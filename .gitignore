@@ -1,3 +1,58 @@
-SGPla/.vs/
-SGPla/bin/
-SGPla/obj/
+# =========================
+# Visual Studio
+# =========================
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# =========================
+# Build results
+# =========================
+bin/
+obj/
+out/
+artifacts/
+
+# =========================
+# Logs
+# =========================
+*.log
+
+# =========================
+# .NET / ASP.NET
+# =========================
+*.pdb
+*.cache
+*.db
+*.sqlite
+*.sqlite3
+
+# Static web assets / Razor
+wwwroot/lib/
+node_modules/
+
+# =========================
+# Publish output
+# =========================
+publish/
+*.publishproj
+
+# =========================
+# Package managers
+# =========================
+project.lock.json
+project.fragment.lock.json
+
+# =========================
+# IDEs
+# =========================
+.vscode/
+.idea/
+
+# =========================
+# OS files
+# =========================
+.DS_Store
+Thumbs.db
