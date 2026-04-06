@@ -11,10 +11,11 @@
 using System;
 using System.Reflection;
 
+[assembly: Microsoft.Extensions.Configuration.UserSecrets.UserSecretsIdAttribute("3f20a909-bf19-4318-9022-3dc474e19d70")]
 [assembly: System.Reflection.AssemblyCompanyAttribute("SGPla")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+595bcf51ca5eeff929f970b8c50e4c35e0ee5eee")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+16ddc0c975e1d6af0b292da66b3903f1bff8fbc2")]
 [assembly: System.Reflection.AssemblyProductAttribute("SGPla")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SGPla")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
