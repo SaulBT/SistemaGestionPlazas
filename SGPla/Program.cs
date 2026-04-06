@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using SGPla.Data;
+//using SGPla.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,8 +10,8 @@ builder.Services.AddControllersWithViews();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("No se encontró la cadena 'DefaultConnection'.");
 
-builder.Services.AddDbContext<GestionDePlazasDbContext>(options =>
-    options.UseSqlServer(connectionString));
+//builder.Services.AddDbContext<GestionDePlazasDbContext>(options =>
+//    options.UseSqlServer(connectionString));
 
 var app = builder.Build();
 

@@ -5,13 +5,13 @@ namespace SGPla.Models;
 
 public partial class OfertaAviso
 {
-    public int IdOfertaAviso { get; set; }
+    public int idOfertaAviso { get; set; }
 
-    public int IdOferta { get; set; }
+    public int idOferta { get; set; }
 
-    public int IdAviso { get; set; }
+    public int idAviso { get; set; }
 
-    public virtual Aviso IdAvisoNavigation { get; set; } = null!;
+    public virtual Aviso idAvisoNavigation { get; set; } = null!;
 
-    public virtual Ofertum IdOfertaNavigation { get; set; } = null!;
+    public virtual Oferta idOfertaNavigation { get; set; } = null!;
 }

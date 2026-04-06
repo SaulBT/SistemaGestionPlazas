@@ -12,790 +12,604 @@ public partial class GestionDePlazasDbContext : DbContext
     {
     }
 
-    public virtual DbSet<Actum> Acta { get; set; }
+    public virtual DbSet<Acta> Acta { get; set; }
 
-    public virtual DbSet<AreaAcademica> AreaAcademicas { get; set; }
+    public virtual DbSet<AreaAcademica> AreaAcademica { get; set; }
 
-    public virtual DbSet<Articulo> Articulos { get; set; }
+    public virtual DbSet<Articulo> Articulo { get; set; }
 
-    public virtual DbSet<Asistencium> Asistencia { get; set; }
+    public virtual DbSet<Asistencia> Asistencia { get; set; }
 
-    public virtual DbSet<Aviso> Avisos { get; set; }
+    public virtual DbSet<Aviso> Aviso { get; set; }
 
-    public virtual DbSet<CoordinadorDgaa> CoordinadorDgaas { get; set; }
+    public virtual DbSet<CoordinadorDGAA> CoordinadorDGAA { get; set; }
 
-    public virtual DbSet<CoordinadorEa> CoordinadorEas { get; set; }
+    public virtual DbSet<CoordinadorEA> CoordinadorEA { get; set; }
 
-    public virtual DbSet<Dictaman> Dictamen { get; set; }
+    public virtual DbSet<Dictamen> Dictamen { get; set; }
 
-    public virtual DbSet<Docente> Docentes { get; set; }
+    public virtual DbSet<Docente> Docente { get; set; }
 
-    public virtual DbSet<EntidadAcademica> EntidadAcademicas { get; set; }
+    public virtual DbSet<EntidadAcademica> EntidadAcademica { get; set; }
 
-    public virtual DbSet<ExperienciaEducativa> ExperienciaEducativas { get; set; }
+    public virtual DbSet<ExperienciaEducativa> ExperienciaEducativa { get; set; }
 
-    public virtual DbSet<Grado> Grados { get; set; }
+    public virtual DbSet<Grado> Grado { get; set; }
 
-    public virtual DbSet<Horario> Horarios { get; set; }
+    public virtual DbSet<Horario> Horario { get; set; }
 
-    public virtual DbSet<IntegranteCt> IntegranteCts { get; set; }
+    public virtual DbSet<IntegranteCT> IntegranteCT { get; set; }
 
-    public virtual DbSet<Log> Logs { get; set; }
+    public virtual DbSet<Log> Log { get; set; }
 
-    public virtual DbSet<Notificacion> Notificacions { get; set; }
+    public virtual DbSet<Notificacion> Notificacion { get; set; }
 
-    public virtual DbSet<OfertaAviso> OfertaAvisos { get; set; }
+    public virtual DbSet<Oferta> Oferta { get; set; }
 
-    public virtual DbSet<Ofertum> Oferta { get; set; }
+    public virtual DbSet<OfertaAviso> OfertaAviso { get; set; }
 
-    public virtual DbSet<Periodo> Periodos { get; set; }
+    public virtual DbSet<Periodo> Periodo { get; set; }
 
-    public virtual DbSet<PlanEstudio> PlanEstudios { get; set; }
+    public virtual DbSet<PlanEstudios> PlanEstudios { get; set; }
 
-    public virtual DbSet<ProgramaEducativo> ProgramaEducativos { get; set; }
+    public virtual DbSet<ProgramaEducativo> ProgramaEducativo { get; set; }
 
-    public virtual DbSet<Solicitud> Solicituds { get; set; }
+    public virtual DbSet<Solicitud> Solicitud { get; set; }
 
-    public virtual DbSet<SuperUsuario> SuperUsuarios { get; set; }
+    public virtual DbSet<SuperUsuario> SuperUsuario { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Actum>(entity =>
+        modelBuilder.Entity<Acta>(entity =>
         {
-            entity.HasKey(e => e.IdActa);
+            entity.HasKey(e => e.idActa);
 
-            entity.HasIndex(e => e.IdAviso, "IX_Acta_idAviso");
+            entity.HasIndex(e => e.idAviso, "IX_Acta_idAviso");
 
-            entity.Property(e => e.IdActa).HasColumnName("idActa");
-            entity.Property(e => e.AsuntosGenerales)
-                .IsUnicode(false)
-                .HasColumnName("asuntosGenerales");
-            entity.Property(e => e.Fecha).HasColumnName("fecha");
-            entity.Property(e => e.Folio)
+            entity.Property(e => e.asuntosGenerales).IsUnicode(false);
+            entity.Property(e => e.folio)
                 .HasMaxLength(10)
-                .IsUnicode(false)
-                .HasColumnName("folio");
-            entity.Property(e => e.HoraConclusion).HasColumnName("horaConclusion");
-            entity.Property(e => e.HoraInicio).HasColumnName("horaInicio");
-            entity.Property(e => e.IdAviso).HasColumnName("idAviso");
-            entity.Property(e => e.Lugar)
+                .IsUnicode(false);
+            entity.Property(e => e.lugar)
                 .HasMaxLength(100)
-                .IsUnicode(false)
-                .HasColumnName("lugar");
-            entity.Property(e => e.RutaDocumentoFirmado)
+                .IsUnicode(false);
+            entity.Property(e => e.rutaDocumentoFirmado)
                 .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("rutaDocumentoFirmado");
-            entity.Property(e => e.RutaDocumentoOriginal)
+                .IsUnicode(false);
+            entity.Property(e => e.rutaDocumentoOriginal)
                 .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("rutaDocumentoOriginal");
+                .IsUnicode(false);
 
-            entity.HasOne(d => d.IdAvisoNavigation).WithMany(p => p.Acta)
-                .HasForeignKey(d => d.IdAviso)
+            entity.HasOne(d => d.idAvisoNavigation).WithMany(p => p.Acta)
+                .HasForeignKey(d => d.idAviso)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Acta_Aviso");
         });
 
         modelBuilder.Entity<AreaAcademica>(entity =>
         {
-            entity.HasKey(e => e.IdAreaAcademica);
+            entity.HasKey(e => e.idAreaAcademica);
 
-            entity.ToTable("AreaAcademica");
-
-            entity.Property(e => e.IdAreaAcademica).HasColumnName("idAreaAcademica");
-            entity.Property(e => e.CalleNumero)
+            entity.Property(e => e.calleNumero)
                 .HasMaxLength(150)
-                .IsUnicode(false)
-                .HasColumnName("calleNumero");
-            entity.Property(e => e.Colonia)
+                .IsUnicode(false);
+            entity.Property(e => e.colonia)
                 .HasMaxLength(100)
-                .IsUnicode(false)
-                .HasColumnName("colonia");
-            entity.Property(e => e.Conmutador)
+                .IsUnicode(false);
+            entity.Property(e => e.conmutador)
                 .HasMaxLength(20)
-                .IsUnicode(false)
-                .HasColumnName("conmutador");
-            entity.Property(e => e.Cp)
+                .IsUnicode(false);
+            entity.Property(e => e.cp)
                 .HasMaxLength(5)
-                .IsUnicode(false)
-                .HasColumnName("cp");
-            entity.Property(e => e.Extension)
+                .IsUnicode(false);
+            entity.Property(e => e.extension)
                 .HasMaxLength(5)
-                .IsUnicode(false)
-                .HasColumnName("extension");
-            entity.Property(e => e.Fax)
+                .IsUnicode(false);
+            entity.Property(e => e.fax)
                 .HasMaxLength(20)
-                .IsUnicode(false)
-                .HasColumnName("fax");
-            entity.Property(e => e.Municipio)
+                .IsUnicode(false);
+            entity.Property(e => e.municipio)
                 .HasMaxLength(100)
-                .IsUnicode(false)
-                .HasColumnName("municipio");
-            entity.Property(e => e.Nombre)
+                .IsUnicode(false);
+            entity.Property(e => e.nombre)
                 .HasMaxLength(100)
-                .IsUnicode(false)
-                .HasColumnName("nombre");
-            entity.Property(e => e.Telefono)
+                .IsUnicode(false);
+            entity.Property(e => e.telefono)
                 .HasMaxLength(30)
-                .IsUnicode(false)
-                .HasColumnName("telefono");
+                .IsUnicode(false);
         });
 
         modelBuilder.Entity<Articulo>(entity =>
         {
-            entity.HasKey(e => e.IdArticulo);
+            entity.HasKey(e => e.idArticulo);
 
-            entity.ToTable("Articulo");
+            entity.HasIndex(e => e.numero, "UQ_Articulo_numero").IsUnique();
 
-            entity.HasIndex(e => e.Numero, "UQ_Articulo_numero").IsUnique();
-
-            entity.Property(e => e.IdArticulo).HasColumnName("idArticulo");
-            entity.Property(e => e.Descripcion)
-                .IsUnicode(false)
-                .HasColumnName("descripcion");
-            entity.Property(e => e.Numero)
+            entity.Property(e => e.descripcion).IsUnicode(false);
+            entity.Property(e => e.numero)
                 .HasMaxLength(10)
-                .IsUnicode(false)
-                .HasColumnName("numero");
+                .IsUnicode(false);
         });
 
-        modelBuilder.Entity<Asistencium>(entity =>
+        modelBuilder.Entity<Asistencia>(entity =>
         {
-            entity.HasKey(e => e.IdAsistencia);
+            entity.HasKey(e => e.idAsistencia);
 
-            entity.HasIndex(e => e.IdIntegranteCt, "IX_Asistencia_idIntegranteCT");
+            entity.HasIndex(e => e.idIntegranteCT, "IX_Asistencia_idIntegranteCT");
 
-            entity.HasIndex(e => new { e.IdActa, e.IdIntegranteCt }, "UQ_Asistencia_Acta_IntegranteCT").IsUnique();
+            entity.HasIndex(e => new { e.idActa, e.idIntegranteCT }, "UQ_Asistencia_Acta_IntegranteCT").IsUnique();
 
-            entity.Property(e => e.IdAsistencia).HasColumnName("idAsistencia");
-            entity.Property(e => e.Asistio).HasColumnName("asistio");
-            entity.Property(e => e.IdActa).HasColumnName("idActa");
-            entity.Property(e => e.IdIntegranteCt).HasColumnName("idIntegranteCT");
-
-            entity.HasOne(d => d.IdActaNavigation).WithMany(p => p.Asistencia)
-                .HasForeignKey(d => d.IdActa)
+            entity.HasOne(d => d.idActaNavigation).WithMany(p => p.Asistencia)
+                .HasForeignKey(d => d.idActa)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Asistencia_Acta");
 
-            entity.HasOne(d => d.IdIntegranteCtNavigation).WithMany(p => p.Asistencia)
-                .HasForeignKey(d => d.IdIntegranteCt)
+            entity.HasOne(d => d.idIntegranteCTNavigation).WithMany(p => p.Asistencia)
+                .HasForeignKey(d => d.idIntegranteCT)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Asistencia_IntegranteCT");
         });
 
         modelBuilder.Entity<Aviso>(entity =>
         {
-            entity.HasKey(e => e.IdAviso);
+            entity.HasKey(e => e.idAviso);
 
-            entity.ToTable("Aviso");
+            entity.HasIndex(e => e.idArticulo, "IX_Aviso_idArticulo");
 
-            entity.HasIndex(e => e.IdArticulo, "IX_Aviso_idArticulo");
+            entity.HasIndex(e => e.idEntidadAcademica, "IX_Aviso_idEntidadAcademica");
 
-            entity.HasIndex(e => e.IdEntidadAcademica, "IX_Aviso_idEntidadAcademica");
+            entity.HasIndex(e => e.idPeriodo, "IX_Aviso_idPeriodo");
 
-            entity.HasIndex(e => e.IdPeriodo, "IX_Aviso_idPeriodo");
-
-            entity.Property(e => e.IdAviso).HasColumnName("idAviso");
-            entity.Property(e => e.Correo)
+            entity.Property(e => e.correo)
                 .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("correo");
-            entity.Property(e => e.FechaCreacion).HasColumnName("fechaCreacion");
-            entity.Property(e => e.FechaInicio).HasColumnName("fechaInicio");
-            entity.Property(e => e.Folio)
+                .IsUnicode(false);
+            entity.Property(e => e.folio)
                 .HasMaxLength(50)
-                .IsUnicode(false)
-                .HasColumnName("folio");
-            entity.Property(e => e.IdArticulo).HasColumnName("idArticulo");
-            entity.Property(e => e.IdEntidadAcademica).HasColumnName("idEntidadAcademica");
-            entity.Property(e => e.IdPeriodo).HasColumnName("idPeriodo");
-            entity.Property(e => e.Lugar)
+                .IsUnicode(false);
+            entity.Property(e => e.lugar)
                 .HasMaxLength(100)
-                .IsUnicode(false)
-                .HasColumnName("lugar");
-            entity.Property(e => e.Modalidad)
+                .IsUnicode(false);
+            entity.Property(e => e.modalidad)
                 .HasMaxLength(10)
-                .IsUnicode(false)
-                .HasColumnName("modalidad");
-            entity.Property(e => e.Requisitos)
-                .IsUnicode(false)
-                .HasColumnName("requisitos");
-            entity.Property(e => e.RutaDocumentoFirmado)
+                .IsUnicode(false);
+            entity.Property(e => e.requisitos).IsUnicode(false);
+            entity.Property(e => e.rutaDocumentoFirmado)
                 .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("rutaDocumentoFirmado");
-            entity.Property(e => e.RutaDocumentoOriginal)
+                .IsUnicode(false);
+            entity.Property(e => e.rutaDocumentoOriginal)
                 .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("rutaDocumentoOriginal");
+                .IsUnicode(false);
 
-            entity.HasOne(d => d.IdArticuloNavigation).WithMany(p => p.Avisos)
-                .HasForeignKey(d => d.IdArticulo)
+            entity.HasOne(d => d.idArticuloNavigation).WithMany(p => p.Aviso)
+                .HasForeignKey(d => d.idArticulo)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Aviso_Articulo");
 
-            entity.HasOne(d => d.IdEntidadAcademicaNavigation).WithMany(p => p.Avisos)
-                .HasForeignKey(d => d.IdEntidadAcademica)
+            entity.HasOne(d => d.idEntidadAcademicaNavigation).WithMany(p => p.Aviso)
+                .HasForeignKey(d => d.idEntidadAcademica)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Aviso_EntidadAcademica");
 
-            entity.HasOne(d => d.IdPeriodoNavigation).WithMany(p => p.Avisos)
-                .HasForeignKey(d => d.IdPeriodo)
+            entity.HasOne(d => d.idPeriodoNavigation).WithMany(p => p.Aviso)
+                .HasForeignKey(d => d.idPeriodo)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Aviso_Periodo");
         });
 
-        modelBuilder.Entity<CoordinadorDgaa>(entity =>
+        modelBuilder.Entity<CoordinadorDGAA>(entity =>
         {
-            entity.HasKey(e => e.IdCoordinadorDgaa);
+            entity.HasKey(e => e.idCoordinadorDGAA);
 
-            entity.ToTable("CoordinadorDGAA");
+            entity.HasIndex(e => e.idAreaAcademica, "IX_CoordinadorDGAA_idAreaAcademica");
 
-            entity.HasIndex(e => e.IdAreaAcademica, "IX_CoordinadorDGAA_idAreaAcademica");
-
-            entity.Property(e => e.IdCoordinadorDgaa).HasColumnName("idCoordinadorDGAA");
-            entity.Property(e => e.Cargo)
+            entity.Property(e => e.cargo)
                 .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("cargo");
-            entity.Property(e => e.Correo)
+                .IsUnicode(false);
+            entity.Property(e => e.correo)
                 .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("correo");
-            entity.Property(e => e.IdAreaAcademica).HasColumnName("idAreaAcademica");
-            entity.Property(e => e.Nombre)
+                .IsUnicode(false);
+            entity.Property(e => e.nombre)
                 .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("nombre");
+                .IsUnicode(false);
 
-            entity.HasOne(d => d.IdAreaAcademicaNavigation).WithMany(p => p.CoordinadorDgaas)
-                .HasForeignKey(d => d.IdAreaAcademica)
+            entity.HasOne(d => d.idAreaAcademicaNavigation).WithMany(p => p.CoordinadorDGAA)
+                .HasForeignKey(d => d.idAreaAcademica)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_CoordinadorDGAA_AreaAcademica");
         });
 
-        modelBuilder.Entity<CoordinadorEa>(entity =>
+        modelBuilder.Entity<CoordinadorEA>(entity =>
         {
-            entity.HasKey(e => e.IdCoordinadorEa);
+            entity.HasKey(e => e.idCoordinadorEA);
 
-            entity.ToTable("CoordinadorEA");
+            entity.HasIndex(e => e.idEntidadAcademica, "IX_CoordinadorEA_idEntidadAcademica");
 
-            entity.HasIndex(e => e.IdEntidadAcademica, "IX_CoordinadorEA_idEntidadAcademica");
-
-            entity.Property(e => e.IdCoordinadorEa).HasColumnName("idCoordinadorEA");
-            entity.Property(e => e.Cargo)
+            entity.Property(e => e.cargo)
                 .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("cargo");
-            entity.Property(e => e.Correo)
+                .IsUnicode(false);
+            entity.Property(e => e.correo)
                 .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("correo");
-            entity.Property(e => e.IdEntidadAcademica).HasColumnName("idEntidadAcademica");
-            entity.Property(e => e.Nombre)
+                .IsUnicode(false);
+            entity.Property(e => e.nombre)
                 .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("nombre");
+                .IsUnicode(false);
 
-            entity.HasOne(d => d.IdEntidadAcademicaNavigation).WithMany(p => p.CoordinadorEas)
-                .HasForeignKey(d => d.IdEntidadAcademica)
+            entity.HasOne(d => d.idEntidadAcademicaNavigation).WithMany(p => p.CoordinadorEA)
+                .HasForeignKey(d => d.idEntidadAcademica)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_CoordinadorEA_EntidadAcademica");
         });
 
-        modelBuilder.Entity<Dictaman>(entity =>
+        modelBuilder.Entity<Dictamen>(entity =>
         {
-            entity.HasKey(e => e.IdDictamen);
+            entity.HasKey(e => e.idDictamen);
 
-            entity.HasIndex(e => e.IdDocente, "IX_Dictamen_idDocente");
+            entity.HasIndex(e => e.idDocente, "IX_Dictamen_idDocente");
 
-            entity.HasIndex(e => new { e.IdActa, e.IdDocente }, "UQ_Dictamen_Acta_Docente").IsUnique();
+            entity.HasIndex(e => new { e.idActa, e.idDocente }, "UQ_Dictamen_Acta_Docente").IsUnique();
 
-            entity.Property(e => e.IdDictamen).HasColumnName("idDictamen");
-            entity.Property(e => e.IdActa).HasColumnName("idActa");
-            entity.Property(e => e.IdDocente).HasColumnName("idDocente");
-            entity.Property(e => e.RutaDocumentoFirmado)
+            entity.Property(e => e.rutaDocumentoFirmado)
                 .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("rutaDocumentoFirmado");
-            entity.Property(e => e.RutaDocumentoOriginal)
+                .IsUnicode(false);
+            entity.Property(e => e.rutaDocumentoOriginal)
                 .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("rutaDocumentoOriginal");
+                .IsUnicode(false);
 
-            entity.HasOne(d => d.IdActaNavigation).WithMany(p => p.Dictamen)
-                .HasForeignKey(d => d.IdActa)
+            entity.HasOne(d => d.idActaNavigation).WithMany(p => p.Dictamen)
+                .HasForeignKey(d => d.idActa)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Dictamen_Acta");
 
-            entity.HasOne(d => d.IdDocenteNavigation).WithMany(p => p.Dictamen)
-                .HasForeignKey(d => d.IdDocente)
+            entity.HasOne(d => d.idDocenteNavigation).WithMany(p => p.Dictamen)
+                .HasForeignKey(d => d.idDocente)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Dictamen_Docente");
         });
 
         modelBuilder.Entity<Docente>(entity =>
         {
-            entity.HasKey(e => e.IdDocente);
+            entity.HasKey(e => e.idDocente);
 
-            entity.ToTable("Docente");
+            entity.HasIndex(e => e.numeroPersonal, "UQ_Docente_numeroPersonal").IsUnique();
 
-            entity.HasIndex(e => e.NumeroPersonal, "UQ_Docente_numeroPersonal").IsUnique();
-
-            entity.Property(e => e.IdDocente).HasColumnName("idDocente");
-            entity.Property(e => e.DescripcionPerfil)
-                .IsUnicode(false)
-                .HasColumnName("descripcionPerfil");
-            entity.Property(e => e.Nombre)
+            entity.Property(e => e.descripcionPerfil).IsUnicode(false);
+            entity.Property(e => e.nombre)
                 .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("nombre");
-            entity.Property(e => e.NumeroPersonal)
+                .IsUnicode(false);
+            entity.Property(e => e.numeroPersonal)
                 .HasMaxLength(10)
-                .IsUnicode(false)
-                .HasColumnName("numeroPersonal");
-            entity.Property(e => e.Puesto)
+                .IsUnicode(false);
+            entity.Property(e => e.puesto)
                 .HasMaxLength(25)
-                .IsUnicode(false)
-                .HasColumnName("puesto");
-            entity.Property(e => e.RutaDocumentosGenerales)
+                .IsUnicode(false);
+            entity.Property(e => e.rutaDocumentosGenerales)
                 .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("rutaDocumentosGenerales");
+                .IsUnicode(false);
         });
 
         modelBuilder.Entity<EntidadAcademica>(entity =>
         {
-            entity.HasKey(e => e.IdEntidadAcademica);
+            entity.HasKey(e => e.idEntidadAcademica);
 
-            entity.ToTable("EntidadAcademica");
+            entity.HasIndex(e => e.idAreaAcademica, "IX_EntidadAcademica_idAreaAcademica");
 
-            entity.HasIndex(e => e.IdAreaAcademica, "IX_EntidadAcademica_idAreaAcademica");
-
-            entity.Property(e => e.IdEntidadAcademica).HasColumnName("idEntidadAcademica");
-            entity.Property(e => e.CalleNumero)
+            entity.Property(e => e.calleNumero)
                 .HasMaxLength(150)
-                .IsUnicode(false)
-                .HasColumnName("calleNumero");
-            entity.Property(e => e.Campus)
+                .IsUnicode(false);
+            entity.Property(e => e.campus)
                 .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("campus");
-            entity.Property(e => e.Colonia)
+                .IsUnicode(false);
+            entity.Property(e => e.colonia)
                 .HasMaxLength(100)
-                .IsUnicode(false)
-                .HasColumnName("colonia");
-            entity.Property(e => e.Conmutador)
+                .IsUnicode(false);
+            entity.Property(e => e.conmutador)
                 .HasMaxLength(20)
-                .IsUnicode(false)
-                .HasColumnName("conmutador");
-            entity.Property(e => e.Cp)
+                .IsUnicode(false);
+            entity.Property(e => e.cp)
                 .HasMaxLength(5)
-                .IsUnicode(false)
-                .HasColumnName("cp");
-            entity.Property(e => e.Extension)
+                .IsUnicode(false);
+            entity.Property(e => e.extension)
                 .HasMaxLength(5)
-                .IsUnicode(false)
-                .HasColumnName("extension");
-            entity.Property(e => e.Fax)
+                .IsUnicode(false);
+            entity.Property(e => e.fax)
                 .HasMaxLength(20)
-                .IsUnicode(false)
-                .HasColumnName("fax");
-            entity.Property(e => e.IdAreaAcademica).HasColumnName("idAreaAcademica");
-            entity.Property(e => e.Municipio)
+                .IsUnicode(false);
+            entity.Property(e => e.municipio)
                 .HasMaxLength(100)
-                .IsUnicode(false)
-                .HasColumnName("municipio");
-            entity.Property(e => e.Nombre)
+                .IsUnicode(false);
+            entity.Property(e => e.nombre)
                 .HasMaxLength(100)
-                .IsUnicode(false)
-                .HasColumnName("nombre");
-            entity.Property(e => e.Region)
+                .IsUnicode(false);
+            entity.Property(e => e.region)
                 .HasMaxLength(30)
-                .IsUnicode(false)
-                .HasColumnName("region");
-            entity.Property(e => e.Telefono)
+                .IsUnicode(false);
+            entity.Property(e => e.telefono)
                 .HasMaxLength(30)
-                .IsUnicode(false)
-                .HasColumnName("telefono");
+                .IsUnicode(false);
 
-            entity.HasOne(d => d.IdAreaAcademicaNavigation).WithMany(p => p.EntidadAcademicas)
-                .HasForeignKey(d => d.IdAreaAcademica)
+            entity.HasOne(d => d.idAreaAcademicaNavigation).WithMany(p => p.EntidadAcademica)
+                .HasForeignKey(d => d.idAreaAcademica)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_EntidadAcademica_AreaAcademica");
         });
 
         modelBuilder.Entity<ExperienciaEducativa>(entity =>
         {
-            entity.HasKey(e => e.IdExperienciaEducativa);
+            entity.HasKey(e => e.idExperienciaEducativa);
 
-            entity.ToTable("ExperienciaEducativa");
+            entity.HasIndex(e => e.idPlanEstudios, "IX_ExperienciaEducativa_idPlanEstudios");
 
-            entity.HasIndex(e => e.IdPlanEstudios, "IX_ExperienciaEducativa_idPlanEstudios");
-
-            entity.Property(e => e.IdExperienciaEducativa).HasColumnName("idExperienciaEducativa");
-            entity.Property(e => e.Codigo)
+            entity.Property(e => e.codigo)
                 .HasMaxLength(10)
-                .IsUnicode(false)
-                .HasColumnName("codigo");
-            entity.Property(e => e.IdPlanEstudios).HasColumnName("idPlanEstudios");
-            entity.Property(e => e.Nombre)
+                .IsUnicode(false);
+            entity.Property(e => e.nombre)
                 .HasMaxLength(150)
-                .IsUnicode(false)
-                .HasColumnName("nombre");
-            entity.Property(e => e.PerfilDocente)
-                .IsUnicode(false)
-                .HasColumnName("perfilDocente");
+                .IsUnicode(false);
+            entity.Property(e => e.perfilDocente).IsUnicode(false);
 
-            entity.HasOne(d => d.IdPlanEstudiosNavigation).WithMany(p => p.ExperienciaEducativas)
-                .HasForeignKey(d => d.IdPlanEstudios)
+            entity.HasOne(d => d.idPlanEstudiosNavigation).WithMany(p => p.ExperienciaEducativa)
+                .HasForeignKey(d => d.idPlanEstudios)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_ExperienciaEducativa_PlanEstudios");
         });
 
         modelBuilder.Entity<Grado>(entity =>
         {
-            entity.HasKey(e => e.IdGrado);
+            entity.HasKey(e => e.idGrado);
 
-            entity.ToTable("Grado");
+            entity.HasIndex(e => e.idDocente, "IX_Grado_idDocente");
 
-            entity.HasIndex(e => e.IdDocente, "IX_Grado_idDocente");
-
-            entity.HasIndex(e => e.IdDocente, "UX_Grado_docente_ultimo")
+            entity.HasIndex(e => e.idDocente, "UX_Grado_docente_ultimo")
                 .IsUnique()
                 .HasFilter("([ultimo]=(1))");
 
-            entity.Property(e => e.IdGrado).HasColumnName("idGrado");
-            entity.Property(e => e.Grado1)
+            entity.Property(e => e.grado)
                 .HasMaxLength(15)
-                .IsUnicode(false)
-                .HasColumnName("grado");
-            entity.Property(e => e.IdDocente).HasColumnName("idDocente");
-            entity.Property(e => e.Titulo)
+                .IsUnicode(false);
+            entity.Property(e => e.titulo)
                 .HasMaxLength(100)
-                .IsUnicode(false)
-                .HasColumnName("titulo");
-            entity.Property(e => e.Ultimo).HasColumnName("ultimo");
+                .IsUnicode(false);
 
-            entity.HasOne(d => d.IdDocenteNavigation).WithOne(p => p.Grado)
-                .HasForeignKey<Grado>(d => d.IdDocente)
+            entity.HasOne(d => d.idDocenteNavigation).WithOne(p => p.Grado)
+                .HasForeignKey<Grado>(d => d.idDocente)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Grado_Docente");
         });
 
         modelBuilder.Entity<Horario>(entity =>
         {
-            entity.HasKey(e => e.IdHorario);
+            entity.HasKey(e => e.idHorario);
 
-            entity.ToTable("Horario");
+            entity.HasIndex(e => e.idAviso, "IX_Horario_idAviso");
 
-            entity.HasIndex(e => e.IdAviso, "IX_Horario_idAviso");
+            entity.HasIndex(e => e.idOferta, "IX_Horario_idOferta");
 
-            entity.HasIndex(e => e.IdOferta, "IX_Horario_idOferta");
-
-            entity.Property(e => e.IdHorario).HasColumnName("idHorario");
-            entity.Property(e => e.Dia)
+            entity.Property(e => e.dia)
                 .HasMaxLength(10)
-                .IsUnicode(false)
-                .HasColumnName("dia");
-            entity.Property(e => e.HoraFin).HasColumnName("horaFin");
-            entity.Property(e => e.HoraInicio).HasColumnName("horaInicio");
-            entity.Property(e => e.IdAviso).HasColumnName("idAviso");
-            entity.Property(e => e.IdOferta).HasColumnName("idOferta");
-            entity.Property(e => e.Salon)
+                .IsUnicode(false);
+            entity.Property(e => e.salon)
                 .HasMaxLength(100)
-                .IsUnicode(false)
-                .HasColumnName("salon");
+                .IsUnicode(false);
 
-            entity.HasOne(d => d.IdAvisoNavigation).WithMany(p => p.Horarios)
-                .HasForeignKey(d => d.IdAviso)
+            entity.HasOne(d => d.idAvisoNavigation).WithMany(p => p.Horario)
+                .HasForeignKey(d => d.idAviso)
                 .HasConstraintName("FK_Horario_Aviso");
 
-            entity.HasOne(d => d.IdOfertaNavigation).WithMany(p => p.Horarios)
-                .HasForeignKey(d => d.IdOferta)
+            entity.HasOne(d => d.idOfertaNavigation).WithMany(p => p.Horario)
+                .HasForeignKey(d => d.idOferta)
                 .HasConstraintName("FK_Horario_Oferta");
         });
 
-        modelBuilder.Entity<IntegranteCt>(entity =>
+        modelBuilder.Entity<IntegranteCT>(entity =>
         {
-            entity.HasKey(e => e.IdIntegranteCt);
+            entity.HasKey(e => e.idIntegranteCT);
 
-            entity.ToTable("IntegranteCT");
+            entity.HasIndex(e => e.idEntidadAcademica, "IX_IntegranteCT_idEntidadAcademica");
 
-            entity.HasIndex(e => e.IdEntidadAcademica, "IX_IntegranteCT_idEntidadAcademica");
-
-            entity.Property(e => e.IdIntegranteCt).HasColumnName("idIntegranteCT");
-            entity.Property(e => e.Cargo)
+            entity.Property(e => e.cargo)
                 .HasMaxLength(100)
-                .IsUnicode(false)
-                .HasColumnName("cargo");
-            entity.Property(e => e.IdEntidadAcademica).HasColumnName("idEntidadAcademica");
-            entity.Property(e => e.Nombre)
+                .IsUnicode(false);
+            entity.Property(e => e.nombre)
                 .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("nombre");
+                .IsUnicode(false);
 
-            entity.HasOne(d => d.IdEntidadAcademicaNavigation).WithMany(p => p.IntegranteCts)
-                .HasForeignKey(d => d.IdEntidadAcademica)
+            entity.HasOne(d => d.idEntidadAcademicaNavigation).WithMany(p => p.IntegranteCT)
+                .HasForeignKey(d => d.idEntidadAcademica)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_IntegranteCT_EntidadAcademica");
         });
 
         modelBuilder.Entity<Log>(entity =>
         {
-            entity.HasKey(e => e.IdLog);
+            entity.HasKey(e => e.idLog);
 
-            entity.ToTable("Log");
+            entity.HasIndex(e => e.idOferta, "IX_Log_idOferta");
 
-            entity.HasIndex(e => e.IdOferta, "IX_Log_idOferta");
+            entity.Property(e => e.mensaje).IsUnicode(false);
 
-            entity.Property(e => e.IdLog).HasColumnName("idLog");
-            entity.Property(e => e.IdOferta).HasColumnName("idOferta");
-            entity.Property(e => e.Mensaje)
-                .IsUnicode(false)
-                .HasColumnName("mensaje");
-
-            entity.HasOne(d => d.IdOfertaNavigation).WithMany(p => p.Logs)
-                .HasForeignKey(d => d.IdOferta)
+            entity.HasOne(d => d.idOfertaNavigation).WithMany(p => p.Log)
+                .HasForeignKey(d => d.idOferta)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Log_Oferta");
         });
 
         modelBuilder.Entity<Notificacion>(entity =>
         {
-            entity.HasKey(e => e.IdNotificacion);
+            entity.HasKey(e => e.idNotificacion);
 
-            entity.ToTable("Notificacion");
+            entity.HasIndex(e => e.idActa, "IX_Notificacion_idActa");
 
-            entity.HasIndex(e => e.IdActa, "IX_Notificacion_idActa");
-
-            entity.Property(e => e.IdNotificacion).HasColumnName("idNotificacion");
-            entity.Property(e => e.IdActa).HasColumnName("idActa");
-            entity.Property(e => e.RutaDocumentoFirmado)
+            entity.Property(e => e.rutaDocumentoFirmado)
                 .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("rutaDocumentoFirmado");
-            entity.Property(e => e.RutaDocumentoOriginal)
+                .IsUnicode(false);
+            entity.Property(e => e.rutaDocumentoOriginal)
                 .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("rutaDocumentoOriginal");
+                .IsUnicode(false);
 
-            entity.HasOne(d => d.IdActaNavigation).WithMany(p => p.Notificacions)
-                .HasForeignKey(d => d.IdActa)
+            entity.HasOne(d => d.idActaNavigation).WithMany(p => p.Notificacion)
+                .HasForeignKey(d => d.idActa)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Notificacion_Acta");
         });
 
-        modelBuilder.Entity<OfertaAviso>(entity =>
+        modelBuilder.Entity<Oferta>(entity =>
         {
-            entity.HasKey(e => e.IdOfertaAviso);
+            entity.HasKey(e => e.idOferta);
 
-            entity.ToTable("OfertaAviso");
+            entity.HasIndex(e => e.idArticulo, "IX_Oferta_idArticulo");
 
-            entity.HasIndex(e => e.IdAviso, "IX_OfertaAviso_idAviso");
+            entity.HasIndex(e => e.idDocente, "IX_Oferta_idDocente");
 
-            entity.HasIndex(e => new { e.IdOferta, e.IdAviso }, "UQ_OfertaAviso_Oferta_Aviso").IsUnique();
+            entity.HasIndex(e => e.idExperienciaEducativa, "IX_Oferta_idExperienciaEducativa");
 
-            entity.Property(e => e.IdOfertaAviso).HasColumnName("idOfertaAviso");
-            entity.Property(e => e.IdAviso).HasColumnName("idAviso");
-            entity.Property(e => e.IdOferta).HasColumnName("idOferta");
+            entity.HasIndex(e => e.idPeriodo, "IX_Oferta_idPeriodo");
 
-            entity.HasOne(d => d.IdAvisoNavigation).WithMany(p => p.OfertaAvisos)
-                .HasForeignKey(d => d.IdAviso)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_OfertaAviso_Aviso");
-
-            entity.HasOne(d => d.IdOfertaNavigation).WithMany(p => p.OfertaAvisos)
-                .HasForeignKey(d => d.IdOferta)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_OfertaAviso_Oferta");
-        });
-
-        modelBuilder.Entity<Ofertum>(entity =>
-        {
-            entity.HasKey(e => e.IdOferta);
-
-            entity.HasIndex(e => e.IdArticulo, "IX_Oferta_idArticulo");
-
-            entity.HasIndex(e => e.IdDocente, "IX_Oferta_idDocente");
-
-            entity.HasIndex(e => e.IdExperienciaEducativa, "IX_Oferta_idExperienciaEducativa");
-
-            entity.HasIndex(e => e.IdPeriodo, "IX_Oferta_idPeriodo");
-
-            entity.Property(e => e.IdOferta).HasColumnName("idOferta");
-            entity.Property(e => e.EstadoSolicitudApertura)
+            entity.Property(e => e.estadoSolicitudApertura)
                 .HasMaxLength(50)
-                .IsUnicode(false)
-                .HasColumnName("estadoSolicitudApertura");
-            entity.Property(e => e.Hsm).HasColumnName("hsm");
-            entity.Property(e => e.IdArticulo).HasColumnName("idArticulo");
-            entity.Property(e => e.IdDocente).HasColumnName("idDocente");
-            entity.Property(e => e.IdExperienciaEducativa).HasColumnName("idExperienciaEducativa");
-            entity.Property(e => e.IdPeriodo).HasColumnName("idPeriodo");
-            entity.Property(e => e.Incluida).HasColumnName("incluida");
-            entity.Property(e => e.Justificacion)
+                .IsUnicode(false);
+            entity.Property(e => e.justificacion)
                 .HasMaxLength(50)
-                .IsUnicode(false)
-                .HasColumnName("justificacion");
-            entity.Property(e => e.JustificacionApertura)
+                .IsUnicode(false);
+            entity.Property(e => e.justificacionApertura)
                 .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("justificacionApertura");
-            entity.Property(e => e.Nrc)
+                .IsUnicode(false);
+            entity.Property(e => e.nrc)
                 .HasMaxLength(5)
-                .IsUnicode(false)
-                .HasColumnName("nrc");
-            entity.Property(e => e.Plaza)
+                .IsUnicode(false);
+            entity.Property(e => e.plaza)
                 .HasMaxLength(4)
-                .IsUnicode(false)
-                .HasColumnName("plaza");
-            entity.Property(e => e.RutaArchivoSolicitudApertura)
+                .IsUnicode(false);
+            entity.Property(e => e.rutaArchivoSolicitudApertura)
                 .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("rutaArchivoSolicitudApertura");
-            entity.Property(e => e.TipoContratacion)
+                .IsUnicode(false);
+            entity.Property(e => e.tipoContratacion)
                 .HasMaxLength(3)
-                .IsUnicode(false)
-                .HasColumnName("tipoContratacion");
-            entity.Property(e => e.Vacante).HasColumnName("vacante");
+                .IsUnicode(false);
 
-            entity.HasOne(d => d.IdArticuloNavigation).WithMany(p => p.Oferta)
-                .HasForeignKey(d => d.IdArticulo)
+            entity.HasOne(d => d.idArticuloNavigation).WithMany(p => p.Oferta)
+                .HasForeignKey(d => d.idArticulo)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Oferta_Articulo");
 
-            entity.HasOne(d => d.IdDocenteNavigation).WithMany(p => p.Oferta)
-                .HasForeignKey(d => d.IdDocente)
+            entity.HasOne(d => d.idDocenteNavigation).WithMany(p => p.Oferta)
+                .HasForeignKey(d => d.idDocente)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Oferta_Docente");
 
-            entity.HasOne(d => d.IdExperienciaEducativaNavigation).WithMany(p => p.Oferta)
-                .HasForeignKey(d => d.IdExperienciaEducativa)
+            entity.HasOne(d => d.idExperienciaEducativaNavigation).WithMany(p => p.Oferta)
+                .HasForeignKey(d => d.idExperienciaEducativa)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Oferta_ExperienciaEducativa");
 
-            entity.HasOne(d => d.IdPeriodoNavigation).WithMany(p => p.Oferta)
-                .HasForeignKey(d => d.IdPeriodo)
+            entity.HasOne(d => d.idPeriodoNavigation).WithMany(p => p.Oferta)
+                .HasForeignKey(d => d.idPeriodo)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Oferta_Periodo");
         });
 
-        modelBuilder.Entity<Periodo>(entity =>
+        modelBuilder.Entity<OfertaAviso>(entity =>
         {
-            entity.HasKey(e => e.IdPeriodo);
+            entity.HasKey(e => e.idOfertaAviso);
 
-            entity.ToTable("Periodo");
+            entity.HasIndex(e => e.idAviso, "IX_OfertaAviso_idAviso");
 
-            entity.HasIndex(e => new { e.Nombre, e.AnioInicio }, "UQ_Periodo_nombre_anioInicio").IsUnique();
+            entity.HasIndex(e => new { e.idOferta, e.idAviso }, "UQ_OfertaAviso_Oferta_Aviso").IsUnique();
 
-            entity.Property(e => e.IdPeriodo)
-                .ValueGeneratedNever()
-                .HasColumnName("idPeriodo");
-            entity.Property(e => e.AnioInicio).HasColumnName("anioInicio");
-            entity.Property(e => e.Nombre)
-                .HasMaxLength(15)
-                .IsUnicode(false)
-                .HasColumnName("nombre");
+            entity.HasOne(d => d.idAvisoNavigation).WithMany(p => p.OfertaAviso)
+                .HasForeignKey(d => d.idAviso)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_OfertaAviso_Aviso");
+
+            entity.HasOne(d => d.idOfertaNavigation).WithMany(p => p.OfertaAviso)
+                .HasForeignKey(d => d.idOferta)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_OfertaAviso_Oferta");
         });
 
-        modelBuilder.Entity<PlanEstudio>(entity =>
+        modelBuilder.Entity<Periodo>(entity =>
         {
-            entity.HasKey(e => e.IdPlanEstudios);
+            entity.HasKey(e => e.idPeriodo);
 
-            entity.HasIndex(e => e.IdProgramaEducativo, "IX_PlanEstudios_idProgramaEducativo");
+            entity.HasIndex(e => new { e.nombre, e.anioInicio }, "UQ_Periodo_nombre_anioInicio").IsUnique();
 
-            entity.Property(e => e.IdPlanEstudios).HasColumnName("idPlanEstudios");
-            entity.Property(e => e.IdProgramaEducativo).HasColumnName("idProgramaEducativo");
-            entity.Property(e => e.Modalidad)
+            entity.Property(e => e.idPeriodo).ValueGeneratedNever();
+            entity.Property(e => e.nombre)
+                .HasMaxLength(15)
+                .IsUnicode(false);
+        });
+
+        modelBuilder.Entity<PlanEstudios>(entity =>
+        {
+            entity.HasKey(e => e.idPlanEstudios);
+
+            entity.HasIndex(e => e.idProgramaEducativo, "IX_PlanEstudios_idProgramaEducativo");
+
+            entity.Property(e => e.modalidad)
                 .HasMaxLength(100)
-                .IsUnicode(false)
-                .HasColumnName("modalidad");
-            entity.Property(e => e.Nombre)
+                .IsUnicode(false);
+            entity.Property(e => e.nombre)
                 .HasMaxLength(100)
-                .IsUnicode(false)
-                .HasColumnName("nombre");
+                .IsUnicode(false);
 
-            entity.HasOne(d => d.IdProgramaEducativoNavigation).WithMany(p => p.PlanEstudios)
-                .HasForeignKey(d => d.IdProgramaEducativo)
+            entity.HasOne(d => d.idProgramaEducativoNavigation).WithMany(p => p.PlanEstudios)
+                .HasForeignKey(d => d.idProgramaEducativo)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_PlanEstudios_ProgramaEducativo");
         });
 
         modelBuilder.Entity<ProgramaEducativo>(entity =>
         {
-            entity.HasKey(e => e.IdProgramaEducativo);
+            entity.HasKey(e => e.idProgramaEducativo);
 
-            entity.ToTable("ProgramaEducativo");
+            entity.HasIndex(e => e.idEntidadAcademica, "IX_ProgramaEducativo_idEntidadAcademica");
 
-            entity.HasIndex(e => e.IdEntidadAcademica, "IX_ProgramaEducativo_idEntidadAcademica");
-
-            entity.Property(e => e.IdProgramaEducativo).HasColumnName("idProgramaEducativo");
-            entity.Property(e => e.IdEntidadAcademica).HasColumnName("idEntidadAcademica");
-            entity.Property(e => e.Nombre)
+            entity.Property(e => e.nombre)
                 .HasMaxLength(100)
-                .IsUnicode(false)
-                .HasColumnName("nombre");
+                .IsUnicode(false);
 
-            entity.HasOne(d => d.IdEntidadAcademicaNavigation).WithMany(p => p.ProgramaEducativos)
-                .HasForeignKey(d => d.IdEntidadAcademica)
+            entity.HasOne(d => d.idEntidadAcademicaNavigation).WithMany(p => p.ProgramaEducativo)
+                .HasForeignKey(d => d.idEntidadAcademica)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_ProgramaEducativo_EntidadAcademica");
         });
 
         modelBuilder.Entity<Solicitud>(entity =>
         {
-            entity.HasKey(e => e.IdSolicitud);
+            entity.HasKey(e => e.idSolicitud);
 
-            entity.ToTable("Solicitud");
+            entity.HasIndex(e => e.idDocente, "IX_Solicitud_idDocente");
 
-            entity.HasIndex(e => e.IdDocente, "IX_Solicitud_idDocente");
+            entity.HasIndex(e => e.idOferta, "IX_Solicitud_idOferta");
 
-            entity.HasIndex(e => e.IdOferta, "IX_Solicitud_idOferta");
-
-            entity.Property(e => e.IdSolicitud).HasColumnName("idSolicitud");
-            entity.Property(e => e.Designado).HasColumnName("designado");
-            entity.Property(e => e.IdDocente).HasColumnName("idDocente");
-            entity.Property(e => e.IdOferta).HasColumnName("idOferta");
-            entity.Property(e => e.Justificacion)
-                .IsUnicode(false)
-                .HasColumnName("justificacion");
-            entity.Property(e => e.Modalidad)
+            entity.Property(e => e.justificacion).IsUnicode(false);
+            entity.Property(e => e.modalidad)
                 .HasMaxLength(10)
-                .IsUnicode(false)
-                .HasColumnName("modalidad");
-            entity.Property(e => e.RutaDocumentosSolicitud)
+                .IsUnicode(false);
+            entity.Property(e => e.rutaDocumentosSolicitud)
                 .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("rutaDocumentosSolicitud");
+                .IsUnicode(false);
 
-            entity.HasOne(d => d.IdDocenteNavigation).WithMany(p => p.Solicituds)
-                .HasForeignKey(d => d.IdDocente)
+            entity.HasOne(d => d.idDocenteNavigation).WithMany(p => p.Solicitud)
+                .HasForeignKey(d => d.idDocente)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Solicitud_Docente");
 
-            entity.HasOne(d => d.IdOfertaNavigation).WithMany(p => p.Solicituds)
-                .HasForeignKey(d => d.IdOferta)
+            entity.HasOne(d => d.idOfertaNavigation).WithMany(p => p.Solicitud)
+                .HasForeignKey(d => d.idOferta)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Solicitud_Oferta");
         });
 
         modelBuilder.Entity<SuperUsuario>(entity =>
         {
-            entity.HasKey(e => e.IdSuperUsuario);
+            entity.HasKey(e => e.idSuperUsuario);
 
-            entity.ToTable("SuperUsuario");
-
-            entity.Property(e => e.IdSuperUsuario).HasColumnName("idSuperUsuario");
-            entity.Property(e => e.Correo)
+            entity.Property(e => e.correo)
                 .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("correo");
-            entity.Property(e => e.Nombre)
+                .IsUnicode(false);
+            entity.Property(e => e.nombre)
                 .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("nombre");
+                .IsUnicode(false);
         });
 
         OnModelCreatingPartial(modelBuilder);

@@ -5,21 +5,21 @@ namespace SGPla.Models;
 
 public partial class Solicitud
 {
-    public int IdSolicitud { get; set; }
+    public int idSolicitud { get; set; }
 
-    public int IdDocente { get; set; }
+    public int idDocente { get; set; }
 
-    public int IdOferta { get; set; }
+    public int idOferta { get; set; }
 
-    public bool Designado { get; set; }
+    public bool designado { get; set; }
 
-    public string Modalidad { get; set; } = null!;
+    public string modalidad { get; set; } = null!;
 
-    public string Justificacion { get; set; } = null!;
+    public string justificacion { get; set; } = null!;
 
-    public string RutaDocumentosSolicitud { get; set; } = null!;
+    public string rutaDocumentosSolicitud { get; set; } = null!;
 
-    public virtual Docente IdDocenteNavigation { get; set; } = null!;
+    public virtual Docente idDocenteNavigation { get; set; } = null!;
 
-    public virtual Ofertum IdOfertaNavigation { get; set; } = null!;
+    public virtual Oferta idOfertaNavigation { get; set; } = null!;
 }

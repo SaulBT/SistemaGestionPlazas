@@ -5,41 +5,41 @@ namespace SGPla.Models;
 
 public partial class Aviso
 {
-    public int IdAviso { get; set; }
+    public int idAviso { get; set; }
 
-    public int IdEntidadAcademica { get; set; }
+    public int idEntidadAcademica { get; set; }
 
-    public int IdPeriodo { get; set; }
+    public int idPeriodo { get; set; }
 
-    public int IdArticulo { get; set; }
+    public int idArticulo { get; set; }
 
-    public string Folio { get; set; } = null!;
+    public string folio { get; set; } = null!;
 
-    public DateOnly FechaInicio { get; set; }
+    public DateOnly fechaInicio { get; set; }
 
-    public DateOnly FechaCreacion { get; set; }
+    public DateOnly fechaCreacion { get; set; }
 
-    public string Requisitos { get; set; } = null!;
+    public string requisitos { get; set; } = null!;
 
-    public string? Lugar { get; set; }
+    public string? lugar { get; set; }
 
-    public string? Correo { get; set; }
+    public string? correo { get; set; }
 
-    public string Modalidad { get; set; } = null!;
+    public string modalidad { get; set; } = null!;
 
-    public string? RutaDocumentoOriginal { get; set; }
+    public string? rutaDocumentoOriginal { get; set; }
 
-    public string? RutaDocumentoFirmado { get; set; }
+    public string? rutaDocumentoFirmado { get; set; }
 
-    public virtual ICollection<Actum> Acta { get; set; } = new List<Actum>();
+    public virtual ICollection<Acta> Acta { get; set; } = new List<Acta>();
 
-    public virtual ICollection<Horario> Horarios { get; set; } = new List<Horario>();
+    public virtual ICollection<Horario> Horario { get; set; } = new List<Horario>();
 
-    public virtual Articulo IdArticuloNavigation { get; set; } = null!;
+    public virtual ICollection<OfertaAviso> OfertaAviso { get; set; } = new List<OfertaAviso>();
 
-    public virtual EntidadAcademica IdEntidadAcademicaNavigation { get; set; } = null!;
+    public virtual Articulo idArticuloNavigation { get; set; } = null!;
 
-    public virtual Periodo IdPeriodoNavigation { get; set; } = null!;
+    public virtual EntidadAcademica idEntidadAcademicaNavigation { get; set; } = null!;
 
-    public virtual ICollection<OfertaAviso> OfertaAvisos { get; set; } = new List<OfertaAviso>();
+    public virtual Periodo idPeriodoNavigation { get; set; } = null!;
 }

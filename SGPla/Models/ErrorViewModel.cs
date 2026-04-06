@@ -1,4 +1,4 @@
-namespace SGPla.Models
+﻿namespace SGPla.Models
 {
     public class ErrorViewModel
     {

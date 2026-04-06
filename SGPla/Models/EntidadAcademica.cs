@@ -5,39 +5,39 @@ namespace SGPla.Models;
 
 public partial class EntidadAcademica
 {
-    public int IdEntidadAcademica { get; set; }
+    public int idEntidadAcademica { get; set; }
 
-    public int IdAreaAcademica { get; set; }
+    public int idAreaAcademica { get; set; }
 
-    public string Nombre { get; set; } = null!;
+    public string nombre { get; set; } = null!;
 
-    public string CalleNumero { get; set; } = null!;
+    public string calleNumero { get; set; } = null!;
 
-    public string Colonia { get; set; } = null!;
+    public string colonia { get; set; } = null!;
 
-    public string Cp { get; set; } = null!;
+    public string cp { get; set; } = null!;
 
-    public string Municipio { get; set; } = null!;
+    public string municipio { get; set; } = null!;
 
-    public string Telefono { get; set; } = null!;
+    public string telefono { get; set; } = null!;
 
-    public string Conmutador { get; set; } = null!;
+    public string conmutador { get; set; } = null!;
 
-    public string Extension { get; set; } = null!;
+    public string extension { get; set; } = null!;
 
-    public string Fax { get; set; } = null!;
+    public string fax { get; set; } = null!;
 
-    public string Region { get; set; } = null!;
+    public string region { get; set; } = null!;
 
-    public string Campus { get; set; } = null!;
+    public string campus { get; set; } = null!;
 
-    public virtual ICollection<Aviso> Avisos { get; set; } = new List<Aviso>();
+    public virtual ICollection<Aviso> Aviso { get; set; } = new List<Aviso>();
 
-    public virtual ICollection<CoordinadorEa> CoordinadorEas { get; set; } = new List<CoordinadorEa>();
+    public virtual ICollection<CoordinadorEA> CoordinadorEA { get; set; } = new List<CoordinadorEA>();
 
-    public virtual AreaAcademica IdAreaAcademicaNavigation { get; set; } = null!;
+    public virtual ICollection<IntegranteCT> IntegranteCT { get; set; } = new List<IntegranteCT>();
 
-    public virtual ICollection<IntegranteCt> IntegranteCts { get; set; } = new List<IntegranteCt>();
+    public virtual ICollection<ProgramaEducativo> ProgramaEducativo { get; set; } = new List<ProgramaEducativo>();
 
-    public virtual ICollection<ProgramaEducativo> ProgramaEducativos { get; set; } = new List<ProgramaEducativo>();
+    public virtual AreaAcademica idAreaAcademicaNavigation { get; set; } = null!;
 }

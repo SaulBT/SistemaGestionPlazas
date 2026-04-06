@@ -5,21 +5,21 @@ namespace SGPla.Models;
 
 public partial class Horario
 {
-    public int IdHorario { get; set; }
+    public int idHorario { get; set; }
 
-    public int? IdOferta { get; set; }
+    public int? idOferta { get; set; }
 
-    public int? IdAviso { get; set; }
+    public int? idAviso { get; set; }
 
-    public string Dia { get; set; } = null!;
+    public string dia { get; set; } = null!;
 
-    public TimeOnly HoraInicio { get; set; }
+    public TimeOnly horaInicio { get; set; }
 
-    public TimeOnly HoraFin { get; set; }
+    public TimeOnly horaFin { get; set; }
 
-    public string? Salon { get; set; }
+    public string? salon { get; set; }
 
-    public virtual Aviso? IdAvisoNavigation { get; set; }
+    public virtual Aviso? idAvisoNavigation { get; set; }
 
-    public virtual Ofertum? IdOfertaNavigation { get; set; }
+    public virtual Oferta? idOfertaNavigation { get; set; }
 }

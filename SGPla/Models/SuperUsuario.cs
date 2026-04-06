@@ -5,9 +5,9 @@ namespace SGPla.Models;
 
 public partial class SuperUsuario
 {
-    public int IdSuperUsuario { get; set; }
+    public int idSuperUsuario { get; set; }
 
-    public string Nombre { get; set; } = null!;
+    public string nombre { get; set; } = null!;
 
-    public string Correo { get; set; } = null!;
+    public string correo { get; set; } = null!;
 }

@@ -5,13 +5,13 @@ namespace SGPla.Models;
 
 public partial class Articulo
 {
-    public int IdArticulo { get; set; }
+    public int idArticulo { get; set; }
 
-    public string Numero { get; set; } = null!;
+    public string numero { get; set; } = null!;
 
-    public string Descripcion { get; set; } = null!;
+    public string descripcion { get; set; } = null!;
 
-    public virtual ICollection<Aviso> Avisos { get; set; } = new List<Aviso>();
+    public virtual ICollection<Aviso> Aviso { get; set; } = new List<Aviso>();
 
-    public virtual ICollection<Ofertum> Oferta { get; set; } = new List<Ofertum>();
+    public virtual ICollection<Oferta> Oferta { get; set; } = new List<Oferta>();
 }

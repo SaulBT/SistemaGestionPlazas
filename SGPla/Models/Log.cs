@@ -5,11 +5,11 @@ namespace SGPla.Models;
 
 public partial class Log
 {
-    public int IdLog { get; set; }
+    public int idLog { get; set; }
 
-    public int IdOferta { get; set; }
+    public int idOferta { get; set; }
 
-    public string Mensaje { get; set; } = null!;
+    public string mensaje { get; set; } = null!;
 
-    public virtual Ofertum IdOfertaNavigation { get; set; } = null!;
+    public virtual Oferta idOfertaNavigation { get; set; } = null!;
 }

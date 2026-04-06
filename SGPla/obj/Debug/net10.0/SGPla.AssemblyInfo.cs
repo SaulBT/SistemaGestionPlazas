@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SGPla")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+42778cb2b459d9babf913c3f13253dce11f894ec")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1f431a7c47d26e44d4821293e0be54f58f706629")]
 [assembly: System.Reflection.AssemblyProductAttribute("SGPla")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SGPla")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

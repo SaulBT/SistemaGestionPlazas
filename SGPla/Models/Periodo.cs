@@ -5,13 +5,13 @@ namespace SGPla.Models;
 
 public partial class Periodo
 {
-    public int IdPeriodo { get; set; }
+    public int idPeriodo { get; set; }
 
-    public string Nombre { get; set; } = null!;
+    public string nombre { get; set; } = null!;
 
-    public int AnioInicio { get; set; }
+    public int anioInicio { get; set; }
 
-    public virtual ICollection<Aviso> Avisos { get; set; } = new List<Aviso>();
+    public virtual ICollection<Aviso> Aviso { get; set; } = new List<Aviso>();
 
-    public virtual ICollection<Ofertum> Oferta { get; set; } = new List<Ofertum>();
+    public virtual ICollection<Oferta> Oferta { get; set; } = new List<Oferta>();
 }

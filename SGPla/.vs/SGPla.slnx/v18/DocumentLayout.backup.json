@@ -3,12 +3,16 @@
   "WorkspaceRootPath": "C:\\repos\\SistemaGestionPlazas\\SGPla\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{EA7CF15A-2825-7CAA-21A0-D947EF6249E8}|SGPla.csproj|c:\\repos\\sistemagestionplazas\\sgpla\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{EA7CF15A-2825-7CAA-21A0-D947EF6249E8}|SGPla.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{EA7CF15A-2825-7CAA-21A0-D947EF6249E8}|SGPla.csproj|c:\\repos\\sistemagestionplazas\\sgpla\\controllers\\homecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{EA7CF15A-2825-7CAA-21A0-D947EF6249E8}|SGPla.csproj|solutionrelative:controllers\\homecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{EA7CF15A-2825-7CAA-21A0-D947EF6249E8}|SGPla.csproj|c:\\repos\\sistemagestionplazas\\sgpla\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
       "RelativeMoniker": "D:0:0:{EA7CF15A-2825-7CAA-21A0-D947EF6249E8}|SGPla.csproj|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{EA7CF15A-2825-7CAA-21A0-D947EF6249E8}|SGPla.csproj|c:\\repos\\sistemagestionplazas\\sgpla\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{EA7CF15A-2825-7CAA-21A0-D947EF6249E8}|SGPla.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -23,12 +27,25 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "HomeController.cs",
+              "DocumentMoniker": "C:\\repos\\SistemaGestionPlazas\\SGPla\\Controllers\\HomeController.cs",
+              "RelativeDocumentMoniker": "Controllers\\HomeController.cs",
+              "ToolTip": "C:\\repos\\SistemaGestionPlazas\\SGPla\\Controllers\\HomeController.cs",
+              "RelativeToolTip": "Controllers\\HomeController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-06T17:55:48.2Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\repos\\SistemaGestionPlazas\\SGPla\\Program.cs",
               "RelativeDocumentMoniker": "Program.cs",
-              "ToolTip": "C:\\repos\\SistemaGestionPlazas\\SGPla\\Program.cs*",
-              "RelativeToolTip": "Program.cs*",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAA==",
+              "ToolTip": "C:\\repos\\SistemaGestionPlazas\\SGPla\\Program.cs",
+              "RelativeToolTip": "Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAhAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-04-06T17:27:44.303Z",
               "EditorCaption": ""
