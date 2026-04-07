@@ -12,7 +12,7 @@ namespace SGPla.Services.Interfaces
 
         Task<DetallesUsuarioDTO?> ObtenerPorIdAsync(int idUsuario);
 
-        Task EditarAsync(ReferenciaUsuarioDTO dto);
+        Task EditarAsync(EditarUsuarioDTO dto);
 
         Task EliminarAsync(int idUsuario);
     }
