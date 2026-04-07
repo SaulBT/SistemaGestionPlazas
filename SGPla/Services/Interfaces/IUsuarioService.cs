@@ -1,4 +1,4 @@
-﻿using SGPla.Models.DTOs.Usuario;
+﻿using SGPla.Models.DTOs.Usuarios;
 
 namespace SGPla.Services.Interfaces
 {
@@ -12,7 +12,7 @@ namespace SGPla.Services.Interfaces
 
         Task<DetallesUsuarioDTO?> ObtenerPorIdAsync(int idUsuario);
 
-        Task EditarAsync(EditarUsuarioDTO dto);
+        Task EditarAsync(ReferenciaUsuarioDTO dto);
 
         Task EliminarAsync(int idUsuario);
     }
