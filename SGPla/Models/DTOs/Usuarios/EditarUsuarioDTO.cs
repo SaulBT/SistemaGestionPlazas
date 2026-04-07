@@ -1,6 +1,6 @@
 ﻿namespace SGPla.Models.DTOs.Usuario
 {
-    public class ActualizarUsuarioDTO
+    public class EditarUsuarioDTO
     {
         public int IdUser { get; set; }
 
