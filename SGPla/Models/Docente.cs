@@ -5,17 +5,17 @@ namespace SGPla.Models;
 
 public partial class Docente
 {
-    public int idDocente { get; set; }
+    public int IdDocente { get; set; }
 
-    public string nombre { get; set; } = null!;
+    public string Nombre { get; set; } = null!;
 
-    public string? descripcionPerfil { get; set; }
+    public string? DescripcionPerfil { get; set; }
 
-    public string? rutaDocumentosGenerales { get; set; }
+    public string? RutaDocumentosGenerales { get; set; }
 
-    public string numeroPersonal { get; set; } = null!;
+    public string NumeroPersonal { get; set; } = null!;
 
-    public string puesto { get; set; } = null!;
+    public string Puesto { get; set; } = null!;
 
     public virtual ICollection<Dictamen> Dictamen { get; set; } = new List<Dictamen>();
 

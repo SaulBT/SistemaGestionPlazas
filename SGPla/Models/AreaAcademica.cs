@@ -5,27 +5,27 @@ namespace SGPla.Models;
 
 public partial class AreaAcademica
 {
-    public int idAreaAcademica { get; set; }
+    public int IdAreaAcademica { get; set; }
 
-    public string nombre { get; set; } = null!;
+    public string Nombre { get; set; } = null!;
 
-    public string calleNumero { get; set; } = null!;
+    public string CalleNumero { get; set; } = null!;
 
-    public string colonia { get; set; } = null!;
+    public string Colonia { get; set; } = null!;
 
-    public string cp { get; set; } = null!;
+    public string Cp { get; set; } = null!;
 
-    public string municipio { get; set; } = null!;
+    public string Municipio { get; set; } = null!;
 
-    public string telefono { get; set; } = null!;
+    public string Telefono { get; set; } = null!;
 
-    public string conmutador { get; set; } = null!;
+    public string Conmutador { get; set; } = null!;
 
-    public string extension { get; set; } = null!;
+    public string Extension { get; set; } = null!;
 
-    public string fax { get; set; } = null!;
+    public string Fax { get; set; } = null!;
 
-    public virtual ICollection<CoordinadorDGAA> CoordinadorDGAA { get; set; } = new List<CoordinadorDGAA>();
+    public virtual ICollection<CoordinadorDgaa> CoordinadorDgaa { get; set; } = new List<CoordinadorDgaa>();
 
     public virtual ICollection<EntidadAcademica> EntidadAcademica { get; set; } = new List<EntidadAcademica>();
 }

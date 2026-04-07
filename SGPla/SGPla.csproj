@@ -16,7 +16,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Services\Interfaces\" />
+    <Folder Include="Data\" />
+    <Folder Include="Models\" />
   </ItemGroup>
 
 </Project>

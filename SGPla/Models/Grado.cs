@@ -5,15 +5,15 @@ namespace SGPla.Models;
 
 public partial class Grado
 {
-    public int idGrado { get; set; }
+    public int IdGrado { get; set; }
 
-    public int idDocente { get; set; }
+    public int IdDocente { get; set; }
 
-    public string grado { get; set; } = null!;
+    public string Grado1 { get; set; } = null!;
 
-    public string titulo { get; set; } = null!;
+    public string Titulo { get; set; } = null!;
 
-    public bool ultimo { get; set; }
+    public bool Ultimo { get; set; }
 
-    public virtual Docente idDocenteNavigation { get; set; } = null!;
+    public virtual Docente IdDocenteNavigation { get; set; } = null!;
 }
