@@ -7,7 +7,7 @@ namespace SGPla.Repositories.Interfaces
         Task<int> CrearAsync(CoordinadorEa coordinadorEa);
         Task<CoordinadorEa?> ObtenerPorIdAsync(int idCoordinadorEa);
         Task<List<CoordinadorEa>> ObtenerTodosAsync();
-        Task<List<CoordinadorEa>> ObtenerPorFiltrosAsync(string? region, int? idEntidadAcademica);
+        Task<List<CoordinadorEa>> ObtenerPorFiltrosAsync(string? region, int? idAreaAcademica, int? idEntidadAcademica);
         Task ActualizarAsync(CoordinadorEa coordinadorEa);
         Task EliminarAsync(CoordinadorEa coordinadorEa);
     }

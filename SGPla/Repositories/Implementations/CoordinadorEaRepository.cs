@@ -37,7 +37,7 @@ namespace SGPla.Repositories.Implementations
                 .ToListAsync();
         }
 
-        public async Task<List<CoordinadorEa>> ObtenerPorFiltrosAsync(string? region, int? idEntidadAcademica)
+        public async Task<List<CoordinadorEa>> ObtenerPorFiltrosAsync(string? region, int? idAreaAcademica, int? idEntidadAcademica)
         {
             var query = _context.CoordinadorEas
                 .Include(c => c.IdEntidadAcademicaNavigation)
@@ -47,6 +47,11 @@ namespace SGPla.Repositories.Implementations
             if (!string.IsNullOrWhiteSpace(region))
             {
                 query = query.Where(c => c.IdEntidadAcademicaNavigation.Region == region);
+            }
+
+            if (idAreaAcademica.HasValue)
+            {
+                query = query.Where(c => c.IdEntidadAcademicaNavigation.IdAreaAcademica == idAreaAcademica.Value);
             }
 
             if (idEntidadAcademica.HasValue)
