@@ -1,4 +1,4 @@
-﻿namespace SGPla.Models.DTOs.Usuario
+﻿namespace SGPla.Models.DTOs.Usuarios
 {
     public class DetallesUsuarioDTO
     {
