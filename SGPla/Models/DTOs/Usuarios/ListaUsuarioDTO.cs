@@ -2,7 +2,7 @@
 {
     public class ListaUsuarioDTO
     {
-        public int IdUser { get; set; }
+        public int IdUsuario { get; set; }
 
         public string Nombre { get; set; } = string.Empty;
         public string Correo { get; set; } = string.Empty;
