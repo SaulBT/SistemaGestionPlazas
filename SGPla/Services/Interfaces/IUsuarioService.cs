@@ -10,7 +10,7 @@ namespace SGPla.Services.Interfaces
 
         Task<List<ListaUsuarioDTO>> ObtenerPorFiltroAsync(FiltrosUsuarioDTO filtro);
 
-        Task<DetallesUsuarioDTO?> ObtenerPorIdAsync(int idUsuario);
+        Task<DetallesUsuarioDTO?> ObtenerPorIdAsync(ReferenciaUsuarioDTO dto);
 
         Task EditarAsync(EditarUsuarioDTO dto);
 
