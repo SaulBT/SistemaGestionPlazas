@@ -1,4 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using SGPla.Repositories.Implementations;
+using SGPla.Repositories.Interfaces;
+using SGPla.Services.Implementations;
+using SGPla.Services.Interfaces;
 //using SGPla.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,8 +14,12 @@ builder.Services.AddControllersWithViews();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("No se encontró la cadena 'DefaultConnection'.");
 
-//builder.Services.AddDbContext<GestionDePlazasDbContext>(options =>
-//    options.UseSqlServer(connectionString));
+builder.Services.AddDbContext<GestionDePlazasDbContext>(options =>
+    options.UseSqlServer(connectionString));
+
+builder.Services.AddScoped<ICoordinadorEaRepository, CoordinadorEaRepository>();
+builder.Services.AddScoped<ICoordinadorDgaaRepository, CoordinadorDgaaRepository>();
+builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 
 var app = builder.Build();
 
