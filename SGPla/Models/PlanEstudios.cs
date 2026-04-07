@@ -5,15 +5,15 @@ namespace SGPla.Models;
 
 public partial class PlanEstudios
 {
-    public int idPlanEstudios { get; set; }
+    public int IdPlanEstudios { get; set; }
 
-    public int idProgramaEducativo { get; set; }
+    public int IdProgramaEducativo { get; set; }
 
-    public string nombre { get; set; } = null!;
+    public string Nombre { get; set; } = null!;
 
-    public string modalidad { get; set; } = null!;
+    public string Modalidad { get; set; } = null!;
 
     public virtual ICollection<ExperienciaEducativa> ExperienciaEducativa { get; set; } = new List<ExperienciaEducativa>();
 
-    public virtual ProgramaEducativo idProgramaEducativoNavigation { get; set; } = null!;
+    public virtual ProgramaEducativo IdProgramaEducativoNavigation { get; set; } = null!;
 }

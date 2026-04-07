@@ -13,6 +13,7 @@ public partial class Articulo
 
     [StringLength(100, MinimumLength = 3,
         ErrorMessage = "La descripción debe ser entre 3 y 100 caracteres")]
+
     public string Descripcion { get; set; } = null!;
 
     public virtual ICollection<Aviso> Aviso { get; set; } = new List<Aviso>();

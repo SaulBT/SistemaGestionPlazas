@@ -5,13 +5,13 @@ namespace SGPla.Models;
 
 public partial class Notificacion
 {
-    public int idNotificacion { get; set; }
+    public int IdNotificacion { get; set; }
 
-    public int idActa { get; set; }
+    public int IdActa { get; set; }
 
-    public string rutaDocumentoOriginal { get; set; } = null!;
+    public string RutaDocumentoOriginal { get; set; } = null!;
 
-    public string? rutaDocumentoFirmado { get; set; }
+    public string? RutaDocumentoFirmado { get; set; }
 
-    public virtual Acta idActaNavigation { get; set; } = null!;
+    public virtual Acta IdActaNavigation { get; set; } = null!;
 }

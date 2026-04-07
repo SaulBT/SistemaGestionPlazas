@@ -5,17 +5,17 @@ namespace SGPla.Models;
 
 public partial class Dictamen
 {
-    public int idDictamen { get; set; }
+    public int IdDictamen { get; set; }
 
-    public int idActa { get; set; }
+    public int IdActa { get; set; }
 
-    public int idDocente { get; set; }
+    public int IdDocente { get; set; }
 
-    public string rutaDocumentoOriginal { get; set; } = null!;
+    public string RutaDocumentoOriginal { get; set; } = null!;
 
-    public string? rutaDocumentoFirmado { get; set; }
+    public string? RutaDocumentoFirmado { get; set; }
 
-    public virtual Acta idActaNavigation { get; set; } = null!;
+    public virtual Acta IdActaNavigation { get; set; } = null!;
 
-    public virtual Docente idDocenteNavigation { get; set; } = null!;
+    public virtual Docente IdDocenteNavigation { get; set; } = null!;
 }

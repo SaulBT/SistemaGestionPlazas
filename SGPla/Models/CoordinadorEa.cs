@@ -3,17 +3,17 @@ using System.Collections.Generic;
 
 namespace SGPla.Models;
 
-public partial class CoordinadorEA
+public partial class CoordinadorEa
 {
-    public int idCoordinadorEA { get; set; }
+    public int IdCoordinadorEa { get; set; }
 
-    public int idEntidadAcademica { get; set; }
+    public int IdEntidadAcademica { get; set; }
 
-    public string nombre { get; set; } = null!;
+    public string Nombre { get; set; } = null!;
 
-    public string correo { get; set; } = null!;
+    public string Correo { get; set; } = null!;
 
-    public string cargo { get; set; } = null!;
+    public string Cargo { get; set; } = null!;
 
-    public virtual EntidadAcademica idEntidadAcademicaNavigation { get; set; } = null!;
+    public virtual EntidadAcademica IdEntidadAcademicaNavigation { get; set; } = null!;
 }
