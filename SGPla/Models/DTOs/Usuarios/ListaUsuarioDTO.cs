@@ -1,6 +1,6 @@
-﻿namespace SGPla.Models.DTOs.User
+﻿namespace SGPla.Models.DTOs.Usuario
 {
-    public class UserListDTO
+    public class ListaUsuarioDTO
     {
         public int IdUser { get; set; }
 

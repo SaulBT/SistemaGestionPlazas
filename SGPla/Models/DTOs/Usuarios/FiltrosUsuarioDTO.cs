@@ -1,6 +1,6 @@
-﻿namespace SGPla.Models.DTOs.User
+﻿namespace SGPla.Models.DTOs.Usuario
 {
-    public class UserFilterDTO
+    public class FiltrosUsuarioDTO
     {
         public string? Rol { get; set; }
 
