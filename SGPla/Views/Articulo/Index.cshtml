@@ -1,0 +1,85 @@
+﻿@model IEnumerable<SGPla.Models.Articulo>
+
+<h2>Articulos</h2>
+<button class="btn btn-primary mb-3" onclick="openCreateModal()">+ Nuevo</button>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Nombre</th><th>Descripcion</th><th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var p in Model)
+    {
+        <tr>
+            <td>@p.Numero</td>
+             <td>@p.Descripcion</td>
+            <td>
+                    <button class="btn btn-sm btn-warning" onclick="openEditModal(@p.IdArticulo, '@p.Numero', '@p.Descripcion')">Editar</button>
+                    <form asp-action="Delete" asp-route-id="@p.IdArticulo" method="post" style="display:inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" onclick="return confirm('¿Eliminar?')">Eliminar</button>
+                </form>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<div class="modal fade" id="articuloModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="articuloForm" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Nuevo Artículo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <input type="hidden" id="IdArticulo" name="IdArticulo" />
+
+                    <div class="mb-3">
+                        <label>Numero</label>
+                        <input type="text" id="Numero" name="Numero" class="form-control" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Descripcion</label>
+                        <input type="text" id="Descripcion" name="Descripcion" class="form-control" required />
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openCreateModal() {
+        document.getElementById("modalTitle").innerText = "Nuevo Artículo";
+        document.getElementById("articuloForm").action = "/Articulo/Create";
+
+        document.getElementById("IdArticulo").value = "";
+        document.getElementById("Numero").value = "";
+        document.getElementById("Descripcion").value = "";
+
+        new bootstrap.Modal(document.getElementById('articuloModal')).show();
+    }
+
+    function openEditModal(id, numero, descripcion) {
+        document.getElementById("modalTitle").innerText = "Editar Artículo";
+        document.getElementById("articuloForm").action = "/Articulo/Edit";
+
+        document.getElementById("IdArticulo").value = id;
+        document.getElementById("Numero").value = numero;
+        document.getElementById("Descripcion").value = descripcion;
+
+        new bootstrap.Modal(document.getElementById('articuloModal')).show();
+    }
+</script>

@@ -121,12 +121,12 @@ public partial class GestionDePlazasDbContext : DbContext
 
         modelBuilder.Entity<Articulo>(entity =>
         {
-            entity.HasKey(e => e.idArticulo);
+            entity.HasKey(e => e.IdArticulo);
 
-            entity.HasIndex(e => e.numero, "UQ_Articulo_numero").IsUnique();
+            entity.HasIndex(e => e.Numero, "UQ_Articulo_numero").IsUnique();
 
-            entity.Property(e => e.descripcion).IsUnicode(false);
-            entity.Property(e => e.numero)
+            entity.Property(e => e.Descripcion).IsUnicode(false);
+            entity.Property(e => e.Numero)
                 .HasMaxLength(10)
                 .IsUnicode(false);
         });
