@@ -3,17 +3,17 @@ using System.Collections.Generic;
 
 namespace SGPla.Models;
 
-public partial class IntegranteCT
+public partial class IntegranteCt
 {
-    public int idIntegranteCT { get; set; }
+    public int IdIntegranteCt { get; set; }
 
-    public int idEntidadAcademica { get; set; }
+    public int IdEntidadAcademica { get; set; }
 
-    public string nombre { get; set; } = null!;
+    public string Nombre { get; set; } = null!;
 
-    public string cargo { get; set; } = null!;
+    public string Cargo { get; set; } = null!;
 
     public virtual ICollection<Asistencia> Asistencia { get; set; } = new List<Asistencia>();
 
-    public virtual EntidadAcademica idEntidadAcademicaNavigation { get; set; } = null!;
+    public virtual EntidadAcademica IdEntidadAcademicaNavigation { get; set; } = null!;
 }

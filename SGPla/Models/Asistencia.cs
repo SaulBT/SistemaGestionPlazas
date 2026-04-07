@@ -5,15 +5,15 @@ namespace SGPla.Models;
 
 public partial class Asistencia
 {
-    public int idAsistencia { get; set; }
+    public int IdAsistencia { get; set; }
 
-    public int idActa { get; set; }
+    public int IdActa { get; set; }
 
-    public int idIntegranteCT { get; set; }
+    public int IdIntegranteCt { get; set; }
 
-    public bool asistio { get; set; }
+    public bool Asistio { get; set; }
 
-    public virtual Acta idActaNavigation { get; set; } = null!;
+    public virtual Acta IdActaNavigation { get; set; } = null!;
 
-    public virtual IntegranteCT idIntegranteCTNavigation { get; set; } = null!;
+    public virtual IntegranteCt IdIntegranteCtNavigation { get; set; } = null!;
 }
