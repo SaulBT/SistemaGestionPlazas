@@ -20,6 +20,7 @@ namespace SGPla.Services.Implementations
             _coordinadorDgaaRepository = coordinadorDgaaRepository;
         }
 
+        //Puede que sea necesario cambiar el retorno, porque la Id por sí sola no dice el rol
         public async Task<int> CrearAsync(CrearUsuarioDTO dto)
         {
             if (dto == null)
@@ -90,6 +91,7 @@ namespace SGPla.Services.Implementations
             throw new ArgumentException("El rol especificado no es válido.");
         }
 
+        //Quizás también convenga retornar el objeto editado.
         public async Task EditarAsync(EditarUsuarioDTO dto)
         {
             if (dto == null)
