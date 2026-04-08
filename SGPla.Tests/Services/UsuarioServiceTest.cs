@@ -21,8 +21,9 @@ public class UsuarioServiceTests
             _coordinadorDgaaRepositoryMock.Object);
     }
 
+    //CP-01
     [Fact]
-    public async Task CrearAsync_CoordinadorEa_RegresarId()
+    public async Task CrearAsync_CoordinadorEa()
     {
         var dto = new CrearUsuarioDTO
         {
@@ -52,6 +53,7 @@ public class UsuarioServiceTests
         _coordinadorDgaaRepositoryMock.Verify(r => r.CrearAsync(It.IsAny<CoordinadorDgaa>()), Times.Never);
     }
 
+    //CP-02
     [Fact]
     public async Task CrearAsync_CoordinadorDgaa_RegresarId()
     {
