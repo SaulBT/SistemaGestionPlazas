@@ -90,14 +90,44 @@ namespace SGPla.Services.Implementations
             throw new ArgumentException("El rol especificado no es válido.");
         }
 
-        public Task EditarAsync(EditarUsuarioDTO dto)
+        public async Task EditarAsync(EditarUsuarioDTO dto)
         {
-            throw new NotImplementedException();
+            if (dto == null)
+                throw new ArgumentNullException(nameof(dto));
+
+            if (dto.Rol == Constantes.CoordinadorEa)
+            {
+                await EditarCoordinadorEaAsync(dto);
+                return;
+            }
+
+            if (dto.Rol == Constantes.CoordinadorDgaa)
+            {
+                await EditarCoordinadorDgaaAsync(dto);
+                return;
+            }
+
+            throw new ArgumentException("El rol especificado no es válido.");
         }
 
-        public Task EliminarAsync(int idUsuario)
+        public async Task EliminarAsync(ReferenciaUsuarioDTO dto)
         {
-            throw new NotImplementedException();
+            if (dto == null)
+                throw new ArgumentNullException(nameof(dto));
+
+            if (dto.Rol == Constantes.CoordinadorEa)
+            {
+                await EliminarCoordinadorEaAsync(dto.IdUsuario);
+                return;
+            }
+
+            if (dto.Rol == Constantes.CoordinadorDgaa)
+            {
+                await EliminarCoordinadorDgaaAsync(dto.IdUsuario);
+                return;
+            }
+
+            throw new ArgumentException("El rol especificado no es válido.");
         }
 
         //Crear usuarios
@@ -175,6 +205,63 @@ namespace SGPla.Services.Implementations
                 .Concat(listaCoordinadoresDgaa)
                 .OrderBy(u => u.Nombre)
                 .ToList();
+        }
+
+        //Editar
+        private async Task EditarCoordinadorEaAsync(EditarUsuarioDTO dto)
+        {
+            var coordinadorEa = await _coordinadorEaRepository.ObtenerPorIdAsync(dto.IdUsuario);
+
+            if (coordinadorEa == null)
+                throw new InvalidOperationException("No se encontró el Coordinador de Entidad Académica.");
+
+            coordinadorEa.Nombre = dto.Nombre;
+            coordinadorEa.Cargo = dto.Cargo;
+
+            if (dto.IdEntidadAcademica.HasValue)
+            {
+                coordinadorEa.IdEntidadAcademica = dto.IdEntidadAcademica.Value;
+            }
+
+            await _coordinadorEaRepository.ActualizarAsync(coordinadorEa);
+        }
+
+        private async Task EditarCoordinadorDgaaAsync(EditarUsuarioDTO dto)
+        {
+            var coordinadorDgaa = await _coordinadorDgaaRepository.ObtenerPorIdAsync(dto.IdUsuario);
+
+            if (coordinadorDgaa == null)
+                throw new InvalidOperationException("No se encontró el Coordinador de Área Académica.");
+
+            coordinadorDgaa.Nombre = dto.Nombre;
+            coordinadorDgaa.Cargo = dto.Cargo;
+
+            if (dto.IdAreaAcademica.HasValue)
+            {
+                coordinadorDgaa.IdAreaAcademica = dto.IdAreaAcademica.Value;
+            }
+
+            await _coordinadorDgaaRepository.ActualizarAsync(coordinadorDgaa);
+        }
+
+        //Eliminar
+        private async Task EliminarCoordinadorEaAsync(int idUsuario)
+        {
+            var coordinadorEa = await _coordinadorEaRepository.ObtenerPorIdAsync(idUsuario);
+
+            if (coordinadorEa == null)
+                throw new InvalidOperationException("No se encontró el Coordinador de Entidad Académica.");
+
+            await _coordinadorEaRepository.EliminarAsync(coordinadorEa);
+        }
+        private async Task EliminarCoordinadorDgaaAsync(int idUsuario)
+        {
+            var coordinadorDgaa = await _coordinadorDgaaRepository.ObtenerPorIdAsync(idUsuario);
+
+            if (coordinadorDgaa == null)
+                throw new InvalidOperationException("No se encontró el Coordinador de Área Académica.");
+
+            await _coordinadorDgaaRepository.EliminarAsync(coordinadorDgaa);
         }
 
         //Mapeos
