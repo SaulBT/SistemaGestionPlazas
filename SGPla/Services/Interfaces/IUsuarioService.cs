@@ -14,6 +14,6 @@ namespace SGPla.Services.Interfaces
 
         Task EditarAsync(EditarUsuarioDTO dto);
 
-        Task EliminarAsync(int idUsuario);
+        Task EliminarAsync(ReferenciaUsuarioDTO dto);
     }
 }
