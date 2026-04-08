@@ -16,28 +16,28 @@ namespace SGPla.Repositories.Implementations
 
         public async Task<int> CrearAsync(CoordinadorDgaa coordinadorDgaa)
         {
-            _context.CoordinadorDgaas.Add(coordinadorDgaa);
+            _context.CoordinadorDgaa.Add(coordinadorDgaa);
             await _context.SaveChangesAsync();
             return coordinadorDgaa.IdCoordinadorDgaa;
         }
 
         public async Task<CoordinadorDgaa?> ObtenerPorIdAsync(int idCoordinadorDgaa)
         {
-            return await _context.CoordinadorDgaas
+            return await _context.CoordinadorDgaa
                 .Include(c => c.IdAreaAcademicaNavigation)
                 .FirstOrDefaultAsync(c => c.IdCoordinadorDgaa == idCoordinadorDgaa);
         }
 
         public async Task<List<CoordinadorDgaa>> ObtenerTodosAsync()
         {
-            return await _context.CoordinadorDgaas
+            return await _context.CoordinadorDgaa
                 .Include(c => c.IdAreaAcademicaNavigation)
                 .ToListAsync();
         }
 
         public async Task<List<CoordinadorDgaa>> ObtenerPorFiltrosAsync(int? idAreaAcademica)
         {
-            var query = _context.CoordinadorDgaas
+            var query = _context.CoordinadorDgaa
                 .Include(c => c.IdAreaAcademicaNavigation)
                 .AsQueryable();
 
@@ -51,13 +51,13 @@ namespace SGPla.Repositories.Implementations
 
         public async Task ActualizarAsync(CoordinadorDgaa coordinadorDgaa)
         {
-            _context.CoordinadorDgaas.Update(coordinadorDgaa);
+            _context.CoordinadorDgaa.Update(coordinadorDgaa);
             await _context.SaveChangesAsync();
         }
 
         public async Task EliminarAsync(CoordinadorDgaa coordinadorDgaa)
         {
-            _context.CoordinadorDgaas.Remove(coordinadorDgaa);
+            _context.CoordinadorDgaa.Remove(coordinadorDgaa);
             await _context.SaveChangesAsync();
         }
     }

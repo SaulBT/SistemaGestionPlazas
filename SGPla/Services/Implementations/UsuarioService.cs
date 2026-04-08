@@ -27,8 +27,8 @@ namespace SGPla.Services.Implementations
 
             return dto.Rol switch
             {
-                Constantes.RolCoordinadorEa => await CrearCoordinadorEaAsync(dto),
-                Constantes.RolCoordinadorDgaa => await CrearCoordinadorDgaaAsync(dto),
+                Constantes.CoordinadorEa => await CrearCoordinadorEaAsync(dto),
+                Constantes.CoordinadorDgaa => await CrearCoordinadorDgaaAsync(dto),
                 _ => throw new ArgumentException("El rol especificado no es válido.")
             };
         }
@@ -52,12 +52,12 @@ namespace SGPla.Services.Implementations
             if (filtro == null)
                 throw new ArgumentNullException(nameof(filtro));
 
-            if (filtro.Rol == Constantes.RolCoordinadorEa)
+            if (filtro.Rol == Constantes.CoordinadorEa)
             {
                 return await ObtenerCoordinadoresEaPorFiltroAsync(filtro);
             }
 
-            if (filtro.Rol == Constantes.RolCoordinadorDgaa)
+            if (filtro.Rol == Constantes.CoordinadorDgaa)
             {
                 return await ObtenerCoordinadoresDgaaPorFiltroAsync(filtro);
             }
@@ -67,7 +67,7 @@ namespace SGPla.Services.Implementations
 
         public async Task<DetallesUsuarioDTO?> ObtenerPorIdAsync(ReferenciaUsuarioDTO dto)
         {
-            if (dto.Rol == Constantes.RolCoordinadorEa)
+            if (dto.Rol == Constantes.CoordinadorEa)
             {
                 var coordinadorEa = await _coordinadorEaRepository.ObtenerPorIdAsync(dto.IdUsuario);
 
@@ -77,7 +77,7 @@ namespace SGPla.Services.Implementations
                 return MapearCoordinadorEaADetallesDTO(coordinadorEa);
             }
 
-            if (dto.Rol == Constantes.RolCoordinadorDgaa)
+            if (dto.Rol == Constantes.CoordinadorDgaa)
             {
                 var coordinadorDgaa = await _coordinadorDgaaRepository.ObtenerPorIdAsync(dto.IdUsuario);
 
@@ -186,7 +186,7 @@ namespace SGPla.Services.Implementations
                 Nombre = coordinadorEa.Nombre,
                 Correo = coordinadorEa.Correo,
                 Cargo = coordinadorEa.Cargo,
-                Rol = Constantes.RolCoordinadorEa,
+                Rol = Constantes.CoordinadorEa,
                 NombreEntidadAcademica = coordinadorEa.IdEntidadAcademicaNavigation?.Nombre,
                 NombreAreaAcademica = coordinadorEa.IdEntidadAcademicaNavigation?.IdAreaAcademicaNavigation?.Nombre,
                 Region = coordinadorEa.IdEntidadAcademicaNavigation?.Region
@@ -201,7 +201,7 @@ namespace SGPla.Services.Implementations
                 Nombre = coordinadorDgaa.Nombre,
                 Correo = coordinadorDgaa.Correo,
                 Cargo = coordinadorDgaa.Cargo,
-                Rol = Constantes.RolCoordinadorDgaa,
+                Rol = Constantes.CoordinadorDgaa,
                 NombreEntidadAcademica = null,
                 NombreAreaAcademica = coordinadorDgaa.IdAreaAcademicaNavigation?.Nombre,
                 Region = null
@@ -216,7 +216,7 @@ namespace SGPla.Services.Implementations
                 Nombre = coordinadorEa.Nombre,
                 Correo = coordinadorEa.Correo,
                 Cargo = coordinadorEa.Cargo,
-                Rol = Constantes.RolCoordinadorEa,
+                Rol = Constantes.CoordinadorEa,
                 IdAreaAcademica = coordinadorEa.IdEntidadAcademicaNavigation?.IdAreaAcademica,
                 NombreAreaAcademica = coordinadorEa.IdEntidadAcademicaNavigation?.IdAreaAcademicaNavigation?.Nombre,
                 IdEntidadAcademica = coordinadorEa.IdEntidadAcademica,
@@ -233,7 +233,7 @@ namespace SGPla.Services.Implementations
                 Nombre = coordinadorDgaa.Nombre,
                 Correo = coordinadorDgaa.Correo,
                 Cargo = coordinadorDgaa.Cargo,
-                Rol = Constantes.RolCoordinadorDgaa,
+                Rol = Constantes.CoordinadorDgaa,
                 IdAreaAcademica = coordinadorDgaa.IdAreaAcademica,
                 NombreAreaAcademica = coordinadorDgaa.IdAreaAcademicaNavigation?.Nombre,
                 IdEntidadAcademica = null,

@@ -16,14 +16,14 @@ namespace SGPla.Repositories.Implementations
 
         public async Task<int> CrearAsync(CoordinadorEa coordinadorEa)
         {
-            _context.CoordinadorEas.Add(coordinadorEa);
+            _context.CoordinadorEa.Add(coordinadorEa);
             await _context.SaveChangesAsync();
             return coordinadorEa.IdCoordinadorEa;
         }
 
         public async Task<CoordinadorEa?> ObtenerPorIdAsync(int idCoordinadorEa)
         {
-            return await _context.CoordinadorEas
+            return await _context.CoordinadorEa
                 .Include(c => c.IdEntidadAcademicaNavigation)
                 .ThenInclude(e => e.IdAreaAcademicaNavigation)
                 .FirstOrDefaultAsync(c => c.IdCoordinadorEa == idCoordinadorEa);
@@ -31,7 +31,7 @@ namespace SGPla.Repositories.Implementations
 
         public async Task<List<CoordinadorEa>> ObtenerTodosAsync()
         {
-            return await _context.CoordinadorEas
+            return await _context.CoordinadorEa
                 .Include(c => c.IdEntidadAcademicaNavigation)
                 .ThenInclude(e => e.IdAreaAcademicaNavigation)
                 .ToListAsync();
@@ -39,7 +39,7 @@ namespace SGPla.Repositories.Implementations
 
         public async Task<List<CoordinadorEa>> ObtenerPorFiltrosAsync(string? region, int? idAreaAcademica, int? idEntidadAcademica)
         {
-            var query = _context.CoordinadorEas
+            var query = _context.CoordinadorEa
                 .Include(c => c.IdEntidadAcademicaNavigation)
                 .ThenInclude(e => e.IdAreaAcademicaNavigation)
                 .AsQueryable();
@@ -64,13 +64,13 @@ namespace SGPla.Repositories.Implementations
 
         public async Task ActualizarAsync(CoordinadorEa coordinadorEa)
         {
-            _context.CoordinadorEas.Update(coordinadorEa);
+            _context.CoordinadorEa.Update(coordinadorEa);
             await _context.SaveChangesAsync();
         }
 
         public async Task EliminarAsync(CoordinadorEa coordinadorEa)
         {
-            _context.CoordinadorEas.Remove(coordinadorEa);
+            _context.CoordinadorEa.Remove(coordinadorEa);
             await _context.SaveChangesAsync();
         }
     }
