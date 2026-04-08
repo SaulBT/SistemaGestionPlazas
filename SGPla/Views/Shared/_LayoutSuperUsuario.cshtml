@@ -1,0 +1,110 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - MiApp</title>
+    
+    <!-- Bootstrap 5 (para estilos básicos) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome (para iconos) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Tus estilos personalizados -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+
+    <!-- ========================================== -->
+    <!-- HEADER SUPERIOR (fijo en la parte de arriba) -->
+    <!-- ========================================== -->
+    <header class="header-superior">
+        <div class="header-contenido">
+            
+            <!-- Logo o título -->
+            <div class="logo">
+                <!--<i class="fas fa-code"></i> -->
+                <span>Sistema de Gestión de Plazas Vacantes</span>
+            </div>
+            
+            <!-- Información del usuario -->
+            <div class="info-usuario">
+                <i class="fas fa-user-circle"></i>
+                <div>
+                    <span>Usuario Demo</span>
+                    <span>Administrador del sistema</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ========================================== -->
+    <!-- CONTENEDOR PRINCIPAL (menú izquierdo + contenido) -->
+    <!-- ========================================== -->
+    <div class="contenedor-principal">
+        
+        <!-- MENÚ LATERAL IZQUIERDO -->
+        <nav class="menu-lateral" id="menuLateral">
+            <div class="menu-items">
+
+                <!-- Usuarios -->
+                <a href="/Usuarios" class="menu-item @(IsActiveController("Usuarios"))">
+                    <span>Usuarios</span>
+                </a>
+                
+                <!-- Articulos -->
+                <a href="/Articulos" class="menu-item @(IsActiveController("Articulos"))">
+                    <span>Articulos</span>
+                </a>
+
+                <!-- Direcciones de Área Académica -->
+                <a href="/DireccionesAA" class="menu-item @(IsActiveController("DireccionesAA"))">
+                    <span>Direcciones de Área Académica</span>
+                </a>
+
+                <!-- Entidades Académicas -->
+                <a href="/EntidadesAcademicas" class="menu-item @(IsActiveController("EntidadesAcademicas"))">
+                    <span>Entidades Académicas</span>
+                </a>
+
+                <!-- Programas Educativos -->
+                <a href="/ProgramasEducativos" class="menu-item @(IsActiveController("ProgramasEducativos"))">
+                    <span>Programas Educativos</span>
+                </a>
+
+                <!-- Periodos Escolares -->
+                <a href="/PlanesEstudio" class="menu-item @(IsActiveController("PlanesEstudio"))">
+                    <span>Planes de Estudio</span>
+                </a>
+
+                <!-- Periodos Escolares-->
+                <a href="/PeriodosEscolares" class="menu-item @(IsActiveController("PeriodosEscolares"))">
+                    <span>Periodos Escolares</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- CONTENIDO PRINCIPAL (aquí irá cada página) -->
+        <main class="contenido-principal">
+            <div class="contenido-pagina">
+                @RenderBody()
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
+
+@functions {
+    private string IsActiveController(string controllerName)
+    {
+        var currentController = ViewContext.RouteData.Values["Controller"]?.ToString();
+        return currentController == controllerName ? "active" : "";
+    }
+}
