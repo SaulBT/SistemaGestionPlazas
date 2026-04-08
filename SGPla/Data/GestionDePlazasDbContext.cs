@@ -67,6 +67,7 @@ public partial class GestionDePlazasDbContext : DbContext
             entity.HasIndex(e => e.IdAviso, "IX_Acta_idAviso");
 
             entity.Property(e => e.IdActa).HasColumnName("idActa");
+            entity.Property(e => e.Archivado).HasColumnName("archivado");
             entity.Property(e => e.AsuntosGenerales)
                 .IsUnicode(false)
                 .HasColumnName("asuntosGenerales");
@@ -191,6 +192,7 @@ public partial class GestionDePlazasDbContext : DbContext
             entity.HasIndex(e => e.IdPeriodo, "IX_Aviso_idPeriodo");
 
             entity.Property(e => e.IdAviso).HasColumnName("idAviso");
+            entity.Property(e => e.Archivado).HasColumnName("archivado");
             entity.Property(e => e.Correo)
                 .HasMaxLength(255)
                 .IsUnicode(false)
