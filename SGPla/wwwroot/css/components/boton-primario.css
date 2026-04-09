@@ -1,0 +1,94 @@
+﻿/*
+.estado-default {
+    display: inline-flex;
+    height: 30px;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 8px;
+    position: relative;
+    background-color: var(--azul-primario);
+}
+
+    .estado-default .text-wrapper {
+        position: relative;
+        width: fit-content;
+        font-family: var(--buttons-font-family);
+        font-weight: var(--buttons-font-weight);
+        color: #ffffff;
+        font-size: var(--buttons-font-size);
+        text-align: center;
+        letter-spacing: var(--buttons-letter-spacing);
+        line-height: var(--buttons-line-height);
+        font-style: var(--buttons-font-style);
+    }
+
+
+
+.estado-hover {
+    display: inline-flex;
+    height: 30px;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 8px;
+    position: relative;
+    background-color: var(--verde-secundario);
+}
+
+    .estado-hover .text-wrapper {
+        position: relative;
+        width: fit-content;
+        font-family: var(--buttons-font-family);
+        font-weight: var(--buttons-font-weight);
+        color: #ffffff;
+        font-size: var(--buttons-font-size);
+        text-align: center;
+        letter-spacing: var(--buttons-letter-spacing);
+        line-height: var(--buttons-line-height);
+        font-style: var(--buttons-font-style);
+    }
+
+/* ===== BOTÓN PRIMARIO ===== */
+/* Un solo selector para el botón en su estado NORMAL */
+.boton-primario {
+    display: inline-flex;
+    height: 30px;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 8px;
+    position: relative;
+    background-color: var(--azul-primario);
+    border: none; /* ← IMPORTANTE: quita bordes por defecto */
+    cursor: pointer; /* ← IMPORTANTE: mano al pasar */
+    transition: all 0.3s ease; /* ← Suaviza la transición */
+}
+
+    /* El texto dentro del botón (solo un selector) */
+    .boton-primario .text-wrapper {
+        position: relative;
+        width: fit-content;
+        font-family: var(--buttons-font-family);
+        font-weight: var(--buttons-font-weight);
+        color: #ffffff;
+        font-size: var(--buttons-font-size);
+        text-align: center;
+        letter-spacing: var(--buttons-letter-spacing);
+        line-height: var(--buttons-line-height);
+        font-style: var(--buttons-font-style);
+    }
+
+    /* ===== ESTADO HOVER (CSS nativo) ===== */
+    /* Esto se activa SOLO cuando el mouse está encima */
+    .boton-primario:hover {
+        background-color: var(--verde-secundario);
+    }
+
+    /* Opcional: estado activo (cuando se hace clic) */
+    .boton-primario:active {
+        transform: scale(0.98); /* Efecto de "presionado" */
+    }
+
+    /* Opcional: estado focus (para accesibilidad con teclado) */
+    .boton-primario:focus-visible {
+        outline: 2px solid var(--verde-secundario);
+        outline-offset: 2px;
+    }
