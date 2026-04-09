@@ -1,0 +1,45 @@
+﻿@{
+    Layout = "_LayoutSuperUsuario";
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="dashboard">
+    <h1><i class="fas fa-tachometer-alt"></i> Dashboard</h1>
+    <p>Bienvenido a tu aplicación</p>
+    
+    <!-- Tarjetas de ejemplo -->
+    <div class="row mt-4">
+        <div class="col-md-4 mb-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h5 class="card-title">Productos</h5>
+                    <p class="card-text display-4">24</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-3">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h5 class="card-title">Usuarios</h5>
+                    <p class="card-text display-4">156</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-3">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <h5 class="card-title">Ventas Hoy</h5>
+                    <p class="card-text display-4">$1,234</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        console.log("Dashboard cargado");
+    </script>
+}
