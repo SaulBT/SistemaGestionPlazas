@@ -4,6 +4,8 @@ using SGPla.Repositories.Implementations;
 using SGPla.Repositories.Interfaces;
 using SGPla.Services.Implementations;
 using SGPla.Services.Interfaces;
+using SGPla.Validations.Implementation;
+using SGPla.Validations.Interfaz;
 //using SGPla.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,6 +24,7 @@ builder.Services.AddScoped<ICoordinadorEaRepository, CoordinadorEaRepository>();
 builder.Services.AddScoped<ICoordinadorDgaaRepository, CoordinadorDgaaRepository>();
 builder.Services.AddScoped<IAreaAcademicaRepository, AreaAcademicaRepository>();
 builder.Services.AddScoped<IEntidadAcademicaRepository, EntidadAcademicaRepository>();
+builder.Services.AddScoped<IUsuarioValidator, UsuarioValidator>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 
 var app = builder.Build();
