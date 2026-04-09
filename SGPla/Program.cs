@@ -20,6 +20,8 @@ builder.Services.AddDbContext<GestionDePlazasDbContext>(options =>
 
 builder.Services.AddScoped<ICoordinadorEaRepository, CoordinadorEaRepository>();
 builder.Services.AddScoped<ICoordinadorDgaaRepository, CoordinadorDgaaRepository>();
+builder.Services.AddScoped<IAreaAcademicaRepository, AreaAcademicaRepository>();
+builder.Services.AddScoped<IEntidadAcademicaRepository, EntidadAcademicaRepository>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 
 var app = builder.Build();
