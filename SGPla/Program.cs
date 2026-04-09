@@ -20,6 +20,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<GestionDePlazasDbContext>(options =>
     options.UseSqlServer(connectionString));
 
+//Clases
 builder.Services.AddScoped<ICoordinadorEaRepository, CoordinadorEaRepository>();
 builder.Services.AddScoped<ICoordinadorDgaaRepository, CoordinadorDgaaRepository>();
 builder.Services.AddScoped<IAreaAcademicaRepository, AreaAcademicaRepository>();

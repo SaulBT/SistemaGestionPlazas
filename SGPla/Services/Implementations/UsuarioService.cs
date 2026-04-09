@@ -1,9 +1,9 @@
 ﻿using SGPla.Commons;
-using SGPla.Data;
 using SGPla.Models;
 using SGPla.Models.DTOs.Usuarios;
 using SGPla.Repositories.Interfaces;
 using SGPla.Services.Interfaces;
+using SGPla.Validations.Interfaz;
 
 namespace SGPla.Services.Implementations
 {
@@ -11,20 +11,22 @@ namespace SGPla.Services.Implementations
     {
         private readonly ICoordinadorEaRepository _coordinadorEaRepository;
         private readonly ICoordinadorDgaaRepository _coordinadorDgaaRepository;
+        private readonly IUsuarioValidator _usuarioValidator;
 
         public UsuarioService(
             ICoordinadorEaRepository coordinadorEaRepository,
-            ICoordinadorDgaaRepository coordinadorDgaaRepository)
+            ICoordinadorDgaaRepository coordinadorDgaaRepository,
+            IUsuarioValidator usuarioValidator)
         {
             _coordinadorEaRepository = coordinadorEaRepository;
             _coordinadorDgaaRepository = coordinadorDgaaRepository;
+            _usuarioValidator = usuarioValidator;
         }
 
         //Puede que sea necesario cambiar el retorno, porque la Id por sí sola no dice el rol
         public async Task<int> CrearAsync(CrearUsuarioDTO dto)
         {
-            if (dto == null)
-                throw new ArgumentNullException(nameof(dto));
+            await _usuarioValidator.ValidarCreacionAsync(dto);
 
             return dto.Rol switch
             {
