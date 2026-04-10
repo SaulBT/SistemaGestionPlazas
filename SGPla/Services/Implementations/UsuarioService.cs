@@ -70,6 +70,8 @@ namespace SGPla.Services.Implementations
 
         public async Task<DetallesUsuarioDTO?> ObtenerPorIdAsync(ReferenciaUsuarioDTO dto)
         {
+            await _usuarioValidator.ValidarReferenciaAsync(dto);
+
             if (dto.Rol == Constantes.CoordinadorEa)
             {
                 var coordinadorEa = await _coordinadorEaRepository.ObtenerPorIdAsync(dto.IdUsuario);
@@ -96,6 +98,8 @@ namespace SGPla.Services.Implementations
         //Quizás también convenga retornar el objeto editado.
         public async Task EditarAsync(EditarUsuarioDTO dto)
         {
+            await _usuarioValidator.ValidarEdicionAsync(dto);
+
             if (dto == null)
                 throw new ArgumentNullException(nameof(dto));
 
