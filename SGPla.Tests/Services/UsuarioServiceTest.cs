@@ -113,18 +113,19 @@ public class UsuarioServiceTests
 
         _coordinadorEaRepositoryMock.Verify(r => r.CrearAsync(It.IsAny<CoordinadorEa>()), Times.Never);
     }
-/*
+
+    //CP-11
     [Fact]
-    public async Task ObtenerTodosAsync_ListaCombinadaOrdenadaPorNombre()
+    public async Task ObtenerListaDeUsuarios()
     {
         var coordinadoresEa = new List<CoordinadorEa>
         {
             new CoordinadorEa
             {
                 IdCoordinadorEa = 2,
-                Nombre = "Zaira",
+                Nombre = "Zaira Alarcón",
                 Correo = "zaira@uv.mx",
-                Cargo = "Coordinadora EA",
+                Cargo = "Directora de Facultad",
                 IdEntidadAcademica = 100,
                 IdEntidadAcademicaNavigation = new EntidadAcademica
                 {
@@ -135,7 +136,7 @@ public class UsuarioServiceTests
                     IdAreaAcademicaNavigation = new AreaAcademica
                     {
                         IdAreaAcademica = 10,
-                        Nombre = "Económico-Administrativa"
+                        Nombre = "Facultad de Psicología"
                     }
                 }
             }
@@ -146,9 +147,9 @@ public class UsuarioServiceTests
             new CoordinadorDgaa
             {
                 IdCoordinadorDgaa = 1,
-                Nombre = "Ana",
+                Nombre = "Ana Lourdes",
                 Correo = "ana@uv.mx",
-                Cargo = "Coordinadora DGAA",
+                Cargo = "Jefa de Unidad",
                 IdAreaAcademica = 20,
                 IdAreaAcademicaNavigation = new AreaAcademica
                 {
@@ -237,53 +238,7 @@ public class UsuarioServiceTests
             }
         };
 
-        var coordinadoresDgaa = new List<CoordinadorDgaa>
-        {
-            new CoordinadorDgaa
-            {
-                IdCoordinadorDgaa = 25,
-                Nombre = "Mario",
-                Correo = "mario@uv.mx",
-                Cargo = "Coordinador DGAA",
-                IdAreaAcademica = 40,
-                IdAreaAcademicaNavigation = new AreaAcademica
-                {
-                    IdAreaAcademica = 40,
-                    Nombre = "Biológico-Agropecuaria"
-                }
-            }
-        };
-
-        _coordinadorEaRepositoryMock
-            .Setup(r => r.ObtenerTodosAsync())
-            .ReturnsAsync(coordinadoresEa);
-
-        _coordinadorDgaaRepositoryMock
-            .Setup(r => r.ObtenerTodosAsync())
-            .ReturnsAsync(coordinadoresDgaa);
-
-        var resultado = await _usuarioService.ObtenerTodosAsync();
-
-        var usuarioEa = resultado.First(x => x.Rol == Constantes.CoordinadorEa);
-        var usuarioDgaa = resultado.First(x => x.Rol == Constantes.CoordinadorDgaa);
-
-        Assert.Equal(15, usuarioEa.IdUsuario);
-        Assert.Equal("Luis", usuarioEa.Nombre);
-        Assert.Equal("luis@uv.mx", usuarioEa.Correo);
-        Assert.Equal("Coordinador EA", usuarioEa.Cargo);
-        Assert.Equal("Humanidades", usuarioEa.NombreAreaAcademica);
-        Assert.Equal("Facultad de Derecho", usuarioEa.NombreEntidadAcademica);
-        Assert.Equal("Veracruz", usuarioEa.Region);
-
-        Assert.Equal(25, usuarioDgaa.IdUsuario);
-        Assert.Equal("Mario", usuarioDgaa.Nombre);
-        Assert.Equal("mario@uv.mx", usuarioDgaa.Correo);
-        Assert.Equal("Coordinador DGAA", usuarioDgaa.Cargo);
-        Assert.Equal("Biológico-Agropecuaria", usuarioDgaa.NombreAreaAcademica);
-        Assert.Null(usuarioDgaa.NombreEntidadAcademica);
-        Assert.Null(usuarioDgaa.Region);
-    }
-
+/*
     //ObtenerPorFiltro
     [Fact]
     public async Task ObtenerPorFiltroAsync_CoordinadorEa()
