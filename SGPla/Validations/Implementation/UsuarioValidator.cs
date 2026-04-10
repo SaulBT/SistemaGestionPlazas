@@ -29,22 +29,69 @@ namespace SGPla.Validations.Implementation
         {
             ArgumentNullException.ThrowIfNull(crearUsuarioDTO);
 
-            ValidarCampos(crearUsuarioDTO);
+            ValidarCamposCreacion(crearUsuarioDTO);
             ValidarFormatoCorreo(crearUsuarioDTO.Correo);
             await ValidarCorreoNoRepetidoAsync(crearUsuarioDTO.Correo);
-
             ValidarRol(crearUsuarioDTO.Rol);
-            await ValidarRelacionRolYDependenciaAsync(crearUsuarioDTO);
+            await ValidarRelacionRolYDependenciaCreacionAsync(crearUsuarioDTO);
         }
 
-        private void ValidarCampos(CrearUsuarioDTO crearUsuarioDTO)
+        public async Task ValidarReferenciaAsync(ReferenciaUsuarioDTO referenciaUsuarioDTO)
+        {
+            ArgumentNullException.ThrowIfNull(referenciaUsuarioDTO);
+
+            ValidarIdUsuarioReferencia(referenciaUsuarioDTO.IdUsuario);
+            ValidarRol(referenciaUsuarioDTO.Rol);
+            await ValidarExistenciaUsuarioAsync(
+                referenciaUsuarioDTO.IdUsuario,
+                referenciaUsuarioDTO.Rol,
+                "El Usuario no existe.");
+        }
+
+        public async Task ValidarEdicionAsync(EditarUsuarioDTO editarUsuarioDTO)
+        {
+            ArgumentNullException.ThrowIfNull(editarUsuarioDTO);
+
+            ValidarIdUsuarioEdicion(editarUsuarioDTO.IdUsuario);
+            ValidarCamposEdicion(editarUsuarioDTO);
+            ValidarRol(editarUsuarioDTO.Rol);
+            await ValidarExistenciaUsuarioAsync(
+                editarUsuarioDTO.IdUsuario,
+                editarUsuarioDTO.Rol,
+                "No existe ese usuario.");
+            await ValidarRelacionRolYDependenciaEdicionAsync(editarUsuarioDTO);
+        }
+
+        private static void ValidarCamposCreacion(CrearUsuarioDTO crearUsuarioDTO)
         {
             if (string.IsNullOrWhiteSpace(crearUsuarioDTO.Nombre))
                 throw new ArgumentException("El nombre es obligatorio.");
+
             if (string.IsNullOrWhiteSpace(crearUsuarioDTO.Correo))
                 throw new ArgumentException("El correo es obligatorio.");
+
             if (string.IsNullOrWhiteSpace(crearUsuarioDTO.Cargo))
                 throw new ArgumentException("El cargo es obligatorio.");
+        }
+        private static void ValidarCamposEdicion(EditarUsuarioDTO editarUsuarioDTO)
+        {
+            if (string.IsNullOrWhiteSpace(editarUsuarioDTO.Nombre))
+                throw new ArgumentException("El nombre es obligatorio.");
+
+            if (string.IsNullOrWhiteSpace(editarUsuarioDTO.Cargo))
+                throw new ArgumentException("El cargo es obligatorio.");
+        }
+
+        private static void ValidarIdUsuarioReferencia(int idUsuario)
+        {
+            if (idUsuario <= 0)
+                throw new ArgumentException("El IdUsuario es obligatorio.");
+        }
+
+        private static void ValidarIdUsuarioEdicion(int idUsuario)
+        {
+            if (idUsuario <= 0)
+                throw new ArgumentException("La IdUsuario es obligatoria.");
         }
 
         private void ValidarFormatoCorreo(string correo)
@@ -76,48 +123,116 @@ namespace SGPla.Validations.Implementation
             }
         }
 
-        private async Task ValidarRelacionRolYDependenciaAsync(CrearUsuarioDTO CrearUsuarioDTO)
+        private async Task ValidarExistenciaUsuarioAsync(int idUsuario, string rol, string mensaje)
         {
-            if (CrearUsuarioDTO.Rol == Constantes.CoordinadorEa)
+            if (rol == Constantes.CoordinadorEa)
             {
-                await ValidarCoordinadorEaAsync(CrearUsuarioDTO);
+                var coordinadorEa = await _coordinadorEaRepository.ObtenerPorIdAsync(idUsuario);
+                if (coordinadorEa == null)
+                    throw new ArgumentException(mensaje);
                 return;
             }
 
-            if (CrearUsuarioDTO.Rol == Constantes.CoordinadorDgaa)
+            if (rol == Constantes.CoordinadorDgaa)
             {
-                await ValidarCoordinadorDgaaAsync(CrearUsuarioDTO);
+                var coordinadorDgaa = await _coordinadorDgaaRepository.ObtenerPorIdAsync(idUsuario);
+                if (coordinadorDgaa == null)
+                    throw new ArgumentException(mensaje);
             }
         }
 
-        private async Task ValidarCoordinadorEaAsync(CrearUsuarioDTO creaUsuarioDTO)
+        private async Task ValidarRelacionRolYDependenciaCreacionAsync(CrearUsuarioDTO crearUsuarioDTO)
         {
-            if (creaUsuarioDTO.IdAreaAcademica.HasValue && creaUsuarioDTO.IdAreaAcademica.Value > 0)
+            if (crearUsuarioDTO.Rol == Constantes.CoordinadorEa)
+            {
+                await ValidarCoordinadorEaCreacionAsync(crearUsuarioDTO);
+                return;
+            }
+
+            if (crearUsuarioDTO.Rol == Constantes.CoordinadorDgaa)
+            {
+                await ValidarCoordinadorDgaaCreacionAsync(crearUsuarioDTO);
+            }
+        }
+
+        private async Task ValidarRelacionRolYDependenciaEdicionAsync(EditarUsuarioDTO editarUsuarioDTO)
+        {
+            if (editarUsuarioDTO.Rol == Constantes.CoordinadorEa)
+            {
+                await ValidarCoordinadorEaEdicionAsync(editarUsuarioDTO);
+                return;
+            }
+
+            if (editarUsuarioDTO.Rol == Constantes.CoordinadorDgaa)
+            {
+                await ValidarCoordinadorDgaaEdicionAsync(editarUsuarioDTO);
+            }
+        }
+
+        private async Task ValidarCoordinadorEaCreacionAsync(CrearUsuarioDTO crearUsuarioDTO)
+        {
+            if (crearUsuarioDTO.IdAreaAcademica.HasValue && crearUsuarioDTO.IdAreaAcademica.Value > 0)
                 throw new ArgumentException("El rol no corresponde con la dependencia seleccionada.");
 
-            if (!creaUsuarioDTO.IdEntidadAcademica.HasValue || creaUsuarioDTO.IdEntidadAcademica.Value <= 0)
+            if (!crearUsuarioDTO.IdEntidadAcademica.HasValue || crearUsuarioDTO.IdEntidadAcademica.Value <= 0)
                 throw new ArgumentException("La Entidad Académica es obligatoria.");
 
             bool existeEntidadAcademica = await _entidadAcademicaRepository
-                .ExistePorIdAsync(creaUsuarioDTO.IdEntidadAcademica.Value);
+                .ExistePorIdAsync(crearUsuarioDTO.IdEntidadAcademica.Value);
 
             if (!existeEntidadAcademica)
                 throw new ArgumentException("No existe esa Entidad Académica.");
         }
 
-        private async Task ValidarCoordinadorDgaaAsync(CrearUsuarioDTO creaUsuarioDTO)
+        private async Task ValidarCoordinadorDgaaCreacionAsync(CrearUsuarioDTO crearUsuarioDTO)
         {
-            if (creaUsuarioDTO.IdEntidadAcademica.HasValue && creaUsuarioDTO.IdEntidadAcademica.Value > 0)
+            if (crearUsuarioDTO.IdEntidadAcademica.HasValue && crearUsuarioDTO.IdEntidadAcademica.Value > 0)
                 throw new ArgumentException("El rol no corresponde con la dependencia seleccionada.");
 
-            if (!creaUsuarioDTO.IdAreaAcademica.HasValue || creaUsuarioDTO.IdAreaAcademica.Value <= 0)
+            if (!crearUsuarioDTO.IdAreaAcademica.HasValue || crearUsuarioDTO.IdAreaAcademica.Value <= 0)
                 throw new ArgumentException("El Área Académica es obligatoria.");
 
             bool existeAreaAcademica = await _areaAcademicaRepository
-                .ExistePorIdAsync(creaUsuarioDTO.IdAreaAcademica.Value);
+                .ExistePorIdAsync(crearUsuarioDTO.IdAreaAcademica.Value);
 
             if (!existeAreaAcademica)
                 throw new ArgumentException("No existe esa Área Académica.");
+        }
+
+        private async Task ValidarCoordinadorEaEdicionAsync(EditarUsuarioDTO editarUsuarioDTO)
+        {
+            if (editarUsuarioDTO.IdAreaAcademica.HasValue && editarUsuarioDTO.IdAreaAcademica.Value > 0)
+                throw new ArgumentException("El rol no corresponde con la dependencia editada.");
+
+            if (editarUsuarioDTO.IdEntidadAcademica.HasValue)
+            {
+                if (editarUsuarioDTO.IdEntidadAcademica.Value <= 0)
+                    throw new ArgumentException("La Entidad Académica es obligatoria.");
+
+                bool existeEntidadAcademica = await _entidadAcademicaRepository
+                    .ExistePorIdAsync(editarUsuarioDTO.IdEntidadAcademica.Value);
+
+                if (!existeEntidadAcademica)
+                    throw new ArgumentException("No existe esa Entidad Académica.");
+            }
+        }
+
+        private async Task ValidarCoordinadorDgaaEdicionAsync(EditarUsuarioDTO editarUsuarioDTO)
+        {
+            if (editarUsuarioDTO.IdEntidadAcademica.HasValue && editarUsuarioDTO.IdEntidadAcademica.Value > 0)
+                throw new ArgumentException("El rol no corresponde con la dependencia editada.");
+
+            if (editarUsuarioDTO.IdAreaAcademica.HasValue)
+            {
+                if (editarUsuarioDTO.IdAreaAcademica.Value <= 0)
+                    throw new ArgumentException("El Área Académica es obligatoria.");
+
+                bool existeAreaAcademica = await _areaAcademicaRepository
+                    .ExistePorIdAsync(editarUsuarioDTO.IdAreaAcademica.Value);
+
+                if (!existeAreaAcademica)
+                    throw new ArgumentException("No existe esa Área Académica.");
+            }
         }
     }
 }
