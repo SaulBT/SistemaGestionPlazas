@@ -90,31 +90,31 @@ namespace SGPla.Validations.Implementation
             }
         }
 
-        private async Task ValidarCoordinadorEaAsync(CrearUsuarioDTO CrearUsuarioDTO)
+        private async Task ValidarCoordinadorEaAsync(CrearUsuarioDTO creaUsuarioDTO)
         {
-            if (!CrearUsuarioDTO.IdEntidadAcademica.HasValue || CrearUsuarioDTO.IdEntidadAcademica.Value <= 0)
-                throw new ArgumentException("La Entidad Académica es obligatoria");
+            if (creaUsuarioDTO.IdAreaAcademica.HasValue && creaUsuarioDTO.IdAreaAcademica.Value > 0)
+                throw new ArgumentException("El rol no corresponde con la dependencia seleccionada.");
 
-            if (CrearUsuarioDTO.IdAreaAcademica.HasValue && CrearUsuarioDTO.IdAreaAcademica.Value > 0)
-                throw new ArgumentException("Rol incorrecto.");
+            if (!creaUsuarioDTO.IdEntidadAcademica.HasValue || creaUsuarioDTO.IdEntidadAcademica.Value <= 0)
+                throw new ArgumentException("La Entidad Académica es obligatoria.");
 
             bool existeEntidadAcademica = await _entidadAcademicaRepository
-                .ExistePorIdAsync(CrearUsuarioDTO.IdEntidadAcademica.Value);
+                .ExistePorIdAsync(creaUsuarioDTO.IdEntidadAcademica.Value);
 
             if (!existeEntidadAcademica)
                 throw new ArgumentException("No existe esa Entidad Académica.");
         }
 
-        private async Task ValidarCoordinadorDgaaAsync(CrearUsuarioDTO CrearUsuarioDTO)
+        private async Task ValidarCoordinadorDgaaAsync(CrearUsuarioDTO creaUsuarioDTO)
         {
-            if (!CrearUsuarioDTO.IdAreaAcademica.HasValue || CrearUsuarioDTO.IdAreaAcademica.Value <= 0)
-                throw new ArgumentException("El Area Académica es obligatoria.");
+            if (creaUsuarioDTO.IdEntidadAcademica.HasValue && creaUsuarioDTO.IdEntidadAcademica.Value > 0)
+                throw new ArgumentException("El rol no corresponde con la dependencia seleccionada.");
 
-            if (CrearUsuarioDTO.IdEntidadAcademica.HasValue && CrearUsuarioDTO.IdEntidadAcademica.Value > 0)
-                throw new ArgumentException("Rol incorrecto.");
+            if (!creaUsuarioDTO.IdAreaAcademica.HasValue || creaUsuarioDTO.IdAreaAcademica.Value <= 0)
+                throw new ArgumentException("El Área Académica es obligatoria.");
 
             bool existeAreaAcademica = await _areaAcademicaRepository
-                .ExistePorIdAsync(CrearUsuarioDTO.IdAreaAcademica.Value);
+                .ExistePorIdAsync(creaUsuarioDTO.IdAreaAcademica.Value);
 
             if (!existeAreaAcademica)
                 throw new ArgumentException("No existe esa Área Académica.");
