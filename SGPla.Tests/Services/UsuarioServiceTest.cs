@@ -71,7 +71,7 @@ public class UsuarioServiceTests
 
     //CP-02
     [Fact]
-    public async Task CrearAsync_CoordinadorDgaa_RegresarId()
+    public async Task CrearCoordinadorDgaa()
     {
         var dto = new CrearUsuarioDTO
         {
