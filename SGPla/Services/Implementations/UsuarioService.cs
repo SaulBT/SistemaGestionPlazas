@@ -120,6 +120,8 @@ namespace SGPla.Services.Implementations
 
         public async Task EliminarAsync(ReferenciaUsuarioDTO dto)
         {
+            await _usuarioValidator.ValidarReferenciaAsync(dto);
+
             if (dto == null)
                 throw new ArgumentNullException(nameof(dto));
 
