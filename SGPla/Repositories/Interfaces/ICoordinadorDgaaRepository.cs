@@ -5,6 +5,7 @@ namespace SGPla.Repositories.Interfaces
     public interface ICoordinadorDgaaRepository
     {
         Task<int> CrearAsync(CoordinadorDgaa coordinadorDgaa);
+        Task<bool> ExisteCorreoAsync(string correo);
         Task<CoordinadorDgaa?> ObtenerPorIdAsync(int idCoordinadorDgaa);
         Task<List<CoordinadorDgaa>> ObtenerTodosAsync();
         Task<List<CoordinadorDgaa>> ObtenerPorFiltrosAsync(int? idAreaAcademica);

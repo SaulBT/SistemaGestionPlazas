@@ -1,28 +1,32 @@
 using Moq;
-using Xunit;
 using SGPla.Repositories.Interfaces;
 using SGPla.Services.Implementations;
 using SGPla.Models.DTOs.Usuarios;
 using SGPla.Models;
 using SGPla.Commons;
+using SGPla.Validations.Interfaz;
 public class UsuarioServiceTests
 {
     private readonly Mock<ICoordinadorEaRepository> _coordinadorEaRepositoryMock;
     private readonly Mock<ICoordinadorDgaaRepository> _coordinadorDgaaRepositoryMock;
+    private readonly Mock<IUsuarioValidator> _usuarioValidatorMock;
     private readonly UsuarioService _usuarioService;
 
     public UsuarioServiceTests()
     {
         _coordinadorEaRepositoryMock = new Mock<ICoordinadorEaRepository>();
         _coordinadorDgaaRepositoryMock = new Mock<ICoordinadorDgaaRepository>();
+        _usuarioValidatorMock = new Mock<IUsuarioValidator>();
 
         _usuarioService = new UsuarioService(
             _coordinadorEaRepositoryMock.Object,
-            _coordinadorDgaaRepositoryMock.Object);
+            _coordinadorDgaaRepositoryMock.Object,
+            _usuarioValidatorMock.Object);
     }
 
+    //CP-01
     [Fact]
-    public async Task CrearAsync_CoordinadorEa_RegresarId()
+    public async Task CrearCoordinadorEa()
     {
         var dto = new CrearUsuarioDTO
         {
@@ -33,6 +37,10 @@ public class UsuarioServiceTests
             IdEntidadAcademica = 10
         };
 
+        _usuarioValidatorMock
+            .Setup(v => v.ValidarCreacionAsync(It.IsAny<CrearUsuarioDTO>()))
+            .Returns(Task.CompletedTask);
+
         _coordinadorEaRepositoryMock
             .Setup(r => r.CrearAsync(It.IsAny<CoordinadorEa>()))
             .ReturnsAsync(15);
@@ -40,6 +48,15 @@ public class UsuarioServiceTests
         var resultado = await _usuarioService.CrearAsync(dto);
 
         Assert.Equal(15, resultado);
+
+        _usuarioValidatorMock.Verify(v => v.ValidarCreacionAsync(
+            It.Is<CrearUsuarioDTO>(x =>
+                x.Nombre == dto.Nombre &&
+                x.Correo == dto.Correo &&
+                x.Cargo == dto.Cargo &&
+                x.Rol == dto.Rol &&
+                x.IdEntidadAcademica == dto.IdEntidadAcademica)),
+            Times.Once);
 
         _coordinadorEaRepositoryMock.Verify(r => r.CrearAsync(
             It.Is<CoordinadorEa>(c =>
@@ -52,8 +69,9 @@ public class UsuarioServiceTests
         _coordinadorDgaaRepositoryMock.Verify(r => r.CrearAsync(It.IsAny<CoordinadorDgaa>()), Times.Never);
     }
 
+    //CP-02
     [Fact]
-    public async Task CrearAsync_CoordinadorDgaa_RegresarId()
+    public async Task CrearCoordinadorDgaa()
     {
         var dto = new CrearUsuarioDTO
         {
@@ -64,6 +82,10 @@ public class UsuarioServiceTests
             IdAreaAcademica = 20
         };
 
+        _usuarioValidatorMock
+            .Setup(v => v.ValidarCreacionAsync(It.IsAny<CrearUsuarioDTO>()))
+            .Returns(Task.CompletedTask);
+
         _coordinadorDgaaRepositoryMock
             .Setup(r => r.CrearAsync(It.IsAny<CoordinadorDgaa>()))
             .ReturnsAsync(30);
@@ -71,6 +93,15 @@ public class UsuarioServiceTests
         var resultado = await _usuarioService.CrearAsync(dto);
 
         Assert.Equal(30, resultado);
+
+        _usuarioValidatorMock.Verify(v => v.ValidarCreacionAsync(
+            It.Is<CrearUsuarioDTO>(x =>
+                x.Nombre == dto.Nombre &&
+                x.Correo == dto.Correo &&
+                x.Cargo == dto.Cargo &&
+                x.Rol == dto.Rol &&
+                x.IdAreaAcademica == dto.IdAreaAcademica)),
+            Times.Once);
 
         _coordinadorDgaaRepositoryMock.Verify(r => r.CrearAsync(
             It.Is<CoordinadorDgaa>(c =>
@@ -83,661 +114,539 @@ public class UsuarioServiceTests
         _coordinadorEaRepositoryMock.Verify(r => r.CrearAsync(It.IsAny<CoordinadorEa>()), Times.Never);
     }
 
+    //CP-11
     [Fact]
-    public async Task ObtenerTodosAsync_ListaCombinadaOrdenadaPorNombre()
+    public async Task ObtenerListaDeUsuarios()
     {
-        var coordinadoresEa = new List<CoordinadorEa>
+        var areaAcademica = new AreaAcademica
         {
-            new CoordinadorEa
-            {
-                IdCoordinadorEa = 2,
-                Nombre = "Zaira",
-                Correo = "zaira@uv.mx",
-                Cargo = "Coordinadora EA",
-                IdEntidadAcademica = 100,
-                IdEntidadAcademicaNavigation = new EntidadAcademica
-                {
-                    IdEntidadAcademica = 100,
-                    Nombre = "Facultad de Contaduría",
-                    Region = "Xalapa",
-                    IdAreaAcademica = 10,
-                    IdAreaAcademicaNavigation = new AreaAcademica
-                    {
-                        IdAreaAcademica = 10,
-                        Nombre = "Económico-Administrativa"
-                    }
-                }
-            }
+            IdAreaAcademica = 20,
+            Nombre = "Técnica"
         };
 
-        var coordinadoresDgaa = new List<CoordinadorDgaa>
+        var entidadAcademica = new EntidadAcademica
         {
-            new CoordinadorDgaa
-            {
-                IdCoordinadorDgaa = 1,
-                Nombre = "Ana",
-                Correo = "ana@uv.mx",
-                Cargo = "Coordinadora DGAA",
-                IdAreaAcademica = 20,
-                IdAreaAcademicaNavigation = new AreaAcademica
-                {
-                    IdAreaAcademica = 20,
-                    Nombre = "Técnica"
-                }
-            }
-        };
-
-        _coordinadorEaRepositoryMock
-            .Setup(r => r.ObtenerTodosAsync())
-            .ReturnsAsync(coordinadoresEa);
-
-        _coordinadorDgaaRepositoryMock
-            .Setup(r => r.ObtenerTodosAsync())
-            .ReturnsAsync(coordinadoresDgaa);
-
-        var resultado = await _usuarioService.ObtenerTodosAsync();
-
-        Assert.NotNull(resultado);
-        Assert.Equal(2, resultado.Count);
-
-        Assert.Equal("Ana", resultado[0].Nombre);
-        Assert.Equal("Zaira", resultado[1].Nombre);
-
-        Assert.Equal(1, resultado[0].IdUsuario);
-        Assert.Equal(Constantes.CoordinadorDgaa, resultado[0].Rol);
-        Assert.Equal("Técnica", resultado[0].NombreAreaAcademica);
-        Assert.Null(resultado[0].NombreEntidadAcademica);
-        Assert.Null(resultado[0].Region);
-
-        Assert.Equal(2, resultado[1].IdUsuario);
-        Assert.Equal(Constantes.CoordinadorEa, resultado[1].Rol);
-        Assert.Equal("Económico-Administrativa", resultado[1].NombreAreaAcademica);
-        Assert.Equal("Facultad de Contaduría", resultado[1].NombreEntidadAcademica);
-        Assert.Equal("Xalapa", resultado[1].Region);
-
-        _coordinadorEaRepositoryMock.Verify(r => r.ObtenerTodosAsync(), Times.Once);
-        _coordinadorDgaaRepositoryMock.Verify(r => r.ObtenerTodosAsync(), Times.Once);
-    }
-
-    [Fact]
-    public async Task ObtenerTodosAsync_ListaVacia()
-    {
-        _coordinadorEaRepositoryMock
-            .Setup(r => r.ObtenerTodosAsync())
-            .ReturnsAsync(new List<CoordinadorEa>());
-
-        _coordinadorDgaaRepositoryMock
-            .Setup(r => r.ObtenerTodosAsync())
-            .ReturnsAsync(new List<CoordinadorDgaa>());
-
-        var resultado = await _usuarioService.ObtenerTodosAsync();
-
-        Assert.NotNull(resultado);
-        Assert.Empty(resultado);
-
-        _coordinadorEaRepositoryMock.Verify(r => r.ObtenerTodosAsync(), Times.Once);
-        _coordinadorDgaaRepositoryMock.Verify(r => r.ObtenerTodosAsync(), Times.Once);
-    }
-
-    [Fact]
-    public async Task ObtenerTodosAsync_CoordinadorEaYCoordinadorDgaa()
-    {
-        var coordinadoresEa = new List<CoordinadorEa>
-        {
-            new CoordinadorEa
-            {
-                IdCoordinadorEa = 15,
-                Nombre = "Luis",
-                Correo = "luis@uv.mx",
-                Cargo = "Coordinador EA",
-                IdEntidadAcademica = 200,
-                IdEntidadAcademicaNavigation = new EntidadAcademica
-                {
-                    IdEntidadAcademica = 200,
-                    Nombre = "Facultad de Derecho",
-                    Region = "Veracruz",
-                    IdAreaAcademica = 30,
-                    IdAreaAcademicaNavigation = new AreaAcademica
-                    {
-                        IdAreaAcademica = 30,
-                        Nombre = "Humanidades"
-                    }
-                }
-            }
-        };
-
-        var coordinadoresDgaa = new List<CoordinadorDgaa>
-        {
-            new CoordinadorDgaa
-            {
-                IdCoordinadorDgaa = 25,
-                Nombre = "Mario",
-                Correo = "mario@uv.mx",
-                Cargo = "Coordinador DGAA",
-                IdAreaAcademica = 40,
-                IdAreaAcademicaNavigation = new AreaAcademica
-                {
-                    IdAreaAcademica = 40,
-                    Nombre = "Biológico-Agropecuaria"
-                }
-            }
-        };
-
-        _coordinadorEaRepositoryMock
-            .Setup(r => r.ObtenerTodosAsync())
-            .ReturnsAsync(coordinadoresEa);
-
-        _coordinadorDgaaRepositoryMock
-            .Setup(r => r.ObtenerTodosAsync())
-            .ReturnsAsync(coordinadoresDgaa);
-
-        var resultado = await _usuarioService.ObtenerTodosAsync();
-
-        var usuarioEa = resultado.First(x => x.Rol == Constantes.CoordinadorEa);
-        var usuarioDgaa = resultado.First(x => x.Rol == Constantes.CoordinadorDgaa);
-
-        Assert.Equal(15, usuarioEa.IdUsuario);
-        Assert.Equal("Luis", usuarioEa.Nombre);
-        Assert.Equal("luis@uv.mx", usuarioEa.Correo);
-        Assert.Equal("Coordinador EA", usuarioEa.Cargo);
-        Assert.Equal("Humanidades", usuarioEa.NombreAreaAcademica);
-        Assert.Equal("Facultad de Derecho", usuarioEa.NombreEntidadAcademica);
-        Assert.Equal("Veracruz", usuarioEa.Region);
-
-        Assert.Equal(25, usuarioDgaa.IdUsuario);
-        Assert.Equal("Mario", usuarioDgaa.Nombre);
-        Assert.Equal("mario@uv.mx", usuarioDgaa.Correo);
-        Assert.Equal("Coordinador DGAA", usuarioDgaa.Cargo);
-        Assert.Equal("Biológico-Agropecuaria", usuarioDgaa.NombreAreaAcademica);
-        Assert.Null(usuarioDgaa.NombreEntidadAcademica);
-        Assert.Null(usuarioDgaa.Region);
-    }
-
-    //ObtenerPorFiltro
-    [Fact]
-    public async Task ObtenerPorFiltroAsync_CoordinadorEa()
-    {
-        var filtro = new FiltrosUsuarioDTO
-        {
-            Rol = Constantes.CoordinadorEa,
+            IdEntidadAcademica = 10,
+            IdAreaAcademica = 20,
+            Nombre = "Facultad de Psicología",
             Region = "Xalapa",
-            IdAreaAcademica = 10,
-            IdEntidadAcademica = 100
-        };
-
-        var coordinadoresEa = new List<CoordinadorEa>
-        {
-            new CoordinadorEa
-            {
-                IdCoordinadorEa = 1,
-                Nombre = "Brenda",
-                Correo = "brenda@uv.mx",
-                Cargo = "Coordinadora EA",
-                IdEntidadAcademica = 100,
-                IdEntidadAcademicaNavigation = new EntidadAcademica
-                {
-                    IdEntidadAcademica = 100,
-                    Nombre = "Facultad de Pedagogía",
-                    Region = "Xalapa",
-                    IdAreaAcademica = 10,
-                    IdAreaAcademicaNavigation = new AreaAcademica
-                    {
-                        IdAreaAcademica = 10,
-                        Nombre = "Humanidades"
-                    }
-                }
-            }
-        };
-
-        _coordinadorEaRepositoryMock
-            .Setup(r => r.ObtenerPorFiltrosAsync(filtro.Region, filtro.IdAreaAcademica, filtro.IdEntidadAcademica))
-            .ReturnsAsync(coordinadoresEa);
-
-        var resultado = await _usuarioService.ObtenerPorFiltroAsync(filtro);
-
-        Assert.Single(resultado);
-        Assert.Equal("Brenda", resultado[0].Nombre);
-        Assert.Equal(Constantes.CoordinadorEa, resultado[0].Rol);
-        Assert.Equal("Humanidades", resultado[0].NombreAreaAcademica);
-        Assert.Equal("Facultad de Pedagogía", resultado[0].NombreEntidadAcademica);
-        Assert.Equal("Xalapa", resultado[0].Region);
-
-        _coordinadorEaRepositoryMock.Verify(
-            r => r.ObtenerPorFiltrosAsync(filtro.Region, filtro.IdAreaAcademica, filtro.IdEntidadAcademica),
-            Times.Once);
-
-        _coordinadorDgaaRepositoryMock.Verify(
-            r => r.ObtenerPorFiltrosAsync(It.IsAny<int?>()),
-            Times.Never);
-    }
-
-    [Fact]
-    public async Task ObtenerPorFiltroAsync_CoordinadorDgaa()
-    {
-        var filtro = new FiltrosUsuarioDTO
-        {
-            Rol = Constantes.CoordinadorDgaa,
-            IdAreaAcademica = 20
-        };
-
-        var coordinadoresDgaa = new List<CoordinadorDgaa>
-        {
-            new CoordinadorDgaa
-            {
-                IdCoordinadorDgaa = 2,
-                Nombre = "Carlos",
-                Correo = "carlos@uv.mx",
-                Cargo = "Coordinador DGAA",
-                IdAreaAcademica = 20,
-                IdAreaAcademicaNavigation = new AreaAcademica
-                {
-                    IdAreaAcademica = 20,
-                    Nombre = "Técnica"
-                }
-            }
-        };
-
-        _coordinadorDgaaRepositoryMock
-            .Setup(r => r.ObtenerPorFiltrosAsync(filtro.IdAreaAcademica))
-            .ReturnsAsync(coordinadoresDgaa);
-
-        var resultado = await _usuarioService.ObtenerPorFiltroAsync(filtro);
-
-        Assert.Single(resultado);
-        Assert.Equal("Carlos", resultado[0].Nombre);
-        Assert.Equal(Constantes.CoordinadorDgaa, resultado[0].Rol);
-        Assert.Equal("Técnica", resultado[0].NombreAreaAcademica);
-        Assert.Null(resultado[0].NombreEntidadAcademica);
-        Assert.Null(resultado[0].Region);
-
-        _coordinadorDgaaRepositoryMock.Verify(
-            r => r.ObtenerPorFiltrosAsync(filtro.IdAreaAcademica),
-            Times.Once);
-
-        _coordinadorEaRepositoryMock.Verify(
-            r => r.ObtenerPorFiltrosAsync(It.IsAny<string?>(), It.IsAny<int?>(), It.IsAny<int?>()),
-            Times.Never);
-    }
-
-    [Fact]
-    public async Task ObtenerPorFiltroAsync_NoSeEspecificaRol()
-    {
-        var filtro = new FiltrosUsuarioDTO
-        {
-            Region = "Veracruz",
-            IdAreaAcademica = 30,
-            IdEntidadAcademica = 200
-        };
-
-        var coordinadoresEa = new List<CoordinadorEa>
-        {
-            new CoordinadorEa
-            {
-                IdCoordinadorEa = 3,
-                Nombre = "Zulema",
-                Correo = "zulema@uv.mx",
-                Cargo = "Coordinadora EA",
-                IdEntidadAcademica = 200,
-                IdEntidadAcademicaNavigation = new EntidadAcademica
-                {
-                    IdEntidadAcademica = 200,
-                    Nombre = "Facultad de Derecho",
-                    Region = "Veracruz",
-                    IdAreaAcademica = 30,
-                    IdAreaAcademicaNavigation = new AreaAcademica
-                    {
-                        IdAreaAcademica = 30,
-                        Nombre = "Humanidades"
-                    }
-                }
-            }
-        };
-
-        var coordinadoresDgaa = new List<CoordinadorDgaa>
-        {
-            new CoordinadorDgaa
-            {
-                IdCoordinadorDgaa = 4,
-                Nombre = "Adriana",
-                Correo = "adriana@uv.mx",
-                Cargo = "Coordinadora DGAA",
-                IdAreaAcademica = 30,
-                IdAreaAcademicaNavigation = new AreaAcademica
-                {
-                    IdAreaAcademica = 30,
-                    Nombre = "Humanidades"
-                }
-            }
-        };
-
-        _coordinadorEaRepositoryMock
-            .Setup(r => r.ObtenerPorFiltrosAsync(filtro.Region, filtro.IdAreaAcademica, filtro.IdEntidadAcademica))
-            .ReturnsAsync(coordinadoresEa);
-
-        _coordinadorDgaaRepositoryMock
-            .Setup(r => r.ObtenerPorFiltrosAsync(filtro.IdAreaAcademica))
-            .ReturnsAsync(coordinadoresDgaa);
-
-        var resultado = await _usuarioService.ObtenerPorFiltroAsync(filtro);
-
-        Assert.Equal(2, resultado.Count);
-        Assert.Equal("Adriana", resultado[0].Nombre);
-        Assert.Equal("Zulema", resultado[1].Nombre);
-
-        Assert.Equal(Constantes.CoordinadorDgaa, resultado[0].Rol);
-        Assert.Equal(Constantes.CoordinadorEa, resultado[1].Rol);
-
-        _coordinadorEaRepositoryMock.Verify(
-            r => r.ObtenerPorFiltrosAsync(filtro.Region, filtro.IdAreaAcademica, filtro.IdEntidadAcademica),
-            Times.Once);
-
-        _coordinadorDgaaRepositoryMock.Verify(
-            r => r.ObtenerPorFiltrosAsync(filtro.IdAreaAcademica),
-            Times.Once);
-    }
-
-    [Fact]
-    public async Task ObtenerPorFiltroAsync_ListaVacia()
-    {
-        var filtro = new FiltrosUsuarioDTO
-        {
-            Rol = Constantes.CoordinadorEa,
-            Region = "Xalapa",
-            IdAreaAcademica = 10,
-            IdEntidadAcademica = 100
-        };
-
-        _coordinadorEaRepositoryMock
-            .Setup(r => r.ObtenerPorFiltrosAsync(filtro.Region, filtro.IdAreaAcademica, filtro.IdEntidadAcademica))
-            .ReturnsAsync(new List<CoordinadorEa>());
-
-        var resultado = await _usuarioService.ObtenerPorFiltroAsync(filtro);
-
-        Assert.NotNull(resultado);
-        Assert.Empty(resultado);
-
-        _coordinadorEaRepositoryMock.Verify(
-            r => r.ObtenerPorFiltrosAsync(filtro.Region, filtro.IdAreaAcademica, filtro.IdEntidadAcademica),
-            Times.Once);
-
-        _coordinadorDgaaRepositoryMock.Verify(
-            r => r.ObtenerPorFiltrosAsync(It.IsAny<int?>()),
-            Times.Never);
-    }
-
-    //ObtenerPorId
-    [Fact]
-    public async Task ObtenerPorIdAsync_CoordinadorEa()
-    {
-        var dto = new ReferenciaUsuarioDTO
-        {
-            IdUsuario = 1,
-            Rol = Constantes.CoordinadorEa
+            IdAreaAcademicaNavigation = areaAcademica
         };
 
         var coordinadorEa = new CoordinadorEa
         {
-            IdCoordinadorEa = 1,
-            Nombre = "Laura",
-            Correo = "laura@uv.mx",
-            Cargo = "Coordinadora EA",
-            IdEntidadAcademica = 100,
-            IdEntidadAcademicaNavigation = new EntidadAcademica
-            {
-                IdEntidadAcademica = 100,
-                Nombre = "Facultad de Arquitectura",
-                Region = "Xalapa",
-                IdAreaAcademica = 10,
-                IdAreaAcademicaNavigation = new AreaAcademica
-                {
-                    IdAreaAcademica = 10,
-                    Nombre = "Técnica"
-                }
-            }
+            IdCoordinadorEa = 2,
+            Nombre = "Zaira Alarcón",
+            Correo = "zaria@uv.mx",
+            Cargo = "Directora de Facultad",
+            IdEntidadAcademica = 10,
+            IdEntidadAcademicaNavigation = entidadAcademica
+        };
+
+        var coordinadorDgaa = new CoordinadorDgaa
+        {
+            IdCoordinadorDgaa = 1,
+            Nombre = "Ana Lourdes",
+            Correo = "ana@uv.mx",
+            Cargo = "Jefa de Unidad",
+            IdAreaAcademica = 20,
+            IdAreaAcademicaNavigation = areaAcademica
         };
 
         _coordinadorEaRepositoryMock
-            .Setup(r => r.ObtenerPorIdAsync(dto.IdUsuario))
+            .Setup(repository => repository.ObtenerTodosAsync())
+            .ReturnsAsync(new List<CoordinadorEa> { coordinadorEa });
+
+        _coordinadorDgaaRepositoryMock
+            .Setup(repository => repository.ObtenerTodosAsync())
+            .ReturnsAsync(new List<CoordinadorDgaa> { coordinadorDgaa });
+
+        var resultado = await _usuarioService.ObtenerTodosAsync();
+
+        Assert.Equal(2, resultado.Count);
+        Assert.Equal("Ana Lourdes", resultado[0].Nombre);
+        Assert.Equal(Constantes.CoordinadorDgaa, resultado[0].Rol);
+        Assert.Equal("Técnica", resultado[0].NombreAreaAcademica);
+        Assert.Equal("Zaira Alarcón", resultado[1].Nombre);
+        Assert.Equal(Constantes.CoordinadorEa, resultado[1].Rol);
+        Assert.Equal("Facultad de Psicología", resultado[1].NombreEntidadAcademica);
+        Assert.Equal("Técnica", resultado[1].NombreAreaAcademica);
+        Assert.Equal("Xalapa", resultado[1].Region);
+    }
+
+    //CP-12
+    [Fact]
+    public async Task ObtenerListaDeUsuariosConFiltroDeCoordinadorDgaa()
+    {
+        var filtro = new FiltrosUsuarioDTO
+        {
+            Rol = Constantes.CoordinadorDgaa,
+            Region = null,
+            IdAreaAcademica = 20,
+            IdEntidadAcademica = null
+        };
+
+        var areaAcademica = new AreaAcademica
+        {
+            IdAreaAcademica = 20,
+            Nombre = "Técnica"
+        };
+
+        var coordinadorDgaa = new CoordinadorDgaa
+        {
+            IdCoordinadorDgaa = 1,
+            Nombre = "Ana Lourdes",
+            Correo = "ana@uv.mx",
+            Cargo = "Jefa de Unidad",
+            IdAreaAcademica = 20,
+            IdAreaAcademicaNavigation = areaAcademica
+        };
+
+        _coordinadorDgaaRepositoryMock
+            .Setup(repository => repository.ObtenerPorFiltrosAsync(20))
+            .ReturnsAsync(new List<CoordinadorDgaa> { coordinadorDgaa });
+
+        var resultado = await _usuarioService.ObtenerPorFiltroAsync(filtro);
+
+        Assert.Single(resultado);
+        Assert.Equal(1, resultado[0].IdUsuario);
+        Assert.Equal("Ana Lourdes", resultado[0].Nombre);
+        Assert.Equal(Constantes.CoordinadorDgaa, resultado[0].Rol);
+        Assert.Equal("Técnica", resultado[0].NombreAreaAcademica);
+
+        _coordinadorEaRepositoryMock.Verify(
+            repository => repository.ObtenerPorFiltrosAsync(It.IsAny<string?>(), It.IsAny<int?>(), It.IsAny<int?>()),
+            Times.Never);
+    }
+
+    //CP-13
+    [Fact]
+    public async Task ObtenerListaDeUsuariosConFiltroDeCoordinadorEa()
+    {
+        var filtro = new FiltrosUsuarioDTO
+        {
+            Rol = Constantes.CoordinadorEa,
+            Region = "Xalapa",
+            IdAreaAcademica = 8,
+            IdEntidadAcademica = 10
+        };
+
+        var areaAcademica = new AreaAcademica
+        {
+            IdAreaAcademica = 8,
+            Nombre = "Técnica"
+        };
+
+        var entidadAcademica = new EntidadAcademica
+        {
+            IdEntidadAcademica = 10,
+            IdAreaAcademica = 8,
+            Nombre = "Facultad de Psicología",
+            Region = "Xalapa",
+            IdAreaAcademicaNavigation = areaAcademica
+        };
+
+        var coordinadorEa = new CoordinadorEa
+        {
+            IdCoordinadorEa = 2,
+            Nombre = "Zaira Alarcón",
+            Correo = "zaria@uv.mx",
+            Cargo = "Directora de Facultad",
+            IdEntidadAcademica = 10,
+            IdEntidadAcademicaNavigation = entidadAcademica
+        };
+
+        _coordinadorEaRepositoryMock
+            .Setup(repository => repository.ObtenerPorFiltrosAsync("Xalapa", 8, 10))
+            .ReturnsAsync(new List<CoordinadorEa> { coordinadorEa });
+
+        var resultado = await _usuarioService.ObtenerPorFiltroAsync(filtro);
+
+        Assert.Single(resultado);
+        Assert.Equal(2, resultado[0].IdUsuario);
+        Assert.Equal("Zaira Alarcón", resultado[0].Nombre);
+        Assert.Equal(Constantes.CoordinadorEa, resultado[0].Rol);
+        Assert.Equal("Facultad de Psicología", resultado[0].NombreEntidadAcademica);
+        Assert.Equal("Técnica", resultado[0].NombreAreaAcademica);
+        Assert.Equal("Xalapa", resultado[0].Region);
+
+        _coordinadorDgaaRepositoryMock.Verify(repository => repository.ObtenerPorFiltrosAsync(It.IsAny<int?>()), Times.Never);
+    }
+
+    //CP-14
+    [Fact]
+    public async Task ObtenerListaDeUsuariosConFiltrosVacios()
+    {
+        var filtro = new FiltrosUsuarioDTO
+        {
+            Rol = null,
+            Region = null,
+            IdAreaAcademica = null,
+            IdEntidadAcademica = null
+        };
+
+        var areaAcademica = new AreaAcademica
+        {
+            IdAreaAcademica = 20,
+            Nombre = "Técnica"
+        };
+
+        var entidadAcademica = new EntidadAcademica
+        {
+            IdEntidadAcademica = 10,
+            IdAreaAcademica = 20,
+            Nombre = "Facultad de Psicología",
+            Region = "Xalapa",
+            IdAreaAcademicaNavigation = areaAcademica
+        };
+
+        var coordinadorEa = new CoordinadorEa
+        {
+            IdCoordinadorEa = 2,
+            Nombre = "Zaira Alarcón",
+            Correo = "zaria@uv.mx",
+            Cargo = "Directora de Facultad",
+            IdEntidadAcademica = 10,
+            IdEntidadAcademicaNavigation = entidadAcademica
+        };
+
+        var coordinadorDgaa = new CoordinadorDgaa
+        {
+            IdCoordinadorDgaa = 1,
+            Nombre = "Ana Lourdes",
+            Correo = "ana@uv.mx",
+            Cargo = "Jefa de Unidad",
+            IdAreaAcademica = 20,
+            IdAreaAcademicaNavigation = areaAcademica
+        };
+
+        _coordinadorEaRepositoryMock
+            .Setup(repository => repository.ObtenerPorFiltrosAsync(null, null, null))
+            .ReturnsAsync(new List<CoordinadorEa> { coordinadorEa });
+
+        _coordinadorDgaaRepositoryMock
+            .Setup(repository => repository.ObtenerPorFiltrosAsync((int?)null))
+            .ReturnsAsync(new List<CoordinadorDgaa> { coordinadorDgaa });
+
+        var resultado = await _usuarioService.ObtenerPorFiltroAsync(filtro);
+
+        Assert.Equal(2, resultado.Count);
+        Assert.Equal("Ana Lourdes", resultado[0].Nombre);
+        Assert.Equal("Zaira Alarcón", resultado[1].Nombre);
+    }
+
+    //CP-15
+    [Fact]
+    public async Task ObtenerCoordinadorEa()
+    {
+        var dto = new ReferenciaUsuarioDTO
+        {
+            IdUsuario = 16,
+            Rol = Constantes.CoordinadorEa
+        };
+
+        var areaAcademica = new AreaAcademica
+        {
+            IdAreaAcademica = 6,
+            Nombre = "Artes"
+        };
+
+        var entidadAcademica = new EntidadAcademica
+        {
+            IdEntidadAcademica = 321,
+            IdAreaAcademica = 6,
+            Nombre = "Facultad de Música",
+            Region = "Xalapa",
+            IdAreaAcademicaNavigation = areaAcademica
+        };
+
+        var coordinadorEa = new CoordinadorEa
+        {
+            IdCoordinadorEa = 16,
+            IdEntidadAcademica = 321,
+            Nombre = "Eliberto Charis",
+            Correo = "eliberto@uv.mx",
+            Cargo = "Secretario Académico",
+            IdEntidadAcademicaNavigation = entidadAcademica
+        };
+
+        _usuarioValidatorMock
+            .Setup(validator => validator.ValidarReferenciaAsync(It.IsAny<ReferenciaUsuarioDTO>()))
+            .Returns(Task.CompletedTask);
+
+        _coordinadorEaRepositoryMock
+            .Setup(repository => repository.ObtenerPorIdAsync(16))
             .ReturnsAsync(coordinadorEa);
 
         var resultado = await _usuarioService.ObtenerPorIdAsync(dto);
 
         Assert.NotNull(resultado);
-        Assert.Equal(1, resultado.IdUsuario);
-        Assert.Equal("Laura", resultado.Nombre);
-        Assert.Equal("laura@uv.mx", resultado.Correo);
-        Assert.Equal("Coordinadora EA", resultado.Cargo);
+        Assert.Equal(16, resultado.IdUsuario);
+        Assert.Equal("Eliberto Charis", resultado.Nombre);
+        Assert.Equal("eliberto@uv.mx", resultado.Correo);
+        Assert.Equal("Secretario Académico", resultado.Cargo);
         Assert.Equal(Constantes.CoordinadorEa, resultado.Rol);
-        Assert.Equal(10, resultado.IdAreaAcademica);
-        Assert.Equal("Técnica", resultado.NombreAreaAcademica);
-        Assert.Equal(100, resultado.IdEntidadAcademica);
-        Assert.Equal("Facultad de Arquitectura", resultado.NombreEntidadAcademica);
+        Assert.Equal(6, resultado.IdAreaAcademica);
+        Assert.Equal("Artes", resultado.NombreAreaAcademica);
+        Assert.Equal(321, resultado.IdEntidadAcademica);
+        Assert.Equal("Facultad de Música", resultado.NombreEntidadAcademica);
         Assert.Equal("Xalapa", resultado.Region);
 
-        _coordinadorEaRepositoryMock.Verify(r => r.ObtenerPorIdAsync(dto.IdUsuario), Times.Once);
-        _coordinadorDgaaRepositoryMock.Verify(r => r.ObtenerPorIdAsync(It.IsAny<int>()), Times.Never);
+        _usuarioValidatorMock.Verify(validator => validator.ValidarReferenciaAsync(
+            It.Is<ReferenciaUsuarioDTO>(usuario =>
+                usuario.IdUsuario == dto.IdUsuario &&
+                usuario.Rol == dto.Rol)),
+            Times.Once);
     }
 
+    //CP-16
     [Fact]
-    public async Task ObtenerPorIdAsync_CoordinadorDgaa()
+    public async Task ObtenerCoordinadorDgaa()
     {
         var dto = new ReferenciaUsuarioDTO
         {
-            IdUsuario = 2,
+            IdUsuario = 56,
             Rol = Constantes.CoordinadorDgaa
+        };
+
+        var areaAcademica = new AreaAcademica
+        {
+            IdAreaAcademica = 3,
+            Nombre = "Ciencias"
         };
 
         var coordinadorDgaa = new CoordinadorDgaa
         {
-            IdCoordinadorDgaa = 2,
-            Nombre = "Pedro",
-            Correo = "pedro@uv.mx",
-            Cargo = "Coordinador DGAA",
-            IdAreaAcademica = 20,
-            IdAreaAcademicaNavigation = new AreaAcademica
-            {
-                IdAreaAcademica = 20,
-                Nombre = "Económico-Administrativa"
-            }
+            IdCoordinadorDgaa = 56,
+            IdAreaAcademica = 3,
+            Nombre = "Jaime Nunó",
+            Correo = "jaime@uv.mx",
+            Cargo = "Director General",
+            IdAreaAcademicaNavigation = areaAcademica
         };
 
+        _usuarioValidatorMock
+            .Setup(validator => validator.ValidarReferenciaAsync(It.IsAny<ReferenciaUsuarioDTO>()))
+            .Returns(Task.CompletedTask);
+
         _coordinadorDgaaRepositoryMock
-            .Setup(r => r.ObtenerPorIdAsync(dto.IdUsuario))
+            .Setup(repository => repository.ObtenerPorIdAsync(56))
             .ReturnsAsync(coordinadorDgaa);
 
         var resultado = await _usuarioService.ObtenerPorIdAsync(dto);
 
         Assert.NotNull(resultado);
-        Assert.Equal(2, resultado.IdUsuario);
-        Assert.Equal("Pedro", resultado.Nombre);
-        Assert.Equal("pedro@uv.mx", resultado.Correo);
-        Assert.Equal("Coordinador DGAA", resultado.Cargo);
+        Assert.Equal(56, resultado.IdUsuario);
+        Assert.Equal("Jaime Nunó", resultado.Nombre);
+        Assert.Equal("jaime@uv.mx", resultado.Correo);
+        Assert.Equal("Director General", resultado.Cargo);
         Assert.Equal(Constantes.CoordinadorDgaa, resultado.Rol);
-        Assert.Equal(20, resultado.IdAreaAcademica);
-        Assert.Equal("Económico-Administrativa", resultado.NombreAreaAcademica);
+        Assert.Equal(3, resultado.IdAreaAcademica);
+        Assert.Equal("Ciencias", resultado.NombreAreaAcademica);
         Assert.Null(resultado.IdEntidadAcademica);
         Assert.Null(resultado.NombreEntidadAcademica);
         Assert.Null(resultado.Region);
 
-        _coordinadorDgaaRepositoryMock.Verify(r => r.ObtenerPorIdAsync(dto.IdUsuario), Times.Once);
-        _coordinadorEaRepositoryMock.Verify(r => r.ObtenerPorIdAsync(It.IsAny<int>()), Times.Never);
+        _usuarioValidatorMock.Verify(validator => validator.ValidarReferenciaAsync(
+            It.Is<ReferenciaUsuarioDTO>(usuario =>
+                usuario.IdUsuario == dto.IdUsuario &&
+                usuario.Rol == dto.Rol)),
+            Times.Once);
     }
 
+    //CP-20
     [Fact]
-    public async Task ObtenerPorIdAsync_NoExisteCoordinadorEa()
-    {
-        var dto = new ReferenciaUsuarioDTO
-        {
-            IdUsuario = 3,
-            Rol = Constantes.CoordinadorEa
-        };
-
-        _coordinadorEaRepositoryMock
-            .Setup(r => r.ObtenerPorIdAsync(dto.IdUsuario))
-            .ReturnsAsync((CoordinadorEa?)null);
-
-        var resultado = await _usuarioService.ObtenerPorIdAsync(dto);
-
-        Assert.Null(resultado);
-
-        _coordinadorEaRepositoryMock.Verify(r => r.ObtenerPorIdAsync(dto.IdUsuario), Times.Once);
-    }
-
-    [Fact]
-    public async Task ObtenerPorIdAsync_NoExisteCoordinadorDgaa()
-    {
-        var dto = new ReferenciaUsuarioDTO
-        {
-            IdUsuario = 4,
-            Rol = Constantes.CoordinadorDgaa
-        };
-
-        _coordinadorDgaaRepositoryMock
-            .Setup(r => r.ObtenerPorIdAsync(dto.IdUsuario))
-            .ReturnsAsync((CoordinadorDgaa?)null);
-
-        var resultado = await _usuarioService.ObtenerPorIdAsync(dto);
-
-        Assert.Null(resultado);
-
-        _coordinadorDgaaRepositoryMock.Verify(r => r.ObtenerPorIdAsync(dto.IdUsuario), Times.Once);
-    }
-
-    //Editar
-    [Fact]
-    public async Task EditarAsync_CoordinadorEa()
+    public async Task EditarCoordinadorEa()
     {
         var dto = new EditarUsuarioDTO
         {
-            IdUsuario = 1,
+            IdUsuario = 534,
             Rol = Constantes.CoordinadorEa,
-            Nombre = "Nombre Editado",
-            Cargo = "Cargo Editado",
+            Nombre = "Miguel Ángel Bocanegra",
+            Cargo = "Coordinador",
             IdEntidadAcademica = 200
         };
 
         var coordinadorEa = new CoordinadorEa
         {
-            IdCoordinadorEa = 1,
-            Nombre = "Nombre Original",
-            Correo = "correo@uv.mx",
-            Cargo = "Cargo Original",
-            IdEntidadAcademica = 100
+            IdCoordinadorEa = 534,
+            IdEntidadAcademica = 200,
+            Nombre = "Ángel Bocanegra",
+            Correo = "angel@uv.mx",
+            Cargo = "Jefe de Unidad"
         };
 
+        _usuarioValidatorMock
+            .Setup(validator => validator.ValidarEdicionAsync(It.IsAny<EditarUsuarioDTO>()))
+            .Returns(Task.CompletedTask);
+
         _coordinadorEaRepositoryMock
-            .Setup(r => r.ObtenerPorIdAsync(dto.IdUsuario))
+            .Setup(repository => repository.ObtenerPorIdAsync(534))
             .ReturnsAsync(coordinadorEa);
+
+        _coordinadorEaRepositoryMock
+            .Setup(repository => repository.ActualizarAsync(It.IsAny<CoordinadorEa>()))
+            .Returns(Task.CompletedTask);
 
         await _usuarioService.EditarAsync(dto);
 
-        Assert.Equal("Nombre Editado", coordinadorEa.Nombre);
-        Assert.Equal("Cargo Editado", coordinadorEa.Cargo);
-        Assert.Equal("correo@uv.mx", coordinadorEa.Correo);
-        Assert.Equal(200, coordinadorEa.IdEntidadAcademica);
+        _usuarioValidatorMock.Verify(validator => validator.ValidarEdicionAsync(
+            It.Is<EditarUsuarioDTO>(usuario =>
+                usuario.IdUsuario == dto.IdUsuario &&
+                usuario.Rol == dto.Rol &&
+                usuario.Nombre == dto.Nombre &&
+                usuario.Cargo == dto.Cargo &&
+                usuario.IdEntidadAcademica == dto.IdEntidadAcademica)),
+            Times.Once);
 
-        _coordinadorEaRepositoryMock.Verify(r => r.ObtenerPorIdAsync(dto.IdUsuario), Times.Once);
-        _coordinadorEaRepositoryMock.Verify(r => r.ActualizarAsync(coordinadorEa), Times.Once);
-        _coordinadorDgaaRepositoryMock.Verify(r => r.ObtenerPorIdAsync(It.IsAny<int>()), Times.Never);
-        _coordinadorDgaaRepositoryMock.Verify(r => r.ActualizarAsync(It.IsAny<CoordinadorDgaa>()), Times.Never);
+        _coordinadorEaRepositoryMock.Verify(repository => repository.ActualizarAsync(
+            It.Is<CoordinadorEa>(usuario =>
+                usuario.IdCoordinadorEa == 534 &&
+                usuario.Nombre == "Miguel Ángel Bocanegra" &&
+                usuario.Cargo == "Coordinador" &&
+                usuario.IdEntidadAcademica == 200)),
+            Times.Once);
     }
 
+    //CP-21
     [Fact]
-    public async Task EditarAsync_CoordinadorDgaa()
+    public async Task EditarCoordinadorDgaa()
     {
         var dto = new EditarUsuarioDTO
         {
-            IdUsuario = 2,
+            IdUsuario = 453,
             Rol = Constantes.CoordinadorDgaa,
-            Nombre = "Nombre Editado",
-            Cargo = "Cargo Editado",
-            IdAreaAcademica = 300
+            Nombre = "Luisa Londóñes",
+            Cargo = "Administradora Jefe",
+            IdAreaAcademica = 2
         };
 
         var coordinadorDgaa = new CoordinadorDgaa
         {
-            IdCoordinadorDgaa = 2,
-            Nombre = "Nombre Original",
-            Correo = "correo@uv.mx",
-            Cargo = "Cargo Original",
-            IdAreaAcademica = 150
+            IdCoordinadorDgaa = 453,
+            IdAreaAcademica = 2,
+            Nombre = "Luisa Londoño",
+            Correo = "luisa@uv.mx",
+            Cargo = "Administradora Jefe"
         };
 
+        _usuarioValidatorMock
+            .Setup(validator => validator.ValidarEdicionAsync(It.IsAny<EditarUsuarioDTO>()))
+            .Returns(Task.CompletedTask);
+
         _coordinadorDgaaRepositoryMock
-            .Setup(r => r.ObtenerPorIdAsync(dto.IdUsuario))
+            .Setup(repository => repository.ObtenerPorIdAsync(453))
             .ReturnsAsync(coordinadorDgaa);
+
+        _coordinadorDgaaRepositoryMock
+            .Setup(repository => repository.ActualizarAsync(It.IsAny<CoordinadorDgaa>()))
+            .Returns(Task.CompletedTask);
 
         await _usuarioService.EditarAsync(dto);
 
-        Assert.Equal("Nombre Editado", coordinadorDgaa.Nombre);
-        Assert.Equal("Cargo Editado", coordinadorDgaa.Cargo);
-        Assert.Equal("correo@uv.mx", coordinadorDgaa.Correo);
-        Assert.Equal(300, coordinadorDgaa.IdAreaAcademica);
+        _usuarioValidatorMock.Verify(validator => validator.ValidarEdicionAsync(
+            It.Is<EditarUsuarioDTO>(usuario =>
+                usuario.IdUsuario == dto.IdUsuario &&
+                usuario.Rol == dto.Rol &&
+                usuario.Nombre == dto.Nombre &&
+                usuario.Cargo == dto.Cargo &&
+                usuario.IdAreaAcademica == dto.IdAreaAcademica)),
+            Times.Once);
 
-        _coordinadorDgaaRepositoryMock.Verify(r => r.ObtenerPorIdAsync(dto.IdUsuario), Times.Once);
-        _coordinadorDgaaRepositoryMock.Verify(r => r.ActualizarAsync(coordinadorDgaa), Times.Once);
-        _coordinadorEaRepositoryMock.Verify(r => r.ObtenerPorIdAsync(It.IsAny<int>()), Times.Never);
-        _coordinadorEaRepositoryMock.Verify(r => r.ActualizarAsync(It.IsAny<CoordinadorEa>()), Times.Never);
+        _coordinadorDgaaRepositoryMock.Verify(repository => repository.ActualizarAsync(
+            It.Is<CoordinadorDgaa>(usuario =>
+                usuario.IdCoordinadorDgaa == 453 &&
+                usuario.Nombre == "Luisa Londóñes" &&
+                usuario.Cargo == "Administradora Jefe" &&
+                usuario.IdAreaAcademica == 2)),
+            Times.Once);
     }
 
-    //Eliminar
+    //CP-29
     [Fact]
-    public async Task EliminarAsync_CoordinadorEa()
+    public async Task EliminarCoordinadorEa()
     {
         var dto = new ReferenciaUsuarioDTO
         {
-            IdUsuario = 3,
+            IdUsuario = 16,
             Rol = Constantes.CoordinadorEa
         };
 
         var coordinadorEa = new CoordinadorEa
         {
-            IdCoordinadorEa = 3,
-            Nombre = "Andrea",
-            Correo = "andrea@uv.mx",
-            Cargo = "Coordinadora EA",
-            IdEntidadAcademica = 100
+            IdCoordinadorEa = 16,
+            IdEntidadAcademica = 321,
+            Nombre = "Eliberto Charis",
+            Correo = "eliberto@uv.mx",
+            Cargo = "Secretario Académico"
         };
 
+        _usuarioValidatorMock
+            .Setup(validator => validator.ValidarReferenciaAsync(It.IsAny<ReferenciaUsuarioDTO>()))
+            .Returns(Task.CompletedTask);
+
         _coordinadorEaRepositoryMock
-            .Setup(r => r.ObtenerPorIdAsync(dto.IdUsuario))
+            .Setup(repository => repository.ObtenerPorIdAsync(16))
             .ReturnsAsync(coordinadorEa);
+
+        _coordinadorEaRepositoryMock
+            .Setup(repository => repository.EliminarAsync(It.IsAny<CoordinadorEa>()))
+            .Returns(Task.CompletedTask);
 
         await _usuarioService.EliminarAsync(dto);
 
-        _coordinadorEaRepositoryMock.Verify(r => r.ObtenerPorIdAsync(dto.IdUsuario), Times.Once);
-        _coordinadorEaRepositoryMock.Verify(r => r.EliminarAsync(coordinadorEa), Times.Once);
-        _coordinadorDgaaRepositoryMock.Verify(r => r.ObtenerPorIdAsync(It.IsAny<int>()), Times.Never);
-        _coordinadorDgaaRepositoryMock.Verify(r => r.EliminarAsync(It.IsAny<CoordinadorDgaa>()), Times.Never);
+        _usuarioValidatorMock.Verify(validator => validator.ValidarReferenciaAsync(
+            It.Is<ReferenciaUsuarioDTO>(usuario =>
+                usuario.IdUsuario == dto.IdUsuario &&
+                usuario.Rol == dto.Rol)),
+            Times.Once);
+
+        _coordinadorEaRepositoryMock.Verify(repository => repository.EliminarAsync(
+            It.Is<CoordinadorEa>(usuario => usuario.IdCoordinadorEa == 16)),
+            Times.Once);
     }
 
+    //CP-30
     [Fact]
-    public async Task EliminarAsync_CoordinadorDgaa()
+    public async Task EliminarCoordinadorDgaa()
     {
         var dto = new ReferenciaUsuarioDTO
         {
-            IdUsuario = 4,
+            IdUsuario = 56,
             Rol = Constantes.CoordinadorDgaa
         };
 
         var coordinadorDgaa = new CoordinadorDgaa
         {
-            IdCoordinadorDgaa = 4,
-            Nombre = "Roberto",
-            Correo = "roberto@uv.mx",
-            Cargo = "Coordinador DGAA",
-            IdAreaAcademica = 200
+            IdCoordinadorDgaa = 56,
+            IdAreaAcademica = 3,
+            Nombre = "Jaime Nunó",
+            Correo = "jaime@uv.mx",
+            Cargo = "Director General"
         };
 
+        _usuarioValidatorMock
+            .Setup(validator => validator.ValidarReferenciaAsync(It.IsAny<ReferenciaUsuarioDTO>()))
+            .Returns(Task.CompletedTask);
+
         _coordinadorDgaaRepositoryMock
-            .Setup(r => r.ObtenerPorIdAsync(dto.IdUsuario))
+            .Setup(repository => repository.ObtenerPorIdAsync(56))
             .ReturnsAsync(coordinadorDgaa);
+
+        _coordinadorDgaaRepositoryMock
+            .Setup(repository => repository.EliminarAsync(It.IsAny<CoordinadorDgaa>()))
+            .Returns(Task.CompletedTask);
 
         await _usuarioService.EliminarAsync(dto);
 
-        _coordinadorDgaaRepositoryMock.Verify(r => r.ObtenerPorIdAsync(dto.IdUsuario), Times.Once);
-        _coordinadorDgaaRepositoryMock.Verify(r => r.EliminarAsync(coordinadorDgaa), Times.Once);
-        _coordinadorEaRepositoryMock.Verify(r => r.ObtenerPorIdAsync(It.IsAny<int>()), Times.Never);
-        _coordinadorEaRepositoryMock.Verify(r => r.EliminarAsync(It.IsAny<CoordinadorEa>()), Times.Never);
+        _usuarioValidatorMock.Verify(validator => validator.ValidarReferenciaAsync(
+            It.Is<ReferenciaUsuarioDTO>(usuario =>
+                usuario.IdUsuario == dto.IdUsuario &&
+                usuario.Rol == dto.Rol)),
+            Times.Once);
+
+        _coordinadorDgaaRepositoryMock.Verify(repository => repository.EliminarAsync(
+            It.Is<CoordinadorDgaa>(usuario => usuario.IdCoordinadorDgaa == 56)),
+            Times.Once);
     }
 }

@@ -21,6 +21,15 @@ namespace SGPla.Repositories.Implementations
             return coordinadorEa.IdCoordinadorEa;
         }
 
+        public async Task<bool> ExisteCorreoAsync(string correo)
+        {
+            if (string.IsNullOrWhiteSpace(correo))
+                return false;
+
+            return await _context.CoordinadorEa
+                .AnyAsync(coordinadorEa => coordinadorEa.Correo == correo);
+        }
+
         public async Task<CoordinadorEa?> ObtenerPorIdAsync(int idCoordinadorEa)
         {
             return await _context.CoordinadorEa
