@@ -1,11 +1,11 @@
-﻿@model IEnumerable<SGPla.Models.Articulo>
+﻿@model IEnumerable<SGPla.Models.DTOs.Articulo.FormularioArticuloDTO>
 
 <h2>Articulos</h2>
 <button class="btn btn-primary mb-3" onclick="abrirModalCrear()">Agregar artículo</button>
 <table class="table table-striped">
     <thead>
         <tr>
-            <th>Nombre</th><th>Descripción</th><th>Acciones</th>
+            <th>Numero</th><th>Descripción</th><th>Acciones</th>
         </tr>
     </thead>
     <tbody>
@@ -25,6 +25,13 @@
     }
     </tbody>
 </table>
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
 
 <div class="modal fade" id="articuloModal" tabindex="-1">
     <div class="modal-dialog">

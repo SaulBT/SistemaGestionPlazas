@@ -2,6 +2,8 @@
 using SGPla.Models;
 using Microsoft.EntityFrameworkCore;
 using SGPla.Repositories.Interfaces;
+using SGPla.Models.DTOs;
+using SGPla.Models.DTOs.Articulo;
 
 namespace SGPla.Repositories
 {
@@ -14,10 +16,16 @@ namespace SGPla.Repositories
             _context = context;
         }
 
-        public async Task CrearArticuloAsync(Articulo articulo)
+        public async Task<Articulo> CrearArticuloAsync(Articulo articulo)
         {
             _context.Articulo.Add(articulo);
             await _context.SaveChangesAsync();
+            return articulo;
+        }
+
+        public async Task<bool> ExisteNumeroAsync (string numero)
+        {
+            return await _context.Articulo.AnyAsync(a => a.Numero == numero);
         }
 
         public async Task EliminarArticuloAsync(int id)

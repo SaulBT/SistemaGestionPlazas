@@ -4,6 +4,8 @@ using SGPla.Repositories;
 using SGPla.Repositories.Interfaces;
 using SGPla.Services.Implementations;
 using SGPla.Services.Interfaces;
+using SGPla.Validations.Implementations;
+using SGPla.Validations.Interfaces;
 //using SGPla.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,6 +24,8 @@ builder.Services.AddDbContext<GestionDePlazasDbContext>(options =>
 
 builder.Services.AddScoped<IArticuloRepository, ArticuloRepository>();
 builder.Services.AddScoped<IArticuloService, ArticuloService>();
+builder.Services.AddScoped<IArticuloValidator, ArticuloValidator>();
+
 
 var app = builder.Build();
 

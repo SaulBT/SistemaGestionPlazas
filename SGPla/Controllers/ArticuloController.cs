@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using SGPla.Mappers;
 using SGPla.Models;
+using SGPla.Models.DTOs.Articulo;
 using SGPla.Services.Interfaces;
 
 namespace SGPla.Controllers
@@ -12,54 +14,48 @@ namespace SGPla.Controllers
         {
             _articuloService = articuloService;
         }
-
         public async Task<IActionResult> Index()
         {
             var articulos = await _articuloService.ObtenerTodosAsync();
-            return View(articulos);
+            var dtos = articulos.Select(a => ArticuloMapper.ToFormularioDTO(a));
+            return View(dtos);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Articulo articulo)
+        public async Task<IActionResult> Create(FormularioArticuloDTO dto)
         {
             if (ModelState.IsValid)
             {
-                await _articuloService.CrearArticuloAsync(articulo);
+                try
+                {
+                    await _articuloService.CrearArticuloAsync(dto);
+                }
+                catch (ArgumentException ex)
+                {
+                    TempData["Error"] = ex.Message; 
+                }
             }
-
-            return RedirectToAction("Index");
+            return RedirectToAction(nameof(Index));
         }
 
-        public async Task<IActionResult> Edit(int id)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(FormularioArticuloDTO dto) 
         {
-            var articulo = await _articuloService.ObtenerArticuloPorIdAsync(id);
-            if (articulo is null)
-            {
-                return NotFound();
-            }
-            return View(articulo);
-        }
-
-        [HttpPost, ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Articulo articulo)
-        {
-
             if (ModelState.IsValid)
             {
-                await _articuloService.ActualizarArticuloAsync(articulo);
-                return RedirectToAction(nameof(Index));
+               // await _articuloService.ActualizarArticuloAsync(dto); 
             }
-            return View(articulo);
+            return RedirectToAction(nameof(Index));
         }
 
-
-        [HttpPost, ValidateAntiForgeryToken]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
             await _articuloService.EliminarArticuloAsync(id);
             return RedirectToAction(nameof(Index));
-
         }
 
     }

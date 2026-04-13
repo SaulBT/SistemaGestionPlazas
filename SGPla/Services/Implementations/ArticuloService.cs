@@ -1,16 +1,21 @@
-﻿using SGPla.Models;
+﻿using SGPla.Mappers;
+using SGPla.Models;
+using SGPla.Models.DTOs.Articulo;
 using SGPla.Repositories.Interfaces;
 using SGPla.Services.Interfaces;
+using SGPla.Validations.Interfaces;
 
 namespace SGPla.Services.Implementations
 {
     public class ArticuloService : IArticuloService
     {
         private readonly IArticuloRepository _articuloRepository;
+        private readonly IArticuloValidator _articuloValidator;
 
-        public ArticuloService(IArticuloRepository articuloRepository)
+        public ArticuloService(IArticuloRepository articuloRepository, IArticuloValidator articuloValidator)
         {
             _articuloRepository = articuloRepository;
+            _articuloValidator = articuloValidator;
         }
 
         public Task ActualizarArticuloAsync(Articulo articulo)
@@ -18,9 +23,16 @@ namespace SGPla.Services.Implementations
             return _articuloRepository.ActualizarArticuloAsync(articulo);
         }
 
-        public  Task CrearArticuloAsync(Articulo articulo)
+        public  async Task<ArticuloDTO> CrearArticuloAsync(FormularioArticuloDTO dto)
         {
-            return _articuloRepository.CrearArticuloAsync(articulo);
+            
+            
+            await _articuloValidator.ValidarCreacionAsync(dto);
+            var articulo = await _articuloRepository.CrearArticuloAsync(ArticuloMapper.ToModel(dto));
+            
+            ArticuloDTO response = ArticuloMapper.ToDTO(articulo);
+
+            return response;
         }
 
         public Task EliminarArticuloAsync(int id)

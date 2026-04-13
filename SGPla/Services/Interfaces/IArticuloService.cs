@@ -1,4 +1,5 @@
 ﻿using SGPla.Models;
+using SGPla.Models.DTOs.Articulo;
 
 namespace SGPla.Services.Interfaces
 {
@@ -7,7 +8,7 @@ namespace SGPla.Services.Interfaces
         Task<IEnumerable<Articulo>> ObtenerTodosAsync();
         Task<Articulo?> ObtenerArticuloPorIdAsync(int id);
 
-        Task CrearArticuloAsync(Articulo articulo);
+        Task<ArticuloDTO> CrearArticuloAsync(FormularioArticuloDTO articulo);
 
         Task ActualizarArticuloAsync(Articulo articulo);
 
