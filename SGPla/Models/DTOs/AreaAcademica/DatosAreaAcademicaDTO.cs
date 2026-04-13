@@ -2,6 +2,7 @@
 {
     public class DatosAreaAcademicaDTO
     {
+        public int IdAreaAcademica { get; set; } = 0;
         public string Nombre { get; set; } = string.Empty;
         public string CalleNumero { get; set; } = string.Empty;
         public string Colonia { get; set; } = string.Empty;
