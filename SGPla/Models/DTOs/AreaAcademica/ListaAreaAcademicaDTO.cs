@@ -1,6 +1,6 @@
 ﻿namespace SGPla.Models.DTOs.AreaAcademica
 {
-    public class ListaAreaAcademica
+    public class ListaAreaAcademicaDTO
     {
         public string Nombre { get; set; } = string.Empty;
         public string Domicilio { get; set; } = string.Empty;
