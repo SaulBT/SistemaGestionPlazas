@@ -6,24 +6,24 @@ using SGPla.Services.Interfaces;
 
 namespace SGPla.Controllers
 {
-    public class ArticuloController : Controller
+    public class ArticulosController : Controller
     {
         private readonly IArticuloService _articuloService;
 
-        public ArticuloController(IArticuloService articuloService)
+        public ArticulosController(IArticuloService articuloService)
         {
             _articuloService = articuloService;
         }
         public async Task<IActionResult> Index()
         {
             var articulos = await _articuloService.ObtenerTodosAsync();
-            var dtos = articulos.Select(a => ArticuloMapper.ToFormularioDTO(a));
-            return View(dtos);
+            
+            return View(articulos);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(FormularioArticuloDTO dto)
+        public async Task<IActionResult> Crear(CrearArticuloDTO dto)
         {
             if (ModelState.IsValid)
             {
@@ -41,18 +41,28 @@ namespace SGPla.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(FormularioArticuloDTO dto) 
+        public async Task<IActionResult> Editar(EditarArticuloDTO dto) 
         {
             if (ModelState.IsValid)
             {
-               // await _articuloService.ActualizarArticuloAsync(dto); 
+                try
+                {
+
+                
+                await _articuloService.EditarArticuloAsync(dto);
+                }
+                catch (ArgumentException ex)
+                {
+                    TempData["Error"] = ex.Message;
+                }
+
             }
             return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Eliminar(int id)
         {
             await _articuloService.EliminarArticuloAsync(id);
             return RedirectToAction(nameof(Index));

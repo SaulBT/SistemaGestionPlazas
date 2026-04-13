@@ -4,6 +4,8 @@ namespace SGPla.Validations.Interfaces
 {
     public interface IArticuloValidator
     {
-        Task<bool> ValidarCreacionAsync(FormularioArticuloDTO crearArticuloDTO);
+        Task<bool> ValidarCreacionAsync(CrearArticuloDTO crearArticuloDTO);
+
+        Task<bool> ValidarEdicionAsync(EditarArticuloDTO editarArticuloDTO);
     }
 }

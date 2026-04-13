@@ -5,13 +5,13 @@ namespace SGPla.Services.Interfaces
 {
     public interface IArticuloService
     {
-        Task<IEnumerable<Articulo>> ObtenerTodosAsync();
-        Task<Articulo?> ObtenerArticuloPorIdAsync(int id);
+        Task<IEnumerable<DetallesArticuloDTO>> ObtenerTodosAsync();
+        Task<DetallesArticuloDTO?> ObtenerArticuloPorIdAsync(int id);
 
-        Task<ArticuloDTO> CrearArticuloAsync(FormularioArticuloDTO articulo);
+        Task<DetallesArticuloDTO> CrearArticuloAsync(CrearArticuloDTO articulo);
 
-        Task ActualizarArticuloAsync(Articulo articulo);
+        Task<DetallesArticuloDTO> EditarArticuloAsync(EditarArticuloDTO articulo);
 
-        Task EliminarArticuloAsync(int id);
+        Task<bool> EliminarArticuloAsync(int id);
     }
 }

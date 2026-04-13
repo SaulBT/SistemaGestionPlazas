@@ -1,30 +1,7 @@
-﻿@model IEnumerable<SGPla.Models.DTOs.Articulo.FormularioArticuloDTO>
+﻿@model IEnumerable<SGPla.Models.DTOs.Articulo.DetallesArticuloDTO>
 
 <h2>Articulos</h2>
-<button class="btn btn-primary mb-3" onclick="abrirModalCrear()">Agregar artículo</button>
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Numero</th><th>Descripción</th><th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-    @foreach (var p in Model)
-    {
-        <tr>
-            <td>@p.Numero</td>
-             <td>@p.Descripcion</td>
-            <td>
-                    <button class="btn btn-sm btn-warning" onclick="abrirModalActualizar(@p.IdArticulo, '@p.Numero', '@p.Descripcion')">Editar</button>
-                    <form asp-action="Delete" asp-route-id="@p.IdArticulo" method="post" style="display:inline">
-                    @Html.AntiForgeryToken()
-                    <button type="submit" onclick="return confirm('¿Eliminar?')">Eliminar</button>
-                </form>
-            </td>
-        </tr>
-    }
-    </tbody>
-</table>
+
 @if (TempData["Error"] != null)
 {
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -33,6 +10,37 @@
     </div>
 }
 
+<button class="btn btn-primary mb-3" onclick="abrirModalCrear()">Agregar artículo</button>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Numero</th>
+            <th>Descripción</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var p in Model)
+        {
+            <tr>
+                <td>@p.Numero</td>
+                <td>@p.Descripcion</td>
+                <td>
+                    <button class="btn btn-sm btn-warning"
+                            onclick="abrirModalActualizar(@p.IdArticulo, '@p.Numero', '@p.Descripcion')">
+                        Editar
+                    </button>
+                    <form asp-action="Eliminar" asp-route-id="@p.IdArticulo" method="post" style="display:inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" onclick="return confirm('¿Eliminar?')">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Modal compartido: Crear usa CrearArticuloDTO, Editar usa EditarArticuloDTO -->
 <div class="modal fade" id="articuloModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -45,6 +53,8 @@
                 </div>
 
                 <div class="modal-body">
+                    <!-- Solo se envía al editar, EditarArticuloDTO lo requiere -->
+                    <!-- Al crear, CrearArticuloDTO no lo tiene, el binder lo ignora -->
                     <input type="hidden" id="IdArticulo" name="IdArticulo" />
 
                     <div class="mb-3">
@@ -70,7 +80,7 @@
 <script>
     function abrirModalCrear() {
         document.getElementById("tituloModal").innerText = "Nuevo Artículo";
-        document.getElementById("articuloForm").action = "/Articulo/Create";
+        document.getElementById("articuloForm").action = "/Articulos/Crear";
 
         document.getElementById("IdArticulo").value = "";
         document.getElementById("Numero").value = "";
@@ -81,7 +91,7 @@
 
     function abrirModalActualizar(id, numero, descripcion) {
         document.getElementById("tituloModal").innerText = "Editar Artículo";
-        document.getElementById("articuloForm").action = "/Articulo/Edit";
+        document.getElementById("articuloForm").action = "/Articulos/Editar";
 
         document.getElementById("IdArticulo").value = id;
         document.getElementById("Numero").value = numero;

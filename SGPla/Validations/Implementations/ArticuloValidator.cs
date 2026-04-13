@@ -1,4 +1,5 @@
 ﻿using SGPla.Models.DTOs.Articulo;
+using SGPla.Models.InterfacesDTOs;
 using SGPla.Repositories.Interfaces;
 using SGPla.Validations.Interfaces;
 
@@ -13,33 +14,53 @@ namespace SGPla.Validations.Implementations
             _articuloRepository = articuloRepository;
         }
 
-        public async Task<bool> ValidarCreacionAsync(FormularioArticuloDTO crearArticuloDTO)
+        public async Task<bool> ValidarCreacionAsync(CrearArticuloDTO crearArticuloDTO)
         {
             ArgumentNullException.ThrowIfNull(crearArticuloDTO);
 
-            await ValidarCamposCreacion(crearArticuloDTO);
-            await ValidarNoRepetidoAsync(crearArticuloDTO.Numero);
+            await ValidarCampos(crearArticuloDTO);
+            await ValidarNoRepetidoCreacionAsync(crearArticuloDTO.Numero);
             return true;
         }
 
-        private static Task ValidarCamposCreacion(FormularioArticuloDTO crearArticuloDTO)
+        public async Task<bool> ValidarEdicionAsync(EditarArticuloDTO editarArticuloDTO)
         {
-            if (string.IsNullOrWhiteSpace(crearArticuloDTO.Numero))
+            ArgumentNullException.ThrowIfNull(editarArticuloDTO);
+
+            await ValidarCampos(editarArticuloDTO);
+            await ValidarNoRepetidoEdicionAsync(editarArticuloDTO.Numero, editarArticuloDTO.IdArticulo);
+            return true;
+        }
+
+        private static Task ValidarCampos(IArticuloDTO articuloDTO)
+        {
+            if (string.IsNullOrWhiteSpace(articuloDTO.Numero))
                 throw new ArgumentException("El número del artículo es obligatorio.");
-            if (string.IsNullOrWhiteSpace(crearArticuloDTO.Descripcion))
+            if (string.IsNullOrWhiteSpace(articuloDTO.Descripcion))
                 throw new ArgumentException("La descripción del artículo es obligatoria.");
             return Task.CompletedTask;
         }
 
-        private async Task ValidarNoRepetidoAsync(string numero)
+        private async Task ValidarNoRepetidoCreacionAsync(string numero)
         {
-            bool existeNumero = await  _articuloRepository.ExisteNumeroAsync(numero);
+            var existeNumero = await _articuloRepository.ExisteNumeroAsync(numero);
 
-            if (existeNumero)
+            if (existeNumero is not null)
             {
-                throw new ArgumentException($"El número '{numero}' ya existe. Por favor, elija un número diferente.");
+                throw new ArgumentException($"El número de articulo '{numero}' ya existe. Por favor, elija un número diferente.");
             }
-                
+
+        }
+
+        private async Task ValidarNoRepetidoEdicionAsync(string numero, int idArticulo)
+        {
+            var existeNumero = await _articuloRepository.ExisteNumeroAsync(numero);
+
+            if (existeNumero is not null && existeNumero.IdArticulo != idArticulo)
+            {
+                throw new ArgumentException($"El número de articulo '{numero}' ya existe. Por favor, elija un número diferente.");
+            }
+
         }
     }
 }

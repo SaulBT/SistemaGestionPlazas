@@ -2,10 +2,9 @@
 using SGPla.Models;
 using Microsoft.EntityFrameworkCore;
 using SGPla.Repositories.Interfaces;
-using SGPla.Models.DTOs;
-using SGPla.Models.DTOs.Articulo;
 
-namespace SGPla.Repositories
+
+namespace SGPla.Repositories.Implementations
 {
     public class ArticuloRepository : IArticuloRepository
     {
@@ -23,19 +22,22 @@ namespace SGPla.Repositories
             return articulo;
         }
 
-        public async Task<bool> ExisteNumeroAsync (string numero)
+        public async Task<Articulo?> ExisteNumeroAsync(string numero)
         {
-            return await _context.Articulo.AnyAsync(a => a.Numero == numero);
+            return await _context.Articulo.FirstOrDefaultAsync(a => a.Numero == numero);
         }
 
-        public async Task EliminarArticuloAsync(int id)
+        public async Task<bool> EliminarArticuloAsync(int id)
         {
             var articulo = await ObtenerArticuloPorIdAsync(id);
+
             if (articulo is not null)
             {
                 _context.Articulo.Remove(articulo);
                 await _context.SaveChangesAsync();
+                return true;
             }
+            return false;
         }
 
         public async Task<IEnumerable<Articulo>> ObtenerTodosAsync()
@@ -48,10 +50,19 @@ namespace SGPla.Repositories
             return _context.Articulo.FindAsync(id).AsTask();
         }
 
-        public async Task ActualizarArticuloAsync(Articulo articulo)
+        public async Task<Articulo?> EditarArticuloAsync(Articulo articulo)
         {
-            _context.Articulo.Update(articulo);
+            var toUpdate = await _context.Articulo.FindAsync(articulo.IdArticulo);
+
+            if (toUpdate is null)
+                return null;
+
+            toUpdate.Numero = articulo.Numero;
+            toUpdate.Descripcion = articulo.Descripcion;
+
             await _context.SaveChangesAsync();
+
+            return toUpdate;
         }
     }
 }

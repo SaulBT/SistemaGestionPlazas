@@ -5,30 +5,31 @@ namespace SGPla.Mappers
 {
     public class ArticuloMapper
     {
-        public static Articulo ToModel(FormularioArticuloDTO articuloDTO)
+        public static Articulo ToModel(CrearArticuloDTO dto)
         {
             return new Articulo
             {
-                Numero = articuloDTO.Numero,
-                Descripcion = articuloDTO.Descripcion
+                Numero = dto.Numero,
+                Descripcion = dto.Descripcion
             };
         }
 
-        public static ArticuloDTO ToDTO(Articulo articulo)
+        public static Articulo ToModel(EditarArticuloDTO dto)
         {
-            return new ArticuloDTO
+            return new Articulo
             {
-                IdArticulo = articulo.IdArticulo ?? 0,
-                Numero = articulo.Numero,
-                Descripcion = articulo.Descripcion
+                IdArticulo = dto.IdArticulo,
+                Numero = dto.Numero,
+                Descripcion = dto.Descripcion
             };
+
         }
 
-        public static FormularioArticuloDTO ToFormularioDTO(Articulo articulo)
+        public static DetallesArticuloDTO ToDTO(Articulo articulo)
         {
-            return new FormularioArticuloDTO
+            return new DetallesArticuloDTO
             {
-                IdArticulo = articulo.IdArticulo ?? 0,
+                IdArticulo = articulo.IdArticulo,
                 Numero = articulo.Numero,
                 Descripcion = articulo.Descripcion
             };

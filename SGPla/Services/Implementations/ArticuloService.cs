@@ -18,35 +18,54 @@ namespace SGPla.Services.Implementations
             _articuloValidator = articuloValidator;
         }
 
-        public Task ActualizarArticuloAsync(Articulo articulo)
+        public async Task<DetallesArticuloDTO> EditarArticuloAsync(EditarArticuloDTO dto)
         {
-            return _articuloRepository.ActualizarArticuloAsync(articulo);
+            await _articuloValidator.ValidarEdicionAsync(dto);
+
+            var articulo = await _articuloRepository.EditarArticuloAsync(ArticuloMapper.ToModel(dto));
+
+            DetallesArticuloDTO resultado = ArticuloMapper.ToDTO(articulo);
+
+            return resultado;
         }
 
-        public  async Task<ArticuloDTO> CrearArticuloAsync(FormularioArticuloDTO dto)
+        public  async Task<DetallesArticuloDTO> CrearArticuloAsync(CrearArticuloDTO dto)
         {
-            
             
             await _articuloValidator.ValidarCreacionAsync(dto);
+
             var articulo = await _articuloRepository.CrearArticuloAsync(ArticuloMapper.ToModel(dto));
             
-            ArticuloDTO response = ArticuloMapper.ToDTO(articulo);
+            DetallesArticuloDTO resultado = ArticuloMapper.ToDTO(articulo);
 
-            return response;
+            return resultado;
         }
 
-        public Task EliminarArticuloAsync(int id)
+        public Task<bool> EliminarArticuloAsync(int id)
         {
             return _articuloRepository.EliminarArticuloAsync(id);
         }
-        public async Task<Articulo?> ObtenerArticuloPorIdAsync(int id)
+        public async Task<DetallesArticuloDTO?> ObtenerArticuloPorIdAsync(int id)
         {
-            return await _articuloRepository.ObtenerArticuloPorIdAsync(id);
+            var articulo = await _articuloRepository.ObtenerArticuloPorIdAsync(id);
+
+            if (articulo is null)
+                return null;
+
+            DetallesArticuloDTO resultado = ArticuloMapper.ToDTO(articulo);
+            return resultado;
         }
 
-        public async Task<IEnumerable<Articulo>> ObtenerTodosAsync()
+        public async Task<IEnumerable<DetallesArticuloDTO>> ObtenerTodosAsync()
         {
-            return await _articuloRepository.ObtenerTodosAsync();
+            var articulos = await _articuloRepository.ObtenerTodosAsync();
+            if (articulos is null)
+                return Enumerable.Empty<DetallesArticuloDTO>();
+
+            IEnumerable<DetallesArticuloDTO> resultado = articulos.Select(a => ArticuloMapper.ToDTO(a));
+
+            return resultado;
+
         }
     }
 }
