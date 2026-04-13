@@ -4,7 +4,6 @@ using SGPla.Repositories.Implementations;
 using SGPla.Repositories.Interfaces;
 using SGPla.Services.Implementations;
 using SGPla.Services.Interfaces;
-using SGPla.Validations.Implementation;
 using SGPla.Repositories;
 using SGPla.Validations.Implementations;
 using SGPla.Validations.Interfaces;
