@@ -1,6 +1,7 @@
 ﻿using SGPla.Data;
 using SGPla.Models;
 using Microsoft.EntityFrameworkCore;
+using SGPla.Repositories.Interfaces;
 
 namespace SGPla.Repositories
 {

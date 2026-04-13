@@ -1,7 +1,8 @@
 ﻿using SGPla.Models;
-using SGPla.Repositories;
+using SGPla.Repositories.Interfaces;
+using SGPla.Services.Interfaces;
 
-namespace SGPla.Services
+namespace SGPla.Services.Implementations
 {
     public class ArticuloService : IArticuloService
     {

@@ -1,11 +1,11 @@
 ﻿@model IEnumerable<SGPla.Models.Articulo>
 
 <h2>Articulos</h2>
-<button class="btn btn-primary mb-3" onclick="openCreateModal()">+ Nuevo</button>
+<button class="btn btn-primary mb-3" onclick="abrirModalCrear()">Agregar artículo</button>
 <table class="table table-striped">
     <thead>
         <tr>
-            <th>Nombre</th><th>Descripcion</th><th>Acciones</th>
+            <th>Nombre</th><th>Descripción</th><th>Acciones</th>
         </tr>
     </thead>
     <tbody>
@@ -15,7 +15,7 @@
             <td>@p.Numero</td>
              <td>@p.Descripcion</td>
             <td>
-                    <button class="btn btn-sm btn-warning" onclick="openEditModal(@p.IdArticulo, '@p.Numero', '@p.Descripcion')">Editar</button>
+                    <button class="btn btn-sm btn-warning" onclick="abrirModalActualizar(@p.IdArticulo, '@p.Numero', '@p.Descripcion')">Editar</button>
                     <form asp-action="Delete" asp-route-id="@p.IdArticulo" method="post" style="display:inline">
                     @Html.AntiForgeryToken()
                     <button type="submit" onclick="return confirm('¿Eliminar?')">Eliminar</button>
@@ -33,7 +33,7 @@
                 @Html.AntiForgeryToken()
 
                 <div class="modal-header">
-                    <h5 class="modal-title" id="modalTitle">Nuevo Artículo</h5>
+                    <h5 class="modal-title" id="tituloModal">Nuevo Artículo</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
 
@@ -61,8 +61,8 @@
 </div>
 
 <script>
-    function openCreateModal() {
-        document.getElementById("modalTitle").innerText = "Nuevo Artículo";
+    function abrirModalCrear() {
+        document.getElementById("tituloModal").innerText = "Nuevo Artículo";
         document.getElementById("articuloForm").action = "/Articulo/Create";
 
         document.getElementById("IdArticulo").value = "";
@@ -72,8 +72,8 @@
         new bootstrap.Modal(document.getElementById('articuloModal')).show();
     }
 
-    function openEditModal(id, numero, descripcion) {
-        document.getElementById("modalTitle").innerText = "Editar Artículo";
+    function abrirModalActualizar(id, numero, descripcion) {
+        document.getElementById("tituloModal").innerText = "Editar Artículo";
         document.getElementById("articuloForm").action = "/Articulo/Edit";
 
         document.getElementById("IdArticulo").value = id;

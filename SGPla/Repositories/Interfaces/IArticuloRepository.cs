@@ -1,6 +1,6 @@
 ﻿using SGPla.Models;
 
-namespace SGPla.Repositories
+namespace SGPla.Repositories.Interfaces
 {
     public interface IArticuloRepository
     {

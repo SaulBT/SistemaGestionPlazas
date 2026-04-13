@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using SGPla.Data;
 using SGPla.Repositories;
-using SGPla.Services;
+using SGPla.Repositories.Interfaces;
+using SGPla.Services.Implementations;
+using SGPla.Services.Interfaces;
 //using SGPla.Data;
 
 var builder = WebApplication.CreateBuilder(args);

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SGPla.Models;
-using SGPla.Services;
+using SGPla.Services.Interfaces;
 
 namespace SGPla.Controllers
 {
@@ -18,8 +18,6 @@ namespace SGPla.Controllers
             var articulos = await _articuloService.ObtenerTodosAsync();
             return View(articulos);
         }
-
-
 
         [HttpPost]
         [ValidateAntiForgeryToken]

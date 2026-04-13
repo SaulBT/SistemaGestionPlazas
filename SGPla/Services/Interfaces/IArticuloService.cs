@@ -1,6 +1,6 @@
 ﻿using SGPla.Models;
 
-namespace SGPla.Services
+namespace SGPla.Services.Interfaces
 {
     public interface IArticuloService
     {
