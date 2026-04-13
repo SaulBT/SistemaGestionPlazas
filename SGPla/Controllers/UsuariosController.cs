@@ -99,6 +99,14 @@ namespace SGPla.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CrearUsuarioDTO model)
         {
+            if (model.Rol == "EA")
+            {
+                model.Rol = Constantes.CoordinadorEa;
+            }
+            else if (model.Rol == "DGAA")
+            {
+                model.Rol = Constantes.CoordinadorDgaa;
+            }
             if (!ModelState.IsValid)
             {
                 ViewBag.Roles = GetRolesList();
