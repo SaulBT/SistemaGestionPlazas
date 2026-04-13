@@ -1,45 +1,69 @@
-﻿@{
+﻿@model List<SGPla.Models.DTOs.Usuarios.ListaUsuarioDTO>
+
+@{
     Layout = "_LayoutSuperUsuario";
-    ViewData["Title"] = "Dashboard";
+    ViewData["Title"] = "Usuarios";
 }
 
-<div class="dashboard">
-    <h1><i class="fas fa-tachometer-alt"></i> Dashboard</h1>
-    <p>Bienvenido a tu aplicación</p>
-    
-    <!-- Tarjetas de ejemplo -->
-    <div class="row mt-4">
-        <div class="col-md-4 mb-3">
-            <div class="card text-white bg-primary">
-                <div class="card-body">
-                    <h5 class="card-title">Productos</h5>
-                    <p class="card-text display-4">24</p>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-4 mb-3">
-            <div class="card text-white bg-success">
-                <div class="card-body">
-                    <h5 class="card-title">Usuarios</h5>
-                    <p class="card-text display-4">156</p>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-4 mb-3">
-            <div class="card text-white bg-info">
-                <div class="card-body">
-                    <h5 class="card-title">Ventas Hoy</h5>
-                    <p class="card-text display-4">$1,234</p>
-                </div>
-            </div>
-        </div>
+<h1>@ViewData["Title"]</h1>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Crear Nuevo Usuario</a>
+</p>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
-</div>
-
-@section Scripts {
-    <script>
-        console.log("Dashboard cargado");
-    </script>
 }
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Correo</th>
+            <th>Cargo</th>
+            <th>Rol</th>
+            <th>Entidad/Área</th>
+            <th>Región</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var usuario in Model)
+        {
+            <tr>
+                <td>@usuario.Nombre</td>
+                <td>@usuario.Correo</td>
+                <td>@usuario.Cargo</td>
+                <td>@usuario.Rol</td>
+                <td>
+                    @if (!string.IsNullOrEmpty(usuario.NombreEntidadAcademica))
+                    {
+                        @usuario.NombreEntidadAcademica
+                    }
+                    else if (!string.IsNullOrEmpty(usuario.NombreAreaAcademica))
+                    {
+                        @usuario.NombreAreaAcademica
+                    }
+                </td>
+                <td>@usuario.Region</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@usuario.IdUsuario" asp-route-rol="@usuario.Rol" class="btn btn-sm btn-info">Detalles</a>
+                    <a asp-action="Edit" asp-route-id="@usuario.IdUsuario" asp-route-rol="@usuario.Rol" class="btn btn-sm btn-warning">Editar</a>
+                    <a asp-action="Delete" asp-route-id="@usuario.IdUsuario" asp-route-rol="@usuario.Rol" class="btn btn-sm btn-danger">Eliminar</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

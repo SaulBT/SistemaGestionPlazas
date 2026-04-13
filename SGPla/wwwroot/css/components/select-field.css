@@ -1,0 +1,73 @@
+﻿
+
+/* NO FUNCIONA... */
+
+/* ===== SELECT FIELD ===== */
+.select {
+    display: flex;
+    min-width: 120px;
+    height: 40px;
+    align-items: center;
+    gap: var(--size-space-200);
+    padding: var(--size-space-300) var(--size-space-300) var(--size-space-300) var(--size-space-400);
+    position: relative;
+    background-color: var(--color-background-default-default);
+    border-radius: var(--size-radius-200);
+    border: 1px solid;
+    border-color: var(--color-border-default-default);
+    /* Estilos específicos para select nativo */
+    cursor: pointer;
+    appearance: none; /* Quita el estilo nativo del sistema */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    /* Para que el texto no se desborde */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+    /* El texto seleccionado */
+    .select .text-wrapper {
+        position: relative;
+        flex: 1;
+        font-family: var(--body-font-family);
+        font-weight: var(--body-font-weight);
+        color: var(--color-text-default-default);
+        font-size: var(--body-font-size);
+        letter-spacing: var(--body-letter-spacing);
+        line-height: var(--body-line-height);
+        font-style: var(--body-font-style);
+        /* Para select nativo */
+        background: transparent;
+        border: none;
+        width: 100%;
+        cursor: pointer;
+    }
+
+    /* Ícono de flecha (chevron) */
+    .select .chevron-down {
+        position: relative;
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0; /* Evita que la flecha se encoja */
+        pointer-events: none; /* Para que los clics pasen al select */
+    }
+
+    /* Estado hover (como aprendiste) */
+    .select:hover {
+        border-color: var(--color-border-default-hover);
+        background-color: var(--color-background-default-hover);
+    }
+
+    /* Estado focus (para accesibilidad) */
+    .select:focus {
+        outline: none;
+        border-color: var(--color-border-default-focus);
+        box-shadow: 0 0 0 2px rgba(var(--azul-primario-rgb), 0.2);
+    }
+
+    /* Estado disabled */
+    .select:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
