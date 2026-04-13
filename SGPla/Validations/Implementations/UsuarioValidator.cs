@@ -4,7 +4,7 @@ using SGPla.Repositories.Interfaces;
 using SGPla.Validations.Interfaces;
 using System.Net.Mail;
 
-namespace SGPla.Validations.Implementation
+namespace SGPla.Validations.Implementations
 {
     public class UsuarioValidator : IUsuarioValidator
     {
