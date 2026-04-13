@@ -3,7 +3,7 @@ using SGPla.Models;
 using SGPla.Models.DTOs.Usuarios;
 using SGPla.Repositories.Interfaces;
 using SGPla.Services.Interfaces;
-using SGPla.Validations.Interfaz;
+using SGPla.Validations.Interfaces;
 
 namespace SGPla.Services.Implementations
 {
