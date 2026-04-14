@@ -39,6 +39,7 @@ CREATE TABLE [dbo].[Acta](
     [asuntosGenerales] [varchar](max) NOT NULL,
     [rutaDocumentoOriginal] [varchar](255) NULL,
     [rutaDocumentoFirmado] [varchar](255) NULL,
+    [archivado] [bit] NULL,
     CONSTRAINT [PK_Acta] PRIMARY KEY CLUSTERED ([idActa] ASC),
     CONSTRAINT [CK_Acta_horas] CHECK ([horaInicio] < [horaConclusion])
 );
@@ -92,6 +93,7 @@ CREATE TABLE [dbo].[Aviso](
     [modalidad] [varchar](10) NOT NULL,
     [rutaDocumentoOriginal] [varchar](255) NULL,
     [rutaDocumentoFirmado] [varchar](255) NULL,
+    [archivado] [bit] NULL,
     CONSTRAINT [PK_Aviso] PRIMARY KEY CLUSTERED ([idAviso] ASC),
     CONSTRAINT [CK_modalidad_aviso] CHECK ([modalidad] IN ('Virtual', 'Presencial')),
     CONSTRAINT [CK_Aviso_fechas] CHECK ([fechaCreacion] <= [fechaInicio])
