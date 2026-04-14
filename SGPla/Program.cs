@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using SGPla.Data;
-using SGPla.Repositories;
 using SGPla.Repositories.Interfaces;
+using SGPla.Repositories.Implementations;
 using SGPla.Services.Implementations;
 using SGPla.Services.Interfaces;
 using SGPla.Validations.Implementations;
