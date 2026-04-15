@@ -28,7 +28,7 @@ namespace SGPla.Validations.Implementations
             bool existe = await _areaAcademicaRepository.ExistePorIdAsync(id);
 
             if (!existe)
-                throw new ArgumentException("No existe ese Área Académica");
+                throw new ArgumentException("No existe esa Área Académica.");
         }
 
         public async Task ValidarEdicionAsync(DatosAreaAcademicaDTO datosAreaAcademicaDTO)
