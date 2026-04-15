@@ -22,8 +22,6 @@ namespace SGPla.Validations.Implementations
 
         public async Task ValidarIdAsync(int id)
         {
-            ArgumentNullException.ThrowIfNull(id);
-
             if (id <= 0)
                 throw new ArithmeticException("La Id es inválida");
 
