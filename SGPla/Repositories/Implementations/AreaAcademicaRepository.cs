@@ -22,6 +22,20 @@
                 .ToListAsync();
         }
 
+        public async Task<List<AreaAcademica>> ObtenerPorNombreAsync(string nombre)
+        {
+            if (string.IsNullOrWhiteSpace(nombre))
+                return new List<AreaAcademica>();
+
+            nombre = nombre.Trim();
+
+            return await _context.AreaAcademica
+                .AsNoTracking()
+                .Where(a => a.Nombre.Contains(nombre))
+                .OrderBy(a => a.Nombre)
+                .ToListAsync();
+        }
+
         public async Task<AreaAcademica?> ObtenerPorIdAsync(int idAreaAcademica)
         {
             return await _context.AreaAcademica
