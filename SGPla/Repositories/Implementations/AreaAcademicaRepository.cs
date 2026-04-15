@@ -64,5 +64,13 @@
             _context.AreaAcademica.Update(areaAcademica);
             await _context.SaveChangesAsync();
         }
+
+        public async Task EliminarAsync(AreaAcademica areaAcademica)
+        {
+            ArgumentNullException.ThrowIfNull(areaAcademica);
+
+            _context.AreaAcademica.Remove(areaAcademica);
+            await _context.SaveChangesAsync();
+        }
     }
 }
