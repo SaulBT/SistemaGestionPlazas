@@ -24,10 +24,14 @@ builder.Services.AddDbContext<GestionDePlazasDbContext>(options =>
 //Clases
 builder.Services.AddScoped<ICoordinadorEaRepository, CoordinadorEaRepository>();
 builder.Services.AddScoped<ICoordinadorDgaaRepository, CoordinadorDgaaRepository>();
-builder.Services.AddScoped<IAreaAcademicaRepository, AreaAcademicaRepository>();
-builder.Services.AddScoped<IEntidadAcademicaRepository, EntidadAcademicaRepository>();
 builder.Services.AddScoped<IUsuarioValidator, UsuarioValidator>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+
+builder.Services.AddScoped<IAreaAcademicaRepository, AreaAcademicaRepository>();
+builder.Services.AddScoped<IAreaAcademicaValidator, AreaAcademicaValidator>();
+builder.Services.AddScoped<IAreaAcademicaService, AreaAcademicaService>();
+
+builder.Services.AddScoped<IEntidadAcademicaRepository, EntidadAcademicaRepository>();
 
 builder.Services.AddScoped<IArticuloRepository, ArticuloRepository>();
 builder.Services.AddScoped<IArticuloService, ArticuloService>();
