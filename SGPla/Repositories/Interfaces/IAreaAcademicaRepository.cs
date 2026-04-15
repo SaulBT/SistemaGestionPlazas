@@ -10,5 +10,6 @@ namespace SGPla.Repositories.Interfaces
         Task<bool> ExistePorIdAsync(int idAreaAcademica);
         Task<AreaAcademica> CrearAsync(AreaAcademica areaAcademica);
         Task ActualizarAsync(AreaAcademica areaAcademica);
+        Task EliminarAsync(AreaAcademica areaAcademica);
     }
 }
