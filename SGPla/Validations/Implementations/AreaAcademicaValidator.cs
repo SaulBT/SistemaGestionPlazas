@@ -41,45 +41,45 @@ namespace SGPla.Validations.Implementations
 
         private void validarCamposCreacion(CrearAreaAcademicaDTO crearAreaAcademicaDTO)
         {
-            if (string.IsNullOrEmpty(crearAreaAcademicaDTO.Nombre.Trim()))
+            if (string.IsNullOrWhiteSpace(crearAreaAcademicaDTO.Nombre))
                 throw new ArgumentException("El Nombre es obligatorio.");
-            if (string.IsNullOrEmpty(crearAreaAcademicaDTO.CalleNumero.Trim()))
+            if (string.IsNullOrWhiteSpace(crearAreaAcademicaDTO.CalleNumero))
                 throw new ArgumentException("La CalleNumero es obligatoria.");
-            if (string.IsNullOrEmpty(crearAreaAcademicaDTO.Colonia.Trim()))
+            if (string.IsNullOrWhiteSpace(crearAreaAcademicaDTO.Colonia))
                 throw new ArgumentException("La Colonia es obligatoria.");
-            if (string.IsNullOrEmpty(crearAreaAcademicaDTO.Cp.Trim()))
+            if (string.IsNullOrWhiteSpace(crearAreaAcademicaDTO.Cp))
                 throw new ArgumentException("El CP es obligatorio.");
-            if (string.IsNullOrEmpty(crearAreaAcademicaDTO.Municipio.Trim()))
+            if (string.IsNullOrWhiteSpace(crearAreaAcademicaDTO.Municipio))
                 throw new ArgumentException("El Municipio es obligatorio.");
-            if (string.IsNullOrEmpty(crearAreaAcademicaDTO.Telefono.Trim()))
+            if (string.IsNullOrWhiteSpace(crearAreaAcademicaDTO.Telefono))
                 throw new ArgumentException("El Teléfono es obligatorio.");
-            if (string.IsNullOrEmpty(crearAreaAcademicaDTO.Conmutador.Trim()))
+            if (string.IsNullOrWhiteSpace(crearAreaAcademicaDTO.Conmutador))
                 throw new ArgumentException("El Conmutador es obligatorio.");
-            if (string.IsNullOrEmpty(crearAreaAcademicaDTO.Extension.Trim()))
+            if (string.IsNullOrWhiteSpace(crearAreaAcademicaDTO.Extension))
                 throw new ArgumentException("La Extensión es obligatoria.");
-            if (string.IsNullOrEmpty(crearAreaAcademicaDTO.Fax.Trim()))
+            if (string.IsNullOrWhiteSpace(crearAreaAcademicaDTO.Fax))
                 throw new ArgumentException("El Fax es obligatorio.");
         }
 
         private void validarCamposEdicion(DatosAreaAcademicaDTO datosAreaAcademicaDTO)
         {
-            if (string.IsNullOrEmpty(datosAreaAcademicaDTO.Nombre.Trim()))
+            if (string.IsNullOrWhiteSpace(datosAreaAcademicaDTO.Nombre))
                 throw new ArgumentException("El Nombre es obligatorio.");
-            if (string.IsNullOrEmpty(datosAreaAcademicaDTO.CalleNumero.Trim()))
+            if (string.IsNullOrWhiteSpace(datosAreaAcademicaDTO.CalleNumero))
                 throw new ArgumentException("La CalleNumero es obligatoria.");
-            if (string.IsNullOrEmpty(datosAreaAcademicaDTO.Colonia.Trim()))
+            if (string.IsNullOrWhiteSpace(datosAreaAcademicaDTO.Colonia))
                 throw new ArgumentException("La Colonia es obligatoria.");
-            if (string.IsNullOrEmpty(datosAreaAcademicaDTO.Cp.Trim()))
+            if (string.IsNullOrWhiteSpace(datosAreaAcademicaDTO.Cp))
                 throw new ArgumentException("El CP es obligatorio.");
-            if (string.IsNullOrEmpty(datosAreaAcademicaDTO.Municipio.Trim()))
+            if (string.IsNullOrWhiteSpace(datosAreaAcademicaDTO.Municipio))
                 throw new ArgumentException("El Municipio es obligatorio.");
-            if (string.IsNullOrEmpty(datosAreaAcademicaDTO.Telefono.Trim()))
+            if (string.IsNullOrWhiteSpace(datosAreaAcademicaDTO.Telefono))
                 throw new ArgumentException("El Teléfono es obligatorio.");
-            if (string.IsNullOrEmpty(datosAreaAcademicaDTO.Conmutador.Trim()))
+            if (string.IsNullOrWhiteSpace(datosAreaAcademicaDTO.Conmutador))
                 throw new ArgumentException("El Conmutador es obligatorio.");
-            if (string.IsNullOrEmpty(datosAreaAcademicaDTO.Extension.Trim()))
+            if (string.IsNullOrWhiteSpace(datosAreaAcademicaDTO.Extension))
                 throw new ArgumentException("La Extensión es obligatoria.");
-            if (string.IsNullOrEmpty(datosAreaAcademicaDTO.Fax.Trim()))
+            if (string.IsNullOrWhiteSpace(datosAreaAcademicaDTO.Fax))
                 throw new ArgumentException("El Fax es obligatorio.");
         }
     }

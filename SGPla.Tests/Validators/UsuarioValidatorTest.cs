@@ -2,7 +2,7 @@ using Moq;
 using SGPla.Repositories.Interfaces;
 using SGPla.Models.DTOs.Usuarios;
 using SGPla.Commons;
-using SGPla.Validations.Implementation;
+using SGPla.Validations.Implementations;
 using SGPla.Models;
 
 public class UsuarioValidatorTests
