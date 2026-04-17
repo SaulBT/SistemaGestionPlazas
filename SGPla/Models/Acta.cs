@@ -25,6 +25,8 @@ public partial class Acta
 
     public string? RutaDocumentoFirmado { get; set; }
 
+    public bool? Archivado { get; set; }
+
     public virtual ICollection<Asistencia> Asistencia { get; set; } = new List<Asistencia>();
 
     public virtual ICollection<Dictamen> Dictamen { get; set; } = new List<Dictamen>();

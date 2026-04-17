@@ -1,13 +1,6 @@
 /*
-    Script depurado y corregido para SQL Server
     Proyecto: Sistema de Gestión de Plazas
-
-    Notas:
-    - Se mantiene todo en un solo script.
-    - Se conservan los campos de dirección repetidos en AreaAcademica y EntidadAcademica.
-    - Se conservan los tipos varchar por decisión del equipo.
-    - Se eliminaron dependencias del entorno original (rutas físicas, opciones avanzadas y usuario ligado a un login).
-    - Este script está pensado para crear una base nueva.
+    V:0.2
 */
 
 SET ANSI_NULLS ON;
@@ -155,7 +148,6 @@ CREATE TABLE [dbo].[EntidadAcademica](
     [extension] [varchar](5) NOT NULL,
     [fax] [varchar](20) NOT NULL,
     [region] [varchar](30) NOT NULL,
-    [campus] [varchar](255) NOT NULL,
     CONSTRAINT [PK_EntidadAcademica] PRIMARY KEY CLUSTERED ([idEntidadAcademica] ASC),
     CONSTRAINT [CK_region_entidadAcademica] CHECK ([region] IN (
         '1-Xalapa',
