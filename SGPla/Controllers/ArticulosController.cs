@@ -39,7 +39,10 @@ namespace SGPla.Controllers
             {
                 try
                 {
-                    await _articuloService.CrearArticuloAsync(dto);
+                    var resultado = await _articuloService.CrearArticuloAsync(dto);
+
+                    TempData["Success"] = $"Art[iculo creado exitosamente con ID: {resultado.IdArticulo}";
+
                 }
                 catch (ArgumentException ex)
                 {
@@ -77,7 +80,9 @@ namespace SGPla.Controllers
             {
                 try
                 {
-                    await _articuloService.EditarArticuloAsync(dto);
+                    var resultado = await _articuloService.EditarArticuloAsync(dto);
+                    TempData["Success"] = $"Art[iculo creado exitosamente con ID: {resultado.IdArticulo}";
+
                 }
                 catch (ArgumentException ex)
                 {
@@ -93,7 +98,11 @@ namespace SGPla.Controllers
         {
             try
             {
-                await _articuloService.EliminarArticuloAsync(id);
+                var resultado = await _articuloService.EliminarArticuloAsync(id);
+                if (resultado)
+                {
+                    TempData["Success"] = $"Artículo eliminado exitosamente";
+                }
             }
             catch (ArgumentException ex)
             {
