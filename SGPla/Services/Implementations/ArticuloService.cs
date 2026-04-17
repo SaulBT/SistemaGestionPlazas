@@ -67,5 +67,16 @@ namespace SGPla.Services.Implementations
             return resultado;
 
         }
+
+        public async Task<IEnumerable<DetallesArticuloDTO>> BuscarPorTerminoAsync(string busqueda)
+        {
+            var articulos = await _articuloRepository.BuscarPorTerminoAsync(busqueda);
+            if (articulos is null)
+                return Enumerable.Empty<DetallesArticuloDTO>();
+
+            IEnumerable<DetallesArticuloDTO> resultado = articulos.Select(a => ArticuloMapper.ToDTO(a));
+
+            return resultado;
+        }
     }
 }

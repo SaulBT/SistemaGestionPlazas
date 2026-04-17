@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using SGPla.Mappers;
 using SGPla.Models;
 using SGPla.Models.DTOs.Articulo;
@@ -16,8 +17,17 @@ namespace SGPla.Controllers
         }
         public async Task<IActionResult> Index()
         {
-            var articulos = await _articuloService.ObtenerTodosAsync();
-            
+            IEnumerable<DetallesArticuloDTO>? articulos = null;
+
+            try
+            {
+                articulos = await _articuloService.ObtenerTodosAsync();
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = ex.Message;
+            }
+
             return View(articulos);
         }
 
@@ -39,6 +49,26 @@ namespace SGPla.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [HttpGet]
+        public async Task<IActionResult> Buscar(string busqueda)
+        {  
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var resultados = await _articuloService.BuscarPorTerminoAsync(busqueda);
+                    return View("Index", resultados);
+
+                }
+                catch (Exception ex)
+                {
+                    TempData["Error"] = ex.Message;
+                    return RedirectToAction(nameof(Index));
+                }
+            }
+            return RedirectToAction(nameof(Index));
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Editar(EditarArticuloDTO dto) 
@@ -47,15 +77,12 @@ namespace SGPla.Controllers
             {
                 try
                 {
-
-                
-                await _articuloService.EditarArticuloAsync(dto);
+                    await _articuloService.EditarArticuloAsync(dto);
                 }
                 catch (ArgumentException ex)
                 {
                     TempData["Error"] = ex.Message;
                 }
-
             }
             return RedirectToAction(nameof(Index));
         }
@@ -64,7 +91,14 @@ namespace SGPla.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Eliminar(int id)
         {
-            await _articuloService.EliminarArticuloAsync(id);
+            try
+            {
+                await _articuloService.EliminarArticuloAsync(id);
+            }
+            catch (ArgumentException ex)
+            {
+                TempData["Error"] = ex.Message;
+            }
             return RedirectToAction(nameof(Index));
         }
 

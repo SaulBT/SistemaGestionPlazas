@@ -13,5 +13,7 @@ namespace SGPla.Services.Interfaces
         Task<DetallesArticuloDTO> EditarArticuloAsync(EditarArticuloDTO articulo);
 
         Task<bool> EliminarArticuloAsync(int id);
+
+        Task<IEnumerable<DetallesArticuloDTO>> BuscarPorTerminoAsync(string busqueda);
     }
 }

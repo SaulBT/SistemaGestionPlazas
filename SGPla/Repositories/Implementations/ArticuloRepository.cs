@@ -52,17 +52,35 @@ namespace SGPla.Repositories.Implementations
 
         public async Task<Articulo?> EditarArticuloAsync(Articulo articulo)
         {
-            var toUpdate = await _context.Articulo.FindAsync(articulo.IdArticulo);
+            var actualizado = await _context.Articulo.FindAsync(articulo.IdArticulo);
 
-            if (toUpdate is null)
+            if (actualizado is null)
                 return null;
 
-            toUpdate.Numero = articulo.Numero;
-            toUpdate.Descripcion = articulo.Descripcion;
-
+            actualizado.Numero = articulo.Numero;
+            actualizado.Descripcion = articulo.Descripcion;
             await _context.SaveChangesAsync();
 
-            return toUpdate;
+            return actualizado;
+        }
+
+        public async Task<IEnumerable<Articulo>> BuscarPorTerminoAsync(string busqueda)
+        {
+            var texto = busqueda.Trim();
+
+            var query = _context.Articulo.AsQueryable();
+
+            if (!string.IsNullOrEmpty(texto))
+            {
+                query = query.Where(a =>
+                    a.Descripcion.Contains(texto) ||
+                    a.Numero.Contains(texto)
+                );
+            }
+
+            var resultados = await query.ToListAsync();
+
+            return resultados;
         }
     }
 }
