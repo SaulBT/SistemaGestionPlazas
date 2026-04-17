@@ -1,6 +1,6 @@
 ﻿using SGPla.Models.DTOs.Usuarios;
 
-namespace SGPla.Validations.Interfaz
+namespace SGPla.Validations.Interfaces
 {
     public interface IUsuarioValidator
     {

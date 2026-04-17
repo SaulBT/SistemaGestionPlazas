@@ -4,7 +4,7 @@ using SGPla.Services.Implementations;
 using SGPla.Models.DTOs.Usuarios;
 using SGPla.Models;
 using SGPla.Commons;
-using SGPla.Validations.Interfaz;
+using SGPla.Validations.Interfaces;
 public class UsuarioServiceTests
 {
     private readonly Mock<ICoordinadorEaRepository> _coordinadorEaRepositoryMock;

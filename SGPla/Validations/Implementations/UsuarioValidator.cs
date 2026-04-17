@@ -1,10 +1,10 @@
 ﻿using SGPla.Commons;
 using SGPla.Models.DTOs.Usuarios;
 using SGPla.Repositories.Interfaces;
-using SGPla.Validations.Interfaz;
+using SGPla.Validations.Interfaces;
 using System.Net.Mail;
 
-namespace SGPla.Validations.Implementation
+namespace SGPla.Validations.Implementations
 {
     public class UsuarioValidator : IUsuarioValidator
     {
