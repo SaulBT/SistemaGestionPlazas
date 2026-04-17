@@ -109,7 +109,7 @@ Si esto está mal, pueden aparecer errores aunque la configuración sea correcta
 Abrir la **Consola del Administrador de paquetes** y ejecutar el comando de scaffolding:
 
 ```powershell
-Scaffold-DbContext Name=ConnectionStrings:DefaultConnection Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models -ContextDir Data -Context GestionDePlazasDbContext -NoOnConfiguring -NoPluralize -UseDatabaseNames
+Scaffold-DbContext Name=ConnectionStrings:DefaultConnection Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models -ContextDir Data -Context GestionDePlazasDbContext -NoOnConfiguring -NoPluralize
 ```
 
 Este comando hace lo siguiente:
