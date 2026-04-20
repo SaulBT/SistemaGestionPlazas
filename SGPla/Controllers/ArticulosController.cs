@@ -41,7 +41,7 @@ namespace SGPla.Controllers
                 {
                     var resultado = await _articuloService.CrearArticuloAsync(dto);
 
-                    TempData["Success"] = $"Art[iculo creado exitosamente con ID: {resultado.IdArticulo}";
+                    TempData["Success"] = $"Articulo creado exitosamente con ID: {resultado.IdArticulo}";
 
                 }
                 catch (ArgumentException ex)
@@ -81,7 +81,7 @@ namespace SGPla.Controllers
                 try
                 {
                     var resultado = await _articuloService.EditarArticuloAsync(dto);
-                    TempData["Success"] = $"Art[iculo creado exitosamente con ID: {resultado.IdArticulo}";
+                    TempData["Success"] = $"Articulo creado exitosamente con ID: {resultado.IdArticulo}";
 
                 }
                 catch (ArgumentException ex)
