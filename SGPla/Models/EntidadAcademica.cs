@@ -29,8 +29,6 @@ public partial class EntidadAcademica
 
     public string Region { get; set; } = null!;
 
-    public string Campus { get; set; } = null!;
-
     public virtual ICollection<Aviso> Aviso { get; set; } = new List<Aviso>();
 
     public virtual ICollection<CoordinadorEa> CoordinadorEa { get; set; } = new List<CoordinadorEa>();

@@ -372,10 +372,6 @@ public partial class GestionDePlazasDbContext : DbContext
                 .HasMaxLength(150)
                 .IsUnicode(false)
                 .HasColumnName("calleNumero");
-            entity.Property(e => e.Campus)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("campus");
             entity.Property(e => e.Colonia)
                 .HasMaxLength(100)
                 .IsUnicode(false)
