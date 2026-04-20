@@ -80,5 +80,13 @@ namespace SGPla.Repositories.Implementations
             _context.EntidadAcademica.Update(entidadAcademica);
             await _context.SaveChangesAsync();
         }
+
+        public async Task EliminarAsync(EntidadAcademica entidadAcademica)
+        {
+            ArgumentNullException.ThrowIfNull(entidadAcademica);
+
+            _context.EntidadAcademica.Remove(entidadAcademica);
+            await _context.SaveChangesAsync();
+        }
     }
 }

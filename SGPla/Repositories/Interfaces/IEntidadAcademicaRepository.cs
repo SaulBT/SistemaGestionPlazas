@@ -12,5 +12,6 @@ namespace SGPla.Repositories.Interfaces
         Task<bool> ExistePorClaveAsync(string clave, int idEntidadAcademica);
         Task<EntidadAcademica> CrearAsync(EntidadAcademica entidadAcademica);
         Task ActualizarAsync(EntidadAcademica entidadAcademica);
+        Task EliminarAsync(EntidadAcademica entidadAcademica);
     }
 }
