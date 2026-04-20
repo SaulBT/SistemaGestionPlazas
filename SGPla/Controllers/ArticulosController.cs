@@ -54,19 +54,19 @@ namespace SGPla.Controllers
 
         [HttpGet]
         public async Task<IActionResult> Buscar(string busqueda)
-        {  
+        {
             if (ModelState.IsValid)
             {
                 try
                 {
                     var resultados = await _articuloService.BuscarPorTerminoAsync(busqueda);
-                    return View("Index", resultados);
+                      return View("Index", resultados);
 
                 }
-                catch (Exception ex)
+                catch (ArgumentException ex)
                 {
-                    TempData["Error"] = ex.Message;
-                    return RedirectToAction(nameof(Index));
+                    ModelState.AddModelError("", ex.Message);
+                    return View("Index");
                 }
             }
             return RedirectToAction(nameof(Index));

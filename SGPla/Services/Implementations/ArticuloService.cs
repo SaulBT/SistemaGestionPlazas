@@ -47,6 +47,8 @@ namespace SGPla.Services.Implementations
         }
         public async Task<DetallesArticuloDTO?> ObtenerArticuloPorIdAsync(int id)
         {
+            await _articuloValidator.ValidarObtenerPorIdAsync(id);
+
             var articulo = await _articuloRepository.ObtenerArticuloPorIdAsync(id);
 
             if (articulo is null)
@@ -70,6 +72,9 @@ namespace SGPla.Services.Implementations
 
         public async Task<IEnumerable<DetallesArticuloDTO>> BuscarPorTerminoAsync(string busqueda)
         {
+            await _articuloValidator.ValidarBusquedaPorTerminoAsync(busqueda);
+
+
             var articulos = await _articuloRepository.BuscarPorTerminoAsync(busqueda);
             if (articulos is null)
                 return Enumerable.Empty<DetallesArticuloDTO>();

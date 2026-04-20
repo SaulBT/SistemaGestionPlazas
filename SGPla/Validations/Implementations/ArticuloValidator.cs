@@ -2,6 +2,7 @@
 using SGPla.Models.InterfacesDTOs;
 using SGPla.Repositories.Interfaces;
 using SGPla.Validations.Interfaces;
+using System.Text.RegularExpressions;
 
 namespace SGPla.Validations.Implementations
 {
@@ -14,31 +15,35 @@ namespace SGPla.Validations.Implementations
             _articuloRepository = articuloRepository;
         }
 
-        public async Task<bool> ValidarCreacionAsync(CrearArticuloDTO crearArticuloDTO)
+        public async Task ValidarCreacionAsync(CrearArticuloDTO crearArticuloDTO)
         {
             ArgumentNullException.ThrowIfNull(crearArticuloDTO);
 
-            await ValidarCampos(crearArticuloDTO);
+            ValidarCampos(crearArticuloDTO);
             await ValidarNoRepetidoCreacionAsync(crearArticuloDTO.Numero);
-            return true;
         }
 
-        public async Task<bool> ValidarEdicionAsync(EditarArticuloDTO editarArticuloDTO)
+        public async Task ValidarEdicionAsync(EditarArticuloDTO editarArticuloDTO)
         {
             ArgumentNullException.ThrowIfNull(editarArticuloDTO);
 
-            await ValidarCampos(editarArticuloDTO);
+            ValidarCampos(editarArticuloDTO);
             await ValidarNoRepetidoEdicionAsync(editarArticuloDTO.Numero, editarArticuloDTO.IdArticulo);
-            return true;
         }
 
-        private static Task ValidarCampos(IArticuloDTO articuloDTO)
+
+        private static void ValidarCampos(IArticuloDTO articuloDTO)
         {
             if (string.IsNullOrWhiteSpace(articuloDTO.Numero))
                 throw new ArgumentException("El número del artículo es obligatorio.");
+
+            if (!Regex.IsMatch(articuloDTO.Numero, @"\d"))
+                throw new ArgumentException("El número del artículo debe contener al menos un número.");
+
             if (string.IsNullOrWhiteSpace(articuloDTO.Descripcion))
                 throw new ArgumentException("La descripción del artículo es obligatoria.");
-            return Task.CompletedTask;
+
+           
         }
 
         private async Task ValidarNoRepetidoCreacionAsync(string numero)
@@ -61,6 +66,24 @@ namespace SGPla.Validations.Implementations
                 throw new ArgumentException($"El número de articulo '{numero}' ya existe. Por favor, elija un número diferente.");
             }
 
+        }
+
+        public async Task ValidarBusquedaPorTerminoAsync(string busqueda)
+        {
+            if (string.IsNullOrWhiteSpace(busqueda))
+                throw new ArgumentException("La cadena de búsqueda no puede estar vacía.");
+        }
+
+        public async Task ValidarObtenerPorIdAsync(int id)
+        {
+            if (id <= 0)
+                throw new ArgumentException("El ID del artículo no es válido.");
+        }
+
+        public async Task ValidarEliminarAsync(int id)
+        {
+            if (id <= 0)
+                throw new ArgumentException("El ID del artículo no es válido.");
         }
     }
 }
