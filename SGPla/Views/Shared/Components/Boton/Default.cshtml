@@ -1,0 +1,49 @@
+﻿@model BotonModel
+
+@if (Model.Fondo)
+{
+    @if ((Model.Accion.Equals("siguiente")) || (Model.Accion.Equals("ver mas"))) {
+        <button class="boton-primario boton-@Model.Tipo"
+                disabled="@(Model.Disabled ? "disabled" : null)"
+                style="flex-direction: row-reverse">
+
+            @if (!string.IsNullOrWhiteSpace(Model.Icono))
+            {
+                <i class="@Model.Icono"></i>
+            }
+
+            <span class="text-wrapper">
+                @Model.Texto
+            </span>
+        </button>
+    } else
+    {
+        <button class="boton-primario boton-@Model.Tipo"
+                disabled="@(Model.Disabled ? "disabled" : null)">
+
+            @if (!string.IsNullOrWhiteSpace(Model.Icono))
+            {
+                <i class="@Model.Icono"></i>
+            }
+
+            <span class="text-wrapper">
+                @Model.Texto
+            </span>
+        </button>
+    }
+}
+else
+{
+    <button class="boton-primario boton-icono"
+            disabled="@(Model.Disabled ? "disabled" : null)">
+
+        @if (!string.IsNullOrWhiteSpace(Model.Icono))
+        {
+            <i class="@Model.Icono"></i>
+        }
+
+        <span class="text-wrapper">
+            @Model.Texto
+        </span>
+    </button>
+}

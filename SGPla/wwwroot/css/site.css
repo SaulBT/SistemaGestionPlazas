@@ -27,6 +27,8 @@
     --border-radius-sm: 8px;
 
 
+    --fondo-iconos: rgba(1,1,1,0.1);
+    --publicar: rgba(134, 192, 169, 1);
     --azul-primario: rgba(0, 91, 170, 1);
     --verde-secundario: rgba(65, 143, 114, 1);
     --sidebar-hover: rgba(60, 106, 153, 1);
