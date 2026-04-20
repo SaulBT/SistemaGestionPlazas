@@ -32,6 +32,7 @@ builder.Services.AddScoped<IAreaAcademicaValidator, AreaAcademicaValidator>();
 builder.Services.AddScoped<IAreaAcademicaService, AreaAcademicaService>();
 
 builder.Services.AddScoped<IEntidadAcademicaRepository, EntidadAcademicaRepository>();
+builder.Services.AddScoped<IEntidadAcademicaValidator, EntidadAcademicaValidator>();
 
 builder.Services.AddScoped<IArticuloRepository, ArticuloRepository>();
 builder.Services.AddScoped<IArticuloService, ArticuloService>();
