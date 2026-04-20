@@ -50,6 +50,24 @@ namespace SGPla.Repositories.Implementations
                 .AnyAsync(e => e.IdEntidadAcademica == idEntidadAcademica);
         }
 
+        public async Task<bool> ExistePorClaveAsync(string clave)
+        {
+            string prefijoClave = $"{clave.Trim()}-";
+
+            return await _context.EntidadAcademica
+                .AnyAsync(e => e.Nombre != null && e.Nombre.StartsWith(prefijoClave));
+        }
+
+        public async Task<bool> ExistePorClaveAsync(string clave, int idEntidadAcademica)
+        {
+            string prefijoClave = $"{clave.Trim()}-";
+
+            return await _context.EntidadAcademica
+                .AnyAsync(e => e.IdEntidadAcademica != idEntidadAcademica
+                    && e.Nombre != null
+                    && e.Nombre.StartsWith(prefijoClave));
+        }
+
         public async Task<EntidadAcademica> CrearAsync(EntidadAcademica entidadAcademica)
         {
             await _context.EntidadAcademica.AddAsync(entidadAcademica);
