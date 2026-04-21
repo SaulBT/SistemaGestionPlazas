@@ -81,6 +81,14 @@ namespace SGPla.Validations.Implementations
             await validarClaveAsync(datosEntidadAcademicaDTO.Clave, datosEntidadAcademicaDTO.Region);
         }
 
+        public void ValidarIndice(int indice)
+        {
+            ArgumentNullException.ThrowIfNull(indice);
+
+            if (indice <= 0)
+                throw new ArgumentException("El Índice es inválido");
+        }
+
         public async Task ValidarIdAsync(int id)
         {
             validarEstadoId(id, Constantes.IdEntidadAcademica);
