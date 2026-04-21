@@ -25,7 +25,7 @@ namespace SGPla.Repositories.Implementations
         public async Task<EntidadAcademica?> ObtenerPorIdAsync(int idEntidadAcademica)
         {
             return await _context.EntidadAcademica
-                .AsNoTracking()
+                .Include(e => e.IdAreaAcademicaNavigation)
                 .FirstOrDefaultAsync(e => e.IdEntidadAcademica == idEntidadAcademica);
         }
 
