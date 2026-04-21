@@ -22,10 +22,37 @@ namespace SGPla.Repositories.Implementations
                 .ToListAsync();
         }
 
-        public async Task<EntidadAcademica?> ObtenerPorIdAsync(int idEntidadAcademica)
+        public async Task<List<EntidadAcademica>> ObtenerDiezAsync(int indiceInicial)
         {
             return await _context.EntidadAcademica
                 .AsNoTracking()
+                .OrderBy(e => e.Nombre)
+                .Include(e => e.IdAreaAcademicaNavigation)
+                .Skip(indiceInicial - 1)
+                .Take(10)
+                .ToListAsync();
+        }
+
+        public async Task<List<EntidadAcademica>> ObtenerPorFiltroAsync(string? region, int? idAreaAcademica, string? nombre)
+        {
+            var lista = _context.EntidadAcademica
+                .Include(e => e.IdAreaAcademicaNavigation)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(region))
+                lista = lista.Where(e => e.Region == region);
+            if (idAreaAcademica != null && idAreaAcademica >= 0)
+                lista = lista.Where(e=> e.IdAreaAcademica == idAreaAcademica);
+            if (!string.IsNullOrEmpty(nombre))
+                lista = lista.Where(e => e.Nombre.Contains(nombre));
+
+            return await lista.ToListAsync();
+        }
+
+        public async Task<EntidadAcademica?> ObtenerPorIdAsync(int idEntidadAcademica)
+        {
+            return await _context.EntidadAcademica
+                .Include(e => e.IdAreaAcademicaNavigation)
                 .FirstOrDefaultAsync(e => e.IdEntidadAcademica == idEntidadAcademica);
         }
 
@@ -50,6 +77,24 @@ namespace SGPla.Repositories.Implementations
                 .AnyAsync(e => e.IdEntidadAcademica == idEntidadAcademica);
         }
 
+        public async Task<bool> ExistePorClaveAsync(string clave)
+        {
+            string prefijoClave = $"{clave.Trim()}-";
+
+            return await _context.EntidadAcademica
+                .AnyAsync(e => e.Nombre != null && e.Nombre.StartsWith(prefijoClave));
+        }
+
+        public async Task<bool> ExistePorClaveAsync(string clave, int idEntidadAcademica)
+        {
+            string prefijoClave = $"{clave.Trim()}-";
+
+            return await _context.EntidadAcademica
+                .AnyAsync(e => e.IdEntidadAcademica != idEntidadAcademica
+                    && e.Nombre != null
+                    && e.Nombre.StartsWith(prefijoClave));
+        }
+
         public async Task<EntidadAcademica> CrearAsync(EntidadAcademica entidadAcademica)
         {
             await _context.EntidadAcademica.AddAsync(entidadAcademica);
@@ -60,6 +105,14 @@ namespace SGPla.Repositories.Implementations
         public async Task ActualizarAsync(EntidadAcademica entidadAcademica)
         {
             _context.EntidadAcademica.Update(entidadAcademica);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task EliminarAsync(EntidadAcademica entidadAcademica)
+        {
+            ArgumentNullException.ThrowIfNull(entidadAcademica);
+
+            _context.EntidadAcademica.Remove(entidadAcademica);
             await _context.SaveChangesAsync();
         }
     }
