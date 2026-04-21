@@ -23,10 +23,11 @@ namespace SGPla.Services.Implementations
         {
             await _entidadAcademicaValidator.ValidarCreacionAsync(dto);
 
+            string nombre = $"{dto.Clave}-{dto.Nombre}";
             var entidad = new EntidadAcademica
             {
                 IdAreaAcademica = dto.IdAreaAcademica,
-                Nombre = dto.Nombre,
+                Nombre = nombre,
                 CalleNumero = dto.CalleNumero,
                 Colonia = dto.Colonia,
                 Cp = dto.Cp,
@@ -46,11 +47,12 @@ namespace SGPla.Services.Implementations
         {
             await _entidadAcademicaValidator.ValidarEdicionAsync(dto);
 
+            string nombre = $"{dto.Clave}-{dto.Nombre}";
             var entidad = new EntidadAcademica
             {
                 IdEntidadAcademica = dto.IdEntidadAcademica,
                 IdAreaAcademica = dto.IdAreaAcademica,
-                Nombre = dto.Nombre,
+                Nombre = nombre,
                 CalleNumero = dto.CalleNumero,
                 Colonia = dto.Colonia,
                 Cp = dto.Cp,
@@ -128,8 +130,8 @@ namespace SGPla.Services.Implementations
 
         private ListaEntidadAcademicaDTO mapearLista(EntidadAcademica entidad)
         {
-            string domicilio = "";
-            string telefono = "";
+            string domicilio = $"{entidad.CalleNumero} Col. {entidad.Colonia} C.P. {entidad.Cp} {entidad.Municipio}";
+            string telefono = $"Teléfono: {entidad.Telefono}\nConmutador: {entidad.Conmutador} Ext: {entidad.Extension}\nFax: {entidad.Fax}";
 
             return new ListaEntidadAcademicaDTO
             {
