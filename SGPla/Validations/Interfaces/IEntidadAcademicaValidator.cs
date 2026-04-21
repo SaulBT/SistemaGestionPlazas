@@ -7,6 +7,6 @@ namespace SGPla.Validations.Interfaces
         Task ValidarCreacionAsync(CrearEntidadAcademicaDTO crearEntidadAcademicaDTO);
         Task ValidarIdAsync(int Id);
         Task ValidarEdicionAsync(DatosEntidadAcademicaDTO datosEntidadAcademicaDTO);
-        void ValidarIndice(int indice)
+        void ValidarIndice(int indice);
     }
 }
