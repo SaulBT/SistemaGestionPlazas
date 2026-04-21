@@ -147,8 +147,6 @@ public partial class GestionDePlazasDbContext : DbContext
 
             entity.HasIndex(e => e.Numero, "UQ_Articulo_numero").IsUnique();
 
-
-            entity.Property(e => e.Descripcion).IsUnicode(false);
             entity.Property(e => e.IdArticulo).HasColumnName("idArticulo");
             entity.Property(e => e.Descripcion)
                 .IsUnicode(false)

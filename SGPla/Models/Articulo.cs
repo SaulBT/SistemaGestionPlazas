@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 
 namespace SGPla.Models;
 
 public partial class Articulo
 {
     public int IdArticulo { get; set; }
-    
+
     public string Numero { get; set; } = null!;
 
     public string Descripcion { get; set; } = null!;

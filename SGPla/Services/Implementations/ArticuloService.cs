@@ -22,7 +22,7 @@ namespace SGPla.Services.Implementations
         {
             await _articuloValidator.ValidarEdicionAsync(dto);
 
-            var articulo = await _articuloRepository.EditarArticuloAsync(ArticuloMapper.ToModel(dto));
+            var articulo = await _articuloRepository.ActualizarArticuloAsync(ArticuloMapper.ToModel(dto));
 
             DetallesArticuloDTO resultado = ArticuloMapper.ToDTO(articulo);
 
