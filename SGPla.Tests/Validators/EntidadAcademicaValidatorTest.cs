@@ -248,7 +248,7 @@ public class EntidadAcademicaValidatorTests
         Assert.Contains("La Clave no coincide con la Región seleccionada.", ex.Message);
     }
 
-    //CP-63
+    //CP-64
     [Fact]
     public async Task EditarEntidadAcademicaInexistente()
     {
@@ -267,7 +267,7 @@ public class EntidadAcademicaValidatorTests
         Assert.Contains("No existe esa Entidad Académica.", ex.Message);
     }
 
-    //CP-64
+    //CP-65
     [Fact]
     public async Task EditarEntidadAcademicaConAreaAcademicaInexistente()
     {
@@ -288,7 +288,7 @@ public class EntidadAcademicaValidatorTests
         Assert.Contains("No existe esa Área Académica.", ex.Message);
     }
 
-    //CP-66
+    //CP-67
     [Fact]
     public async Task EliminarEntidadAcademicaConIdInvalido()
     {

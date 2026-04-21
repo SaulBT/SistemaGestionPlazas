@@ -299,7 +299,7 @@ public class EntidadAcademicaServiceTests
         _entidadAcademicaRepositoryMock.Verify(repository => repository.ActualizarAsync(It.IsAny<EntidadAcademica>()), Times.Once);
     }
 
-    //CP-65
+    //CP-66
     [Fact]
     public async Task EliminarEntidadAcademica()
     {

@@ -23,7 +23,7 @@ public class ArticuloServiceTests
         _articuloValidatorMock.Object);
     }
 
-    //CP-67
+    //CP-68
     [Fact]
     public async Task CrearArticulo()
     {
@@ -64,7 +64,7 @@ public class ArticuloServiceTests
             Times.Once);
     }
 
-    //CP-71
+    //CP-72
     [Fact]
     public async Task ObtenerTodosArticulos()
     {
@@ -105,7 +105,7 @@ public class ArticuloServiceTests
     }
 
 
-    //CP-72
+    //CP-73
     [Fact]
     public async Task ObtenerArticulosPorTermino()
     {
@@ -135,7 +135,7 @@ public class ArticuloServiceTests
         _articuloRepositoryMock.Verify(r => r.BuscarPorTerminoAsync(It.IsAny<string>()), Times.Once);
     }
 
-    //CP-74
+    //CP-75
     [Fact]
     public async Task ObtenerArticuloPorId()
     {
@@ -163,7 +163,7 @@ public class ArticuloServiceTests
         _articuloRepositoryMock.Verify(r => r.ObtenerArticuloPorIdAsync(It.IsAny<int>()), Times.Once);
     }
 
-    //CP-76
+    //CP-77
     [Fact]
     public async Task EditarArticulo()
     {
@@ -206,7 +206,7 @@ public class ArticuloServiceTests
             Times.Once);
     }
 
-    //CP-79
+    //CP-80
     [Fact]
     public async Task EliminarArticulo()
     {
