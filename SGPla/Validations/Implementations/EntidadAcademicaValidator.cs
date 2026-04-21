@@ -118,11 +118,11 @@ namespace SGPla.Validations.Implementations
         private async Task validarClaveAsync(string clave, string region)
         {
             if (clave.IsNullOrEmpty())
-                throw new ArgumentException("La Clave es obligatorio.");
+                throw new ArgumentException("La Clave es obligatoria.");
 
             bool soloNumeros = clave.All(char.IsDigit);
             if (clave.Count() != 5 || !soloNumeros)
-                throw new ArgumentException("La Clave es inválido.");
+                throw new ArgumentException("La Clave es inválida.");
 
             bool existe = await _entidadAcademicaRepository.ExistePorClaveAsync(clave);
             if (existe)
