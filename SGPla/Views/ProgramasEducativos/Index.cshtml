@@ -1,0 +1,127 @@
+﻿@model IEnumerable<SGPla.Models.DTOs.ProgramaEducativo.DetallesProgramaEducativoDTO>
+
+<h2>Programas Educativos</h2>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<form asp-action="Buscar" method="get" class="mb-3">
+    <div class="input-group">
+        <input type="text"
+               name="busqueda"
+               class="form-control"
+               placeholder="Buscar por nombre"
+               value="@Context.Request.Query["busqueda"]" />
+
+        <button type="submit" class="btn btn-primary">
+            Buscar
+        </button>
+        <a asp-action="Index" class="btn btn-secondary ms-2">Limpiar</a>
+    </div>
+</form>
+
+<button class="btn btn-primary mb-3" onclick="abrirModalCrear()">Agregar Programa Educativo</button>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Region</th>
+            <th>Area Academica</th>
+            <th>Entidad Academica</th>
+
+
+
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var p in Model)
+        {
+            <tr>
+                <td>@p.Nombre</td>
+                <td>@p.Region</td>
+                <td>@p.AreaAcademica</td>
+                <td>@p.EntidadAcademica</td>
+
+                <td>
+                    <button class="btn btn-sm btn-warning"
+                            onclick="abrirModalActualizar(@p.IdProgramaEducativo, '@p.Nombre')">
+                        Editar
+                    </button>
+                    <form asp-action="Eliminar" asp-route-id="@p.IdProgramaEducativo" method="post" style="display:inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" onclick="return confirm('¿Eliminar?')">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Modal compartido: Crear usa CrearProgamaEducativoDTO, Editar usa EditarProgramaEducativoDTO -->
+<div class="modal fade" id="programaEducativoModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="programaEducativoForm" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="tituloModal">Nuevo Programa Educativo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <!-- Solo se envía al editar, EditarProgramaEducativoDTO lo requiere -->
+                    <!-- Al crear, CrearProgramaEducativoDTO no lo tiene, el binder lo ignora -->
+                    <input type="hidden" id="IdProgramaEducativo" name="IdProgramaEducativo" />
+
+                    <div class="mb-3">
+                        <label>Nombre</label>
+                        <input type="text" id="Nombre" name="Nombre" class="form-control" required />
+                       
+                    </div>
+
+                   
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function abrirModalCrear() {
+        document.getElementById("tituloModal").innerText = "Nuevo Programa Educativo";
+        document.getElementById("programaEducativoForm").action = "/ProgramasEducativos/Crear";
+
+        document.getElementById("IdProgramaEducativo").value = "";
+        document.getElementById("Nombre").value = "";
+
+        new bootstrap.Modal(document.getElementById('programaEducativoModal')).show();
+    }
+
+    function abrirModalActualizar(id, nombre) {
+        document.getElementById("tituloModal").innerText = "Editar Programa Educativo";
+        document.getElementById("programaEducativoForm").action = "/ProgramasEducativos/Editar";
+
+        document.getElementById("IdProgramaEducativo").value = id;
+        document.getElementById("Nombre").value = nombre;
+
+        new bootstrap.Modal(document.getElementById('programaEducativoModal')).show();
+    }
+</script>

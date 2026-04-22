@@ -64,14 +64,18 @@ namespace SGPla.Repositories.Implementations
             return resultados;
         }
 
-        public Task<ProgramaEducativo?> ObtenerPorIdAsync(int id)
+        public async Task<ProgramaEducativo?> ObtenerPorIdAsync(int id)
         {
-            return _context.ProgramaEducativo.FindAsync(id).AsTask();
+            return await _context.ProgramaEducativo.FindAsync(id);
         }
 
         public async Task<List<ProgramaEducativo>> ObtenerTodosAsync()
         {
-            return await _context.ProgramaEducativo.OrderBy(a => a.Nombre).ToListAsync();
+            return await _context.ProgramaEducativo
+                .Include(p => p.IdEntidadAcademicaNavigation)
+                .Include(aa => aa.IdEntidadAcademicaNavigation.IdAreaAcademicaNavigation)
+                .OrderBy(a => a.Nombre)
+                .ToListAsync();
         }
 
         public async Task<bool> EliminarAsync(int id)
