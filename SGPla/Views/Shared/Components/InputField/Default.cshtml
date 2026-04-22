@@ -1,0 +1,20 @@
+﻿@model InputFieldModel
+
+<div class="input-field">
+
+    @if (!string.IsNullOrWhiteSpace(Model.Label))
+    {
+        <div class="text-wrapper">
+            @Model.Label
+        </div>
+    }
+
+    <input class="input"
+           type="@Model.Tipo"
+           id="@Model.Id"
+           name="@Model.Name"
+           value="@Model.Valor"
+           placeholder="@Model.Placeholder"
+           disabled="@(Model.Disabled ? "disabled" : null)" />
+
+</div>

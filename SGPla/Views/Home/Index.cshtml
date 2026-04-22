@@ -229,10 +229,24 @@
     
     <h2>Campos</h2>
     <br />
-    <!-- Input field-->
+    <!-- Barra de Búsqueda-->
+    <div style="margin-left: 20px;">
+        <h4>Barra de Búsqueda</h4>
+
+        <br />
+        <br />
+    </div>
+
+    <!-- Input Field-->
     <div style="margin-left: 20px;">
         <h4>Input Field</h4>
-
+        @await Component.InvokeAsync("InputField", new InputFieldModel
+        {
+            Id = "inputfield",
+            Name = "Input",
+            Label = "Campo de entrada",
+            Placeholder = "Aquí va el contenido"
+        })
         <br />
         <br />
     </div>
@@ -263,3 +277,5 @@
 
     <br />
 </div>
+
+
