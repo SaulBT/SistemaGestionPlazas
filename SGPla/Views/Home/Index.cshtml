@@ -1,6 +1,6 @@
 ﻿@{
     Layout = "_LayoutSuperUsuario";
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Inicio";
 }
 
 <div class="text-center" >
@@ -9,8 +9,9 @@
 
 <!-- Botones -->
 <div style="padding-left: 20px;">
-
+    
     <h2>Botones </h2>
+    <br />
     <!-- Botones sin ícono -->
     <div style="margin-left: 20px;">
         <h4> Botones con texto personalizado </h4>
@@ -33,6 +34,12 @@
             texto = "Texto con más información",
             accion = "ver mas"
         })
+        <a href="@Url.Action("Index", "Usuarios")" style="display: inline-block; text-decoration: none;">
+            @await Component.InvokeAsync("Boton", new{texto = "prueba usuarios"})
+        </a>
+        <a href="@Url.Action("Index", "Articulo")" style="display: inline-block; text-decoration: none;">
+            @await Component.InvokeAsync("Boton", new { texto = "prueba articulos" })
+        </a>
         <br />
         <br />
     </div>
@@ -214,6 +221,45 @@
         <br />
     </div>
     
-    
+    <br />
 </div>
 
+<!-- Campos -->
+<div style="padding-left: 20px;">
+    
+    <h2>Campos</h2>
+    <br />
+    <!-- Input field-->
+    <div style="margin-left: 20px;">
+        <h4>Input Field</h4>
+
+        <br />
+        <br />
+    </div>
+
+    <!-- Date Picker-->
+    <div style="margin-left: 20px;">
+        <h4>Date Picker</h4>
+
+        <br />
+        <br />
+    </div>
+
+    <!-- Select Field-->
+    <div style="margin-left: 20px;">
+        <h4>Select Field</h4>
+
+        <br />
+        <br />
+    </div>
+
+    <!-- Textarea Field-->
+    <div style="margin-left: 20px;">
+        <h4>Textarea Field</h4>
+
+        <br />
+        <br />
+    </div>
+
+    <br />
+</div>

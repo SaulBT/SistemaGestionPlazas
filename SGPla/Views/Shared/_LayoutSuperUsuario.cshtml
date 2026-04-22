@@ -91,7 +91,48 @@
         <!-- CONTENIDO PRINCIPAL (aquí irá cada página) -->
         <main class="contenido-principal">
             <div class="contenido-pagina">
+                @{
+                    var currentController = ViewContext.RouteData.Values["Controller"]?.ToString();
+                    var currentAction = ViewContext.RouteData.Values["Action"]?.ToString();
+
+                    var esInicio = currentController == "Home" && currentAction == "Index";
+                }
+                <!-- CABECERA DINÁMICA -->
+                <div class="cabecera-seccion mb-3">
+
+                    <h2 class="titulo-seccion">
+                        @ViewData["Title"]
+                    </h2>
+
+                    @if (!esInicio)
+                    {
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb">
+
+                                <li class="breadcrumb-item">
+                                    <a href="/">Inicio</a>
+                                </li>
+
+                                @if (ViewData["SeccionPadre"] != null)
+                                {
+                                    <li class="breadcrumb-item">
+                                        @ViewData["SeccionPadre"]
+                                    </li>
+                                }
+
+                                <li class="breadcrumb-item active">
+                                    @ViewData["Title"]
+                                </li>
+
+                            </ol>
+                        </nav>
+                    }
+
+                </div>
+
+                <!-- CONTENIDO REAL -->
                 @RenderBody()
+
             </div>
         </main>
     </div>

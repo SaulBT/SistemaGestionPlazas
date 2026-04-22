@@ -292,6 +292,17 @@ body {
 /* ========================================== */
 /* CONTENIDO PRINCIPAL */
 /* ========================================== */
+
+.cabecera-seccion {
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+}
+
+.titulo-seccion {
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
 .contenido-principal {
     flex: 1;
     margin-left: var(--menu-width);
