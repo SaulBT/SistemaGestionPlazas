@@ -3,13 +3,11 @@ using SGPla.Models;
 
 namespace SGPla.ViewComponents
 {
-    public class InputFieldViewComponent : ViewComponent
+    public class SelectFieldViewComponent : ViewComponent
     {
-
-        public IViewComponentResult Invoke(InputFieldModel model)
+        public IViewComponentResult Invoke(SelectFieldModel model)
         {
             model.Id ??= model.Name;
-            model.Tipo ??= "text";
             return View(model);
         }
     }

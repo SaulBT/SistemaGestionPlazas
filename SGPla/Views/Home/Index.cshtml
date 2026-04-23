@@ -262,7 +262,19 @@
     <!-- Select Field-->
     <div style="margin-left: 20px;">
         <h4>Select Field</h4>
-
+        @await Component.InvokeAsync("SelectField", new SelectFieldModel
+        {
+            Label = "Campo de selección",
+            Name = "SelectField",
+            Placeholder = "Aquí van las opciones",
+            Options = new List<OptionModel>
+            {
+                new OptionModel { Value="1", Text="Opción de prueba"},
+                new OptionModel { Value="1", Text="Opción dos de prueba"},
+                new OptionModel { Value="1", Text="Opción tres de prueba"},
+                new OptionModel { Value="1", Text="Última opción de prueba", Selected=false},
+            }
+        })
         <br />
         <br />
     </div>

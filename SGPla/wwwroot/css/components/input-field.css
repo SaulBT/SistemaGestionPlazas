@@ -1,7 +1,7 @@
 ﻿.input-field {
     display: flex;
     flex-direction: column;
-    width: 300px;
+    width: var(--width-fields);
     gap: var(--border-gap);
 }
 
