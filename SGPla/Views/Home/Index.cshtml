@@ -232,7 +232,13 @@
     <!-- Barra de Búsqueda-->
     <div style="margin-left: 20px;">
         <h4>Barra de Búsqueda</h4>
-
+        @await Component.InvokeAsync("Buscador", new BuscadorModel
+        {
+            Name = "query",
+            Placeholder = "Buscar algo...",
+            Action = "/Algo/Buscar",
+            Method = "get"
+        })
         <br />
         <br />
     </div>
@@ -254,7 +260,29 @@
     <!-- Date Picker-->
     <div style="margin-left: 20px;">
         <h4>Date Picker</h4>
+        @await Component.InvokeAsync("DatePicker", new DatePickerModel
+        {
+            Name = "fechaNacimiento",
+            Label = "Fecha de nacimiento",
+            Value = "2000-01-01",
+            Min = "1900-01-01",
+            Max = "2026-12-31"
+        })
+        <br />
+        <br />
+    </div>
 
+    <!-- Time Field-->
+    <div style="margin-left: 20px;">
+        <h4>Textarea Field</h4>
+        @await Component.InvokeAsync("TimeField", new TimeFieldModel
+        {
+            Name = "horaInicio",
+            Label = "Hora de inicio",
+            Value = "14:30",
+            Min = "08:00",
+            Max = "20:00"
+        })
         <br />
         <br />
     </div>
@@ -282,10 +310,63 @@
     <!-- Textarea Field-->
     <div style="margin-left: 20px;">
         <h4>Textarea Field</h4>
-
+        @await Component.InvokeAsync("TextAreaField", new TextAreaFieldModel
+        {
+            Name = "descripcion",
+            Label = "Descripción",
+            Placeholder = "Escribe aquí...",
+            Rows = 5
+        })
         <br />
         <br />
     </div>
+
+    <!-- Checkbox Field-->
+    <div style="margin-left: 20px;">
+        <h4>CheckBox</h4>
+        @await Component.InvokeAsync("CheckboxField", new CheckboxFieldModel
+        {
+            Name = "terminos",
+            Label = "Acepto los términos"
+        })
+        <br />
+        <br />
+    </div>
+
+    <!-- Radio button -->
+    <div style="margin-left: 20px;">
+        <h4>Radio button</h4>
+        @await Component.InvokeAsync("RadioGroupField", new RadioGroupFieldModel
+        {
+            Name = "ejemplo",
+            Label = "Ejemplo",
+            SelectedValue = "activo",
+            Options = new List<RadioOptionModel>
+    {
+        new() { Value = "activo", Text = "Activo" },
+        new() { Value = "inactivo", Text = "Inactivo" },
+        new() { Value = "otras opciones...", Text = "Otros..." }
+    }
+        })
+        <br />
+        <br />
+    </div>
+
+    <!-- switch -->
+    <div style="margin-left: 20px;">
+        <h4>Switch</h4>
+        @await Component.InvokeAsync("SwitchField", new SwitchFieldModel
+        {
+            Name = "activo",
+            Label = "Activo",
+            Checked = true
+        })
+        <br />
+        <br />
+    </div>
+
+
+    
 
     <br />
 </div>

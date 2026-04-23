@@ -1,0 +1,13 @@
+﻿@model CheckboxFieldModel
+
+<label class="checkbox-field">
+    <input type="checkbox"
+           id="@Model.Id"
+           name="@Model.Name"
+    @(Model.Checked ? "checked" : null)
+    @(Model.Disabled ? "disabled" : null) />
+
+    <span class="text-wrapper">
+        @Model.Label
+    </span>
+</label>
