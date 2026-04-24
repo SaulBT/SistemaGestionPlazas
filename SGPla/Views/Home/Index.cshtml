@@ -1,18 +1,374 @@
 ﻿@{
     Layout = "_LayoutSuperUsuario";
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Inicio";
 }
 
-<div class="text-center">
+<div class="text-center" >
     <h1>Componentes creados</h1>
 </div>
 
-<button class="boton-primario">
-    <span class="text-wrapper">Click aquí</span>
-</button>
- 
-<select class="select-field" id="miSelect" name="miSelect">
-    <option value="opcion1">Opción 1</option>
-    <option value="opcion2">Opción 2</option>
-    <option value="opcion3">Opción 3</option>
-</select>
+<!-- Botones -->
+<div style="padding-left: 20px;">
+    
+    <h2>Botones </h2>
+    <br />
+    <!-- Botones sin ícono -->
+    <div style="margin-left: 20px;">
+        <h4> Botones con texto personalizado </h4>
+        @await Component.InvokeAsync("Boton", new
+        {
+            texto = "Texto primario"
+        })
+        @await Component.InvokeAsync("Boton", new
+        {
+            texto = "Texto secundario",
+            tipo = "secundario"
+        })
+        @await Component.InvokeAsync("Boton", new
+        {
+            texto = "Texto terciario",
+            tipo = "terciario"
+        })
+        @await Component.InvokeAsync("Boton", new
+        {
+            texto = "Texto con más información",
+            accion = "ver mas"
+        })
+        <a href="@Url.Action("Index", "Usuarios")" style="display: inline-block; text-decoration: none;">
+            @await Component.InvokeAsync("Boton", new{texto = "prueba usuarios"})
+        </a>
+        <a href="@Url.Action("Index", "Articulo")" style="display: inline-block; text-decoration: none;">
+            @await Component.InvokeAsync("Boton", new { texto = "prueba articulos" })
+        </a>
+        <br />
+        <br />
+    </div>
+
+    <!-- Botones primarios -->
+    <div style="margin-left: 20px;">
+        <h4> Botones primarios</h4>
+        @await Component.InvokeAsync("Boton", new
+        {
+            accion = "guardar"
+        })
+        @await Component.InvokeAsync("Boton", new
+        {
+            accion = "agregar"
+        })
+        @await Component.InvokeAsync("Boton", new
+        {
+            accion = "descargar"
+        })
+        @await Component.InvokeAsync("Boton", new
+        {
+            accion = "enviar"
+        })
+        @await Component.InvokeAsync("Boton", new
+        {
+            accion = "confirmar"
+        })
+        <br />
+        <br />
+    </div>
+
+    <!-- Botones secundarios -->
+    <div style="margin-left: 20px;">
+        <h4> Botones secundarios</h4>
+        @await Component.InvokeAsync("Boton", new
+        {
+            accion = "siguiente"
+        })
+        @await Component.InvokeAsync("Boton", new
+        {
+            accion = "regresar"
+        })
+        @await Component.InvokeAsync("Boton", new
+        {
+            accion = "cargar"
+        })
+        @await Component.InvokeAsync("Boton", new
+        {
+            accion = "buscar"
+        })
+        @await Component.InvokeAsync("Boton", new
+        {
+            accion = "firmar"
+        })
+        @await Component.InvokeAsync("Boton", new
+        {
+            accion = "AGREGAR",
+            tipo = "secundario"
+        })
+        @await Component.InvokeAsync("Boton", new
+        {
+            accion = "enviar",
+            tipo = "secundario"
+        })
+        <br />
+        <br />
+    </div>
+    
+    <!-- Botones terciarios -->
+    <div style="margin-left: 20px;">
+        <h4> Botones terciarios </h4>
+        @await Component.InvokeAsync("Boton", new
+        {
+            accion = "imprimir"
+        })
+        <br />
+        <br />
+    </div>
+    
+    <!-- Botones con colores específicos según la acción -->
+    <div style="margin-left: 20px;">
+        <h4> Botones con colores específicos según la acción</h4>
+        @await Component.InvokeAsync("Boton", new
+        {
+            accion = "cancelar"
+        })
+        @await Component.InvokeAsync("Boton", new
+        {
+            accion = "publicar"
+        })
+        <br />
+        <br />
+    </div>
+
+    <!-- Botones sin fondo -->
+    <div style="margin-left: 20px;">
+        <h4> Botones sin fondo </h4>
+        @await Component.InvokeAsync("Boton", new
+        {
+            accion = "editar",
+            fondo = false
+        })
+        @await Component.InvokeAsync("Boton", new
+        {
+            accion = "eliminar",
+            fondo = false
+        })
+        @await Component.InvokeAsync("Boton", new
+        {
+            accion = "ver",
+            fondo = false
+        })
+        @await Component.InvokeAsync("Boton", new
+        {
+            accion = "archivar",
+            fondo = false
+        })
+        @await Component.InvokeAsync("Boton", new
+        {
+            accion = "informacion",
+            fondo = false
+        })
+        @await Component.InvokeAsync("Boton", new
+        {
+            accion = "programa educativo",
+            fondo = false
+        })
+        @await Component.InvokeAsync("Boton", new
+        {
+            accion = "plan de estudios",
+            fondo = false
+        })
+        @await Component.InvokeAsync("Boton", new
+        {
+            accion = "agregar",
+            fondo = false
+        })
+        @await Component.InvokeAsync("Boton", new
+        {
+            accion = "aspirante",
+            fondo = false
+        })
+        @await Component.InvokeAsync("Boton", new
+        {
+            accion = "derecha",
+            fondo = false
+        })
+        @await Component.InvokeAsync("Boton", new
+        {
+            accion = "izquierda",
+            fondo = false
+        })
+        @await Component.InvokeAsync("Boton", new
+        {
+            accion = "firmar",
+            fondo = false
+        })
+        @await Component.InvokeAsync("Boton", new
+        {
+            accion = "solicitudes",
+            fondo = false
+        })
+        @await Component.InvokeAsync("Boton", new
+        {
+            accion = "historial",
+            fondo = false
+        })
+        @await Component.InvokeAsync("Boton", new
+        {
+            accion = "excel",
+            fondo = false
+        })
+        @await Component.InvokeAsync("Boton", new
+        {
+            accion = "pdf",
+            fondo = false
+        })
+        <br />
+        <br />
+    </div>
+    
+    <br />
+</div>
+
+<!-- Campos -->
+<div style="padding-left: 20px;">
+    
+    <h2>Campos</h2>
+    <br />
+    <!-- Barra de Búsqueda-->
+    <div style="margin-left: 20px;">
+        <h4>Barra de Búsqueda</h4>
+        @await Component.InvokeAsync("Buscador", new BuscadorModel
+        {
+            Name = "query",
+            Placeholder = "Buscar algo...",
+            Action = "/Algo/Buscar",
+            Method = "get"
+        })
+        <br />
+        <br />
+    </div>
+
+    <!-- Input Field-->
+    <div style="margin-left: 20px;">
+        <h4>Input Field</h4>
+        @await Component.InvokeAsync("InputField", new InputFieldModel
+        {
+            Id = "inputfield",
+            Name = "Input",
+            Label = "Campo de entrada",
+            Placeholder = "Aquí va el contenido"
+        })
+        <br />
+        <br />
+    </div>
+
+    <!-- Date Picker-->
+    <div style="margin-left: 20px;">
+        <h4>Date Picker</h4>
+        @await Component.InvokeAsync("DatePicker", new DatePickerModel
+        {
+            Name = "fechaNacimiento",
+            Label = "Fecha de nacimiento",
+            Value = "2000-01-01",
+            Min = "1900-01-01",
+            Max = "2026-12-31"
+        })
+        <br />
+        <br />
+    </div>
+
+    <!-- Time Field-->
+    <div style="margin-left: 20px;">
+        <h4>Textarea Field</h4>
+        @await Component.InvokeAsync("TimeField", new TimeFieldModel
+        {
+            Name = "horaInicio",
+            Label = "Hora de inicio",
+            Value = "14:30",
+            Min = "08:00",
+            Max = "20:00"
+        })
+        <br />
+        <br />
+    </div>
+
+    <!-- Select Field-->
+    <div style="margin-left: 20px;">
+        <h4>Select Field</h4>
+        @await Component.InvokeAsync("SelectField", new SelectFieldModel
+        {
+            Label = "Campo de selección",
+            Name = "SelectField",
+            Placeholder = "Aquí van las opciones",
+            Options = new List<OptionModel>
+            {
+                new OptionModel { Value="1", Text="Opción de prueba"},
+                new OptionModel { Value="1", Text="Opción dos de prueba"},
+                new OptionModel { Value="1", Text="Opción tres de prueba"},
+                new OptionModel { Value="1", Text="Última opción de prueba", Selected=false},
+            }
+        })
+        <br />
+        <br />
+    </div>
+
+    <!-- Textarea Field-->
+    <div style="margin-left: 20px;">
+        <h4>Textarea Field</h4>
+        @await Component.InvokeAsync("TextAreaField", new TextAreaFieldModel
+        {
+            Name = "descripcion",
+            Label = "Descripción",
+            Placeholder = "Escribe aquí...",
+            Rows = 5
+        })
+        <br />
+        <br />
+    </div>
+
+    <!-- Checkbox Field-->
+    <div style="margin-left: 20px;">
+        <h4>CheckBox</h4>
+        @await Component.InvokeAsync("CheckboxField", new CheckboxFieldModel
+        {
+            Name = "terminos",
+            Label = "Acepto los términos"
+        })
+        <br />
+        <br />
+    </div>
+
+    <!-- Radio button -->
+    <div style="margin-left: 20px;">
+        <h4>Radio button</h4>
+        @await Component.InvokeAsync("RadioGroupField", new RadioGroupFieldModel
+        {
+            Name = "ejemplo",
+            Label = "Ejemplo",
+            SelectedValue = "activo",
+            Options = new List<RadioOptionModel>
+    {
+        new() { Value = "activo", Text = "Activo" },
+        new() { Value = "inactivo", Text = "Inactivo" },
+        new() { Value = "otras opciones...", Text = "Otros..." }
+    }
+        })
+        <br />
+        <br />
+    </div>
+
+    <!-- switch -->
+    <div style="margin-left: 20px;">
+        <h4>Switch</h4>
+        @await Component.InvokeAsync("SwitchField", new SwitchFieldModel
+        {
+            Name = "activo",
+            Label = "Activo",
+            Checked = true
+        })
+        <br />
+        <br />
+    </div>
+
+
+    
+
+    <br />
+</div>
+
+

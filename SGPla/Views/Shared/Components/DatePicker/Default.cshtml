@@ -1,0 +1,19 @@
+﻿@model DatePickerModel
+
+<div class="date-field">
+    @if (!string.IsNullOrWhiteSpace(Model.Label))
+    {
+        <label class="text-wrapper" for="@Model.Id">
+            @Model.Label
+        </label>
+    }
+
+    <input type="date"
+           id="@Model.Id"
+           name="@Model.Name"
+           value="@Model.Value"
+           min="@Model.Min"
+           max="@Model.Max"
+           class="input date-input"
+           disabled="@(Model.Disabled ? "disabled" : null)" />
+</div>
