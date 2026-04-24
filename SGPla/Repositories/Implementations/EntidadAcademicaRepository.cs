@@ -22,6 +22,19 @@ namespace SGPla.Repositories.Implementations
                 .ToListAsync();
         }
 
+        public async Task<List<EntidadAcademica>> ObtenerOpcionesAsync()
+        {
+            return await _context.EntidadAcademica
+            .AsNoTracking()
+            .OrderBy(e => e.Nombre)
+            .Select(e => new EntidadAcademica
+            {
+                IdEntidadAcademica = e.IdEntidadAcademica,
+                Nombre = e.Nombre
+            })
+            .ToListAsync();
+        }
+
         public async Task<List<EntidadAcademica>> ObtenerDiezAsync(int indiceInicial)
         {
             return await _context.EntidadAcademica

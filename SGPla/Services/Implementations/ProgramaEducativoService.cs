@@ -10,11 +10,14 @@ namespace SGPla.Services.Implementations
     {
         private readonly IProgramaEducativoRepository _programaEducativoRepository;
         private readonly IProgramaEducativoValidator _programaEducativoValidator;
+        private readonly IEntidadAcademicaRepository _entidadAcademicaRepository;
 
-        public ProgramaEducativoService(IProgramaEducativoRepository programaEducativoRepository, IProgramaEducativoValidator programaEducativoValidator)
+
+        public ProgramaEducativoService(IProgramaEducativoRepository programaEducativoRepository, IProgramaEducativoValidator programaEducativoValidator, IEntidadAcademicaRepository entidadAcademicaRepository    )
         {
             _programaEducativoRepository = programaEducativoRepository;
             _programaEducativoValidator = programaEducativoValidator;
+            _entidadAcademicaRepository = entidadAcademicaRepository;
         }
         public Task<List<DetallesProgramaEducativoDTO>> BuscarPorFiltroAsync(BuscarProgramaEducativoDTO filtro)
         {
