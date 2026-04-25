@@ -26,6 +26,7 @@ public class BotonViewComponent : ViewComponent
         if (model.Fondo)
         {
             string tipo = model.Tipo;
+            string texto = model.Texto;
             switch (model.Accion)
             {
                 //Botones con colores específicos según la acción
@@ -106,6 +107,10 @@ public class BotonViewComponent : ViewComponent
             if (!tipo.IsNullOrEmpty())
             {
                 model.Tipo = tipo;
+            }
+            if (!texto.IsNullOrEmpty())
+            {
+                model.Texto = texto;
             }
         } else
         {
