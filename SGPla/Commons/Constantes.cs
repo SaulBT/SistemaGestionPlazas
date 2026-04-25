@@ -13,5 +13,6 @@
         public const string RegionOrizabaCordoba = "3-Orizaba-Córdoba";
         public const string RegionPozaRicaTuxpan = "4-Poza Rica-Túxpan";
         public const string RegionCotazacoalcosMinatitlan = "5-Coatzacoalcos-Minatitlán";
+        public static List<string> Regiones = new List<string> { RegionXalapa, RegionVeracruz, RegionOrizabaCordoba, RegionPozaRicaTuxpan, RegionCotazacoalcosMinatitlan };
     }
 }
