@@ -46,7 +46,7 @@ namespace SGPla.Repositories.Implementations
                 .ToListAsync();
         }
 
-        public async Task<List<CoordinadorEa>> ObtenerPorFiltrosAsync(string? region, int? idAreaAcademica, int? idEntidadAcademica)
+        public async Task<List<CoordinadorEa>> BuscarConFiltros(string? region, int? idAreaAcademica, int? idEntidadAcademica, string? busqueda)
         {
             var query = _context.CoordinadorEa
                 .Include(c => c.IdEntidadAcademicaNavigation)
@@ -66,6 +66,17 @@ namespace SGPla.Repositories.Implementations
             if (idEntidadAcademica.HasValue)
             {
                 query = query.Where(c => c.IdEntidadAcademica == idEntidadAcademica.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(busqueda))
+            {
+                var texto = busqueda.ToLower();
+
+                query = query.Where(c =>
+                    (c.Nombre ?? "").ToLower().Contains(texto) ||
+                    (c.Correo ?? "").ToLower().Contains(texto) ||
+                    (c.Cargo ?? "").ToLower().Contains(texto)
+                );
             }
 
             return await query.ToListAsync();

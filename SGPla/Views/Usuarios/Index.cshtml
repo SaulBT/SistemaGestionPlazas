@@ -1,69 +1,118 @@
-﻿@model List<SGPla.Models.DTOs.Usuarios.ListaUsuarioDTO>
+﻿@model UsuariosIndexViewModel
 
 @{
     Layout = "_LayoutSuperUsuario";
     ViewData["Title"] = "Usuarios";
 }
 
-<h1>@ViewData["Title"]</h1>
+<form method="get" action="@Url.Action("Index", "Usuarios")">
 
-<p>
-    <a asp-action="Create" class="btn btn-primary">Crear Nuevo Usuario</a>
-</p>
-
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        @TempData["Success"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
-
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        @TempData["Error"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
-
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Nombre</th>
-            <th>Correo</th>
-            <th>Cargo</th>
-            <th>Rol</th>
-            <th>Entidad/Área</th>
-            <th>Región</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var usuario in Model)
+    <!-- Filtros -->
+    <div style="display:inline-flex; gap:10px; padding-bottom:30px;">
+        @await Component.InvokeAsync("SelectField", new SelectFieldModel
         {
-            <tr>
-                <td>@usuario.Nombre</td>
-                <td>@usuario.Correo</td>
-                <td>@usuario.Cargo</td>
-                <td>@usuario.Rol</td>
-                <td>
-                    @if (!string.IsNullOrEmpty(usuario.NombreEntidadAcademica))
-                    {
-                        @usuario.NombreEntidadAcademica
-                    }
-                    else if (!string.IsNullOrEmpty(usuario.NombreAreaAcademica))
-                    {
-                        @usuario.NombreAreaAcademica
-                    }
-                </td>
-                <td>@usuario.Region</td>
-                <td>
-                    <a asp-action="Details" asp-route-id="@usuario.IdUsuario" asp-route-rol="@usuario.Rol" class="btn btn-sm btn-info">Detalles</a>
-                    <a asp-action="Edit" asp-route-id="@usuario.IdUsuario" asp-route-rol="@usuario.Rol" class="btn btn-sm btn-warning">Editar</a>
-                    <a asp-action="Delete" asp-route-id="@usuario.IdUsuario" asp-route-rol="@usuario.Rol" class="btn btn-sm btn-danger">Eliminar</a>
-                </td>
-            </tr>
+            Label = "Región",
+            Options = Model.Regiones,
+            Name = "region"
+        })
+
+        @await Component.InvokeAsync("SelectField", new SelectFieldModel
+        {
+            Label = "Área Académica",
+            Options = Model.Areas,
+            Name = "idAreaAcademica"
+        })
+
+        <div id="contenedorEntidad">
+            @await Component.InvokeAsync("SelectField", new SelectFieldModel
+            {
+                Label = "Entidad Académica",
+                Options = Model.Entidades,
+                Name = "idEntidadAcademica"
+            })
+        </div>
+        
+    </div>
+
+    <!-- Acciones -->
+    <div style="display:flex; gap:10px; padding-bottom:30px; align-items:center; justify-content:space-between">
+        <!--Barra de Búsqueda-->
+        @await Component.InvokeAsync("Buscador", new BuscadorModel
+        {
+            Name = "busqueda",
+            Placeholder = "Buscar usuario...",
+            Action = Url.Action("Index", "Usuarios"),
+            Method = "get",
+            Value = Context.Request.Query["busqueda"]
+        })
+
+        <!--Botón Crear Usuario-->
+        <a href="@Url.Action("Create", ViewData["Title"])" style="display: inline-block; text-decoration: none;">
+            @await Component.InvokeAsync("Boton", new
+            {
+                Accion = "Agregar",
+                Texto = "Crear Usuario"
+            })
+        </a>
+    
+    </div>
+
+</form>
+
+
+<!-- Tabla con Datos -->
+<div style="display:flex; gap:10px; padding-top:20px;justify-content:left" >
+    @await Component.InvokeAsync("Table", Model.Table)
+    
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const form = document.querySelector("form");
+
+        const region = document.getElementById("region");
+        const area = document.getElementById("idAreaAcademica");
+        const entidad = document.getElementById("idEntidadAcademica");
+        const contenedorEntidad = document.getElementById("contenedorEntidad");
+
+        function toggleEntidad() {
+            if (!area || !contenedorEntidad) return;
+
+            if (!area.value) {
+                contenedorEntidad.style.display = "none";
+            } else {
+                contenedorEntidad.style.display = "inline-flex";
+            }
         }
-    </tbody>
-</table>
+
+        // Estado inicial
+        toggleEntidad();
+
+        // Región cambia
+        if (region) {
+            region.addEventListener("change", function () {
+                if (area) area.value = "";
+                if (entidad) entidad.value = "";
+                form.submit();
+            });
+        }
+
+        // Área cambia
+        if (area) {
+            area.addEventListener("change", function () {
+                if (entidad) entidad.value = "";
+                toggleEntidad();
+                form.submit();
+            });
+        }
+
+        // Entidad cambia
+        if (entidad) {
+            entidad.addEventListener("change", function () {
+                form.submit();
+            });
+        }
+
+    });
+</script>

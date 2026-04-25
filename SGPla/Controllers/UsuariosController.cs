@@ -1,7 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using SGPla.Commons;
+using SGPla.Models;
+using SGPla.Models.Components;
 using SGPla.Models.DTOs.Usuarios;
+using SGPla.Models.ViewModels;
 using SGPla.Repositories.Interfaces;
 using SGPla.Services.Interfaces;
 
@@ -27,29 +30,137 @@ namespace SGPla.Controllers
         }
 
         // GET: Usuarios
-        public async Task<IActionResult> Index(string rol = null, string busqueda = null)
+        public async Task<IActionResult> Index(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica)
+        {
+
+            // combos
+            var regionesCombo = Constantes.Regiones
+                .Select(r => new OptionModel
+                {
+                    Value = r,
+                    Text = r,
+                    Selected = r == region 
+                })
+                .ToList();
+
+            var areas = await _areaAcademicaRepository.ObtenerTodosAsync();
+
+            var areasCombo = areas
+                .Select(a => new OptionModel
+                {
+                    Value = a.IdAreaAcademica.ToString(),
+                    Text = a.Nombre,
+                    Selected = idAreaAcademica.HasValue &&
+                               a.IdAreaAcademica == idAreaAcademica.Value 
+                })
+                .ToList();
+
+            List<EntidadAcademica> entidades;
+
+            if (idAreaAcademica.HasValue)
+            {
+                entidades = await _entidadAcademicaRepository
+                    .ObtenerPorIdAreaAcademicaAsync(idAreaAcademica.Value);
+            }
+            else
+            {
+                entidades = new List<EntidadAcademica>();
+                idEntidadAcademica = null; // 👈 evita inconsistencias
+            }
+
+            var entidadesCombo = entidades
+                .Select(e => new OptionModel
+                {
+                    Value = e.IdEntidadAcademica.ToString(),
+                    Text = e.Nombre,
+                    Selected = idEntidadAcademica.HasValue &&
+                               e.IdEntidadAcademica == idEntidadAcademica.Value
+                })
+                .ToList();
+
+            return View(new UsuariosIndexViewModel
+            {
+                Table = await LlenarTabla(busqueda, region, idAreaAcademica, idEntidadAcademica),
+                Regiones = regionesCombo,
+                Areas = areasCombo,
+                Entidades = entidadesCombo,
+
+                RegionSeleccionada = region,
+                IdAreaSeleccionada = idAreaAcademica,
+                IdEntidadSeleccionada = idEntidadAcademica,
+                Busqueda = busqueda
+            });
+        }
+
+        private async Task<TableModel> LlenarTabla( string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica)
         {
             try
             {
-                var filtro = new FiltrosUsuarioDTO
+                FiltrosUsuarioDTO filtros = new FiltrosUsuarioDTO
                 {
-                    Rol = rol
+                    Busqueda = busqueda,
+                    Region = region,
+                    IdAreaAcademica = idAreaAcademica,
+                    IdEntidadAcademica = idEntidadAcademica
                 };
+                var usuarios = await _usuarioService.BuscarConFiltrosAsync(filtros);
 
-                var usuarios = await _usuarioService.ObtenerPorFiltroAsync(filtro);
-
-                ViewBag.RolSeleccionado = rol;
-                ViewBag.Busqueda = busqueda;
-
-                return View(usuarios);
+                return new TableModel
+                {
+                    Headers = new List<string>
+                        {
+                            "Nombre", "Correo", "Cargo", "Rol", "Entidad/Área", "Región", "Acciones"
+                        },
+                    Rows = usuarios.Select(usuario => new TableRowModel
+                    {
+                        Cells = new List<TableCellModel>
+                        {
+                            new() { Value = usuario.Nombre },
+                            new() { Value = usuario.Correo },
+                            new() { Value = usuario.Cargo },
+                            new() { Value = usuario.Rol },
+                            new()
+                        {
+                        Value = !string.IsNullOrEmpty(usuario.NombreEntidadAcademica)
+                            ? usuario.NombreEntidadAcademica
+                            : usuario.NombreAreaAcademica
+                    },
+                    new() { Value = usuario.Region },
+                    new()
+                    {
+                        Actions = new List<TableActionModel>
+                        {
+                            new()
+                            {
+                                Accion = "ver",
+                                Url = Url.Action("Details", "Usuarios", new { id = usuario.IdUsuario, rol = usuario.Rol })
+                            },
+                            new()
+                            {
+                                Accion = "editar",
+                                Url = Url.Action("Edit", "Usuarios", new { id = usuario.IdUsuario, rol = usuario.Rol })
+                            },
+                            new()
+                            {
+                                Accion = "eliminar",
+                                Url = Url.Action("Delete", "Usuarios", new { id = usuario.IdUsuario, rol = usuario.Rol })
+                            }
+                        }
+                    }
+                }
+                    }).ToList()
+                };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener la lista de usuarios");
                 TempData["Error"] = "Error al cargar los usuarios";
-                return View(new List<ListaUsuarioDTO>());
+
+                return new TableModel();
             }
         }
+
+
 
         // GET: Usuarios/Details/5
         public async Task<IActionResult> Details(int id, string rol)

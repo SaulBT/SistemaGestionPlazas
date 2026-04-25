@@ -8,6 +8,8 @@ namespace SGPla.Services.Interfaces
 
         Task<List<ListaUsuarioDTO>> ObtenerTodosAsync();
 
+        Task<List<ListaUsuarioDTO>> BuscarConFiltrosAsync(FiltrosUsuarioDTO filtro);
+
         Task<List<ListaUsuarioDTO>> ObtenerPorFiltroAsync(FiltrosUsuarioDTO filtro);
 
         Task<DetallesUsuarioDTO?> ObtenerPorIdAsync(ReferenciaUsuarioDTO dto);

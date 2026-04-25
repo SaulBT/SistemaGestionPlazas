@@ -8,6 +8,11 @@ namespace SGPla.Models.ViewModels
         public List<OptionModel> Regiones { get; set; }
         public List<OptionModel> Areas { get; set; }
         public List<OptionModel> Entidades { get; set; }
+
+        public string? RegionSeleccionada { get; set; }
+        public int? IdAreaSeleccionada { get; set; }
+        public int? IdEntidadSeleccionada { get; set; }
+        public string? Busqueda { get; set; }
     }
 }
 
