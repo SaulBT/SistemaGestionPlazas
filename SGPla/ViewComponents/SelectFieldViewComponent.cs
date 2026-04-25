@@ -7,7 +7,10 @@ namespace SGPla.ViewComponents
     {
         public IViewComponentResult Invoke(SelectFieldModel model)
         {
-            model.Id ??= model.Name;
+            if (string.IsNullOrWhiteSpace(model.Id))
+            {
+                model.Id = model.Name;
+            }
             return View(model);
         }
     }

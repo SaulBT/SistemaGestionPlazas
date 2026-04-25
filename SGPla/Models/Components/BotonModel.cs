@@ -6,4 +6,6 @@
     public string Texto { get; set; }
     public bool Disabled { get; set; }
     public bool Fondo { get; set; }
+
+    public string ButtonType { get; set; } = "button";
 }

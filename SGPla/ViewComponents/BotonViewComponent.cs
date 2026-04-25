@@ -4,7 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 public class BotonViewComponent : ViewComponent
 {
     
-    public IViewComponentResult Invoke(string texto = "", string tipo = "", string accion = "", bool disabled = false, bool fondo = true)
+    public IViewComponentResult Invoke(string texto = "", string tipo = "", string accion = "", bool disabled = false, bool fondo = true, string buttonType = "button")
     {
         var model = new BotonModel
         {
@@ -13,7 +13,8 @@ public class BotonViewComponent : ViewComponent
             Accion = accion.ToLower(),
             Disabled = disabled,
             Icono = "",
-            Fondo = fondo
+            Fondo = fondo,
+            ButtonType = buttonType
         };
         ConfigurarTipoAccion(model);
 
@@ -69,6 +70,7 @@ public class BotonViewComponent : ViewComponent
                     model.Tipo = "secundario";
                     model.Texto = "Buscar";
                     model.Icono = "bi bi-search";
+                    model.ButtonType = "submit";
                     break;
                 case "firmar":
                     model.Tipo = "secundario";

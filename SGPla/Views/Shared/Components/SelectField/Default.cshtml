@@ -9,7 +9,7 @@
     }
 
     <div class="select-wrapper">
-        <select class="select" required
+        <select class="select" 
                 id="@Model.Id"
                 name="@Model.Name"
                 disabled="@(Model.Disabled ? "disabled" : null)">
@@ -17,9 +17,10 @@
             @* Placeholder opcional *@
             @if (!string.IsNullOrWhiteSpace(Model.Placeholder))
             {
-                <option value="" disabled selected hidden>
+                <option value=""
+                        selected="@(Model.Options.All(o => !o.Selected) ? "selected" : null)">
                     @Model.Placeholder
-                    </option>
+                </option>
             }
 
             @foreach (var option in Model.Options)

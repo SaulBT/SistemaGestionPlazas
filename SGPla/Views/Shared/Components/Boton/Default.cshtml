@@ -1,6 +1,6 @@
 ﻿@model BotonModel
 
-<button type="submit"
+<button type="@Model.ButtonType"
         class="boton-primario @(Model.Fondo ? $"boton-{Model.Tipo}" : "boton-icono")"
         disabled="@(Model.Disabled ? "disabled" : null)"
     @( (Model.Accion == "siguiente" || Model.Accion == "ver mas") ? "style=\"flex-direction: row-reverse\"" : "" )>
