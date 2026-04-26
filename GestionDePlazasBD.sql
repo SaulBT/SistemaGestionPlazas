@@ -283,6 +283,7 @@ CREATE TABLE [dbo].[ProgramaEducativo](
     [idProgramaEducativo] [int] IDENTITY(1,1) NOT NULL,
     [idEntidadAcademica] [int] NOT NULL,
     [nombre] [varchar](100) NOT NULL,
+    [campus] [varchar](100) NOT NULL,
     CONSTRAINT [PK_ProgramaEducativo] PRIMARY KEY CLUSTERED ([idProgramaEducativo] ASC)
 );
 GO
