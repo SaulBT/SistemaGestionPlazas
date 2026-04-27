@@ -39,6 +39,11 @@ builder.Services.AddScoped<IArticuloRepository, ArticuloRepository>();
 builder.Services.AddScoped<IArticuloService, ArticuloService>();
 builder.Services.AddScoped<IArticuloValidator, ArticuloValidator>();
 
+builder.Services.AddScoped<IPlanEstudiosRepository, PlanEstudiosRepository>();
+builder.Services.AddScoped<IExperienciaEducativaRepository, ExperienciaEducativaRepository>();
+builder.Services.AddScoped<IPlanEstudiosValidator, PlanEstudiosValidator>();
+builder.Services.AddScoped<IPlanEstudiosService, PlanEstudiosService>();
+
 
 var app = builder.Build();
 
