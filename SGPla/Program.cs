@@ -1,12 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using SGPla.Data;
+using SGPla.Repositories;
 using SGPla.Repositories.Implementations;
 using SGPla.Repositories.Interfaces;
 using SGPla.Services.Implementations;
 using SGPla.Services.Interfaces;
-using SGPla.Repositories;
 using SGPla.Validations.Implementations;
 using SGPla.Validations.Interfaces;
+using System.Text;
 //using SGPla.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -63,5 +64,6 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
+Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
 app.Run();

@@ -1,4 +1,4 @@
-using ClosedXML.Excel;
+using ExcelDataReader;
 using SGPla.Models;
 using SGPla.Models.DTOs.PlanEstudios;
 using SGPla.Repositories.Interfaces;
@@ -29,26 +29,34 @@ namespace SGPla.Services.Implementations
 
             archivoPlanEstudiosDTO.Archivo.Position = 0;
 
-            using var workbook = new XLWorkbook(archivoPlanEstudiosDTO.Archivo);
-            var worksheet = workbook.Worksheet(1);
             var experienciasEducativas = new List<DatosExperienciaEducativaDTO>();
 
-            foreach (var row in worksheet.RowsUsed().Skip(1))
-            {
-                var materia = row.Cell(6).GetFormattedString().Trim();
-                var curso = row.Cell(7).GetFormattedString().Trim();
-                var nombre = row.Cell(8).GetFormattedString().Trim();
-                var perfilDocente = row.Cell(14).GetFormattedString().Trim();
+            using var reader = ExcelReaderFactory.CreateReader(archivoPlanEstudiosDTO.Archivo);
 
-                if (string.IsNullOrWhiteSpace(materia)
-                    && string.IsNullOrWhiteSpace(curso)
-                    && string.IsNullOrWhiteSpace(nombre)
-                    && string.IsNullOrWhiteSpace(perfilDocente))
+            var esPrimeraFila = true;
+
+            while (reader.Read())
+            {
+                if (esPrimeraFila)
+                {
+                    esPrimeraFila = false;
+                    continue;
+                }
+
+                var materia = ObtenerTextoCelda(reader, 5);       // Columna 6: MATERIA_EE
+                var curso = ObtenerTextoCelda(reader, 6);         // Columna 7: CURSO_EE
+                var nombre = ObtenerTextoCelda(reader, 7);        // Columna 8: DESC_EE
+                var perfilDocente = ObtenerTextoCelda(reader, 13); // Columna 14: PERFIL_DOC
+
+                if (string.IsNullOrWhiteSpace(materia) &&
+                    string.IsNullOrWhiteSpace(curso) &&
+                    string.IsNullOrWhiteSpace(nombre) &&
+                    string.IsNullOrWhiteSpace(perfilDocente))
                 {
                     continue;
                 }
 
-                var codigo = string.Concat(materia, " ", curso).Trim();
+                var codigo = $"{materia} {curso}".Trim();
 
                 experienciasEducativas.Add(new DatosExperienciaEducativaDTO
                 {
@@ -148,6 +156,14 @@ namespace SGPla.Services.Implementations
             var ids = experiencias.Select(experienciaEducativa => experienciaEducativa.IdExperienciaEducativa).ToList();
             await _experienciaEducativaRepository.EliminarExperienciasEducativasPorIdsAsync(ids);
             await _planEstudiosRepository.EliminarAsync(planEstudios!);
+        }
+
+        private static string ObtenerTextoCelda(IExcelDataReader reader, int columnIndex)
+        {
+            if (columnIndex >= reader.FieldCount || reader.IsDBNull(columnIndex))
+                return string.Empty;
+
+            return Convert.ToString(reader.GetValue(columnIndex))?.Trim() ?? string.Empty;
         }
 
         private List<ExperienciaEducativa> mapearExperienciasNuevas(List<AgregarExperienciaEducativaDTO> experienciasNuevas, int idPlanEstudios)
