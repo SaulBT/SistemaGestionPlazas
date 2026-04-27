@@ -18,7 +18,21 @@ namespace SGPla.Validations.Implementations
 
         public async Task ValidarBusquedaPorFiltroAsync(BuscarProgramaEducativoDTO buscarProgramaEducativoDTO)
         {
-            ValidarCampos(buscarProgramaEducativoDTO);
+           
+
+            if (buscarProgramaEducativoDTO.Nombre.Length > 100)
+                throw new ArgumentException("El nombre no debe ser superior a 100 caracteres.");
+
+            if (!Regex.IsMatch(buscarProgramaEducativoDTO.Nombre, @"^[a-zA-Z0-9\s]+$"))
+                throw new ArgumentException("El nombre del programa educativo solo puede contener letras, números y espacios.");
+
+
+           
+               
+
+                if (buscarProgramaEducativoDTO.IdAreaAcademica < 0)
+                    throw new ArgumentException("El área académica debe ser un número positivo.");
+            
         }
 
         public async Task ValidarCreacionAsync(CrearProgramaEducativoDTO crearProgramaEducativoDTO)
@@ -72,14 +86,7 @@ namespace SGPla.Validations.Implementations
             if (programaEducativoDTO.IdEntidadAcademica <= 0)
                 throw new ArgumentException("La entidad académica es obligatoria.");
 
-            if (programaEducativoDTO is BuscarProgramaEducativoDTO buscarDTO)
-            {
-                if (buscarDTO.IdRegion < 0)
-                    throw new ArgumentException("La región debe ser un número positivo.");
-
-                if (buscarDTO.IdAreaAcademica < 0)
-                    throw new ArgumentException("El área académica debe ser un número positivo.");
-            }
+           
         }
 
         public async Task ValidarEliminarAsync(int id)

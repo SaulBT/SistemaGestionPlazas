@@ -11,5 +11,8 @@ namespace SGPla.Repositories.Interfaces
         Task<AreaAcademica> CrearAsync(AreaAcademica areaAcademica);
         Task ActualizarAsync(AreaAcademica areaAcademica);
         Task EliminarAsync(AreaAcademica areaAcademica);
+
+        Task<List<AreaAcademica>> ObtenerTodosOpcionesAsync();
+
     }
 }

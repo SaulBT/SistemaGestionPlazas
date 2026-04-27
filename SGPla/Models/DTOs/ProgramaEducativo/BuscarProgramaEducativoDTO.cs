@@ -2,13 +2,13 @@
 
 namespace SGPla.Models.DTOs.ProgramaEducativo
 {
-    public class BuscarProgramaEducativoDTO : IProgramaEducativoDTO
+    public class BuscarProgramaEducativoDTO 
     {
-        public string Nombre { get; set; } = string.Empty;
-        public int IdEntidadAcademica { get; set; }
+        public string? Nombre { get; set; } = string.Empty;
+        public int? IdEntidadAcademica { get; set; }
 
-        public int IdAreaAcademica { get; set; }
+        public int? IdAreaAcademica { get; set; }
 
-        public int IdRegion { get; set; }
+        public string? Region { get; set; }
     }
 }

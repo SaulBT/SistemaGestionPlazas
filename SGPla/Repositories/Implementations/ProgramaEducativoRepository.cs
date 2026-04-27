@@ -2,6 +2,7 @@
 using SGPla.Models;
 using SGPla.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using SGPla.Models.DTOs.ProgramaEducativo;
 
 
 namespace SGPla.Repositories.Implementations
@@ -46,20 +47,24 @@ namespace SGPla.Repositories.Implementations
 
         }
 
-        public async Task<List<ProgramaEducativo>> ObtenerPorFiltrosAsync(string busqueda)
+        public async Task<List<ProgramaEducativo>> ObtenerPorFiltroAsync(BuscarProgramaEducativoDTO filtro)
         {
-            var texto = busqueda.Trim();
 
             var query = _context.ProgramaEducativo.AsQueryable();
 
-            if (!string.IsNullOrEmpty(texto))
-            {
+            
                 query = query.Where(a =>
-                    a.Nombre.Contains(texto)
-                );
-            }
+    (string.IsNullOrEmpty(filtro.Nombre) || a.Nombre.Contains(filtro.Nombre)) &&
+    (!filtro.IdEntidadAcademica.HasValue || a.IdEntidadAcademica == filtro.IdEntidadAcademica) &&
+    (!filtro.IdAreaAcademica.HasValue ||
+        (a.IdEntidadAcademicaNavigation != null &&
+         a.IdEntidadAcademicaNavigation.IdAreaAcademica == filtro.IdAreaAcademica)) &&
+       (string.IsNullOrEmpty(filtro.Region) || a.IdEntidadAcademicaNavigation.Region.Contains(filtro.Region))
+);
+            
 
-            var resultados = await query.ToListAsync();
+            var resultados = await query.Include(p => p.IdEntidadAcademicaNavigation)
+                .Include(aa => aa.IdEntidadAcademicaNavigation.IdAreaAcademicaNavigation).ToListAsync();
 
             return resultados;
         }

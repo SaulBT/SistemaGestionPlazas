@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using SGPla.Models.DTOs.AreaAcademica;
 using SGPla.Models.DTOs.ProgramaEducativo;
 using SGPla.Services.Interfaces;
 
@@ -18,6 +19,9 @@ namespace SGPla.Controllers
             try
             {
                 programasEducativos = await _programaEducativoService.ObtenerTodosAsync();
+
+                ViewBag.AreasAcademicas = await _programaEducativoService.ObtenerOpcionesAreaAcademicaAsync();
+
             }
             catch (Exception ex)
             {
@@ -47,23 +51,22 @@ namespace SGPla.Controllers
 
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Buscar(string busqueda)
+        [HttpGet]
+        public async Task<IActionResult> Buscar(BuscarProgramaEducativoDTO filtro)
         {
-            if (ModelState.IsValid)
+            try
             {
-                try
-                {
-                    var filtro = new BuscarProgramaEducativoDTO { Nombre = busqueda };
-                    var resultados = await _programaEducativoService.BuscarPorFiltroAsync(filtro);
-                    return View("Index", resultados);
-                }
-                catch (ArgumentException ex)
-                {
-                    TempData["Error"] = ex.Message;
-                }
+                var resultados = await _programaEducativoService.BuscarPorFiltroAsync(filtro);
+
+                ViewBag.AreasAcademicas = await _programaEducativoService.ObtenerOpcionesAreaAcademicaAsync();
+
+                return View("Index", resultados);
             }
-            return RedirectToAction(nameof(Index));
+            catch (Exception ex)
+            {
+                TempData["Error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
 
@@ -105,6 +108,14 @@ namespace SGPla.Controllers
             }
             return RedirectToAction(nameof(Index));
 
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> ObtenerPorFiltros(string region, int idArea)
+        {
+            var programas = await _programaEducativoService.ObtenerOpcionesEntidadAcademicaAsync(region, idArea);
+            return Json(programas);
         }
     }
 }

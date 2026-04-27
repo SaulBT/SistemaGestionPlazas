@@ -22,11 +22,11 @@ namespace SGPla.Repositories.Implementations
                 .ToListAsync();
         }
 
-        public async Task<List<EntidadAcademica>> ObtenerOpcionesAsync()
+        public async Task<List<EntidadAcademica>> ObtenerOpcionesAsync(string region, int idAreaAcademica)
         {
             return await _context.EntidadAcademica
             .AsNoTracking()
-            .OrderBy(e => e.Nombre)
+            .OrderBy(e => e.Nombre).Where(e => e.Region == region && e.IdAreaAcademica == idAreaAcademica)
             .Select(e => new EntidadAcademica
             {
                 IdEntidadAcademica = e.IdEntidadAcademica,

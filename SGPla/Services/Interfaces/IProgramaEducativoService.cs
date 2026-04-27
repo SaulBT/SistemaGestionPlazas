@@ -1,4 +1,6 @@
-﻿using SGPla.Models.DTOs.ProgramaEducativo;
+﻿using SGPla.Models.DTOs.EntidadAcademica;
+using SGPla.Models.DTOs.ProgramaEducativo;
+using SGPla.Models.DTOs.AreaAcademica;
 
 namespace SGPla.Services.Interfaces
 {
@@ -14,5 +16,10 @@ namespace SGPla.Services.Interfaces
         Task<bool> EliminarAsync(int id);
 
         Task<List<DetallesProgramaEducativoDTO>> BuscarPorFiltroAsync(BuscarProgramaEducativoDTO filtro);
+
+        Task<List<OpcionEntidadAcademicaDTO>> ObtenerOpcionesEntidadAcademicaAsync(string region, int idAreaAcademica);
+
+
+        Task<List<OpcionAreaAcademicaDTO>> ObtenerOpcionesAreaAcademicaAsync();
     }
 }
