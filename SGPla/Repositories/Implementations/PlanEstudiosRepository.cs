@@ -103,5 +103,15 @@ namespace SGPla.Repositories.Implementations
             _context.PlanEstudios.Remove(planEstudios);
             await _context.SaveChangesAsync();
         }
+
+        public async Task EditarAsync(PlanEstudios planEstudios)
+        {
+            var plan = await _context.PlanEstudios.FindAsync(planEstudios.IdPlanEstudios);
+            if (plan is null)
+                return;
+
+            plan.IdArchivoPlan = planEstudios.IdArchivoPlan;
+            await _context.SaveChangesAsync();
+        }
     }
 }

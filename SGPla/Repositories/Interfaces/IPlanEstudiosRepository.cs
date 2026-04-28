@@ -12,5 +12,6 @@ namespace SGPla.Repositories.Interfaces
         Task<bool> ExisteProgramaEducativoPorIdAsync(int idProgramaEducativo);
         Task<PlanEstudios> CrearAsync(PlanEstudios planEstudios);
         Task EliminarAsync(PlanEstudios planEstudios);
+        Task EditarAsync(PlanEstudios planEstudios);
     }
 }
