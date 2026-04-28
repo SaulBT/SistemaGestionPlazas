@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.StaticFiles;
 using SGPla.Models.DTOs.Archivo;
+using SGPla.Repositories.Interfaces;
 using SGPla.Services.Interfaces;
 
 namespace SGPla.Services.Implementations
@@ -8,8 +9,9 @@ namespace SGPla.Services.Implementations
     {
         private readonly string _rutaBase;
         private readonly FileExtensionContentTypeProvider _contentTypeProvider;
+        private readonly IArchivoRepository _archivoRepository;
 
-        public ArchivoService(IConfiguration configuration, IHostEnvironment environment)
+        public ArchivoService(IConfiguration configuration, IHostEnvironment environment, IArchivoRepository archivoRepository)
         {
             var rutaConfigurada = configuration["Archivos:RutaBase"]
                 ?? throw new InvalidOperationException("No se encontró la configuración Archivos:RutaBase.");
@@ -19,6 +21,7 @@ namespace SGPla.Services.Implementations
             : Path.GetFullPath(rutaConfigurada, environment.ContentRootPath);
 
             _contentTypeProvider = new FileExtensionContentTypeProvider();
+            _archivoRepository = archivoRepository;
         }
 
         public async Task<DatosArchivoGuardadoDTO> GuardarAsync(Stream archivo, string nombreOriginal, string carpeta)
@@ -56,6 +59,31 @@ namespace SGPla.Services.Implementations
                 Ruta = rutaRelativa,
                 Tipo = tipo,
                 Tamanio = tamanio
+            };
+        }
+
+        public async Task<ArchivoDescargadoDTO> DescargarAsync(int idArchivo)
+        {
+            if (idArchivo <= 0)
+                throw new ArgumentException("La IdArchivo es inválida.");
+
+            var archivo = await _archivoRepository.ObtenerPorIdAsync(idArchivo);
+
+            if (archivo == null)
+                throw new KeyNotFoundException("No existe ese Archivo.");
+
+            var rutaFisica = Path.Combine(_rutaBase, archivo.Ruta);
+
+            if (!File.Exists(rutaFisica))
+                throw new FileNotFoundException("No se encontró el archivo físico.", archivo.Ruta);
+
+            var stream = new FileStream(rutaFisica, FileMode.Open, FileAccess.Read, FileShare.Read);
+
+            return new ArchivoDescargadoDTO
+            {
+                Contenido = stream,
+                Nombre = archivo.Nombre,
+                Tipo = archivo.Tipo
             };
         }
 
