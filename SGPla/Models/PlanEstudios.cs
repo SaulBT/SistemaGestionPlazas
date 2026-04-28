@@ -13,7 +13,11 @@ public partial class PlanEstudios
 
     public string Modalidad { get; set; } = null!;
 
+    public int IdArchivoPlan { get; set; }
+
     public virtual ICollection<ExperienciaEducativa> ExperienciaEducativa { get; set; } = new List<ExperienciaEducativa>();
+
+    public virtual Archivo IdArchivoPlanNavigation { get; set; } = null!;
 
     public virtual ProgramaEducativo IdProgramaEducativoNavigation { get; set; } = null!;
 }
