@@ -2,9 +2,11 @@ using System.Text;
 using ClosedXML.Excel;
 using Moq;
 using SGPla.Models;
+using SGPla.Models.DTOs.Archivo;
 using SGPla.Models.DTOs.PlanEstudios;
 using SGPla.Repositories.Interfaces;
 using SGPla.Services.Implementations;
+using SGPla.Services.Interfaces;
 using SGPla.Validations.Interfaces;
 
 namespace SGPlaTests.Services;
@@ -15,7 +17,7 @@ public class PlanEstudiosServiceTests
     {
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
     }
-    
+
     // CP-82
     [Fact]
     public void ProcesarArchivoDePlanDeEstudios()
@@ -23,10 +25,15 @@ public class PlanEstudiosServiceTests
         var planEstudiosRepositoryMock = new Mock<IPlanEstudiosRepository>();
         var experienciaEducativaRepositoryMock = new Mock<IExperienciaEducativaRepository>();
         var planEstudiosValidatorMock = new Mock<IPlanEstudiosValidator>();
-        var service = new PlanEstudiosService(
+        var archivoRepositoryMock = new Mock<IArchivoRepository>();
+        var archivoServiceMock = new Mock<IArchivoService>();
+
+        var service = CrearService(
             planEstudiosRepositoryMock.Object,
             experienciaEducativaRepositoryMock.Object,
-            planEstudiosValidatorMock.Object);
+            planEstudiosValidatorMock.Object,
+            archivoRepositoryMock.Object,
+            archivoServiceMock.Object);
 
         var dto = new ArchivoPlanEstudiosDTO
         {
@@ -68,18 +75,49 @@ public class PlanEstudiosServiceTests
         var planEstudiosRepositoryMock = new Mock<IPlanEstudiosRepository>();
         var experienciaEducativaRepositoryMock = new Mock<IExperienciaEducativaRepository>();
         var planEstudiosValidatorMock = new Mock<IPlanEstudiosValidator>();
-        var service = new PlanEstudiosService(
+        var archivoRepositoryMock = new Mock<IArchivoRepository>();
+        var archivoServiceMock = new Mock<IArchivoService>();
+
+        var service = CrearService(
             planEstudiosRepositoryMock.Object,
             experienciaEducativaRepositoryMock.Object,
-            planEstudiosValidatorMock.Object);
+            planEstudiosValidatorMock.Object,
+            archivoRepositoryMock.Object,
+            archivoServiceMock.Object);
 
         var dto = CrearPlanEstudiosDtoValido();
         PlanEstudios? planEnviado = null;
         List<ExperienciaEducativa>? experienciasEnviadas = null;
+        Archivo? archivoEnviado = null;
 
         planEstudiosValidatorMock
             .Setup(v => v.ValidarCreacionAsync(dto))
             .Returns(Task.CompletedTask);
+
+        archivoServiceMock
+            .Setup(s => s.GuardarAsync(
+                dto.Archivo.Archivo,
+                dto.Archivo.NombreArchivo,
+                "planes-estudios"))
+            .ReturnsAsync(new DatosArchivoGuardadoDTO
+            {
+                NombreOriginal = "PlanLisoft.xls",
+                Ruta = "planes-estudios/archivo-prueba.xls",
+                Tipo = "application/vnd.ms-excel",
+                Tamanio = 1000
+            });
+
+        archivoRepositoryMock
+            .Setup(r => r.CrearAsync(It.IsAny<Archivo>()))
+            .Callback<Archivo>(archivo => archivoEnviado = archivo)
+            .ReturnsAsync(new Archivo
+            {
+                IdArchivo = 15,
+                Nombre = "PlanLisoft.xls",
+                Ruta = "planes-estudios/archivo-prueba.xls",
+                Tipo = "application/vnd.ms-excel",
+                Tamanio = 1000
+            });
 
         planEstudiosRepositoryMock
             .Setup(r => r.CrearAsync(It.IsAny<PlanEstudios>()))
@@ -97,10 +135,18 @@ public class PlanEstudiosServiceTests
         var idResultado = await service.AgregarAsync(dto);
 
         Assert.Equal(1, idResultado);
+
+        Assert.NotNull(archivoEnviado);
+        Assert.Equal("PlanLisoft.xls", archivoEnviado!.Nombre);
+        Assert.Equal("planes-estudios/archivo-prueba.xls", archivoEnviado.Ruta);
+        Assert.Equal("application/vnd.ms-excel", archivoEnviado.Tipo);
+        Assert.Equal(1000, archivoEnviado.Tamanio);
+
         Assert.NotNull(planEnviado);
         Assert.Equal(dto.IdProgramaEducativo, planEnviado!.IdProgramaEducativo);
         Assert.Equal(dto.Nombre, planEnviado.Nombre);
         Assert.Equal(dto.Sistema, planEnviado.Modalidad);
+        Assert.Equal(15, planEnviado.IdArchivoPlan);
 
         Assert.NotNull(experienciasEnviadas);
         Assert.Equal(3, experienciasEnviadas!.Count);
@@ -127,6 +173,8 @@ public class PlanEstudiosServiceTests
             });
 
         planEstudiosValidatorMock.Verify(v => v.ValidarCreacionAsync(dto), Times.Once);
+        archivoServiceMock.Verify(s => s.GuardarAsync(dto.Archivo.Archivo, dto.Archivo.NombreArchivo, "planes-estudios"), Times.Once);
+        archivoRepositoryMock.Verify(r => r.CrearAsync(It.IsAny<Archivo>()), Times.Once);
         planEstudiosRepositoryMock.Verify(r => r.CrearAsync(It.IsAny<PlanEstudios>()), Times.Once);
         experienciaEducativaRepositoryMock.Verify(r => r.CrearExperienciasEducativasAsync(It.IsAny<List<ExperienciaEducativa>>()), Times.Once);
     }
@@ -138,10 +186,15 @@ public class PlanEstudiosServiceTests
         var planEstudiosRepositoryMock = new Mock<IPlanEstudiosRepository>();
         var experienciaEducativaRepositoryMock = new Mock<IExperienciaEducativaRepository>();
         var planEstudiosValidatorMock = new Mock<IPlanEstudiosValidator>();
-        var service = new PlanEstudiosService(
+        var archivoRepositoryMock = new Mock<IArchivoRepository>();
+        var archivoServiceMock = new Mock<IArchivoService>();
+
+        var service = CrearService(
             planEstudiosRepositoryMock.Object,
             experienciaEducativaRepositoryMock.Object,
-            planEstudiosValidatorMock.Object);
+            planEstudiosValidatorMock.Object,
+            archivoRepositoryMock.Object,
+            archivoServiceMock.Object);
 
         var planes = new List<PlanEstudios>
         {
@@ -185,10 +238,15 @@ public class PlanEstudiosServiceTests
         var planEstudiosRepositoryMock = new Mock<IPlanEstudiosRepository>();
         var experienciaEducativaRepositoryMock = new Mock<IExperienciaEducativaRepository>();
         var planEstudiosValidatorMock = new Mock<IPlanEstudiosValidator>();
-        var service = new PlanEstudiosService(
+        var archivoRepositoryMock = new Mock<IArchivoRepository>();
+        var archivoServiceMock = new Mock<IArchivoService>();
+
+        var service = CrearService(
             planEstudiosRepositoryMock.Object,
             experienciaEducativaRepositoryMock.Object,
-            planEstudiosValidatorMock.Object);
+            planEstudiosValidatorMock.Object,
+            archivoRepositoryMock.Object,
+            archivoServiceMock.Object);
 
         var filtro = new FiltroPlanEstudiosDTO
         {
@@ -226,10 +284,15 @@ public class PlanEstudiosServiceTests
         var planEstudiosRepositoryMock = new Mock<IPlanEstudiosRepository>();
         var experienciaEducativaRepositoryMock = new Mock<IExperienciaEducativaRepository>();
         var planEstudiosValidatorMock = new Mock<IPlanEstudiosValidator>();
-        var service = new PlanEstudiosService(
+        var archivoRepositoryMock = new Mock<IArchivoRepository>();
+        var archivoServiceMock = new Mock<IArchivoService>();
+
+        var service = CrearService(
             planEstudiosRepositoryMock.Object,
             experienciaEducativaRepositoryMock.Object,
-            planEstudiosValidatorMock.Object);
+            planEstudiosValidatorMock.Object,
+            archivoRepositoryMock.Object,
+            archivoServiceMock.Object);
 
         var plan = CrearPlanEstudiosLista(67, "Licenciatura en Ingeniería en Software", "Plan 2024", "Escolarizado", "Económico-Administrativo");
         var experiencias = new List<ExperienciaEducativa>
@@ -301,14 +364,20 @@ public class PlanEstudiosServiceTests
         var planEstudiosRepositoryMock = new Mock<IPlanEstudiosRepository>();
         var experienciaEducativaRepositoryMock = new Mock<IExperienciaEducativaRepository>();
         var planEstudiosValidatorMock = new Mock<IPlanEstudiosValidator>();
-        var service = new PlanEstudiosService(
+        var archivoRepositoryMock = new Mock<IArchivoRepository>();
+        var archivoServiceMock = new Mock<IArchivoService>();
+
+        var service = CrearService(
             planEstudiosRepositoryMock.Object,
             experienciaEducativaRepositoryMock.Object,
-            planEstudiosValidatorMock.Object);
+            planEstudiosValidatorMock.Object,
+            archivoRepositoryMock.Object,
+            archivoServiceMock.Object);
 
         var dto = new EditarPlanEstudiosDTO
         {
             IdPlanEstudios = 67,
+            NuevaLista = false,
             ExperienciasNuevas = new List<AgregarExperienciaEducativaDTO>
             {
                 new AgregarExperienciaEducativaDTO
@@ -339,6 +408,17 @@ public class PlanEstudiosServiceTests
         planEstudiosValidatorMock
             .Setup(v => v.ValidarEdicionAsync(dto))
             .Returns(Task.CompletedTask);
+
+        planEstudiosRepositoryMock
+            .Setup(r => r.ObtenerPorIdAsync(67))
+            .ReturnsAsync(new PlanEstudios
+            {
+                IdPlanEstudios = 67,
+                IdProgramaEducativo = 12,
+                Nombre = "Plan 2024",
+                Modalidad = "Escolarizado",
+                IdArchivoPlan = 0
+            });
 
         experienciaEducativaRepositoryMock
             .InSequence(sequence)
@@ -380,6 +460,7 @@ public class PlanEstudiosServiceTests
         Assert.Equal("Licenciado en informática o carrera a fin...", experienciaNueva.PerfilDocente);
 
         planEstudiosValidatorMock.Verify(v => v.ValidarEdicionAsync(dto), Times.Once);
+        planEstudiosRepositoryMock.Verify(r => r.ObtenerPorIdAsync(67), Times.Once);
         experienciaEducativaRepositoryMock.Verify(r => r.EliminarExperienciasEducativasPorIdsAsync(It.IsAny<List<int>>()), Times.Once);
         experienciaEducativaRepositoryMock.Verify(r => r.ActualizarExperienciasEducativasAsync(It.IsAny<List<ExperienciaEducativa>>()), Times.Once);
         experienciaEducativaRepositoryMock.Verify(r => r.CrearExperienciasEducativasAsync(It.IsAny<List<ExperienciaEducativa>>()), Times.Once);
@@ -392,10 +473,15 @@ public class PlanEstudiosServiceTests
         var planEstudiosRepositoryMock = new Mock<IPlanEstudiosRepository>();
         var experienciaEducativaRepositoryMock = new Mock<IExperienciaEducativaRepository>();
         var planEstudiosValidatorMock = new Mock<IPlanEstudiosValidator>();
-        var service = new PlanEstudiosService(
+        var archivoRepositoryMock = new Mock<IArchivoRepository>();
+        var archivoServiceMock = new Mock<IArchivoService>();
+
+        var service = CrearService(
             planEstudiosRepositoryMock.Object,
             experienciaEducativaRepositoryMock.Object,
-            planEstudiosValidatorMock.Object);
+            planEstudiosValidatorMock.Object,
+            archivoRepositoryMock.Object,
+            archivoServiceMock.Object);
 
         var plan = new PlanEstudios
         {
@@ -454,6 +540,21 @@ public class PlanEstudiosServiceTests
         planEstudiosRepositoryMock.Verify(r => r.EliminarAsync(plan), Times.Once);
     }
 
+    private static PlanEstudiosService CrearService(
+        IPlanEstudiosRepository? planEstudiosRepository = null,
+        IExperienciaEducativaRepository? experienciaEducativaRepository = null,
+        IPlanEstudiosValidator? planEstudiosValidator = null,
+        IArchivoRepository? archivoRepository = null,
+        IArchivoService? archivoService = null)
+    {
+        return new PlanEstudiosService(
+            planEstudiosRepository ?? Mock.Of<IPlanEstudiosRepository>(),
+            experienciaEducativaRepository ?? Mock.Of<IExperienciaEducativaRepository>(),
+            planEstudiosValidator ?? Mock.Of<IPlanEstudiosValidator>(),
+            archivoRepository ?? Mock.Of<IArchivoRepository>(),
+            archivoService ?? Mock.Of<IArchivoService>());
+    }
+
     private static CrearPlanEstudiosDTO CrearPlanEstudiosDtoValido()
     {
         return new CrearPlanEstudiosDTO
@@ -461,6 +562,11 @@ public class PlanEstudiosServiceTests
             IdProgramaEducativo = 12,
             Nombre = "Plan 2014",
             Sistema = "Escolarizado",
+            Archivo = new ArchivoPlanEstudiosDTO
+            {
+                Archivo = CrearArchivoExcelPlanEstudios(),
+                NombreArchivo = "PlanLisoft.xls"
+            },
             ExperienciasEducativas = new List<AgregarExperienciaEducativaDTO>
             {
                 new AgregarExperienciaEducativaDTO
