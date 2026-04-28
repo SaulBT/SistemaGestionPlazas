@@ -44,6 +44,9 @@ builder.Services.AddScoped<IExperienciaEducativaRepository, ExperienciaEducativa
 builder.Services.AddScoped<IPlanEstudiosValidator, PlanEstudiosValidator>();
 builder.Services.AddScoped<IPlanEstudiosService, PlanEstudiosService>();
 
+builder.Services.AddScoped<IArchivoRepository, ArchivoRepository>();
+builder.Services.AddScoped<IArchivoService, ArchivoService>();
+
 
 var app = builder.Build();
 
