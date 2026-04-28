@@ -8,7 +8,6 @@ using SGPla.Services.Interfaces;
 using SGPla.Validations.Implementations;
 using SGPla.Validations.Interfaces;
 using System.Text;
-//using SGPla.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
