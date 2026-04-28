@@ -1,5 +1,6 @@
 using ExcelDataReader;
 using SGPla.Models;
+using SGPla.Models.DTOs.Archivo;
 using SGPla.Models.DTOs.PlanEstudios;
 using SGPla.Repositories.Interfaces;
 using SGPla.Services.Interfaces;
@@ -13,14 +14,21 @@ namespace SGPla.Services.Implementations
         private readonly IExperienciaEducativaRepository _experienciaEducativaRepository;
         private readonly IPlanEstudiosValidator _planEstudiosValidator;
 
+        private readonly IArchivoRepository _archivoRepository;
+        private readonly IArchivoService _archivoService;
+
         public PlanEstudiosService(
             IPlanEstudiosRepository planEstudiosRepository,
             IExperienciaEducativaRepository experienciaEducativaRepository,
-            IPlanEstudiosValidator planEstudiosValidator)
+            IPlanEstudiosValidator planEstudiosValidator,
+            IArchivoRepository archivoRepository,
+            IArchivoService archivoService)
         {
             _planEstudiosRepository = planEstudiosRepository;
             _experienciaEducativaRepository = experienciaEducativaRepository;
             _planEstudiosValidator = planEstudiosValidator;
+            _archivoRepository = archivoRepository;
+            _archivoService = archivoService;
         }
 
         public List<DatosExperienciaEducativaDTO> ProcesarArchivo(ArchivoPlanEstudiosDTO archivoPlanEstudiosDTO)
@@ -73,19 +81,47 @@ namespace SGPla.Services.Implementations
         {
             await _planEstudiosValidator.ValidarCreacionAsync(crearPlanEstudiosDTO);
 
-            var planEstudios = new PlanEstudios
+            DatosArchivoGuardadoDTO? archivoGuardado = null;
+            Archivo? archivoRegistrado = null;
+
+            try
             {
-                IdProgramaEducativo = crearPlanEstudiosDTO.IdProgramaEducativo,
-                Nombre = crearPlanEstudiosDTO.Nombre,
-                Modalidad = crearPlanEstudiosDTO.Sistema
-            };
+                archivoGuardado = await _archivoService.GuardarAsync(
+                    crearPlanEstudiosDTO.Archivo.Archivo,
+                    crearPlanEstudiosDTO.Archivo.NombreArchivo,
+                    "planes-estudios");
+                archivoRegistrado = await _archivoRepository.CrearAsync(new Archivo
+                {
+                    Nombre = archivoGuardado.NombreOriginal,
+                    Ruta = archivoGuardado.Ruta,
+                    Tipo = archivoGuardado.Tipo,
+                    Tamanio = archivoGuardado.Tamanio
+                });
 
-            var planEstudiosCreado = await _planEstudiosRepository.CrearAsync(planEstudios);
-            var experienciasEducativas = mapearExperienciasNuevas(crearPlanEstudiosDTO.ExperienciasEducativas, planEstudiosCreado.IdPlanEstudios);
+                var planEstudios = new PlanEstudios
+                {
+                    IdProgramaEducativo = crearPlanEstudiosDTO.IdProgramaEducativo,
+                    Nombre = crearPlanEstudiosDTO.Nombre,
+                    Modalidad = crearPlanEstudiosDTO.Sistema,
+                    IdArchivoPlan = archivoRegistrado.IdArchivo
+                };
 
-            await _experienciaEducativaRepository.CrearExperienciasEducativasAsync(experienciasEducativas);
+                var planEstudiosCreado = await _planEstudiosRepository.CrearAsync(planEstudios);
+                var experienciasEducativas = mapearExperienciasNuevas(crearPlanEstudiosDTO.ExperienciasEducativas, planEstudiosCreado.IdPlanEstudios);
 
-            return planEstudiosCreado.IdPlanEstudios;
+                await _experienciaEducativaRepository.CrearExperienciasEducativasAsync(experienciasEducativas);
+
+                return planEstudiosCreado.IdPlanEstudios;
+            }
+            catch
+            {
+                if (archivoRegistrado != null)
+                    await _archivoRepository.EliminarAsync(archivoRegistrado);
+                if (archivoGuardado != null)
+                    await _archivoService.EliminarAsync(archivoGuardado.Ruta);
+
+                throw;
+            }
         }
 
         public async Task<List<ListaPlanEstudiosDTO>> ObtenerTodosAsync()
@@ -135,16 +171,72 @@ namespace SGPla.Services.Implementations
         {
             await _planEstudiosValidator.ValidarEdicionAsync(editarPlanEstudiosDTO);
 
-            if (editarPlanEstudiosDTO.IdsExperienciasEliminadas.Count > 0)
-                await _experienciaEducativaRepository.EliminarExperienciasEducativasPorIdsAsync(editarPlanEstudiosDTO.IdsExperienciasEliminadas);
+            var planEstudios = await _planEstudiosRepository.ObtenerPorIdAsync(editarPlanEstudiosDTO.IdPlanEstudios);
+            DatosArchivoGuardadoDTO? archivoNuevoGuardado = null;
+            Archivo? archivoAnterior = null;
+            string? rutaAnterior = null;
 
-            if (editarPlanEstudiosDTO.ExperienciasEditadas.Count > 0)
-                await _experienciaEducativaRepository.ActualizarExperienciasEducativasAsync(
-                    mapearExperienciasEditadas(editarPlanEstudiosDTO.ExperienciasEditadas, editarPlanEstudiosDTO.IdPlanEstudios));
+            try
+            {
+                if (editarPlanEstudiosDTO.NuevaLista && editarPlanEstudiosDTO.Archivo != null)
+                {
+                    archivoNuevoGuardado = await _archivoService.GuardarAsync(
+                        editarPlanEstudiosDTO.Archivo.Archivo,
+                        editarPlanEstudiosDTO.Archivo.NombreArchivo,
+                        "planes-estudios");
 
-            if (editarPlanEstudiosDTO.ExperienciasNuevas.Count > 0)
-                await _experienciaEducativaRepository.CrearExperienciasEducativasAsync(
-                    mapearExperienciasNuevas(editarPlanEstudiosDTO.ExperienciasNuevas, editarPlanEstudiosDTO.IdPlanEstudios));
+                    if (planEstudios.IdArchivoPlan != 0)
+                    {
+                        archivoAnterior = await _archivoRepository.ObtenerPorIdAsync(planEstudios.IdArchivoPlan);
+
+                        if (archivoAnterior != null)
+                        {
+                            rutaAnterior = archivoAnterior.Ruta;
+                            archivoAnterior.Nombre = archivoNuevoGuardado.NombreOriginal;
+                            archivoAnterior.Ruta = archivoNuevoGuardado.Ruta;
+                            archivoAnterior.Tipo = archivoNuevoGuardado.Tipo;
+                            archivoAnterior.Tamanio = archivoNuevoGuardado.Tamanio;
+
+                            await _archivoRepository.ActualizarAsync(archivoAnterior);
+                        }
+                    }
+                    else
+                    {
+                        var nuevoArchivo = await _archivoRepository.CrearAsync(new Archivo
+                        {
+                            Nombre = archivoNuevoGuardado.NombreOriginal,
+                            Ruta = archivoNuevoGuardado.Ruta,
+                            Tipo = archivoNuevoGuardado.Tipo,
+                            Tamanio = archivoNuevoGuardado.Tamanio
+                        });
+
+                        planEstudios.IdArchivoPlan = nuevoArchivo.IdArchivo;
+                        await _planEstudiosRepository.EditarAsync(planEstudios);
+                    }
+                }
+
+                if (editarPlanEstudiosDTO.IdsExperienciasEliminadas.Count > 0)
+                    await _experienciaEducativaRepository.EliminarExperienciasEducativasPorIdsAsync(editarPlanEstudiosDTO.IdsExperienciasEliminadas);
+
+                if (editarPlanEstudiosDTO.ExperienciasEditadas.Count > 0)
+                    await _experienciaEducativaRepository.ActualizarExperienciasEducativasAsync(
+                        mapearExperienciasEditadas(editarPlanEstudiosDTO.ExperienciasEditadas, editarPlanEstudiosDTO.IdPlanEstudios));
+
+                if (editarPlanEstudiosDTO.ExperienciasNuevas.Count > 0)
+                    await _experienciaEducativaRepository.CrearExperienciasEducativasAsync(
+                        mapearExperienciasNuevas(editarPlanEstudiosDTO.ExperienciasNuevas, editarPlanEstudiosDTO.IdPlanEstudios));
+
+                if (!string.IsNullOrWhiteSpace(rutaAnterior) && archivoNuevoGuardado != null)
+                    await _archivoService.EliminarAsync(rutaAnterior);
+            }
+            catch
+            {
+                if (archivoNuevoGuardado != null)
+                    await _archivoService.EliminarAsync(archivoNuevoGuardado.Ruta);
+
+                throw;
+            }
+            
         }
 
         public async Task EliminarAsync(int idPlanEstudios)
