@@ -1,6 +1,6 @@
 ﻿@model InputFieldModel
 
-<div class="input-field">
+<div class="input-field @(Model.Flexible ? "flexible" : "")">
 
     @if (!string.IsNullOrWhiteSpace(Model.Label))
     {
@@ -9,12 +9,15 @@
         </div>
     }
 
-    <input class="input"
-           type="@Model.Tipo"
+    <input class="input @( !string.IsNullOrEmpty(Model.Error) ? "input-error" : "" )"
            id="@Model.Id"
            name="@Model.Name"
            value="@Model.Valor"
            placeholder="@Model.Placeholder"
-           disabled="@(Model.Disabled ? "disabled" : null)" />
-
+           type="@Model.Tipo"
+            @(Model.Disabled ? "disabled" : null) />
+    @if (!string.IsNullOrEmpty(Model.Error))
+    {
+        <span class="input-error-text">@Model.Error</span>
+    }
 </div>

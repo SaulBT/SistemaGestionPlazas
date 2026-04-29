@@ -13,6 +13,7 @@
     --bg-body: #f5f5f5;
     --bg-white: #ffffff;
     --bg-scrollbar: #f1f1f1;
+    --bg-gris: #D9D9D9;
     /* Colores de scroll */
     --scrollbar-thumb: #667eea;
     --scrollbar-thumb-hover: #764ba2;
@@ -26,9 +27,11 @@
     --menu-width: 250px;
     --padding-lg: 16px;
     --padding-sm: 12px;
+    --padding-end: 40px;
     --border-radius: 10px;
     --border-radius-sm: 8px;
     --border-gap: 8px;
+    --button-gap:20px;
     /* Colores Campos */
     --border-default: #D9D9D9;
     --fondo-iconos: rgba(1,1,1,0.1);
@@ -47,7 +50,6 @@
     --gris: rgba(217, 217, 217, 1);
     --gris-tenue: rgba(244, 243, 243, 1);
     --gris-hover: rgba(196, 194, 194, 1);
-
     /* Fuentes */
     --h1-font-family: "Inter", Helvetica;
     --h1-font-weight: 800;
@@ -91,7 +93,6 @@
     --estados-letter-spacing: 0px;
     --estados-line-height: normal;
     --estados-font-style: normal;
-
     /*Qué es esto jajajaj*/
     --material-theme-schemes-primary: rgba(101, 85, 143, 1);
     --material-theme-schemes-surface-tint: rgba(103, 80, 164, 1);

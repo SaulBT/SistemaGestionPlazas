@@ -68,6 +68,18 @@ namespace SGPla.Repositories.Implementations
                 .ToListAsync();
         }
 
+        public async Task<List<EntidadAcademica>> ObtenerPorIdAreaAcademicaYRegionAsync(int idAreaAcademica, string region)
+        {
+            if (idAreaAcademica <= 0)
+                return new List<EntidadAcademica>();
+
+            return await _context.EntidadAcademica
+                .AsNoTracking()
+                .Where(e => e.IdAreaAcademica == idAreaAcademica && e.Region == region)
+                .OrderBy(e => e.Nombre)
+                .ToListAsync();
+        }
+
         public async Task<bool> ExistePorIdAsync(int idEntidadAcademica)
         {
             if (idEntidadAcademica <= 0)

@@ -1,8 +1,8 @@
 ﻿using SGPla.Models.Components;
 
-namespace SGPla.Models.ViewModels
+namespace SGPla.Models.ViewModels.Usuarios
 {
-    public class UsuariosIndexViewModel
+    public class IndexViewModel
     {
         public TableModel Table { get; set; }
         public List<OptionModel> Regiones { get; set; }

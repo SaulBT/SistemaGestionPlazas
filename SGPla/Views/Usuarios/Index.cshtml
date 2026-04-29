@@ -1,4 +1,5 @@
-﻿@model UsuariosIndexViewModel
+﻿@using SGPla.Models.ViewModels.Usuarios
+@model IndexViewModel
 
 @{
     Layout = "_LayoutSuperUsuario";
@@ -23,7 +24,7 @@
             Name = "idAreaAcademica"
         })
 
-        <div id="contenedorEntidad">
+        <div id="contenedorEntidad" >
             @await Component.InvokeAsync("SelectField", new SelectFieldModel
             {
                 Label = "Entidad Académica",
@@ -47,14 +48,13 @@
         })
 
         <!--Botón Crear Usuario-->
-        <a href="@Url.Action("Create", ViewData["Title"])" style="display: inline-block; text-decoration: none;">
+        <a href="@Url.Action("CrearUsuario", "Usuarios")" style="display: inline-block; text-decoration: none;">
             @await Component.InvokeAsync("Boton", new
             {
                 Accion = "Agregar",
                 Texto = "Crear Usuario"
             })
         </a>
-    
     </div>
 
 </form>
@@ -92,7 +92,7 @@
         // Región cambia
         if (region) {
             region.addEventListener("change", function () {
-                if (area) area.value = "";
+                
                 if (entidad) entidad.value = "";
                 form.submit();
             });

@@ -6,7 +6,10 @@
         public string Name { get; set; } = string.Empty;
         public string Label { get; set; } = string.Empty;
         public bool Disabled { get; set; }
+        public string? Error {  get; set; }
+        public string? SelectedValue { get; set; }
         public string Placeholder { get; set; } = "Selecciona una opción";
+        public bool Flexible { get; set; }
 
         public List<OptionModel> Options { get; set; } = new();
     }

@@ -1,0 +1,21 @@
+﻿@model ModalModel
+
+<div id="@Model.Id" class="modal-overlay" style="display:none;">
+    <div class="modal">
+        <h3>@Model.Titulo</h3>
+        <p>@Model.Mensaje</p>
+
+        <div class="modal-actions">
+            <button type="button" onclick="cerrarModal('@Model.Id')">
+                @Model.TextoCancelar
+            </button>
+
+            <form method="post" action="@Model.ActionUrl">
+                @Html.AntiForgeryToken()
+                <button type="submit">
+                    @Model.TextoConfirmar
+                </button>
+            </form>
+        </div>
+    </div>
+</div>

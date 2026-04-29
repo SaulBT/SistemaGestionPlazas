@@ -7,4 +7,6 @@
     public string Placeholder { get; set; } = string.Empty;
     public string Label { get; set; } = string.Empty;
     public bool Disabled { get; set; }
+    public bool Flexible { get; set; }
+    public string? Error { get; set; }
 }

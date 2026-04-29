@@ -9,6 +9,7 @@ namespace SGPla.Repositories.Interfaces
         Task<List<EntidadAcademica>> ObtenerPorFiltroAsync(string? region, int? idAreaAcademica, string? nombre);
         Task<EntidadAcademica?> ObtenerPorIdAsync(int idEntidadAcademica);
         Task<List<EntidadAcademica>> ObtenerPorIdAreaAcademicaAsync(int idAreaAcademica);
+        Task<List<EntidadAcademica>> ObtenerPorIdAreaAcademicaYRegionAsync(int idAreaAcademica, string region);
         Task<bool> ExistePorIdAsync(int idEntidadAcademica);
         Task<bool> ExistePorClaveAsync(string clave);
         Task<bool> ExistePorClaveAsync(string clave, int idEntidadAcademica);
