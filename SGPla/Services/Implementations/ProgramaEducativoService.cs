@@ -26,6 +26,8 @@ namespace SGPla.Services.Implementations
         }
         public async Task<List<DetallesProgramaEducativoDTO>> BuscarPorFiltroAsync(BuscarProgramaEducativoDTO filtro)
         {
+            await _programaEducativoValidator.ValidarBusquedaPorFiltroAsync(filtro);
+
             var obtenidos = await _programaEducativoRepository.ObtenerPorFiltroAsync(filtro)
                              ?? new List<ProgramaEducativo>();
 
