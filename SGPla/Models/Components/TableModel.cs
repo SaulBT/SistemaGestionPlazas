@@ -21,4 +21,6 @@ public class TableActionModel
 {
     public string Accion { get; set; } = ""; // editar, eliminar, etc.
     public string Url { get; set; } = "";
+
+    public Dictionary<string, string>? Data { get; set; }
 }

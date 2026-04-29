@@ -8,4 +8,5 @@
     public bool Fondo { get; set; }
 
     public string ButtonType { get; set; } = "button";
+    public string? OnClick { get; set; }
 }

@@ -143,7 +143,12 @@ namespace SGPla.Controllers
                             new()
                             {
                                 Accion = "eliminar",
-                                Url = Url.Action("Delete", "Usuarios", new { id = usuario.IdUsuario, rol = usuario.Rol })
+                                Url = "#", // ya no navega
+                                Data = new Dictionary<string, string>
+                                {
+                                    { "id", usuario.IdUsuario.ToString() },
+                                    { "rol", usuario.Rol }
+                                }
                             }
                         }
                     }
@@ -472,7 +477,38 @@ namespace SGPla.Controllers
             }
         }
 
+        /* * * * * * Eliminar Usuario * * * * * */
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EliminarUsuario(int id, string rol)
+        {
+            try
+            {
+                var referencia = new ReferenciaUsuarioDTO
+                {
+                    IdUsuario = id,
+                    Rol = rol
+                };
+
+                await _usuarioService.EliminarAsync(referencia);
+                TempData["Success"] = "Usuario eliminado exitosamente";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "Usuario no encontrado {Id}", id);
+                TempData["Error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al eliminar usuario {Id}", id);
+                TempData["Error"] = "Error al eliminar el usuario";
+                return RedirectToAction(nameof(Index));
+            }
+
+        }
 
 
 
@@ -676,35 +712,7 @@ namespace SGPla.Controllers
         }
 
         // POST: Usuarios/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id, string rol)
-        {
-            try
-            {
-                var referencia = new ReferenciaUsuarioDTO
-                {
-                    IdUsuario = id,
-                    Rol = rol
-                };
-
-                await _usuarioService.EliminarAsync(referencia);
-                TempData["Success"] = "Usuario eliminado exitosamente";
-                return RedirectToAction(nameof(Index));
-            }
-            catch (InvalidOperationException ex)
-            {
-                _logger.LogWarning(ex, "Usuario no encontrado {Id}", id);
-                TempData["Error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al eliminar usuario {Id}", id);
-                TempData["Error"] = "Error al eliminar el usuario";
-                return RedirectToAction(nameof(Index));
-            }
-        }
+        
 
         // POST: Usuarios/Filtrar
         [HttpPost]

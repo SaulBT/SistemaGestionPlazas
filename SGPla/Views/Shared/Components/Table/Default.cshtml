@@ -23,13 +23,28 @@
                             <div class="table-actions">
                                 @foreach (var action in cell.Actions)
                                 {
-                                    <a href="@action.Url">
+                                    @if (action.Accion == "eliminar" && action.Data != null)
+                                    {
+                                        var id = action.Data.GetValueOrDefault("id");
+                                        var rol = action.Data.GetValueOrDefault("rol");
+
                                         @await Component.InvokeAsync("Boton", new
                                         {
                                             accion = action.Accion,
-                                            fondo = false
+                                            fondo = false,
+                                            onClick = $"abrirModalEliminar('{id}', '{rol}')"
                                         })
-                                    </a>
+                                    }
+                                    else
+                                    {
+                                        <a href="@action.Url">
+                                            @await Component.InvokeAsync("Boton", new
+                                            {
+                                                accion = action.Accion,
+                                                fondo = false
+                                            })
+                                        </a>
+                                    }
                                 }
                             </div>
                         }
