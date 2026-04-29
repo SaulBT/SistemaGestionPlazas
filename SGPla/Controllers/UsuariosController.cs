@@ -321,6 +321,10 @@ namespace SGPla.Controllers
                 IdEntidadAcademica = model.IdEntidadAcademica
             };
 
+            if (model.Rol.ToLower() == Constantes.CoordinadorEa.ToLower())
+                dto.IdAreaAcademica = null;
+            
+
             try
             {
                 await _usuarioService.CrearAsync(dto);
