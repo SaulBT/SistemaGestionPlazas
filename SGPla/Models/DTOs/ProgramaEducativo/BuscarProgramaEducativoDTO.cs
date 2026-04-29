@@ -10,5 +10,9 @@ namespace SGPla.Models.DTOs.ProgramaEducativo
         public int? IdAreaAcademica { get; set; }
 
         public string? Region { get; set; }
+
+        public int Pagina { get; set; } = 1;
+
+        public int Cantidad { get; set; } = 10;
     }
 }

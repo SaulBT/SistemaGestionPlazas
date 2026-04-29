@@ -310,6 +310,9 @@ public class EntidadAcademicaServiceTests
             Nombre = "11304-Facultad de Estadística e Informática"
         };
 
+        _entidadAcademicaRepositoryMock
+         .Setup(repository => repository.ObtenerPorIdAsync(12))
+         .ReturnsAsync(entidadAcademica);
         _entidadAcademicaValidatorMock
             .Setup(validator => validator.ValidarIdAsync(12))
             .Returns(Task.CompletedTask);

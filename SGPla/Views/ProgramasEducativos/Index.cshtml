@@ -48,6 +48,10 @@
                class="form-control"
                placeholder="Buscar por nombre" />
 
+        <!-- 🔥 inputs ocultos para paginación -->
+        <input type="hidden" name="Pagina" value="1" />
+        <input type="hidden" name="Cantidad" value="10" />
+
         <button type="submit" class="btn btn-primary">Buscar</button>
         <a asp-action="Index" class="btn btn-secondary ms-2">Limpiar</a>
     </div>
@@ -111,6 +115,7 @@
                     <div class="mb-3">
                         <label>Nombre</label>
                         <input type="text" id="Nombre" name="Nombre" class="form-control" required />
+                     
                        
                     </div>
 
@@ -158,7 +163,7 @@
             entidad.innerHTML = '<option>Cargando...</option>';
 
             try {
-                const response = await fetch(`/ProgramasEducativos/ObtenerPorFiltros?region=${region.value}&idArea=${area.value}`);
+                const response = await fetch(`/ProgramasEducativos/ObtenerEntidadesAcademicas?region=${region.value}&idArea=${area.value}`);
 
                 // 🔴 Si el backend responde error (404, 500, etc)
                 if (!response.ok) {

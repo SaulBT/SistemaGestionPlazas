@@ -30,12 +30,18 @@ namespace SGPla.Mappers
             return new DetallesProgramaEducativoDTO
             {
                 IdProgramaEducativo = programaEducativo.IdProgramaEducativo,
-                Nombre = programaEducativo.Nombre   ,
+                Nombre = programaEducativo.Nombre,
                 IdEntidadAcademica = programaEducativo.IdEntidadAcademica,
-                IdAreaAcademica = programaEducativo.IdEntidadAcademicaNavigation.IdAreaAcademica,
-                Region = programaEducativo.IdEntidadAcademicaNavigation.Region,
-                EntidadAcademica = programaEducativo.IdEntidadAcademicaNavigation.Nombre,
-                AreaAcademica = programaEducativo.IdEntidadAcademicaNavigation.IdAreaAcademicaNavigation.Nombre
+
+                IdAreaAcademica = programaEducativo.IdEntidadAcademicaNavigation?.IdAreaAcademica ?? 0,
+                Region = programaEducativo.IdEntidadAcademicaNavigation?.Region,
+
+                EntidadAcademica = programaEducativo.IdEntidadAcademicaNavigation?.Nombre,
+
+                AreaAcademica = programaEducativo
+                    .IdEntidadAcademicaNavigation?
+                    .IdAreaAcademicaNavigation?
+                    .Nombre
             };
         }
     }

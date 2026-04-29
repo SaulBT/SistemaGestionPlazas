@@ -13,20 +13,12 @@ namespace SGPla.Controllers
             _programaEducativoService = programaEducativoService;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(BuscarProgramaEducativoDTO filtro)
         {
-            IEnumerable<DetallesProgramaEducativoDTO>? programasEducativos = null;
-            try
-            {
-                programasEducativos = await _programaEducativoService.ObtenerTodosAsync();
+            var programasEducativos = await _programaEducativoService.BuscarPorFiltroAsync(filtro);
 
-                ViewBag.AreasAcademicas = await _programaEducativoService.ObtenerOpcionesAreaAcademicaAsync();
+            ViewBag.AreasAcademicas = await _programaEducativoService.ObtenerOpcionesAreaAcademicaAsync();
 
-            }
-            catch (Exception ex)
-            {
-                TempData["Error"] = ex.Message;
-            }
             return View(programasEducativos);
         }
 
@@ -38,7 +30,7 @@ namespace SGPla.Controllers
             {
                 try
                 {
-                    dto.IdEntidadAcademica = 1;
+                    dto.IdEntidadAcademica = 100;
                     var resultado = await _programaEducativoService.CrearAsync(dto);
                     TempData["Success"] = $"Programa Educativo creado exitosamente con ID: {resultado.IdProgramaEducativo}";
                 }
@@ -49,6 +41,15 @@ namespace SGPla.Controllers
             }
             return RedirectToAction(nameof(Index));
 
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ObtenerEntidadesAcademicas(string region, int idArea)
+        {
+            var entidades = await _programaEducativoService
+        .ObtenerOpcionesEntidadAcademicaAsync(region, idArea);
+
+            return Json(entidades);
         }
 
         [HttpGet]
@@ -78,6 +79,7 @@ namespace SGPla.Controllers
             {
                 try
                 {
+
                     var resultado = await _programaEducativoService.EditarAsync(dto);
                     TempData["Success"] = $"Programa Educativo editado exitosamente con ID: {resultado.IdProgramaEducativo}";
                 }
@@ -111,11 +113,6 @@ namespace SGPla.Controllers
         }
 
 
-        [HttpGet]
-        public async Task<IActionResult> ObtenerPorFiltros(string region, int idArea)
-        {
-            var programas = await _programaEducativoService.ObtenerOpcionesEntidadAcademicaAsync(region, idArea);
-            return Json(programas);
-        }
+       
     }
 }

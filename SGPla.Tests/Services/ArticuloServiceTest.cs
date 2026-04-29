@@ -178,7 +178,7 @@ public class ArticuloServiceTests
             .Returns(Task.CompletedTask);
 
         _articuloRepositoryMock
-            .Setup(r => r.EditarArticuloAsync(It.IsAny<Articulo>()))
+            .Setup(r => r.ActualizarArticuloAsync(It.IsAny<Articulo>()))
             .ReturnsAsync(new Articulo
             {
                 IdArticulo = 70,
@@ -199,7 +199,7 @@ public class ArticuloServiceTests
                 x.Descripcion == dto.Descripcion)),
             Times.Once);
 
-        _articuloRepositoryMock.Verify(r => r.EditarArticuloAsync(
+        _articuloRepositoryMock.Verify(r => r.ActualizarArticuloAsync(
             It.Is<Articulo>(a =>
                 a.Numero == dto.Numero &&
                 a.Descripcion == dto.Descripcion)),

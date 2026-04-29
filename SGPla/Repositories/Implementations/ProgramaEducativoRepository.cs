@@ -28,7 +28,7 @@ namespace SGPla.Repositories.Implementations
             actualizado.IdEntidadAcademica = programaEducativo.IdEntidadAcademica;
             await _context.SaveChangesAsync();
 
-            return actualizado;
+            return programaEducativo;
         }
 
         public async Task<ProgramaEducativo> CrearAsync(ProgramaEducativo programaEducativo)
@@ -49,22 +49,32 @@ namespace SGPla.Repositories.Implementations
 
         public async Task<List<ProgramaEducativo>> ObtenerPorFiltroAsync(BuscarProgramaEducativoDTO filtro)
         {
-
             var query = _context.ProgramaEducativo.AsQueryable();
 
-            
-                query = query.Where(a =>
-    (string.IsNullOrEmpty(filtro.Nombre) || a.Nombre.Contains(filtro.Nombre)) &&
-    (!filtro.IdEntidadAcademica.HasValue || a.IdEntidadAcademica == filtro.IdEntidadAcademica) &&
-    (!filtro.IdAreaAcademica.HasValue ||
-        (a.IdEntidadAcademicaNavigation != null &&
-         a.IdEntidadAcademicaNavigation.IdAreaAcademica == filtro.IdAreaAcademica)) &&
-       (string.IsNullOrEmpty(filtro.Region) || a.IdEntidadAcademicaNavigation.Region.Contains(filtro.Region))
-);
-            
+            query = query.Where(a =>
+                (string.IsNullOrEmpty(filtro.Nombre) || a.Nombre.Contains(filtro.Nombre)) &&
+                (!filtro.IdEntidadAcademica.HasValue || a.IdEntidadAcademica == filtro.IdEntidadAcademica) &&
+                (!filtro.IdAreaAcademica.HasValue ||
+                    (a.IdEntidadAcademicaNavigation != null &&
+                     a.IdEntidadAcademicaNavigation.IdAreaAcademica == filtro.IdAreaAcademica)) &&
+                (string.IsNullOrEmpty(filtro.Region) ||
+                    (a.IdEntidadAcademicaNavigation != null &&
+                     a.IdEntidadAcademicaNavigation.Region.Contains(filtro.Region)))
+            );
 
-            var resultados = await query.Include(p => p.IdEntidadAcademicaNavigation)
-                .Include(aa => aa.IdEntidadAcademicaNavigation.IdAreaAcademicaNavigation).ToListAsync();
+            query = query.OrderBy(a => a.Nombre);
+
+            int pagina = filtro.Pagina <= 0 ? 1 : filtro.Pagina;
+            int cantidad = filtro.Cantidad <= 0 ? 10 : filtro.Cantidad;
+
+            int skip = (pagina - 1) * cantidad;
+
+            var resultados = await query
+                .Include(p => p.IdEntidadAcademicaNavigation)
+                .ThenInclude(e => e.IdAreaAcademicaNavigation)
+                .Skip(skip)
+                .Take(cantidad)
+                .ToListAsync();
 
             return resultados;
         }

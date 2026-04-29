@@ -137,6 +137,14 @@ public class ArticuloValidatorTests
             Descripcion = "Nuevo ejemplo de descripcion",
         };
 
+        _articuloRepositoryMock.Setup(r => r.ObtenerArticuloPorIdAsync(dto.IdArticulo))
+            .ReturnsAsync(new Articulo
+            {
+                IdArticulo = dto.IdArticulo,
+                Numero = "70",
+                Descripcion = "Ejemplo de descripcion"
+            });
+
         _articuloRepositoryMock
            .Setup(r => r.ExisteNumeroAsync(dto.Numero))
            .ReturnsAsync(articulo);
