@@ -1,0 +1,22 @@
+﻿@model BuscadorModel
+
+<form method="@Model.Method" action="@Model.Action" class="search-field">
+    
+    
+
+    <div class="input-field">
+
+        <input type="text"
+               name="@Model.Name"
+               value="@Model.Value"
+               placeholder="@Model.Placeholder"
+               class="input" />
+
+    </div>
+
+    @await Component.InvokeAsync("Boton", new
+    {
+        accion = "buscar"
+    })
+
+</form>

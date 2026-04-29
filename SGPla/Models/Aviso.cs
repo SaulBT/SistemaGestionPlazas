@@ -27,15 +27,19 @@ public partial class Aviso
 
     public string Modalidad { get; set; } = null!;
 
-    public string? RutaDocumentoOriginal { get; set; }
+    public int? IdArchivoOriginal { get; set; }
 
-    public string? RutaDocumentoFirmado { get; set; }
+    public int? IdArchivoFirmado { get; set; }
 
     public bool? Archivado { get; set; }
 
     public virtual ICollection<Acta> Acta { get; set; } = new List<Acta>();
 
     public virtual ICollection<Horario> Horario { get; set; } = new List<Horario>();
+
+    public virtual Archivo? IdArchivoFirmadoNavigation { get; set; }
+
+    public virtual Archivo? IdArchivoOriginalNavigation { get; set; }
 
     public virtual Articulo IdArticuloNavigation { get; set; } = null!;
 

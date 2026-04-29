@@ -27,7 +27,7 @@ public partial class Oferta
 
     public string Justificacion { get; set; } = null!;
 
-    public string? RutaArchivoSolicitudApertura { get; set; }
+    public int? IdArchivoApertura { get; set; }
 
     public string EstadoSolicitudApertura { get; set; } = null!;
 
@@ -36,6 +36,8 @@ public partial class Oferta
     public string? JustificacionApertura { get; set; }
 
     public virtual ICollection<Horario> Horario { get; set; } = new List<Horario>();
+
+    public virtual Archivo? IdArchivoAperturaNavigation { get; set; }
 
     public virtual Articulo IdArticuloNavigation { get; set; } = null!;
 

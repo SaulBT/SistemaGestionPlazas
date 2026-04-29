@@ -17,7 +17,9 @@ public partial class Solicitud
 
     public string Justificacion { get; set; } = null!;
 
-    public string RutaDocumentosSolicitud { get; set; } = null!;
+    public int IdArchivoSolicitud { get; set; }
+
+    public virtual Archivo IdArchivoSolicitudNavigation { get; set; } = null!;
 
     public virtual Docente IdDocenteNavigation { get; set; } = null!;
 

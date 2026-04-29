@@ -57,3 +57,9 @@ project.fragment.lock.json
 # =========================
 .DS_Store
 Thumbs.db
+
+# =========================
+# Archivos
+# =========================
+Archivos/*
+!Archivos/.gitkeep

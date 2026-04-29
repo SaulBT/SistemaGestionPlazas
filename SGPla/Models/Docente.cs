@@ -11,7 +11,7 @@ public partial class Docente
 
     public string? DescripcionPerfil { get; set; }
 
-    public string? RutaDocumentosGenerales { get; set; }
+    public int? IdArchivosGenerales { get; set; }
 
     public string NumeroPersonal { get; set; } = null!;
 
@@ -20,6 +20,8 @@ public partial class Docente
     public virtual ICollection<Dictamen> Dictamen { get; set; } = new List<Dictamen>();
 
     public virtual Grado? Grado { get; set; }
+
+    public virtual Archivo? IdArchivosGeneralesNavigation { get; set; }
 
     public virtual ICollection<Oferta> Oferta { get; set; } = new List<Oferta>();
 

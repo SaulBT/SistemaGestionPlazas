@@ -1,0 +1,36 @@
+﻿@model SelectFieldModel
+
+<div class="select-field">
+    @if (!string.IsNullOrWhiteSpace(Model.Label))
+    {
+        <div class="text-wrapper" >
+            @Model.Label
+        </div>
+    }
+
+    <div class="select-wrapper">
+        <select class="select" required
+                id="@Model.Id"
+                name="@Model.Name"
+                disabled="@(Model.Disabled ? "disabled" : null)">
+
+            @* Placeholder opcional *@
+            @if (!string.IsNullOrWhiteSpace(Model.Placeholder))
+            {
+                <option value="" disabled selected hidden>
+                    @Model.Placeholder
+                    </option>
+            }
+
+            @foreach (var option in Model.Options)
+            {
+                <option value="@option.Value"
+                        selected="@(option.Selected ? "selected" : null)">
+                    @option.Text
+                </option>
+            }
+        </select>
+
+        <i class="bi bi-caret-down-fill select-icon"></i>
+    </div>
+</div>

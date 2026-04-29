@@ -1,0 +1,20 @@
+﻿@model SwitchFieldModel
+
+<div class="switch-field">
+
+    @if (!string.IsNullOrWhiteSpace(Model.Label))
+    {
+        <span class="text-wrapper">@Model.Label</span>
+    }
+
+    <label class="switch">
+        <input type="checkbox"
+               id="@Model.Id"
+               name="@Model.Name"
+        @(Model.Checked ? "checked" : null)
+        @(Model.Disabled ? "disabled" : null) />
+
+        <span class="slider"></span>
+    </label>
+
+</div>

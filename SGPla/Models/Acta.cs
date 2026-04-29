@@ -21,15 +21,19 @@ public partial class Acta
 
     public string AsuntosGenerales { get; set; } = null!;
 
-    public string? RutaDocumentoOriginal { get; set; }
+    public int? IdArchivoOriginal { get; set; }
 
-    public string? RutaDocumentoFirmado { get; set; }
+    public int? IdArchivoFirmado { get; set; }
 
     public bool? Archivado { get; set; }
 
     public virtual ICollection<Asistencia> Asistencia { get; set; } = new List<Asistencia>();
 
     public virtual ICollection<Dictamen> Dictamen { get; set; } = new List<Dictamen>();
+
+    public virtual Archivo? IdArchivoFirmadoNavigation { get; set; }
+
+    public virtual Archivo? IdArchivoOriginalNavigation { get; set; }
 
     public virtual Aviso IdAvisoNavigation { get; set; } = null!;
 

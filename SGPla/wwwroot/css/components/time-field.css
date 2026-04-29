@@ -1,0 +1,31 @@
+﻿.time-field {
+    display: flex;
+    flex-direction: column;
+    width: var(--width-fields);
+    gap: var(--border-gap);
+}
+
+    .time-field .text-wrapper {
+        font-weight: bold;
+        font-family: var(--labels-font-family);
+        font-size: var(--labels-font-size);
+        color: var(--color-text-default-default);
+    }
+
+    .time-field .time-input {
+        width: 100%;
+        height: 44px;
+        padding: 0 var(--padding-lg);
+        background-color: var(--bg-white);
+        border: 2px solid var(--border-default);
+        border-radius: var(--border-radius);
+        font-family: var(--body-font-family);
+        font-size: var(--body-font-size);
+        color: var(--body);
+        outline: none;
+    }
+
+        .time-field .time-input:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+        }

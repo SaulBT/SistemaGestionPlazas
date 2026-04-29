@@ -1,13 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using SGPla.Data;
+using SGPla.Repositories;
 using SGPla.Repositories.Implementations;
 using SGPla.Repositories.Interfaces;
 using SGPla.Services.Implementations;
 using SGPla.Services.Interfaces;
-using SGPla.Repositories;
 using SGPla.Validations.Implementations;
 using SGPla.Validations.Interfaces;
-//using SGPla.Data;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,6 +42,14 @@ builder.Services.AddScoped<IArticuloValidator, ArticuloValidator>();
 builder.Services.AddScoped<IProgramaEducativoRepository, ProgramaEducativoRepository>();
 builder.Services.AddScoped<IProgramaEducativoService,  ProgramaEducativoService>();
 builder.Services.AddScoped<IProgramaEducativoValidator, ProgramaEducativoValidator>();
+builder.Services.AddScoped<IPlanEstudiosRepository, PlanEstudiosRepository>();
+builder.Services.AddScoped<IExperienciaEducativaRepository, ExperienciaEducativaRepository>();
+builder.Services.AddScoped<IPlanEstudiosValidator, PlanEstudiosValidator>();
+builder.Services.AddScoped<IPlanEstudiosService, PlanEstudiosService>();
+
+builder.Services.AddScoped<IArchivoRepository, ArchivoRepository>();
+builder.Services.AddScoped<IArchivoService, ArchivoService>();
+
 
 
 var app = builder.Build();
@@ -62,5 +70,6 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
+Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
 app.Run();
