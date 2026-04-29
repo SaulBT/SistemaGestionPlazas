@@ -14,6 +14,8 @@ public partial class GestionDePlazasDbContext : DbContext
 
     public virtual DbSet<Acta> Acta { get; set; }
 
+    public virtual DbSet<Archivo> Archivo { get; set; }
+
     public virtual DbSet<AreaAcademica> AreaAcademica { get; set; }
 
     public virtual DbSet<Articulo> Articulo { get; set; }
@@ -78,24 +80,48 @@ public partial class GestionDePlazasDbContext : DbContext
                 .HasColumnName("folio");
             entity.Property(e => e.HoraConclusion).HasColumnName("horaConclusion");
             entity.Property(e => e.HoraInicio).HasColumnName("horaInicio");
+            entity.Property(e => e.IdArchivoFirmado).HasColumnName("idArchivoFirmado");
+            entity.Property(e => e.IdArchivoOriginal).HasColumnName("idArchivoOriginal");
             entity.Property(e => e.IdAviso).HasColumnName("idAviso");
             entity.Property(e => e.Lugar)
                 .HasMaxLength(100)
                 .IsUnicode(false)
                 .HasColumnName("lugar");
-            entity.Property(e => e.RutaDocumentoFirmado)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("rutaDocumentoFirmado");
-            entity.Property(e => e.RutaDocumentoOriginal)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("rutaDocumentoOriginal");
+
+            entity.HasOne(d => d.IdArchivoFirmadoNavigation).WithMany(p => p.ActaIdArchivoFirmadoNavigation)
+                .HasForeignKey(d => d.IdArchivoFirmado)
+                .HasConstraintName("FK_Acta_ArchivoFirmado");
+
+            entity.HasOne(d => d.IdArchivoOriginalNavigation).WithMany(p => p.ActaIdArchivoOriginalNavigation)
+                .HasForeignKey(d => d.IdArchivoOriginal)
+                .HasConstraintName("FK_Acta_ArchivoOriginal");
 
             entity.HasOne(d => d.IdAvisoNavigation).WithMany(p => p.Acta)
                 .HasForeignKey(d => d.IdAviso)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Acta_Aviso");
+        });
+
+        modelBuilder.Entity<Archivo>(entity =>
+        {
+            entity.HasKey(e => e.IdArchivo);
+
+            entity.Property(e => e.IdArchivo)
+                .ValueGeneratedNever()
+                .HasColumnName("idArchivo");
+            entity.Property(e => e.Nombre)
+                .HasMaxLength(250)
+                .IsUnicode(false)
+                .HasColumnName("nombre");
+            entity.Property(e => e.Ruta)
+                .HasMaxLength(250)
+                .IsUnicode(false)
+                .HasColumnName("ruta");
+            entity.Property(e => e.Tamanio).HasColumnName("tamanio");
+            entity.Property(e => e.Tipo)
+                .HasMaxLength(250)
+                .IsUnicode(false)
+                .HasColumnName("tipo");
         });
 
         modelBuilder.Entity<AreaAcademica>(entity =>
@@ -203,6 +229,8 @@ public partial class GestionDePlazasDbContext : DbContext
                 .HasMaxLength(50)
                 .IsUnicode(false)
                 .HasColumnName("folio");
+            entity.Property(e => e.IdArchivoFirmado).HasColumnName("idArchivoFirmado");
+            entity.Property(e => e.IdArchivoOriginal).HasColumnName("idArchivoOriginal");
             entity.Property(e => e.IdArticulo).HasColumnName("idArticulo");
             entity.Property(e => e.IdEntidadAcademica).HasColumnName("idEntidadAcademica");
             entity.Property(e => e.IdPeriodo).HasColumnName("idPeriodo");
@@ -217,14 +245,14 @@ public partial class GestionDePlazasDbContext : DbContext
             entity.Property(e => e.Requisitos)
                 .IsUnicode(false)
                 .HasColumnName("requisitos");
-            entity.Property(e => e.RutaDocumentoFirmado)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("rutaDocumentoFirmado");
-            entity.Property(e => e.RutaDocumentoOriginal)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("rutaDocumentoOriginal");
+
+            entity.HasOne(d => d.IdArchivoFirmadoNavigation).WithMany(p => p.AvisoIdArchivoFirmadoNavigation)
+                .HasForeignKey(d => d.IdArchivoFirmado)
+                .HasConstraintName("FK_Aviso_ArchivoFirmado");
+
+            entity.HasOne(d => d.IdArchivoOriginalNavigation).WithMany(p => p.AvisoIdArchivoOriginalNavigation)
+                .HasForeignKey(d => d.IdArchivoOriginal)
+                .HasConstraintName("FK_Aviso_ArchivoOriginal");
 
             entity.HasOne(d => d.IdArticuloNavigation).WithMany(p => p.Aviso)
                 .HasForeignKey(d => d.IdArticulo)
@@ -310,20 +338,23 @@ public partial class GestionDePlazasDbContext : DbContext
 
             entity.Property(e => e.IdDictamen).HasColumnName("idDictamen");
             entity.Property(e => e.IdActa).HasColumnName("idActa");
+            entity.Property(e => e.IdArchivoFirmado).HasColumnName("idArchivoFirmado");
+            entity.Property(e => e.IdArchivoOriginal).HasColumnName("idArchivoOriginal");
             entity.Property(e => e.IdDocente).HasColumnName("idDocente");
-            entity.Property(e => e.RutaDocumentoFirmado)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("rutaDocumentoFirmado");
-            entity.Property(e => e.RutaDocumentoOriginal)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("rutaDocumentoOriginal");
 
             entity.HasOne(d => d.IdActaNavigation).WithMany(p => p.Dictamen)
                 .HasForeignKey(d => d.IdActa)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Dictamen_Acta");
+
+            entity.HasOne(d => d.IdArchivoFirmadoNavigation).WithMany(p => p.DictamenIdArchivoFirmadoNavigation)
+                .HasForeignKey(d => d.IdArchivoFirmado)
+                .HasConstraintName("FK_Dictamen_DictamenFirmado");
+
+            entity.HasOne(d => d.IdArchivoOriginalNavigation).WithMany(p => p.DictamenIdArchivoOriginalNavigation)
+                .HasForeignKey(d => d.IdArchivoOriginal)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Dictamen_ArchivoOriginal");
 
             entity.HasOne(d => d.IdDocenteNavigation).WithMany(p => p.Dictamen)
                 .HasForeignKey(d => d.IdDocente)
@@ -341,6 +372,7 @@ public partial class GestionDePlazasDbContext : DbContext
             entity.Property(e => e.DescripcionPerfil)
                 .IsUnicode(false)
                 .HasColumnName("descripcionPerfil");
+            entity.Property(e => e.IdArchivosGenerales).HasColumnName("idArchivosGenerales");
             entity.Property(e => e.Nombre)
                 .HasMaxLength(255)
                 .IsUnicode(false)
@@ -353,10 +385,10 @@ public partial class GestionDePlazasDbContext : DbContext
                 .HasMaxLength(25)
                 .IsUnicode(false)
                 .HasColumnName("puesto");
-            entity.Property(e => e.RutaDocumentosGenerales)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("rutaDocumentosGenerales");
+
+            entity.HasOne(d => d.IdArchivosGeneralesNavigation).WithMany(p => p.Docente)
+                .HasForeignKey(d => d.IdArchivosGenerales)
+                .HasConstraintName("FK_Docente_Archivo");
         });
 
         modelBuilder.Entity<EntidadAcademica>(entity =>
@@ -550,19 +582,22 @@ public partial class GestionDePlazasDbContext : DbContext
 
             entity.Property(e => e.IdNotificacion).HasColumnName("idNotificacion");
             entity.Property(e => e.IdActa).HasColumnName("idActa");
-            entity.Property(e => e.RutaDocumentoFirmado)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("rutaDocumentoFirmado");
-            entity.Property(e => e.RutaDocumentoOriginal)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("rutaDocumentoOriginal");
+            entity.Property(e => e.IdArchivoFirmado).HasColumnName("idArchivoFirmado");
+            entity.Property(e => e.IdArchivoOriginal).HasColumnName("idArchivoOriginal");
 
             entity.HasOne(d => d.IdActaNavigation).WithMany(p => p.Notificacion)
                 .HasForeignKey(d => d.IdActa)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Notificacion_Acta");
+
+            entity.HasOne(d => d.IdArchivoFirmadoNavigation).WithMany(p => p.NotificacionIdArchivoFirmadoNavigation)
+                .HasForeignKey(d => d.IdArchivoFirmado)
+                .HasConstraintName("FK_Notificacion_NotificacionFirmado");
+
+            entity.HasOne(d => d.IdArchivoOriginalNavigation).WithMany(p => p.NotificacionIdArchivoOriginalNavigation)
+                .HasForeignKey(d => d.IdArchivoOriginal)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Notificacion_ArchivoOriginal");
         });
 
         modelBuilder.Entity<Oferta>(entity =>
@@ -583,6 +618,7 @@ public partial class GestionDePlazasDbContext : DbContext
                 .IsUnicode(false)
                 .HasColumnName("estadoSolicitudApertura");
             entity.Property(e => e.Hsm).HasColumnName("hsm");
+            entity.Property(e => e.IdArchivoApertura).HasColumnName("idArchivoApertura");
             entity.Property(e => e.IdArticulo).HasColumnName("idArticulo");
             entity.Property(e => e.IdDocente).HasColumnName("idDocente");
             entity.Property(e => e.IdExperienciaEducativa).HasColumnName("idExperienciaEducativa");
@@ -604,15 +640,15 @@ public partial class GestionDePlazasDbContext : DbContext
                 .HasMaxLength(4)
                 .IsUnicode(false)
                 .HasColumnName("plaza");
-            entity.Property(e => e.RutaArchivoSolicitudApertura)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("rutaArchivoSolicitudApertura");
             entity.Property(e => e.TipoContratacion)
                 .HasMaxLength(3)
                 .IsUnicode(false)
                 .HasColumnName("tipoContratacion");
             entity.Property(e => e.Vacante).HasColumnName("vacante");
+
+            entity.HasOne(d => d.IdArchivoAperturaNavigation).WithMany(p => p.Oferta)
+                .HasForeignKey(d => d.IdArchivoApertura)
+                .HasConstraintName("FK_Oferta_Archivo");
 
             entity.HasOne(d => d.IdArticuloNavigation).WithMany(p => p.Oferta)
                 .HasForeignKey(d => d.IdArticulo)
@@ -681,6 +717,7 @@ public partial class GestionDePlazasDbContext : DbContext
             entity.HasIndex(e => e.IdProgramaEducativo, "IX_PlanEstudios_idProgramaEducativo");
 
             entity.Property(e => e.IdPlanEstudios).HasColumnName("idPlanEstudios");
+            entity.Property(e => e.IdArchivoPlan).HasColumnName("idArchivoPlan");
             entity.Property(e => e.IdProgramaEducativo).HasColumnName("idProgramaEducativo");
             entity.Property(e => e.Modalidad)
                 .HasMaxLength(100)
@@ -690,6 +727,11 @@ public partial class GestionDePlazasDbContext : DbContext
                 .HasMaxLength(100)
                 .IsUnicode(false)
                 .HasColumnName("nombre");
+
+            entity.HasOne(d => d.IdArchivoPlanNavigation).WithMany(p => p.PlanEstudios)
+                .HasForeignKey(d => d.IdArchivoPlan)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_PlanEstudios_Archivo");
 
             entity.HasOne(d => d.IdProgramaEducativoNavigation).WithMany(p => p.PlanEstudios)
                 .HasForeignKey(d => d.IdProgramaEducativo)
@@ -726,6 +768,7 @@ public partial class GestionDePlazasDbContext : DbContext
 
             entity.Property(e => e.IdSolicitud).HasColumnName("idSolicitud");
             entity.Property(e => e.Designado).HasColumnName("designado");
+            entity.Property(e => e.IdArchivoSolicitud).HasColumnName("idArchivoSolicitud");
             entity.Property(e => e.IdDocente).HasColumnName("idDocente");
             entity.Property(e => e.IdOferta).HasColumnName("idOferta");
             entity.Property(e => e.Justificacion)
@@ -735,10 +778,11 @@ public partial class GestionDePlazasDbContext : DbContext
                 .HasMaxLength(10)
                 .IsUnicode(false)
                 .HasColumnName("modalidad");
-            entity.Property(e => e.RutaDocumentosSolicitud)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("rutaDocumentosSolicitud");
+
+            entity.HasOne(d => d.IdArchivoSolicitudNavigation).WithMany(p => p.Solicitud)
+                .HasForeignKey(d => d.IdArchivoSolicitud)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Solicitud_Archivo");
 
             entity.HasOne(d => d.IdDocenteNavigation).WithMany(p => p.Solicitud)
                 .HasForeignKey(d => d.IdDocente)
