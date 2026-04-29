@@ -28,7 +28,17 @@ namespace SGPla.Validations.Implementations
             ArgumentNullException.ThrowIfNull(editarArticuloDTO);
 
             ValidarCampos(editarArticuloDTO);
+            await ValidarExistencia(editarArticuloDTO.IdArticulo);
             await ValidarNoRepetidoEdicionAsync(editarArticuloDTO.Numero, editarArticuloDTO.IdArticulo);
+        }
+
+        private async Task<bool> ValidarExistencia(int idArticulo)
+        {
+            var resultado = await _articuloRepository.ObtenerArticuloPorIdAsync(idArticulo);
+
+            if (resultado is null)
+                throw new ArgumentException($"El artículo con ID {idArticulo} no existe.");
+            return true;
         }
 
 
@@ -42,8 +52,6 @@ namespace SGPla.Validations.Implementations
 
             if (string.IsNullOrWhiteSpace(articuloDTO.Descripcion))
                 throw new ArgumentException("La descripción del artículo es obligatoria.");
-
-           
         }
 
         private async Task ValidarNoRepetidoCreacionAsync(string numero)

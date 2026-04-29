@@ -16,5 +16,8 @@ namespace SGPla.Repositories.Interfaces
         Task<EntidadAcademica> CrearAsync(EntidadAcademica entidadAcademica);
         Task ActualizarAsync(EntidadAcademica entidadAcademica);
         Task EliminarAsync(EntidadAcademica entidadAcademica);
+
+        Task<List<EntidadAcademica>> ObtenerOpcionesAsync(string region, int idAreaAcademica);
+
     }
 }

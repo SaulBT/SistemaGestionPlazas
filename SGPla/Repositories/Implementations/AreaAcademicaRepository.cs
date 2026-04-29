@@ -21,6 +21,17 @@
                 .OrderBy(a => a.Nombre)
                 .ToListAsync();
         }
+        public async Task<List<AreaAcademica>> ObtenerTodosOpcionesAsync()
+        {
+            return await _context.AreaAcademica
+                .AsNoTracking()
+                .OrderBy(a => a.Nombre).Select(e => new AreaAcademica
+                {
+                    IdAreaAcademica = e.IdAreaAcademica,
+                    Nombre = e.Nombre
+                })
+                .ToListAsync();
+        }
 
         public async Task<List<AreaAcademica>> ObtenerPorNombreAsync(string nombre)
         {

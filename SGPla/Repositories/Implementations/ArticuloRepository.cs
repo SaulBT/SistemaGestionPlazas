@@ -50,7 +50,7 @@ namespace SGPla.Repositories.Implementations
             return _context.Articulo.FindAsync(id).AsTask();
         }
 
-        public async Task<Articulo?> EditarArticuloAsync(Articulo articulo)
+        public async Task<Articulo?> ActualizarArticuloAsync(Articulo articulo)
         {
             var actualizado = await _context.Articulo.FindAsync(articulo.IdArticulo);
 

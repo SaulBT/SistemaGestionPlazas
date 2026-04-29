@@ -10,7 +10,7 @@ namespace SGPla.Repositories.Interfaces
 
         Task<Articulo> CrearArticuloAsync(Articulo articulo);
 
-        Task<Articulo?> EditarArticuloAsync(Articulo articulo);
+        Task<Articulo?> ActualizarArticuloAsync(Articulo articulo);
 
         Task<bool> EliminarArticuloAsync(int id);
 
