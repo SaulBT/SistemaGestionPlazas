@@ -23,16 +23,13 @@
                             <div class="table-actions">
                                 @foreach (var action in cell.Actions)
                                 {
-                                    @if (action.Accion == "eliminar" && action.Data != null)
+                                    @if (action.Accion == "eliminar")
                                     {
-                                        var id = action.Data.GetValueOrDefault("id");
-                                        var rol = action.Data.GetValueOrDefault("rol");
-
                                         @await Component.InvokeAsync("Boton", new
                                         {
                                             accion = action.Accion,
                                             fondo = false,
-                                            onClick = $"abrirModalEliminar('{id}', '{rol}')"
+                                            onClick = action.OnClick
                                         })
                                     }
                                     else

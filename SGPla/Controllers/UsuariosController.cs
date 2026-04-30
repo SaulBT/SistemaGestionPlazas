@@ -39,7 +39,7 @@ namespace SGPla.Controllers
                 {
                     Value = r,
                     Text = r,
-                    Selected = r == region 
+                    Selected = r == region
                 })
                 .ToList();
 
@@ -51,7 +51,7 @@ namespace SGPla.Controllers
                     Value = a.IdAreaAcademica.ToString(),
                     Text = a.Nombre,
                     Selected = idAreaAcademica.HasValue &&
-                               a.IdAreaAcademica == idAreaAcademica.Value 
+                               a.IdAreaAcademica == idAreaAcademica.Value
                 })
                 .ToList();
 
@@ -65,7 +65,7 @@ namespace SGPla.Controllers
             else
             {
                 entidades = new List<EntidadAcademica>();
-                idEntidadAcademica = null; 
+                idEntidadAcademica = null;
             }
 
             var entidadesCombo = entidades
@@ -92,7 +92,7 @@ namespace SGPla.Controllers
             });
         }
 
-        private async Task<TableModel> LlenarTabla( string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica)
+        private async Task<TableModel> LlenarTabla(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica)
         {
             try
             {
@@ -143,12 +143,7 @@ namespace SGPla.Controllers
                             new()
                             {
                                 Accion = "eliminar",
-                                Url = "#", // ya no navega
-                                Data = new Dictionary<string, string>
-                                {
-                                    { "id", usuario.IdUsuario.ToString() },
-                                    { "rol", usuario.Rol }
-                                }
+                                OnClick = $"abrirModalConfirmacion('¿Desea eliminar este usuario?', function() {{ eliminarUsuario({usuario.IdUsuario}, \"{usuario.Rol}\"); }})"
                             }
                         }
                     }
@@ -275,7 +270,7 @@ namespace SGPla.Controllers
         public async Task<IActionResult> ObtenerEntidades(int idAreaAcademica, string region)
         {
             var entidades = await _entidadAcademicaRepository.ObtenerPorIdAreaAcademicaYRegionAsync(idAreaAcademica, region);
-                
+
 
             var result = entidades.Select(e => new
             {
@@ -328,7 +323,7 @@ namespace SGPla.Controllers
 
             if (model.Rol.ToLower() == Constantes.CoordinadorEa.ToLower())
                 dto.IdAreaAcademica = null;
-            
+
 
             try
             {
@@ -407,7 +402,7 @@ namespace SGPla.Controllers
 
         public async Task<IActionResult> EditarUsuario(int id, string rol)
         {
-            var usuario = await _usuarioService.ObtenerPorIdAsync(new ReferenciaUsuarioDTO { IdUsuario = id, Rol = rol});
+            var usuario = await _usuarioService.ObtenerPorIdAsync(new ReferenciaUsuarioDTO { IdUsuario = id, Rol = rol });
 
             var model = new CrearUsuarioViewModel
             {
@@ -515,247 +510,5 @@ namespace SGPla.Controllers
         }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        // GET: Usuarios/Create - CORREGIDO: ahora es async y usa await
-        public async Task<IActionResult> Create()
-        {
-            ViewBag.Roles = GetRolesList();
-            ViewBag.AreasAcademicas = await GetAreasAcademicasList(); // Añadido await
-            ViewBag.EntidadesAcademicas = await GetEntidadesAcademicasList(); // Añadido await
-
-            return View(new CrearUsuarioDTO());
-        }
-
-        
-
-        // POST: Usuarios/Create - CORREGIDO: usa await en las listas
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(CrearUsuarioDTO model)
-        {
-            if (model.Rol == "EA")
-            {
-                model.Rol = Constantes.CoordinadorEa;
-            }
-            else if (model.Rol == "DGAA")
-            {
-                model.Rol = Constantes.CoordinadorDgaa;
-            }
-            if (!ModelState.IsValid)
-            {
-                ViewBag.Roles = GetRolesList();
-                ViewBag.AreasAcademicas = await GetAreasAcademicasList(); // Añadido await
-                ViewBag.EntidadesAcademicas = await GetEntidadesAcademicasList(); // Añadido await
-                return View(model);
-            }
-
-            try
-            {
-                var idUsuario = await _usuarioService.CrearAsync(model);
-                TempData["Success"] = $"Usuario creado exitosamente con ID: {idUsuario}";
-                return RedirectToAction(nameof(Index));
-            }
-            catch (ArgumentException ex)
-            {
-                ModelState.AddModelError("", ex.Message);
-                ViewBag.Roles = GetRolesList();
-                ViewBag.AreasAcademicas = await GetAreasAcademicasList(); // Añadido await
-                ViewBag.EntidadesAcademicas = await GetEntidadesAcademicasList(); // Añadido await
-                return View(model);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al crear usuario");
-                ModelState.AddModelError("", "Error al crear el usuario");
-                ViewBag.Roles = GetRolesList();
-                ViewBag.AreasAcademicas = await GetAreasAcademicasList(); // Añadido await
-                ViewBag.EntidadesAcademicas = await GetEntidadesAcademicasList(); // Añadido await
-                return View(model);
-            }
-        }
-
-        // GET: Usuarios/Edit/5 - CORREGIDO: usa await en las listas
-        public async Task<IActionResult> Edit(int id, string rol)
-        {
-            if (id == 0 || string.IsNullOrEmpty(rol))
-            {
-                return BadRequest();
-            }
-
-            try
-            {
-                var referencia = new ReferenciaUsuarioDTO
-                {
-                    IdUsuario = id,
-                    Rol = rol
-                };
-
-                var usuario = await _usuarioService.ObtenerPorIdAsync(referencia);
-
-                if (usuario == null)
-                {
-                    return NotFound();
-                }
-
-                var model = new EditarUsuarioDTO
-                {
-                    IdUsuario = usuario.IdUsuario,
-                    Nombre = usuario.Nombre,
-                    //Correo = usuario.Correo, // Descomentado: debe incluir el correo
-                    Cargo = usuario.Cargo,
-                    Rol = usuario.Rol,
-                    IdAreaAcademica = usuario.IdAreaAcademica,
-                    IdEntidadAcademica = usuario.IdEntidadAcademica
-                };
-
-                ViewBag.AreasAcademicas = await GetAreasAcademicasList(); // Añadido await
-                ViewBag.EntidadesAcademicas = await GetEntidadesAcademicasList(); // Añadido await
-
-                return View(model);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al cargar usuario para editar {Id}", id);
-                TempData["Error"] = "Error al cargar el usuario para editar";
-                return RedirectToAction(nameof(Index));
-            }
-        }
-
-
-        // POST: Usuarios/Edit/5 - CORREGIDO: usa await en las listas
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, EditarUsuarioDTO model)
-        {
-            if (id != model.IdUsuario)
-            {
-                return BadRequest();
-            }
-
-            if (!ModelState.IsValid)
-            {
-                ViewBag.AreasAcademicas = await GetAreasAcademicasList(); // Añadido await
-                ViewBag.EntidadesAcademicas = await GetEntidadesAcademicasList(); // Añadido await
-                return View(model);
-            }
-
-            try
-            {
-                await _usuarioService.EditarAsync(model);
-                TempData["Success"] = "Usuario actualizado exitosamente";
-                return RedirectToAction(nameof(Index));
-            }
-            catch (InvalidOperationException ex)
-            {
-                ModelState.AddModelError("", ex.Message);
-                ViewBag.AreasAcademicas = await GetAreasAcademicasList(); // Añadido await
-                ViewBag.EntidadesAcademicas = await GetEntidadesAcademicasList(); // Añadido await
-                return View(model);
-            }
-            catch (ArgumentException ex)
-            {
-                ModelState.AddModelError("", ex.Message);
-                ViewBag.AreasAcademicas = await GetAreasAcademicasList(); // Añadido await
-                ViewBag.EntidadesAcademicas = await GetEntidadesAcademicasList(); // Añadido await
-                return View(model);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al actualizar usuario {Id}", id);
-                ModelState.AddModelError("", "Error al actualizar el usuario");
-                ViewBag.AreasAcademicas = await GetAreasAcademicasList(); // Añadido await
-                ViewBag.EntidadesAcademicas = await GetEntidadesAcademicasList(); // Añadido await
-                return View(model);
-            }
-        }
-
-        // GET: Usuarios/Delete/5
-        public async Task<IActionResult> Delete(int id, string rol)
-        {
-            if (id == 0 || string.IsNullOrEmpty(rol))
-            {
-                return BadRequest();
-            }
-
-            try
-            {
-                var referencia = new ReferenciaUsuarioDTO
-                {
-                    IdUsuario = id,
-                    Rol = rol
-                };
-
-                var usuario = await _usuarioService.ObtenerPorIdAsync(referencia);
-
-                if (usuario == null)
-                {
-                    return NotFound();
-                }
-
-                return View(usuario);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al cargar usuario para eliminar {Id}", id);
-                TempData["Error"] = "Error al cargar el usuario para eliminar";
-                return RedirectToAction(nameof(Index));
-            }
-        }
-
-        // POST: Usuarios/Delete/5
-        
-
-        // POST: Usuarios/Filtrar
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Filtrar(FiltrosUsuarioDTO filtro)
-        {
-            try
-            {
-                var usuarios = await _usuarioService.ObtenerPorFiltroAsync(filtro);
-                return PartialView("_ListaUsuariosPartial", usuarios);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al filtrar usuarios");
-                return StatusCode(500, "Error al aplicar el filtro");
-            }
-        }
-
-        // Métodos auxiliares
-        private SelectList GetRolesList()
-        {
-            var roles = new List<SelectListItem>
-            {
-                new SelectListItem { Value = Constantes.CoordinadorEa, Text = "Coordinador de Entidad Académica" },
-                new SelectListItem { Value = Constantes.CoordinadorDgaa, Text = "Coordinador DGAA" }
-            };
-            return new SelectList(roles, "Value", "Text");
-        }
-
-        private async Task<SelectList> GetAreasAcademicasList()
-        {
-            var areas = await _areaAcademicaRepository.ObtenerTodosAsync();
-            return new SelectList(areas, "IdAreaAcademica", "Nombre");
-        }
-
-        private async Task<SelectList> GetEntidadesAcademicasList()
-        {
-            var entidades = await _entidadAcademicaRepository.ObtenerTodosAsync();
-            return new SelectList(entidades, "IdEntidadAcademica", "Nombre"); // Corregido: "Nombre" en lugar de "nombre"
-        }
     }
 }

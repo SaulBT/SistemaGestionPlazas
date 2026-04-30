@@ -5,92 +5,83 @@
     Layout = "_LayoutSuperUsuario";
     ViewData["Title"] = "Usuarios";
 }
+<div> 
+    <form method="get" action="@Url.Action("Index", "Usuarios")">
 
-<form method="get" action="@Url.Action("Index", "Usuarios")">
-
-    <!-- Filtros -->
-    <div style="display:inline-flex; gap:10px; padding-bottom:30px;">
-        @await Component.InvokeAsync("SelectField", new SelectFieldModel
-        {
-            Label = "Región",
-            Options = Model.Regiones,
-            Name = "region"
-        })
-
-        @await Component.InvokeAsync("SelectField", new SelectFieldModel
-        {
-            Label = "Área Académica",
-            Options = Model.Areas,
-            Name = "idAreaAcademica"
-        })
-
-        <div id="contenedorEntidad" >
+        <!-- Filtros -->
+        <div style="display:inline-flex; gap:10px; padding-bottom:30px;">
             @await Component.InvokeAsync("SelectField", new SelectFieldModel
             {
-                Label = "Entidad Académica",
-                Options = Model.Entidades,
-                Name = "idEntidadAcademica"
+                Label = "Región",
+                Options = Model.Regiones,
+                Name = "region"
             })
+
+            @await Component.InvokeAsync("SelectField", new SelectFieldModel
+            {
+                Label = "Área Académica",
+                Options = Model.Areas,
+                Name = "idAreaAcademica"
+            })
+
+            <div id="contenedorEntidad">
+                @await Component.InvokeAsync("SelectField", new SelectFieldModel
+                {
+                    Label = "Entidad Académica",
+                    Options = Model.Entidades,
+                    Name = "idEntidadAcademica"
+                })
+            </div>
+        
         </div>
+
+        <!-- Acciones -->
+        <div style="display:flex; gap:10px; padding-bottom:30px; align-items:center; justify-content:space-between">
+            <!--Barra de Búsqueda-->
+            @await Component.InvokeAsync("Buscador", new BuscadorModel
+            {
+                Name = "busqueda",
+                Placeholder = "Buscar usuario...",
+                Action = Url.Action("Index", "Usuarios"),
+                Method = "get",
+                Value = Context.Request.Query["busqueda"]
+            })
+
+            <!--Botón Crear Usuario-->
+            <a href="@Url.Action("CrearUsuario", "Usuarios")" style="display: inline-block; text-decoration: none;">
+                @await Component.InvokeAsync("Boton", new
+                {
+                    Accion = "Agregar",
+                    Texto = "Crear Usuario"
+                })
+            </a>
+        </div>
+
+    </form>
+
+
+    <!-- Tabla con Datos -->
+    <div style="display:flex; gap:10px; padding-top:20px;justify-content:left">
+        @await Component.InvokeAsync("Table", Model.Table)
+        <form id="formEliminarUsuario" method="post" action="@Url.Action("EliminarUsuario", "Usuarios")">
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" name="id" id="deleteUserId" />
+            <input type="hidden" name="rol" id="deleteUserRol" />
+            @await Component.InvokeAsync("Modal", new ModalModel
+            {
+                Id = "modalEliminar",
+                Tipo = "confirm",
+                Titulo = "Confirmación",
+                Mensaje = "holaaa",
+                OnConfirm = "confirmarModal()",
+                OnCancel = "cerrarModal('modalEliminar')"
+            })
+        </form>
         
     </div>
-
-    <!-- Acciones -->
-    <div style="display:flex; gap:10px; padding-bottom:30px; align-items:center; justify-content:space-between">
-        <!--Barra de Búsqueda-->
-        @await Component.InvokeAsync("Buscador", new BuscadorModel
-        {
-            Name = "busqueda",
-            Placeholder = "Buscar usuario...",
-            Action = Url.Action("Index", "Usuarios"),
-            Method = "get",
-            Value = Context.Request.Query["busqueda"]
-        })
-
-        <!--Botón Crear Usuario-->
-        <a href="@Url.Action("CrearUsuario", "Usuarios")" style="display: inline-block; text-decoration: none;">
-            @await Component.InvokeAsync("Boton", new
-            {
-                Accion = "Agregar",
-                Texto = "Crear Usuario"
-            })
-        </a>
-    </div>
-
-</form>
-
-
-<!-- Tabla con Datos -->
-<div style="display:flex; gap:10px; padding-top:20px;justify-content:left" >
-    @await Component.InvokeAsync("Table", Model.Table)
-    <div id="modalEliminar" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
-
-        <div style="background:white; padding:20px; border-radius:10px; min-width:300px;">
-            <p>¿Seguro que deseas eliminar este usuario?</p>
-
-            <form method="post" action="@Url.Action("EliminarUsuario", "Usuarios")">
-                @Html.AntiForgeryToken()
-
-                <input type="hidden" id="modal-id" name="id" />
-                <input type="hidden" id="modal-rol" name="rol" />
-
-                <div style="display:flex; justify-content:flex-end; gap:10px;">
-                    @await Component.InvokeAsync("Boton", new 
-                    {
-                        Accion = "Cancelar",
-                        ButtonType = "button",
-                        OnClick = "cerrarModal('modalEliminar')"
-                    })
-                    @await Component.InvokeAsync("Boton", new 
-                    {
-                        Accion = "Confirmar",
-                        ButtonType = "submit"
-                    })
-                </div>
-            </form>
-        </div>
-    </div>
 </div>
+
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -141,20 +132,4 @@
         }
 
     });
-</script>
-
-<script>
-    function abrirModal(id) {
-        document.getElementById(id).style.display = "flex";
-    }
-
-    function cerrarModal(id) {
-        document.getElementById(id).style.display = "none";
-    }
-        function abrirModalEliminar(id, rol) {
-        document.getElementById("modal-id").value = id;
-        document.getElementById("modal-rol").value = rol;
-
-        abrirModal("modalEliminar");
-    }
 </script>
