@@ -63,6 +63,14 @@
     <!-- Tabla con Datos -->
     <div style="display:flex; gap:10px; padding-top:20px;justify-content:left">
         @await Component.InvokeAsync("Table", Model.Table)
+        
+        
+    </div>
+
+
+    <!-- Ventanas Modales-->
+    <div>
+        <!-- Ventana de Confirmación eliminación de usuario -->
         <form id="formEliminarUsuario" method="post" action="@Url.Action("EliminarUsuario", "Usuarios")">
             @Html.AntiForgeryToken()
 
@@ -78,7 +86,25 @@
                 OnCancel = "cerrarModal('modalEliminar')"
             })
         </form>
-        
+
+        <!-- Ventana de éxito al realizar una acción -->
+        @if (TempData["Success"] != null)
+        {
+            @await Component.InvokeAsync("Modal", new ModalModel
+            {
+                Id = "modalSuccess",
+                Tipo = "info",
+                Titulo = "Éxito",
+                Mensaje = TempData["Success"]!.ToString(),
+                OnConfirm = "cerrarModal('modalSuccess')"
+            })
+
+            <script>
+                        document.addEventListener("DOMContentLoaded", function () {
+                            abrirModal("modalSuccess");
+                        });
+            </script>
+        }
     </div>
 </div>
 
