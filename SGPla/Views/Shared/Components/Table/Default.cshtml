@@ -23,7 +23,7 @@
                             <div class="table-actions">
                                 @foreach (var action in cell.Actions)
                                 {
-                                    @if (action.Accion == "eliminar")
+                                    @if (!action.OnClick.IsWhiteSpace())
                                     {
                                         @await Component.InvokeAsync("Boton", new
                                         {

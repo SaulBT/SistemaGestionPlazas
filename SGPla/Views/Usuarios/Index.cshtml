@@ -78,12 +78,12 @@
             <input type="hidden" name="rol" id="deleteUserRol" />
             @await Component.InvokeAsync("Modal", new ModalModel
             {
-                Id = "modalEliminar",
+                Id = "modalConfirmacion",
                 Tipo = "confirm",
                 Titulo = "Confirmación",
                 Mensaje = "holaaa",
                 OnConfirm = "confirmarModal()",
-                OnCancel = "cerrarModal('modalEliminar')"
+                OnCancel = "cerrarModal('modalConfirmacion')"
             })
         </form>
 
@@ -158,4 +158,14 @@
         }
 
     });
+</script>
+
+<script>
+        function eliminarUsuario(id, rol) {
+
+        document.getElementById("deleteUserId").value = id;
+        document.getElementById("deleteUserRol").value = rol;
+
+        document.getElementById("formEliminarUsuario").submit();
+    }
 </script>

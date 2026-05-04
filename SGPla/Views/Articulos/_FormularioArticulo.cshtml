@@ -1,0 +1,27 @@
+﻿@using SGPla.Models.ViewModels.Articulos
+@model ArticuloFormularioViewModel
+
+<input type="hidden"
+       id="IdArticulo"
+       name="IdArticulo"
+       value="@Model?.IdArticulo" />
+
+@await Component.InvokeAsync("InputField", new InputFieldModel
+{
+    Id = "Numero",
+    Name = "Numero",
+    Label = "Número",
+    Valor = Model?.Numero,
+    Flexible = true,
+    Error = ViewData.ModelState["Numero"]?.Errors.FirstOrDefault()?.ErrorMessage
+})
+
+@await Component.InvokeAsync("InputField", new InputFieldModel
+{
+    Id = "Descripcion",
+    Name = "Descripcion",
+    Label = "Descripción",
+    Valor = Model?.Descripcion,
+    Flexible = true,
+    Error = ViewData.ModelState["Descripcion"]?.Errors.FirstOrDefault()?.ErrorMessage
+})

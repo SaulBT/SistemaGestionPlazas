@@ -11,17 +11,17 @@ function cerrarModal(id) {
     document.getElementById(id).classList.remove("show");
 }
 
-// Modal Eliminar
+// Modal Confirmacion
 let accionConfirmacion = null;
 
 function abrirModalConfirmacion(mensaje, onConfirm) {
 
-    document.querySelector("#modalEliminar .modal-body p")
+    document.querySelector("#modalConfirmacion .modal-body p")
         .innerText = mensaje;
 
     accionConfirmacion = onConfirm;
 
-    abrirModal("modalEliminar");
+    abrirModal("modalConfirmacion");
 }
 
 function confirmarModal() {
@@ -30,13 +30,8 @@ function confirmarModal() {
         accionConfirmacion();
     }
 
-    cerrarModal("modalEliminar");
+    cerrarModal("modalConfirmacion");
 }
 
-function eliminarUsuario(id, rol) {
 
-    document.getElementById("deleteUserId").value = id;
-    document.getElementById("deleteUserRol").value = rol;
 
-    document.getElementById("formEliminarUsuario").submit();
-}

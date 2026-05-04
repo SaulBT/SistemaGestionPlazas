@@ -15,5 +15,8 @@
 
         public string OnConfirm { get; set; } = string.Empty;
         public string OnCancel { get; set; } = string.Empty;
+
+        public string? Body { get; set; }
+        public string Accion { get; set; } = "Confirmar";
     }
 }

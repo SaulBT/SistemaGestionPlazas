@@ -11,7 +11,16 @@
 
         <!-- Body -->
         <div class="modal-body">
-            <p>@Model.Mensaje</p>
+
+            @if (!string.IsNullOrEmpty(Model.Body))
+            {
+                @Html.Raw(Model.Body)
+            }
+            else
+            {
+                <p>@Model.Mensaje</p>
+            }
+
         </div>
 
         <!-- Footer -->
@@ -27,7 +36,7 @@
             }
             @await Component.InvokeAsync("Boton", new
             {
-                Accion = "Confirmar",
+                Accion = Model.Accion,
                 OnClick = Model.OnConfirm
             })
 
