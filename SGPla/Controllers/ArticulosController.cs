@@ -156,7 +156,7 @@ namespace SGPla.Controllers
                 var resultado = await _articuloService.CrearArticuloAsync(dto);
 
                 TempData["Success"] =
-                    $"Artículo creado exitosamente con ID: {resultado.IdArticulo}";
+                    $"Artículo creado exitosamente";
             }
             catch (ArgumentException ex)
             {
