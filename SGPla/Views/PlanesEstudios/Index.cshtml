@@ -1,0 +1,145 @@
+﻿@using SGPla.Models.ViewModels.PlanesEstudios
+@model IndexViewModel
+
+@{
+    Layout = "_LayoutSuperUsuario";
+    ViewData["Title"] = "Planes de Estudios";
+}
+
+<form method="get" action="@Url.Action("Index", "PlanesEstudios")">
+
+    <!-- Filtros -->
+    <div style="display:inline-flex; gap:10px; padding-bottom:30px;">
+        @await Component.InvokeAsync("SelectField", new SelectFieldModel
+        {
+            Label = "Región",
+            Options = Model.Regiones,
+            Name = "region"
+        })
+
+        @await Component.InvokeAsync("SelectField", new SelectFieldModel
+        {
+            Label = "Área Académica",
+            Options = Model.Areas,
+            Name = "idAreaAcademica"
+        })
+
+        <div id="contenedorEntidad">
+            @await Component.InvokeAsync("SelectField", new SelectFieldModel
+            {
+                Label = "Entidad Académica",
+                Options = Model.Entidades,
+                Name = "idEntidadAcademica"
+            })
+        </div>
+
+        <div id="contenedorPrograma">
+            @await Component.InvokeAsync("SelectField", new SelectFieldModel
+            {
+                Label = "Programa Educativo",
+                Options = Model.Entidades,
+                Name = "idProgramaEducativo"
+            })
+        </div>
+    </div>
+
+    <!-- Aacciones -->
+    <div style="display:flex; gap:10px; padding-bottom:30px; align-items:center; justify-content:space-between">
+        <!--Barra de Búsqueda-->
+        @await Component.InvokeAsync("Buscador", new BuscadorModel
+        {
+            Name = "busqueda",
+            Placeholder = "Buscar Plan de Estudios",
+            Action = Url.Action("Index", "PlanesEstudios"),
+            Method = "get",
+            Value = Context.Request.Query["busqueda"]
+        })
+
+        <!--Botón Cargar Plan Estudios-->
+        <a href="@Url.Action("CargarPlanEstudios", "PlanesEstudios")" style="display: inline-block; text-decoration: none;">
+            @await Component.InvokeAsync("Boton", new
+            {
+                Accion = "Agregar",
+                Texto = "Cargar Plan de Estudios"
+            })
+        </a>
+    </div>
+</form>
+
+<!-- Tabla con Datos -->
+<div style="display:flex; gap:10px; padding-top:20px;justify-content:left">
+    @await Component.InvokeAsync("Table", Model.Table)
+    
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+
+        const form = document.querySelector("form");
+
+        const region = document.getElementById("region");
+        const area = document.getElementById("idAreaAcademica");
+        const entidad = document.getElementById("idEntidadAcademica");
+        const programa = document.getElementById("idProgramaEstudios");
+        const contenedorEntidad = document.getElementById("contenedorEntidad");
+        const contenedorPrograma = document.getElementById("contenedorPrograma");
+
+        function toggleEntidad() {
+            if (!area || !contenedorEntidad) return;
+
+            if (!area.value) {
+                contenedorEntidad.style.display = "none";
+            } else {
+                contenedorEntidad.style.display = "inline-flex";
+            }
+        }
+
+        function togglePrograma() {
+            if (!area || !contenedorPrograma) return;
+
+            if (!entidad.value) {
+                contenedorPrograma.style.display = "none";
+            } else {
+                contenedorPrograma.style.display = "inline-flex";
+            }
+        }
+
+        // Estado inicial
+        toggleEntidad();
+        togglePrograma();
+
+        // Región cambia
+        if (region) {
+            region.addEventListener("change", function() {
+                
+                if (entidad) entidad.value = "";
+                form.submit();
+            });
+        }
+
+        // Área cambia
+        if (area) {
+            area.addEventListener("change", function() {
+                if (entidad) entidad.value = "";
+                toggleEntidad();
+                form.submit();
+            });
+        }
+
+        // Entidad cambia
+        if (entidad) {
+            entidad.addEventListener("change", function() {
+                togglePrograma();
+                form.submit();
+            });
+        }
+
+        // Programa cambia
+        if (programa) {
+            programa.addEventListener("change", function() {
+                form.submit();
+            })
+        }
+
+    });
+</script>
