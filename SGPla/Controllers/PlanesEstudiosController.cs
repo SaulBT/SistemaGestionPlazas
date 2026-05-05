@@ -38,22 +38,39 @@ namespace SGPla.Controllers
         public async Task<IActionResult> Index(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int? idProgramaEducativo)
         {
             var regionesCombo = generarCatalogoRegiones(region);
-            var areasCombo = await generarCatalogoAreasAsync(idAreaAcademica);
+            var areasCombo = new List<OptionModel>();
             var entidadesCombo = new List<OptionModel>();
             var programasCombo = new List<OptionModel>();
 
+            //Llenar Areas
+            if (!region.IsNullOrEmpty())
+                areasCombo = await generarCatalogoAreasAsync(idAreaAcademica);
+            else
+                idAreaAcademica = null;
+
+            //Llenar Entidades
             if (idAreaAcademica.HasValue && !region.IsNullOrEmpty())
                 entidadesCombo = await generarCatalogoEntidadesAsync(idAreaAcademica.Value, region, idEntidadAcademica);
-            if (idEntidadAcademica.HasValue)
+            else
+            {
+                idEntidadAcademica = null;
+            }
+
+            //Llenar Programas Educativos
+            if (idEntidadAcademica.HasValue && idAreaAcademica.HasValue)
                 programasCombo = await generarCatalogoProgramasAsync(idAreaAcademica.Value, region, idEntidadAcademica.Value, idProgramaEducativo);
+            else
+            {
+                idProgramaEducativo = null;
+            }
 
             return View(new IndexViewModel
             {
-                Table = await LlenarTabla(busqueda, region, idAreaAcademica, idEntidadAcademica, 1),
+                Table = await LlenarTabla(busqueda, region, idAreaAcademica, idEntidadAcademica, idProgramaEducativo),
                 Regiones = regionesCombo,
                 Areas = areasCombo,
                 Entidades = entidadesCombo,
-                ProgramaEducativos = programasCombo,
+                ProgramasEducativos = programasCombo,
 
                 RegionSeleccionada = region,
                 IdAreaSeleccionada = idAreaAcademica,
@@ -169,7 +186,7 @@ namespace SGPla.Controllers
                                     new()
                                     {
                                         Accion = "ver",
-                                        //Url = Url.Action("VerUsuario", "Usuarios", new { id = plan.IdUsuario, rol = plan.Rol })
+                                        Url = Url.Action("VerPlanEstudios", "PlanesEstudios", new { id = plan.IdPlanEstudios})
                                     },
                                     new()
                                     {
