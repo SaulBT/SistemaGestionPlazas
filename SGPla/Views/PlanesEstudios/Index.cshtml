@@ -17,14 +17,16 @@
             Name = "region"
         })
 
-        @await Component.InvokeAsync("SelectField", new SelectFieldModel
-        {
-            Label = "Área Académica",
-            Options = Model.Areas,
-            Name = "idAreaAcademica"
-        })
+        <div id="contenedorArea" style="display:none">
+            @await Component.InvokeAsync("SelectField", new SelectFieldModel
+            {
+                Label = "Área Académica",
+                Options = Model.Areas,
+                Name = "idAreaAcademica"
+            })
+        </div>
 
-        <div id="contenedorEntidad">
+        <div id="contenedorEntidad" style="display:none">
             @await Component.InvokeAsync("SelectField", new SelectFieldModel
             {
                 Label = "Entidad Académica",
@@ -33,11 +35,11 @@
             })
         </div>
 
-        <div id="contenedorPrograma">
+        <div id="contenedorPrograma" style="display:none">
             @await Component.InvokeAsync("SelectField", new SelectFieldModel
             {
                 Label = "Programa Educativo",
-                Options = Model.Entidades,
+                Options = Model.ProgramasEducativos,
                 Name = "idProgramaEducativo"
             })
         </div>
@@ -80,9 +82,20 @@
         const region = document.getElementById("region");
         const area = document.getElementById("idAreaAcademica");
         const entidad = document.getElementById("idEntidadAcademica");
-        const programa = document.getElementById("idProgramaEstudios");
+        const programa = document.getElementById("idProgramaEducativo");
+
+        const contenedorArea = document.getElementById("contenedorArea");
         const contenedorEntidad = document.getElementById("contenedorEntidad");
         const contenedorPrograma = document.getElementById("contenedorPrograma");
+
+        function toggleArea() {
+            if (!region || !contenedorArea) return;
+            if (!region.value) {
+                contenedorArea.style.display = "none";
+            } else {
+                contenedorArea.style.display = "inline-flex";
+            }
+        }
 
         function toggleEntidad() {
             if (!area || !contenedorEntidad) return;
@@ -105,6 +118,7 @@
         }
 
         // Estado inicial
+        toggleArea();
         toggleEntidad();
         togglePrograma();
 
@@ -112,7 +126,8 @@
         if (region) {
             region.addEventListener("change", function() {
                 
-                if (entidad) entidad.value = "";
+                if (area) area.value = "";
+                toggleArea();
                 form.submit();
             });
         }
@@ -129,6 +144,7 @@
         // Entidad cambia
         if (entidad) {
             entidad.addEventListener("change", function() {
+                if (programa) programa.value = "";
                 togglePrograma();
                 form.submit();
             });
