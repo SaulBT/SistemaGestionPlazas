@@ -16,23 +16,28 @@ namespace SGPla.Services.Implementations
 
         private readonly IArchivoRepository _archivoRepository;
         private readonly IArchivoService _archivoService;
+        private readonly ILogger<PlanEstudiosService> _logger;
 
         public PlanEstudiosService(
             IPlanEstudiosRepository planEstudiosRepository,
             IExperienciaEducativaRepository experienciaEducativaRepository,
             IPlanEstudiosValidator planEstudiosValidator,
             IArchivoRepository archivoRepository,
-            IArchivoService archivoService)
+            IArchivoService archivoService,
+            ILogger<PlanEstudiosService> logger)
         {
             _planEstudiosRepository = planEstudiosRepository;
             _experienciaEducativaRepository = experienciaEducativaRepository;
             _planEstudiosValidator = planEstudiosValidator;
             _archivoRepository = archivoRepository;
             _archivoService = archivoService;
+            _logger = logger;
         }
 
         public List<DatosExperienciaEducativaDTO> ProcesarArchivo(ArchivoPlanEstudiosDTO archivoPlanEstudiosDTO)
         {
+            _logger.LogInformation("PLAN ESTUDIOS: Iniciando procesamiento del archivo de Plan de Estudios.");
+
             _planEstudiosValidator.ValidarArchivo(archivoPlanEstudiosDTO);
 
             archivoPlanEstudiosDTO.Archivo.Position = 0;
@@ -144,8 +149,13 @@ namespace SGPla.Services.Implementations
 
         public async Task<List<ListaPlanEstudiosDTO>> ObtenerPorFiltroAsync(FiltroPlanEstudiosDTO filtroPlanEstudiosDTO, int indice)
         {
+            _logger.LogInformation("PLAN ESTUDIOS: Obteniendo lista de Planes de Estudio por filtro.");
+
             ArgumentNullException.ThrowIfNull(filtroPlanEstudiosDTO);
             _planEstudiosValidator.ValidarIndice(indice);
+
+            _logger.LogInformation("PLAN ESTUDIOS: Filtro recibido - IdEntidadAcademica: {IdEntidadAcademica}, IdProgramaEducativo: {IdProgramaEducativo}, Nombre: {Nombre}, Indice: {Indice}",
+                filtroPlanEstudiosDTO.IdEntidadAcademica, filtroPlanEstudiosDTO.IdProgramaEducativo, filtroPlanEstudiosDTO.Nombre, indice);
 
             var planesEstudios = await _planEstudiosRepository.ObtenerPorFiltroAsync(
                 filtroPlanEstudiosDTO.IdEntidadAcademica,

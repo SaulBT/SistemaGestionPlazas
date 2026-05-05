@@ -23,13 +23,16 @@ namespace SGPla.Validations.Implementations
 
         private readonly IPlanEstudiosRepository _planEstudiosRepository;
         private readonly IExperienciaEducativaRepository _experienciaEducativaRepository;
+        private readonly ILogger<PlanEstudiosValidator> _logger;
 
         public PlanEstudiosValidator(
             IPlanEstudiosRepository planEstudiosRepository,
-            IExperienciaEducativaRepository experienciaEducativaRepository)
+            IExperienciaEducativaRepository experienciaEducativaRepository,
+            ILogger<PlanEstudiosValidator> logger)
         {
             _planEstudiosRepository = planEstudiosRepository;
             _experienciaEducativaRepository = experienciaEducativaRepository;
+            _logger = logger;
         }
 
         public void ValidarArchivo(ArchivoPlanEstudiosDTO archivoPlanEstudiosDTO)
@@ -49,7 +52,10 @@ namespace SGPla.Validations.Implementations
         public void ValidarIndice(int indice)
         {
             if (indice <= 0)
+            {
+                _logger.LogError("PLAN ESTUDIOS: El Índice proporcionado es inválido: {Indice}", indice);
                 throw new ArgumentException("El Índice es inválido.");
+            }
         }
 
         public async Task ValidarCreacionAsync(CrearPlanEstudiosDTO crearPlanEstudiosDTO)
