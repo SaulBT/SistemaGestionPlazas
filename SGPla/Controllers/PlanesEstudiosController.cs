@@ -214,6 +214,7 @@ namespace SGPla.Controllers
             }
         }
 
+        //GET planesEstudios/verPlanEstudio
         public async Task<IActionResult> VerPlanEstudios(int id)
         {
             if (id == 0)
@@ -262,7 +263,7 @@ namespace SGPla.Controllers
                                 new()
                                 {
                                     Accion = "informacion",
-                                    //Url = Url.Action("VerPlanEstudios", "PlanesEstudios", new { id = plan.IdPlanEstudios})
+                                    OnClick = $"abrirModalPerfilDocente(\"{ee.PerfilDocente}\")"
                                 }
                             }
                         }
