@@ -312,7 +312,7 @@ namespace SGPla.Services.Implementations
                 Modalidad = planEstudios.Modalidad,
                 Nombre = planEstudios.Nombre,
                 NombreAreaAcademica = planEstudios.IdProgramaEducativoNavigation?.IdEntidadAcademicaNavigation?.IdAreaAcademicaNavigation?.Nombre ?? string.Empty,
-                ExperienciasEducativos = experienciasEducativas.Select(experienciaEducativa => new DatosExperienciaEducativaDTO
+                ExperienciasEducativas = experienciasEducativas.Select(experienciaEducativa => new DatosExperienciaEducativaDTO
                 {
                     IdExperienciaEducativa = experienciaEducativa.IdExperienciaEducativa,
                     Codigo = experienciaEducativa.Codigo,
