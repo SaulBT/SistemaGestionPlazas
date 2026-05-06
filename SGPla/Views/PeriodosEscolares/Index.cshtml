@@ -1,148 +1,245 @@
-﻿@using SGPla.Models.DTOs.PeriodoEscolar
-@model IEnumerable<DetallesPeriodoEscolarDTO>
+﻿@using SGPla.Models.ViewModels.PeriodosEscolares
+@model IndexViewModel
 
-<h2>Periodos Escolares</h2>
-
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger alert-dismissible fade show">
-        @TempData["Error"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-}
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success alert-dismissible fade show">
-        @TempData["Success"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
+@{
+	Layout = "_LayoutSuperUsuario";
+	ViewData["Title"] = "Periodos Escolares";
 }
 
-<form asp-action="Buscar" method="get" class="mb-3">
+<div>
+	<!--Acciones-->
+	<div style="display:flex; gap:10px; padding-bottom:30px; align-items:center; justify-content:space-between">
+		<form method="get" action="@Url.Action("Index", "PeriodosEscolares")">
+			<div style="display:inline-flex; gap:10px; padding-bottom:30px;">
+				@await Component.InvokeAsync("SelectField", new SelectFieldModel
+				{
+					Label = "Periodo",
+					Name = "periodo",
+					Options = new List<OptionModel>
+					{
+						new OptionModel { Value = "Febrero-Julio", Text = "Febrero-Julio" },
+						new OptionModel { Value = "Agosto-Enero", Text = "Agosto-Enero" }
+					}
+				})
+        
+			</div>
 
-    <div class="d-flex gap-3 mb-3">
+			<div>
+				<!-- Barra de búsqueda -->
+				@await Component.InvokeAsync("Buscador", new BuscadorModel
+				{
+					Name = "anio",
+					Placeholder = "Buscar por año...",
+					Value = Context.Request.Query["anio"]
 
-        <!-- Año -->
-        <input type="number"
-               name="Anio"
-               class="form-control"
-               placeholder="Año (ej. 2026)" />
+				})
 
-        <!-- Periodo -->
-        <select name="Periodo" class="form-select">
-            <option value="">-- Periodo --</option>
-            <option value="Febrero-Julio">Febrero-Julio</option>
-            <option value="Agosto-Enero">Agosto-Enero</option>
-        </select>
 
-    </div>
+			</div>
+			
+		</form>
 
-    <div class="input-group">
-        <input type="hidden" name="Pagina" value="1" />
-        <input type="hidden" name="Cantidad" value="10" />
+		<!-- Botón agregar -->
+		@await Component.InvokeAsync("Boton", new
+		{
+			Accion = "Agregar",
+			Texto = "Agregar Periodo Escolar",
+			OnClick = "abrirModalCrearPeriodoEscolar()"
+		})
+	</div>
 
-        <button type="submit" class="btn btn-primary">Buscar</button>
-        <a asp-action="Index" class="btn btn-secondary ms-2">Limpiar</a>
-    </div>
 
-</form>
+	<!-- Tabla -->
+	<div style="display:flex; gap:10px; padding-top:20px; justify-content:left">
+		@await Component.InvokeAsync("Table", Model.Table)
+	</div>
 
-<button class="btn btn-primary mb-3" onclick="abrirModalCrear()">Agregar Periodo</button>
+	<!-- ========================= -->
+	<!-- MODALES -->
+	<!-- ========================= -->
+	<div>
 
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Código</th>
-            <th>Año</th>
-            <th>Periodo</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var p in Model)
-        {
-            <tr>
-                <td>@p.Codigo</td>
-                <td>@p.Anio</td>
-                <td>@p.Periodo</td>
+		<!-- Modal Crear / Editar -->
+		<form id="formPeriodoEscolar" method="post">
 
-                <td>
-                    <button class="btn btn-sm btn-warning"
-                            onclick="abrirModalActualizar(@p.IdPeriodoEscolar, '@p.Codigo', '@p.Anio', '@p.Periodo')">
-                        Editar
-                    </button>
+			@Html.AntiForgeryToken()
+            
+			@await Component.InvokeAsync("ModalFormulario", new ModalFormularioModel
+			{
+				Id = "modalPeriodoEscolar",
+				Titulo = "Periodo Escolar",
+				PartialView = "_FormularioPeriodoEscolar",
+				PartialModel = Model.Formulario,
+				OnConfirm = "submitFormPeriodoEscolar()",
+				OnCancel = "cerrarModal('modalPeriodoEscolar')"
+			})
 
-                    <form asp-action="Eliminar" asp-route-id="@p.IdPeriodoEscolar" method="post" style="display:inline">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" onclick="return confirm('¿Eliminar?')">Eliminar</button>
-                    </form>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+		</form>
 
-<div class="modal fade" id="periodoModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form id="periodoForm" method="post">
-                @Html.AntiForgeryToken()
 
-                <div class="modal-header">
-                    <h5 class="modal-title" id="tituloModal">Nuevo Periodo</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
+		<!-- Modal eliminar -->
+		<form id="formEliminarPeriodoEscolar"
+			  method="post"
+			  action="@Url.Action("Eliminar", "PeriodosEscolares")">
 
-                <div class="modal-body">
-                    <input type="hidden" id="IdPeriodoEscolar" name="IdPeriodoEscolar" />
-                    <input type="hidden" id="Codigo" name="Codigo" />
+			@Html.AntiForgeryToken()
 
-                    <div class="mb-3">
-                        <label>Año</label>
-                        <input type="number" id="Anio" name="Anio" class="form-control" required />
-                    </div>
+			<input type="hidden"
+				   name="id"
+				   id="deletePeriodoEscolarId" />
 
-                    <div class="mb-3">
-                        <label>Periodo</label>
-                        <select id="Periodo" name="Periodo" class="form-select" required>
-                            <option value="Febrero-Julio">Febrero-Julio</option>
-                            <option value="Agosto-Enero">Agosto-Enero</option>
-                        </select>
-                    </div>
+			@await Component.InvokeAsync("Modal", new ModalModel
+			{
+				Id = "modalConfirmacion",
+				Tipo = "confirm",
+				Titulo = "Confirmación",
+				Mensaje = "¿Deseas eliminar este periodo?",
+				OnConfirm = "confirmarModal()",
+				OnCancel = "cerrarModal('modalConfirmacion')"
+			})
 
-                </div>
+		</form>
 
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Guardar</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                </div>
+		<!-- Modal éxito -->
+		@if (TempData["Success"] != null)
+		{
+			@await Component.InvokeAsync("Modal", new ModalModel
+			{
+				Id = "modalSuccess",
+				Tipo = "info",
+				Titulo = "Éxito",
+				Mensaje = TempData["Success"]!.ToString(),
+				OnConfirm = "cerrarModal('modalSuccess')"
+			})
 
-            </form>
-        </div>
-    </div>
+			<script>
+						document.addEventListener("DOMContentLoaded", function () {
+							abrirModal("modalSuccess");
+						});
+			</script>
+		}
+
+		<!-- Modal error -->
+		@if (TempData["Error"] != null)
+		{
+			@await Component.InvokeAsync("Modal", new ModalModel
+			{
+				Id = "modalError",
+				Tipo = "info",
+				Titulo = "Error",
+				Mensaje = TempData["Error"]!.ToString(),
+				OnConfirm = "cerrarModal('modalError')"
+			})
+
+			<script>
+						document.addEventListener("DOMContentLoaded", function () {
+							abrirModal("modalError");
+						});
+			</script>
+		}
+
+	</div>
+
+	@if (!ViewData.ModelState.IsValid)
+	{
+		<script>
+
+				document.addEventListener("DOMContentLoaded", function () {
+
+					document.getElementById("formPeriodoEscolar").action =
+						"@Url.Action("Crear", "PeriodosEscolares")";
+
+					abrirModal("modalPeriodoEscolar");
+
+					history.replaceState(
+						null,
+						"",
+						"@Url.Action("Index", "PeriodosEscolares")"
+					);
+
+				});
+
+		</script>
+	}
 </div>
 
+
+                
 <script>
-    function abrirModalCrear() {
-        document.getElementById("tituloModal").innerText = "Nuevo Periodo";
-        document.getElementById("periodoForm").action = "/PeriodosEscolares/Crear";
 
-        document.getElementById("Codigo").value = "";
-        document.getElementById("Anio").value = "";
-        document.getElementById("Periodo").value = "Febrero-Julio";
+	// =========================
+	// CREAR
+	// =========================
+	function abrirModalCrearPeriodoEscolar() {
 
-        new bootstrap.Modal(document.getElementById('periodoModal')).show();
-    }
+		limpiarErroresFormularioPeriodoEscolar();
 
-      function abrirModalActualizar(id, codigo, anio, periodo) {
-        document.getElementById("tituloModal").innerText = "Editar Periodo";
-        document.getElementById("periodoForm").action = "/PeriodosEscolares/Editar";
+		document.getElementById("formPeriodoEscolar").action =
+			"@Url.Action("Crear", "PeriodosEscolares")";
 
-        document.getElementById("IdPeriodoEscolar").value = id;
-        document.getElementById("Codigo").value = codigo;
-        document.getElementById("Anio").value = anio;
-        document.getElementById("Periodo").value = periodo;
+		document.getElementById("IdPeriodoEscolar").value = "";
+		document.getElementById("Anio").value = "";
+		document.getElementById("Periodo").value = "";
 
-        new bootstrap.Modal(document.getElementById('periodoModal')).show();
-    }
+		abrirModal("modalPeriodoEscolar");
+	}
+
+	// =========================
+	// EDITAR
+	// =========================
+	function abrirModalEditarPeriodoEscolar(id, anio, periodo) {
+
+		limpiarErroresFormularioPeriodoEscolar();
+
+		document.getElementById("formPeriodoEscolar").action =
+			"@Url.Action("Editar", "PeriodosEscolares")";
+
+		document.getElementById("IdPeriodoEscolar").value = id;
+		document.getElementById("Anio").value = anio;
+		document.getElementById("Periodo").value = periodo;
+
+		abrirModal("modalPeriodoEscolar");
+	}
+
+	// =========================
+	// SUBMIT FORM
+	// =========================
+	function submitFormPeriodoEscolar() {
+		document.getElementById("formPeriodoEscolar").submit();
+	}
+
+	function limpiarErroresFormularioPeriodoEscolar() {
+
+		document.querySelectorAll(".input-error-text")
+			.forEach(e => {
+				e.innerText = "";
+			});
+
+	}
+
 </script>
+
+<script>
+	function eliminarPeriodoEscolar(id) {
+
+		document.getElementById("deletePeriodoEscolarId").value = id;
+
+		document.getElementById("formEliminarPeriodoEscolar").submit();
+	}
+</script>
+
+<script>
+	document.addEventListener("DOMContentLoaded", function () {
+
+		const form = document.querySelector("form");
+		const periodo = document.querySelector("select[name='periodo']");
+
+		if (periodo) {
+			periodo.addEventListener("change", function () {
+				form.submit();
+			});
+		}
+
+	});
+</script>
+
