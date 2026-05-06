@@ -1,0 +1,75 @@
+﻿@model SGPla.Models.ViewModels.PlanesEstudios.VerPlanEstudiosViewModel
+
+@{
+    ViewData["Title"] = "Plan de Estudios";
+}
+
+<div class="container-fluid">
+
+    <!-- BLOQUE SUPERIOR -->
+    <div class="row mb-4">
+
+        @await Component.InvokeAsync("InputField", new InputFieldModel
+        {
+            Id = "programaEducativo",
+            Name = "programaEducativo",
+            Label = "Programa Educativo:",
+            Valor = Model.NombreProgramaEducativo,
+            Disabled = true,
+            Flexible = true
+        })
+
+        @await Component.InvokeAsync("InputField", new InputFieldModel
+        {
+            Id = "sistema",
+            Name = "sistema",
+            Label = "Sistema:",
+            Valor = Model.Modalidad,
+            Disabled = true,
+            Flexible = true
+        })
+
+        @await Component.InvokeAsync("InputField", new InputFieldModel
+        {
+            Id = "plan",
+            Name = "plan",
+            Label = "Plan:",
+            Valor = Model.Nombre,
+            Disabled = true,
+            Flexible = true
+        })
+
+        @await Component.InvokeAsync("InputField", new InputFieldModel
+        {
+            Id = "area",
+            Name = "area",
+            Label = "Área:",
+            Valor = Model.NombreAreaAcademica,
+            Disabled = true,
+            Flexible = true
+        })
+
+        <!-- BOTON DESCARGAR -->
+        <div class="col-md-3 d-flex justify-content-end align-items-start gap-2">
+            @await Component.InvokeAsync("Boton", new
+            {
+                accion = "descargar"
+            })
+        </div>
+    </div>
+
+    <!-- TABLA -->
+    <div class="row">
+        @await Component.InvokeAsync("Table", Model.Table)
+    </div>
+
+    <!-- BOTÓN REGRSAR -->
+    <div class="row mt-3">
+        <a href="@Url.Action("Index", "PlanesEstudios")" style="display: inline-block; text-decoration: none;">
+            @await Component.InvokeAsync("Boton", new
+            {
+                Accion = "Regresar"
+            })
+        </a>
+    </div>
+</div>

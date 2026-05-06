@@ -9,6 +9,7 @@ using SGPla.Models.DTOs.ProgramaEducativo;
 using SGPla.Models.ViewModels.PlanesEstudios;
 using SGPla.Services.Implementations;
 using SGPla.Services.Interfaces;
+using System.Numerics;
 
 namespace SGPla.Controllers
 {
@@ -66,7 +67,7 @@ namespace SGPla.Controllers
 
             return View(new IndexViewModel
             {
-                Table = await LlenarTabla(busqueda, region, idAreaAcademica, idEntidadAcademica, idProgramaEducativo),
+                Table = await LlenarTablaIndex(busqueda, region, idAreaAcademica, idEntidadAcademica, idProgramaEducativo),
                 Regiones = regionesCombo,
                 Areas = areasCombo,
                 Entidades = entidadesCombo,
@@ -97,12 +98,12 @@ namespace SGPla.Controllers
             var areas = await _areaAcademicaService.ObtenerTodasAsync();
 
             return areas.Select(a => new OptionModel
-                {
-                    Value = a.IdAreaAcademica.ToString(),
-                    Text = a.Nombre,
-                    Selected = idAreaAcademica.HasValue &&
+            {
+                Value = a.IdAreaAcademica.ToString(),
+                Text = a.Nombre,
+                Selected = idAreaAcademica.HasValue &&
                                a.IdAreaAcademica == idAreaAcademica.Value
-                })
+            })
                 .ToList();
         }
 
@@ -112,7 +113,7 @@ namespace SGPla.Controllers
             {
                 IdAreaAcademica = idAreaAcademica,
                 Region = region,
-                
+
             };
 
             var entidades = await _entidadAcademicaService.ObtenerPorFiltroAsync(filtros, 1);
@@ -146,7 +147,7 @@ namespace SGPla.Controllers
             }).ToList();
         }
 
-        private async Task<TableModel> LlenarTabla(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int? idProgramaEducativo)
+        private async Task<TableModel> LlenarTablaIndex(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int? idProgramaEducativo)
         {
             try
             {
@@ -211,6 +212,63 @@ namespace SGPla.Controllers
 
                 return new TableModel();
             }
+        }
+
+        public async Task<IActionResult> VerPlanEstudios(int id)
+        {
+            if (id == 0)
+                return BadRequest();
+
+            try
+            {
+                var plan = await _planEstudiosService.ObtenerPorIdAsync(id);
+                if (plan == null)
+                    return NotFound();
+
+                return View(new VerPlanEstudiosViewModel
+                {
+                    IdPlanEstudios = plan.IdPlanEstudios,
+                    NombreProgramaEducativo = plan.NombreProgramaEducativo,
+                    Modalidad = plan.Modalidad,
+                    Nombre = plan.Nombre,
+                    NombreAreaAcademica = plan.NombreAreaAcademica,
+                    ExperienciasEducativas = plan.ExperienciasEducativas,
+                    Table = LlenarTablaVerPlanEstudios(plan.ExperienciasEducativas)
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener detalles del Plan de Estudios {Id}", id);
+                TempData["Error"] = "Error al cargar los detalles del Plan de Estudios";
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        private TableModel LlenarTablaVerPlanEstudios(List<DatosExperienciaEducativaDTO> experiencias)
+        {
+            return new TableModel
+            {
+                Headers = new List<string> { "Codigo", "Experiencia Educativa", "Perfil Docente" },
+                Rows = experiencias.Select(ee => new TableRowModel
+                {
+                    Cells = new List<TableCellModel>
+                    {
+                        new() { Value = ee.Codigo },
+                        new() { Value = ee.Nombre },
+                        new()
+                        {
+                            Actions = new List<TableActionModel>
+                            {
+                                new()
+                                {
+                                    Accion = "informacion",
+                                    //Url = Url.Action("VerPlanEstudios", "PlanesEstudios", new { id = plan.IdPlanEstudios})
+                                }
+                            }
+                        }
+                    }
+                }).ToList()
+            };
         }
     }
 }
