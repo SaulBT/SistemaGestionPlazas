@@ -7,6 +7,6 @@
         public string Modalidad { get; set; } = string.Empty;
         public string Nombre { get; set; } = string.Empty;
         public string NombreAreaAcademica { get; set; } = string.Empty;
-        public List<DatosExperienciaEducativaDTO> ExperienciasEducativos { get; set; } = [];
+        public List<DatosExperienciaEducativaDTO> ExperienciasEducativas { get; set; } = [];
     }
 }
