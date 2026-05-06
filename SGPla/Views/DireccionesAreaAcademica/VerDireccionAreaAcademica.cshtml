@@ -1,0 +1,134 @@
+﻿@using SGPla.Models.DTOs.AreaAcademica
+@model DatosAreaAcademicaDTO
+@{
+    ViewData["Title"] = "Dirección de Área Académica";
+}
+
+<!-- Campos -->
+<div style="padding-bottom:var(--padding-end); ">
+    <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:center; justify-content:space-between; background-color:var(--bg-gris)">
+        @await Component.InvokeAsync("InputField", new InputFieldModel
+        {
+            Id = "nombre",
+            Name = "nombre",
+            Label = "Nombre:",
+            Valor = Model.Nombre,
+            Disabled = true,
+            Flexible = true
+        })
+    </div>
+
+    <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:center; justify-content:space-between; background-color:var(--bg-gris)">
+        <div style="width:200%">
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "domicilio",
+                Name = "domicilio",
+                Label = "Domicilio (Calle y Número):",
+                Valor = Model.CalleNumero,
+                Disabled = true,
+                Flexible = true
+            })
+        </div>
+        
+        <div style="width:100%">
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "colonia",
+                Name = "colonia",
+                Label = "Colonia:",
+                Valor = Model.Colonia,
+                Disabled = true,
+                Flexible = true
+            })
+        </div>
+        
+        <div style="width:50%">
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "cp",
+                Name = "cp",
+                Label = "C.P. :",
+                Valor = Model.Cp,
+                Disabled = true,
+                Flexible = true
+            })
+        </div>
+        
+        <div style="width:100%">
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "municipio",
+                Name = "municipio",
+                Label = "Municipio:",
+                Valor = Model.Municipio,
+                Disabled = true,
+                Flexible = true
+            })
+        </div>
+
+        
+    </div>
+
+    <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:center; justify-content:space-between; background-color:var(--bg-gris)">
+        <div style="width:100%">
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "telefono",
+                Name = "telefono",
+                Label = "Teléfono:",
+                Valor = Model.Telefono,
+                Disabled = true,
+                Flexible = true
+            })
+        </div>
+
+        <div style="width:100%">
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "conmutador",
+                Name = "conmutador",
+                Label = "Conmutador:",
+                Valor = Model.Conmutador,
+                Disabled = true,
+                Flexible = true
+            })
+        </div>
+        
+        <div style="width:100%">
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "extension",
+                Name = "extension",
+                Label = "Extensión:",
+                Valor = Model.Extension,
+                Disabled = true,
+                Flexible = true
+            })
+        </div>
+
+        <div style="width:100%">
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "fax",
+                Name = "fax",
+                Label = "Fax:",
+                Valor = Model.Fax,
+                Disabled = true,
+                Flexible = true
+            })
+        </div>
+    </div>
+</div>
+
+<!-- Botón Regresar -->
+<div>
+    <a href="@Url.Action("Index", "DireccionesAreaAcademica")" style="display: inline-block; text-decoration: none;">
+        @await Component.InvokeAsync("Boton", new
+        {
+            Accion = "Regresar"
+        })
+    </a>
+</div>
+
+
