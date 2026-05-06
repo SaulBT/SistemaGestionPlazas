@@ -81,72 +81,6 @@ namespace SGPla.Controllers
             });
         }
 
-        private List<OptionModel> generarCatalogoRegiones(string region)
-        {
-            return Constantes.Regiones
-                .Select(r => new OptionModel
-                {
-                    Value = r,
-                    Text = r,
-                    Selected = r == region
-                })
-                .ToList();
-        }
-
-        private async Task<List<OptionModel>> generarCatalogoAreasAsync(int? idAreaAcademica)
-        {
-            var areas = await _areaAcademicaService.ObtenerTodasAsync();
-
-            return areas.Select(a => new OptionModel
-            {
-                Value = a.IdAreaAcademica.ToString(),
-                Text = a.Nombre,
-                Selected = idAreaAcademica.HasValue &&
-                               a.IdAreaAcademica == idAreaAcademica.Value
-            })
-                .ToList();
-        }
-
-        private async Task<List<OptionModel>> generarCatalogoEntidadesAsync(int idAreaAcademica, string region, int? idEntidadAcademica)
-        {
-            var filtros = new FiltroEntidadAcademicaDTO
-            {
-                IdAreaAcademica = idAreaAcademica,
-                Region = region,
-
-            };
-
-            var entidades = await _entidadAcademicaService.ObtenerPorFiltroAsync(filtros, 1);
-
-            return entidades.Select(e => new OptionModel
-            {
-                Value = e.IdEntidadAcademica.ToString(),
-                Text = e.Nombre,
-                Selected = idEntidadAcademica.HasValue &&
-                    e.IdEntidadAcademica == idEntidadAcademica
-            }).ToList();
-        }
-
-        private async Task<List<OptionModel>> generarCatalogoProgramasAsync(int idAreaAcademica, string region, int idEntidadAcademica, int? idProgramaEducativo)
-        {
-            var filtros = new BuscarProgramaEducativoDTO
-            {
-                Region = region,
-                IdAreaAcademica = idAreaAcademica,
-                IdEntidadAcademica = idEntidadAcademica,
-            };
-
-            var programas = await _programaEducativoService.BuscarPorFiltroAsync(filtros);
-
-            return programas.Select(p => new OptionModel
-            {
-                Value = p.IdProgramaEducativo.ToString(),
-                Text = p.Nombre,
-                Selected = idProgramaEducativo.HasValue &&
-                    p.IdEntidadAcademica == idProgramaEducativo
-            }).ToList();
-        }
-
         private async Task<TableModel> LlenarTablaIndex(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int? idProgramaEducativo)
         {
             try
@@ -270,6 +204,116 @@ namespace SGPla.Controllers
                     }
                 }).ToList()
             };
+        }
+        
+        //GET ProcesarArchivo
+        public async Task<IActionResult> ProcesarArchivo(string? region, int? idAreaAcademica, int? idEntidadAcademica, int? idProgramaEducativo)
+        {
+            var regionesCombo = generarCatalogoRegiones(region);
+            var areasCombo = new List<OptionModel>();
+            var entidadesCombo = new List<OptionModel>();
+            var programasCombo = new List<OptionModel>();
+
+            //Llenar Areas
+            if (!region.IsNullOrEmpty())
+                areasCombo = await generarCatalogoAreasAsync(idAreaAcademica);
+            else
+                idAreaAcademica = null;
+
+            //Llenar Entidades
+            if (idAreaAcademica.HasValue && !region.IsNullOrEmpty())
+                entidadesCombo = await generarCatalogoEntidadesAsync(idAreaAcademica.Value, region, idEntidadAcademica);
+            else
+            {
+                idEntidadAcademica = null;
+            }
+
+            //Llenar Programas Educativos
+            if (idEntidadAcademica.HasValue && idAreaAcademica.HasValue)
+                programasCombo = await generarCatalogoProgramasAsync(idAreaAcademica.Value, region, idEntidadAcademica.Value, idProgramaEducativo);
+            else
+            {
+                idProgramaEducativo = null;
+            }
+
+            return View(new CargarPlanEstudiosPaso1ViewModel
+            {
+                RegionSeleccionada = region,
+                AreaSeleccionada = idAreaAcademica,
+                EntidadSeleccionada = idEntidadAcademica,
+                ProgramaSeleccionado = idProgramaEducativo,
+                
+                ListaRegiones = regionesCombo,
+                ListaAreas = areasCombo,
+                ListaEntidades = entidadesCombo,
+                ListaProgramas = programasCombo
+            });
+        }
+
+        private List<OptionModel> generarCatalogoRegiones(string region)
+        {
+            return Constantes.Regiones
+                .Select(r => new OptionModel
+                {
+                    Value = r,
+                    Text = r,
+                    Selected = r == region
+                })
+                .ToList();
+        }
+
+        private async Task<List<OptionModel>> generarCatalogoAreasAsync(int? idAreaAcademica)
+        {
+            var areas = await _areaAcademicaService.ObtenerTodasAsync();
+
+            return areas.Select(a => new OptionModel
+            {
+                Value = a.IdAreaAcademica.ToString(),
+                Text = a.Nombre,
+                Selected = idAreaAcademica.HasValue &&
+                               a.IdAreaAcademica == idAreaAcademica.Value
+            })
+                .ToList();
+        }
+
+        private async Task<List<OptionModel>> generarCatalogoEntidadesAsync(int idAreaAcademica, string region, int? idEntidadAcademica)
+        {
+            var filtros = new FiltroEntidadAcademicaDTO
+            {
+                IdAreaAcademica = idAreaAcademica,
+                Region = region,
+
+            };
+
+            var entidades = await _entidadAcademicaService.ObtenerPorFiltroAsync(filtros, 1);
+
+            return entidades.Select(e => new OptionModel
+            {
+                Value = e.IdEntidadAcademica.ToString(),
+                Text = e.Nombre,
+                Selected = idEntidadAcademica.HasValue &&
+                    e.IdEntidadAcademica == idEntidadAcademica
+            }).ToList();
+        }
+
+        private async Task<List<OptionModel>> generarCatalogoProgramasAsync(int idAreaAcademica, string region, int idEntidadAcademica, int? idProgramaEducativo)
+        {
+            var filtros = new BuscarProgramaEducativoDTO
+            {
+                Region = region,
+                IdAreaAcademica = idAreaAcademica,
+                IdEntidadAcademica = idEntidadAcademica,
+            };
+
+            var programas = await _programaEducativoService.BuscarPorFiltroAsync(filtros);
+
+            return programas.Select(p => new OptionModel
+            {
+                Value = p.IdProgramaEducativo.ToString(),
+                Text = p.Nombre,
+                Selected = idProgramaEducativo.HasValue &&
+                    p.IdEntidadAcademica == idProgramaEducativo
+            }).ToList();
         }
     }
 }
