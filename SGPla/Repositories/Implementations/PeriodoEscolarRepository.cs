@@ -47,6 +47,13 @@ namespace SGPla.Repositories.Implementations
             return false;
         }
 
+        public async Task<bool> TieneRelacionesAsync(int idPeriodo)
+        {
+            return await _context.Periodo
+                .Where(p => p.IdPeriodo == idPeriodo)
+                .AnyAsync(p => p.Aviso.Any() || p.Oferta.Any());
+        }
+
         public async Task<Periodo?> ExisteAsync(Periodo periodoEscolar)
         {
             return await _context.Periodo.FirstOrDefaultAsync(a =>

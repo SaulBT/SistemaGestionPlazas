@@ -72,16 +72,17 @@ namespace SGPla.Validations.Implementations
                 IdEntidadAcademica = programaEducativoDTO.IdEntidadAcademica
             };
 
+            var existe = await _programaEducativoRepository.ExisteAsync(programaEducativo);
+
+
             if (programaEducativoDTO is CrearProgramaEducativoDTO crearDTO)
             {
-                var existe = await _programaEducativoRepository.ExisteAsync(programaEducativo);
 
                 if (existe is not null)
                     throw new ArgumentException("Ya existe un programa educativo con el mismo nombre en la misma entidad académica.");
             }
             else if (programaEducativoDTO is EditarProgramaEducativoDTO editarDTO)
             {
-                var existe = await _programaEducativoRepository.ExisteAsync(programaEducativo);
 
                 if (existe is not null && existe.IdProgramaEducativo != editarDTO.IdProgramaEducativo)
                     throw new ArgumentException("Ya existe un programa educativo con el mismo nombre en la misma entidad académica.");

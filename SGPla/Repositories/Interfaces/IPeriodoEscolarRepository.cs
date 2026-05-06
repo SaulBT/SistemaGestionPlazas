@@ -13,5 +13,7 @@ namespace SGPla.Repositories.Interfaces
         Task<Periodo?> ActualizarAsync(Periodo periodoEscolar);
 
         Task<bool> EliminarAsync(int id);
+
+        Task<bool> TieneRelacionesAsync(int idPeriodo);
     }
 }
