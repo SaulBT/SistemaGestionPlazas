@@ -58,7 +58,7 @@
         })
 
         <!--Botón Cargar Plan Estudios-->
-        <a href="@Url.Action("CargarPlanEstudios", "PlanesEstudios")" style="display: inline-block; text-decoration: none;">
+        <a href="@Url.Action("ProcesarArchivo", "PlanesEstudios")" style="display: inline-block; text-decoration: none;">
             @await Component.InvokeAsync("Boton", new
             {
                 Accion = "Agregar",
