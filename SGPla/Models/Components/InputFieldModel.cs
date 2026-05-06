@@ -9,4 +9,5 @@
     public bool Disabled { get; set; }
     public bool Flexible { get; set; }
     public string? Error { get; set; }
+    public int MaximoCaracteres { get; set; } = 255;
 }

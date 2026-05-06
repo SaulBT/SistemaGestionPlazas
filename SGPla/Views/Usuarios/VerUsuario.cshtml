@@ -51,35 +51,41 @@
     </div>
 
     <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:center; justify-content:space-between; background-color:var(--bg-gris)">
-        @await Component.InvokeAsync("InputField", new InputFieldModel
-        {
-            Id = "region",
-            Name = "region",
-            Label = "Región:",
-            Valor = Model.Region,
-            Disabled = true,
-            Flexible = true
-        })
+        <div id="contenedorRegion" style="width:100%">
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "region",
+                Name = "region",
+                Label = "Región:",
+                Valor = Model.Region,
+                Disabled = true,
+                Flexible = true
+            })
+        </div>
 
-        @await Component.InvokeAsync("InputField", new InputFieldModel
-        {
-            Id = "areaAcademica",
-            Name = "areaAcademica",
-            Label = "Área Académica:",
-            Valor = Model.NombreAreaAcademica,
-            Disabled = true,
-            Flexible = true
-        })
-
-        @await Component.InvokeAsync("InputField", new InputFieldModel
-        {
-            Id = "entidadAcademica",
-            Name = "entidadAcademica",
-            Label = "Entidad Académica:",
-            Valor = Model.NombreEntidadAcademica,
-            Disabled = true,
-            Flexible = true
-        })
+        <div style="width:100%">
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "areaAcademica",
+                Name = "areaAcademica",
+                Label = "Área Académica:",
+                Valor = Model.NombreAreaAcademica,
+                Disabled = true,
+                Flexible = true
+            })
+        </div>
+        
+        <div id="contenedorEntidad" style="width:100%">
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "entidadAcademica",
+                Name = "entidadAcademica",
+                Label = "Entidad Académica:",
+                Valor = Model.NombreEntidadAcademica,
+                Disabled = true,
+                Flexible = true
+            })
+        </div>
     </div>
 </div>
 
@@ -92,4 +98,25 @@
         })
     </a>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Obtener referencias a los elementos
+        const contenedorRegion = document.getElementById('contenedorRegion');
+        const contenedorEntidad = document.getElementById('contenedorEntidad');
+        
+        function configurarVistaCoordinadorAA() {
+            // Verificar si NombreEntidadAcademica está vacío o solo contiene espacios
+            const nombreEntidadAcademica = '@Model.NombreEntidadAcademica';
+            
+            if (!nombreEntidadAcademica || nombreEntidadAcademica.trim() === "") {
+                if (contenedorEntidad) contenedorEntidad.style.display = "none";
+                if (contenedorRegion) contenedorRegion.style.display = "none";
+            }
+        }
+        
+        // Ejecutar la función
+        configurarVistaCoordinadorAA();
+    });
+</script>
 

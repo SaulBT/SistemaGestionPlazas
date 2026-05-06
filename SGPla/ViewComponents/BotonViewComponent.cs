@@ -4,7 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 public class BotonViewComponent : ViewComponent
 {
     
-    public IViewComponentResult Invoke(string texto = "", string tipo = "", string accion = "", bool disabled = false, bool fondo = true, string buttonType = "button")
+    public IViewComponentResult Invoke(string texto = "", string tipo = "", string accion = "", bool disabled = false, bool fondo = true, string buttonType = "button", string onClick = "")
     {
         var model = new BotonModel
         {
@@ -14,7 +14,8 @@ public class BotonViewComponent : ViewComponent
             Disabled = disabled,
             Icono = "",
             Fondo = fondo,
-            ButtonType = buttonType
+            ButtonType = buttonType,
+            OnClick = onClick
         };
         ConfigurarTipoAccion(model);
 

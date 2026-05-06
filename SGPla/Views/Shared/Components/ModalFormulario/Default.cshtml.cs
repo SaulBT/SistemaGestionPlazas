@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace SGPla.Views.Usuarios
+namespace SGPla.Views.Shared.Components.ModalFormulario
 {
-    public class DetailsModel : PageModel
+    public class DefaultModel : PageModel
     {
         public void OnGet()
         {

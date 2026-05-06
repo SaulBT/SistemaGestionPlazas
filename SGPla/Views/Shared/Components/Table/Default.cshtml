@@ -23,13 +23,25 @@
                             <div class="table-actions">
                                 @foreach (var action in cell.Actions)
                                 {
-                                    <a href="@action.Url">
+                                    @if (!action.OnClick.IsWhiteSpace())
+                                    {
                                         @await Component.InvokeAsync("Boton", new
                                         {
                                             accion = action.Accion,
-                                            fondo = false
+                                            fondo = false,
+                                            onClick = action.OnClick
                                         })
-                                    </a>
+                                    }
+                                    else
+                                    {
+                                        <a href="@action.Url">
+                                            @await Component.InvokeAsync("Boton", new
+                                            {
+                                                accion = action.Accion,
+                                                fondo = false
+                                            })
+                                        </a>
+                                    }
                                 }
                             </div>
                         }

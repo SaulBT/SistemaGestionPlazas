@@ -15,7 +15,7 @@
            value="@Model.Valor"
            placeholder="@Model.Placeholder"
            type="@Model.Tipo"
-            @(Model.Disabled ? "disabled" : null) />
+            @(Model.Disabled ? "disabled" : null) maxlength="@Model.MaximoCaracteres"/>
     @if (!string.IsNullOrEmpty(Model.Error))
     {
         <span class="input-error-text">@Model.Error</span>
