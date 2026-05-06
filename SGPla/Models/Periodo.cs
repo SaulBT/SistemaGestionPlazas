@@ -7,9 +7,7 @@ public partial class Periodo
 {
     public int IdPeriodo { get; set; }
 
-    public string Nombre { get; set; } = null!;
-
-    public int AnioInicio { get; set; }
+    public string Codigo { get; set; } = null!;
 
     public virtual ICollection<Aviso> Aviso { get; set; } = new List<Aviso>();
 

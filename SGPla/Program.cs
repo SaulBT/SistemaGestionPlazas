@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using SGPla.Data;
-using SGPla.Repositories;
 using SGPla.Repositories.Implementations;
 using SGPla.Repositories.Interfaces;
 using SGPla.Services.Implementations;
@@ -46,6 +45,10 @@ builder.Services.AddScoped<IPlanEstudiosRepository, PlanEstudiosRepository>();
 builder.Services.AddScoped<IExperienciaEducativaRepository, ExperienciaEducativaRepository>();
 builder.Services.AddScoped<IPlanEstudiosValidator, PlanEstudiosValidator>();
 builder.Services.AddScoped<IPlanEstudiosService, PlanEstudiosService>();
+
+builder.Services.AddScoped<IPeriodoEscolarRepository, PeriodoEscolarRepository>();
+builder.Services.AddScoped<IPeriodoEscolarService, PeriodoEscolarService>();
+builder.Services.AddScoped<IPeriodoEscolarValidator, PeriodoEscolarValidator>();
 
 builder.Services.AddScoped<IArchivoRepository, ArchivoRepository>();
 builder.Services.AddScoped<IArchivoService, ArchivoService>();

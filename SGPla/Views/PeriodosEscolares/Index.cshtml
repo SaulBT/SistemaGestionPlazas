@@ -1,0 +1,148 @@
+﻿@using SGPla.Models.DTOs.PeriodoEscolar
+@model IEnumerable<DetallesPeriodoEscolarDTO>
+
+<h2>Periodos Escolares</h2>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<form asp-action="Buscar" method="get" class="mb-3">
+
+    <div class="d-flex gap-3 mb-3">
+
+        <!-- Año -->
+        <input type="number"
+               name="Anio"
+               class="form-control"
+               placeholder="Año (ej. 2026)" />
+
+        <!-- Periodo -->
+        <select name="Periodo" class="form-select">
+            <option value="">-- Periodo --</option>
+            <option value="Febrero-Julio">Febrero-Julio</option>
+            <option value="Agosto-Enero">Agosto-Enero</option>
+        </select>
+
+    </div>
+
+    <div class="input-group">
+        <input type="hidden" name="Pagina" value="1" />
+        <input type="hidden" name="Cantidad" value="10" />
+
+        <button type="submit" class="btn btn-primary">Buscar</button>
+        <a asp-action="Index" class="btn btn-secondary ms-2">Limpiar</a>
+    </div>
+
+</form>
+
+<button class="btn btn-primary mb-3" onclick="abrirModalCrear()">Agregar Periodo</button>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Código</th>
+            <th>Año</th>
+            <th>Periodo</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var p in Model)
+        {
+            <tr>
+                <td>@p.Codigo</td>
+                <td>@p.Anio</td>
+                <td>@p.Periodo</td>
+
+                <td>
+                    <button class="btn btn-sm btn-warning"
+                            onclick="abrirModalActualizar(@p.IdPeriodoEscolar, '@p.Codigo', '@p.Anio', '@p.Periodo')">
+                        Editar
+                    </button>
+
+                    <form asp-action="Eliminar" asp-route-id="@p.IdPeriodoEscolar" method="post" style="display:inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" onclick="return confirm('¿Eliminar?')">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="modal fade" id="periodoModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="periodoForm" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="tituloModal">Nuevo Periodo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <input type="hidden" id="IdPeriodoEscolar" name="IdPeriodoEscolar" />
+                    <input type="hidden" id="Codigo" name="Codigo" />
+
+                    <div class="mb-3">
+                        <label>Año</label>
+                        <input type="number" id="Anio" name="Anio" class="form-control" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Periodo</label>
+                        <select id="Periodo" name="Periodo" class="form-select" required>
+                            <option value="Febrero-Julio">Febrero-Julio</option>
+                            <option value="Agosto-Enero">Agosto-Enero</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function abrirModalCrear() {
+        document.getElementById("tituloModal").innerText = "Nuevo Periodo";
+        document.getElementById("periodoForm").action = "/PeriodosEscolares/Crear";
+
+        document.getElementById("Codigo").value = "";
+        document.getElementById("Anio").value = "";
+        document.getElementById("Periodo").value = "Febrero-Julio";
+
+        new bootstrap.Modal(document.getElementById('periodoModal')).show();
+    }
+
+      function abrirModalActualizar(id, codigo, anio, periodo) {
+        document.getElementById("tituloModal").innerText = "Editar Periodo";
+        document.getElementById("periodoForm").action = "/PeriodosEscolares/Editar";
+
+        document.getElementById("IdPeriodoEscolar").value = id;
+        document.getElementById("Codigo").value = codigo;
+        document.getElementById("Anio").value = anio;
+        document.getElementById("Periodo").value = periodo;
+
+        new bootstrap.Modal(document.getElementById('periodoModal')).show();
+    }
+</script>
