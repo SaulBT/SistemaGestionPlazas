@@ -108,7 +108,7 @@ namespace SGPla.Controllers
             try
             {
                 await _areaAcademicaService.CrearAsync(model);
-                TempData["Success"] = "Usuario creado correctamente";
+                TempData["Success"] = "Dirección de área académica creada correctamente";
                 return RedirectToAction("Index");
             }
             catch(ArgumentException ex)
@@ -174,7 +174,7 @@ namespace SGPla.Controllers
             try
             {
                 await _areaAcademicaService.EditarAsync(model);
-                TempData["Success"] = "Dirección agregada correctamente";
+                TempData["Success"] = "Dirección editada correctamente";
                 return RedirectToAction("Index");
             }
             catch (ArgumentException ex)
