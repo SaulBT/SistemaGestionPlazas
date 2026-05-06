@@ -9,7 +9,7 @@
 <div>
 
     <!-- Acciones -->
-    <div style="display:flex; gap:10px; padding-bottom:30px; align-items:center; justify-content:space-between">
+    <div style="display:flex; gap:10px; padding-bottom:20px; align-items:center; justify-content:space-between">
         <form>
             <!-- Barra de búsqueda -->
             @await Component.InvokeAsync("Buscador", new BuscadorModel
@@ -33,7 +33,7 @@
     </div>
 
     <!-- Tabla -->
-    <div style="display:flex; gap:10px; padding-top:20px; justify-content:left">
+    <div style="display:flex; gap:10px; padding-top:0px; justify-content:left">
         @await Component.InvokeAsync("Table", Model.Table)
     </div>
 

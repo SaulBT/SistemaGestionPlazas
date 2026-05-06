@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using SGPla.Models.DTOs.AreaAcademica;
 using SGPla.Models.DTOs.ProgramaEducativo;
 using SGPla.Services.Interfaces;
 
@@ -30,7 +29,6 @@ namespace SGPla.Controllers
             {
                 try
                 {
-                    dto.IdEntidadAcademica = 100;
                     var resultado = await _programaEducativoService.CrearAsync(dto);
                     TempData["Success"] = $"Programa Educativo creado exitosamente con ID: {resultado.IdProgramaEducativo}";
                 }
@@ -46,8 +44,7 @@ namespace SGPla.Controllers
         [HttpGet]
         public async Task<IActionResult> ObtenerEntidadesAcademicas(string region, int idArea)
         {
-            var entidades = await _programaEducativoService
-        .ObtenerOpcionesEntidadAcademicaAsync(region, idArea);
+            var entidades = await _programaEducativoService.ObtenerOpcionesEntidadAcademicaAsync(region, idArea);
 
             return Json(entidades);
         }

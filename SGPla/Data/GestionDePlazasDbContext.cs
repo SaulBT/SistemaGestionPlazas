@@ -698,16 +698,14 @@ public partial class GestionDePlazasDbContext : DbContext
         {
             entity.HasKey(e => e.IdPeriodo);
 
-            entity.HasIndex(e => new { e.Nombre, e.AnioInicio }, "UQ_Periodo_nombre_anioInicio").IsUnique();
+            entity.HasIndex(e => e.Codigo, "UQ_Periodo_codigo").IsUnique();
 
-            entity.Property(e => e.IdPeriodo)
-                .ValueGeneratedNever()
-                .HasColumnName("idPeriodo");
-            entity.Property(e => e.AnioInicio).HasColumnName("anioInicio");
-            entity.Property(e => e.Nombre)
-                .HasMaxLength(15)
+            entity.Property(e => e.IdPeriodo).HasColumnName("idPeriodo");
+            entity.Property(e => e.Codigo)
+                .HasMaxLength(6)
                 .IsUnicode(false)
-                .HasColumnName("nombre");
+                .IsFixedLength()
+                .HasColumnName("codigo");
         });
 
         modelBuilder.Entity<PlanEstudios>(entity =>
