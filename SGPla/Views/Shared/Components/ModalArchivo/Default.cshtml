@@ -1,0 +1,57 @@
+﻿@model ModalArchivoModel
+
+<div class="modal-overlay" id="@Model.Id">
+	<div class="modal-container">
+
+		<!-- Header -->
+		<div class="modal-header">
+			<h3>Subir archivo</h3>
+		</div>
+
+        <!-- Body -->
+        <div class="modal-body">
+            <div id="fileContainer" class="modal-file-container" style="display:none;">
+                
+                <span id="fileName" class="modal-file-name"></span>
+                <button type="button" class="modal-file-x" onclick="quitarArchivo()">
+                    ×
+                </button>
+            </div>
+
+            <p class="modal-file-details">Formato: @Model.FormatosAceptados, Tamaño máximo: @Model.TamanioMaximo MB</p>
+
+            <input type="file"
+                   id="inputFile"
+                   accept=".xlsx,.xls"
+                   style="display:none;"
+                   onchange="desplegarArchivo()" />
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-footer">
+
+            @await Component.InvokeAsync("Boton", new
+            {
+                Accion = "Cancelar",
+                OnClick = $"cancelar(\"{Model.Id}\")",
+            })
+
+            <div id="btnConfirmar" style="display: none;">
+                @await Component.InvokeAsync("Boton", new
+                {
+                    Accion = "Confirmar",
+                    OnClick = $"confirmar(\"{Model.Id}\")"
+                })
+            </div>
+            <div id="btnCargar">
+                @await Component.InvokeAsync("Boton", new
+                {
+                    Accion = "Cargar",
+                    OnClick = "cargarArchivo()",
+                    Texto = "Seleccionar archivo"
+                })
+            </div>
+
+        </div>
+	</div>
+</div>
