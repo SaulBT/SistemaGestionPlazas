@@ -7,17 +7,17 @@ namespace SGPla.Models.ViewModels.Usuarios
     public class CrearUsuarioViewModel
     {
         // 🔹 Datos del formulario
-        [Required(ErrorMessage = "El nombre es obligatorio")]
+        [Required(ErrorMessage = "Campo obligatorio")]
         public string Nombre { get; set; }
 
-        [Required(ErrorMessage = "El cargo es obligatorio")]
+        [Required(ErrorMessage = "Campo obligatorio")]
         public string Cargo { get; set; }
 
-        [Required(ErrorMessage = "El correo es obligatorio")]
+        [Required(ErrorMessage = "Campo obligatorio")]
         [EmailAddress(ErrorMessage = "El correo no es válido")]
         public string Correo { get; set; }
 
-        [Required(ErrorMessage = "Debe seleccionar un rol")]
+        [Required(ErrorMessage = "Campo obligatorio")]
         public string Rol { get; set; }
 
         public int? IdAreaAcademica { get; set; }
