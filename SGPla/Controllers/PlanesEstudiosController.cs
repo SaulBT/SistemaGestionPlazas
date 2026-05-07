@@ -207,12 +207,14 @@ namespace SGPla.Controllers
         }
         
         //GET ProcesarArchivo
-        public async Task<IActionResult> ProcesarArchivo(string? region, int? idAreaAcademica, int? idEntidadAcademica, int? idProgramaEducativo)
+        public async Task<IActionResult> ProcesarArchivo(string? region, int? idAreaAcademica, int? idEntidadAcademica, int? idProgramaEducativo, string? plan, string? modalidad)
         {
             var regionesCombo = generarCatalogoRegiones(region);
             var areasCombo = new List<OptionModel>();
             var entidadesCombo = new List<OptionModel>();
             var programasCombo = new List<OptionModel>();
+            var nombre = plan;
+            var modalidadesCombo = generarCatalogoModalidades(modalidad);
 
             //Llenar Areas
             if (!region.IsNullOrEmpty())
@@ -242,11 +244,13 @@ namespace SGPla.Controllers
                 AreaSeleccionada = idAreaAcademica,
                 EntidadSeleccionada = idEntidadAcademica,
                 ProgramaSeleccionado = idProgramaEducativo,
+                Plan = nombre,
                 
                 ListaRegiones = regionesCombo,
                 ListaAreas = areasCombo,
                 ListaEntidades = entidadesCombo,
-                ListaProgramas = programasCombo
+                ListaProgramas = programasCombo,
+                ListaSistema = modalidadesCombo
             });
         }
 
@@ -314,6 +318,18 @@ namespace SGPla.Controllers
                 Selected = idProgramaEducativo.HasValue &&
                     p.IdEntidadAcademica == idProgramaEducativo
             }).ToList();
+        }
+
+        private List<OptionModel> generarCatalogoModalidades(string? modalidad)
+        {
+            return Constantes.Modalidades
+                .Select(r => new OptionModel
+                {
+                    Value = r,
+                    Text = r,
+                    Selected = r == modalidad
+                })
+                .ToList();
         }
     }
 }

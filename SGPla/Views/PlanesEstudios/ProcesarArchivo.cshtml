@@ -4,8 +4,8 @@
     ViewData["Title"] = "Cargar Plan de Estudios";
 }
 
-<form method="get" action="@Url.Action("ProcesarArchivo", "PlanesEstudios")">
-    <div>
+<form method="get" action="@Url.Action("ProcesarArchivo", "PlanesEstudios")" enctype="multipart/form-data">
+    <div class="d-flex flex-column gap-3">
         @await Component.InvokeAsync("SelectField", new SelectFieldModel
         {
             Label = "Región",
@@ -13,7 +13,7 @@
             Name = "region"
         })
 
-        <div id="contenedorArea" style="display:none; margin-top:10px;">
+        <div id="contenedorArea" style="display:none;">
             @await Component.InvokeAsync("SelectField", new SelectFieldModel
             {
                 Label = "Área Académica",
@@ -22,7 +22,7 @@
             })
         </div>
 
-        <div id="contenedorEntidad" style="display:none; margin:1em;">
+        <div id="contenedorEntidad" style="display:none">
             @await Component.InvokeAsync("SelectField", new SelectFieldModel
             {
                 Label = "Entidad Académica",
@@ -31,7 +31,7 @@
             })
         </div>
 
-        <div id="contenedorPrograma" style="display:none; margin:1em;">
+        <div id="contenedorPrograma" style="display:none;">
             @await Component.InvokeAsync("SelectField", new SelectFieldModel
             {
                 Label = "Programa Educativo",
@@ -40,26 +40,63 @@
             })
         </div>
 
-        <div style="display:inline; margin:1em;">
+        <div style="display:inline;">
             @await Component.InvokeAsync("InputField", new InputFieldModel
             {
-                Id = "sgPlan",
+                Id = "Plan",
                 Name = "plan",
                 Label = "Plan:",
-                Valor = "",
+                Valor = Model.Plan,
                 Disabled = false,
-                Flexible = true
+                Flexible = false
             })
         </div>
 
-        <div style="display:inline; margin:1em;">
+        <div style="display:inline;">
             @await Component.InvokeAsync("SelectField", new SelectFieldModel
             {
                 Label = "Sistema",
                 Options = Model.ListaSistema,
-                Name = "sistema"
+                Name = "modalidad"
             })
         </div>
+
+        <!-- BOTÓN -->
+        <div style="display:inline;">
+            @await Component.InvokeAsync("Boton", new
+            {
+                Accion = "cargar",
+                Texto = "Subir Archivo",
+                OnClick = "abrirModalArchivo()"
+            })
+        </div>
+    </div>
+
+    <!-- BOTONES -->
+    <div style="display:flex; justify-content:flex-end; gap:var(--button-gap)">
+        <a href="@Url.Action("Index", "Usuarios")" style="display: inline-block; text-decoration: none;">
+            @await Component.InvokeAsync("Boton", new
+            {
+                Accion = "Cancelar"
+            })
+        </a>
+        @await Component.InvokeAsync("Boton", new
+        {
+            Accion = "siguiente"
+        })
+    </div>
+
+    <!-- MODAL -->
+    <div>
+        @await Component.InvokeAsync("ModalArchivo", new ModalArchivoModel
+        {
+            Id = "modalArchivo",
+            OnConfirm = "cerrarModal('modalArchivo')",
+            OnCancel = "cerrarModal('modalArchivo')",
+            FormatosAceptados = ".xlsx",
+            TamanioMaximo = 20
+            //NombreArchivo = Model.Archivo.FileName
+        })
     </div>
 </form>
 
@@ -148,4 +185,12 @@
         }
 
     });
+
+    function abrirModalArchivo() {
+        abrirModal("modalArchivo");
+    }
 </script>
+
+@section Scripts {
+    <script src="~/js/cargarArchivo.js"></script>
+}

@@ -10,6 +10,7 @@ namespace SGPla.Models.ViewModels.PlanesEstudios
         public int? ProgramaSeleccionado { get; set; }
         public string Plan { get; set; } = string.Empty;
         public string SistemaSeleccionado { get; set; } = string.Empty;
+        public IFormFile Archivo { get; set; }
 
         public List<OptionModel> ListaRegiones { get; set; } = [];
         public List<OptionModel> ListaAreas { get; set; } = [];
