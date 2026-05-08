@@ -349,7 +349,7 @@ namespace SGPla.Controllers
 
         private async Task CargarCombos(CrearUsuarioViewModel model)
         {
-            // 🔹 Roles
+
             model.Roles = Constantes.Roles
                 .Select(r => new OptionModel
                 {
@@ -358,7 +358,7 @@ namespace SGPla.Controllers
                     Selected = r == model.Rol
                 }).ToList();
 
-            // 🔹 Regiones
+
             model.Regiones = Constantes.Regiones
                 .Select(r => new OptionModel
                 {
@@ -367,7 +367,7 @@ namespace SGPla.Controllers
                     Selected = r == model.Region
                 }).ToList();
 
-            // 🔹 Áreas
+
             var areas = await _areaAcademicaRepository.ObtenerTodosAsync();
 
             model.Areas = areas.Select(a => new OptionModel
@@ -378,7 +378,7 @@ namespace SGPla.Controllers
                            a.IdAreaAcademica == model.IdAreaAcademica.Value
             }).ToList();
 
-            // 🔹 Entidades (IMPORTANTE)
+
             if (model.IdAreaAcademica.HasValue && !string.IsNullOrEmpty(model.Region))
             {
                 var entidades = await _entidadAcademicaRepository

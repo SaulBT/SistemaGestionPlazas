@@ -31,6 +31,34 @@
     padding: 20px 16px;
 }
 
+/* Archivos */
+.modal-file-container {
+    background-color: lightgray;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-file-name {
+    color: black;
+    margin: 10px;
+}
+
+.modal-file-x {
+    border: none;
+    background: transparent;
+    font-size: 2rem;
+    cursor: pointer;
+    margin-right: 1rem;
+}
+
+.modal-file-details {
+    color: slategray;
+    font-size: 0.9rem;
+    text-align: right;
+    margin-top: 10px;
+}
+
 .modal-footer {
     display: flex;
     justify-content: flex-end;

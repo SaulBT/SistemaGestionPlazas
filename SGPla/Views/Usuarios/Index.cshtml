@@ -9,7 +9,7 @@
     <form method="get" action="@Url.Action("Index", "Usuarios")">
 
         <!-- Filtros -->
-        <div style="display:inline-flex; gap:10px; padding-bottom:30px;">
+        <div style="display:inline-flex; gap:10px; padding-bottom:20px;">
             @await Component.InvokeAsync("SelectField", new SelectFieldModel
             {
                 Label = "Región",
@@ -36,7 +36,7 @@
         </div>
 
         <!-- Acciones -->
-        <div style="display:flex; gap:10px; padding-bottom:30px; align-items:center; justify-content:space-between">
+        <div style="display:flex; gap:10px; padding-bottom:20px; align-items:center; justify-content:space-between">
             <!--Barra de Búsqueda-->
             @await Component.InvokeAsync("Buscador", new BuscadorModel
             {
@@ -61,7 +61,7 @@
 
 
     <!-- Tabla con Datos -->
-    <div style="display:flex; gap:10px; padding-top:20px;justify-content:left">
+    <div style="display:flex; gap:10px; padding-top:0px;justify-content:left">
         @await Component.InvokeAsync("Table", Model.Table)
         
         
