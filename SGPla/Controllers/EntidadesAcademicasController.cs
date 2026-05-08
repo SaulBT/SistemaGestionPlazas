@@ -98,7 +98,10 @@ namespace SGPla.Controllers
                                     new()
                                     {
                                         Accion = "programa educativo",
-                                        Url = Url.Action("Index", "Home")
+                                        Url = Url.Action("Buscar", "ProgramasEducativos", new
+                                        {
+                                            IdEntidadAcademica = e.IdEntidadAcademica
+                                        })
                                     },
                                     new()
                                     {
