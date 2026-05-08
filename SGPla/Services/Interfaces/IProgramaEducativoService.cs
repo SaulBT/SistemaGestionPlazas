@@ -1,6 +1,7 @@
 ﻿using SGPla.Models.DTOs.EntidadAcademica;
 using SGPla.Models.DTOs.ProgramaEducativo;
 using SGPla.Models.DTOs.AreaAcademica;
+using SGPla.Models;
 
 namespace SGPla.Services.Interfaces
 {
@@ -17,9 +18,9 @@ namespace SGPla.Services.Interfaces
 
         Task<List<DetallesProgramaEducativoDTO>> BuscarPorFiltroAsync(BuscarProgramaEducativoDTO filtro);
 
-        Task<List<OpcionEntidadAcademicaDTO>> ObtenerOpcionesEntidadAcademicaAsync(string region, int idAreaAcademica);
+        Task<List<EntidadAcademica>> ObtenerOpcionesEntidadAcademicaAsync(string region, int idAreaAcademica);
 
 
-        Task<List<OpcionAreaAcademicaDTO>> ObtenerOpcionesAreaAcademicaAsync();
+        Task<List<AreaAcademica>> ObtenerOpcionesAreaAcademicaAsync();
     }
 }

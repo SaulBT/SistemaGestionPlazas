@@ -1,199 +1,170 @@
-﻿@using SGPla.Models.DTOs.AreaAcademica
-@using SGPla.Models.DTOs.EntidadAcademica
-@model IEnumerable<SGPla.Models.DTOs.ProgramaEducativo.DetallesProgramaEducativoDTO>
+﻿@using SGPla.Models.ViewModels.ProgramasEducativos
+@model IndexViewModel
 
-<h2>Programas Educativos</h2>
-
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        @TempData["Error"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
+@{
+	Layout = "_LayoutSuperUsuario";
+	ViewData["Title"] = "Programas Educativos";
 }
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        @TempData["Success"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-}
+<div>
+	<form method="get" action="@Url.Action("Index", "ProgramasEducativos")">
 
-<form asp-action="Buscar" method="get" class="mb-3">
+		<!-- Filtros -->
+		<div style="display:inline-flex; gap:10px; padding-bottom:30px;">
+			@await Component.InvokeAsync("SelectField", new SelectFieldModel
+			{
+				Label = "Región",
+				Options = Model.Regiones,
+				Name = "region"
+			})
 
-    <div class="d-flex gap-3 mb-3">
+			@await Component.InvokeAsync("SelectField", new SelectFieldModel
+			{
+				Label = "Área Académica",
+				Options = Model.Areas,
+				Name = "idAreaAcademica"
+			})
 
-        <select id="region" name="Region" class="form-select">
-            <option value="">-- Región --</option>
-            <option value="1-Xalapa">Xalapa</option>
-            <option value="2-Veracruz">Veracruz</option>
-        </select>
+			<div id="contenedorEntidad">
+				@await Component.InvokeAsync("SelectField", new SelectFieldModel
+				{
+					Label = "Entidad Académica",
+					Options = Model.Entidades,
+					Name = "idEntidadAcademica"
+				})
+			</div>
+        
+		</div>
 
-        <select id="area" name="IdAreaAcademica" class="form-select">
-            <option value="">-- Área --</option>
-            @foreach (var a in (IEnumerable<OpcionAreaAcademicaDTO>)ViewBag.AreasAcademicas)
-            {
-                <option value="@a.IdAreaAcademica">@a.Nombre</option>
-            }
-        </select>
+		<!-- Acciones -->
+		<div style="display:flex; gap:10px; padding-bottom:30px; align-items:center; justify-content:space-between">
+			<!--Barra de Búsqueda-->
+			@await Component.InvokeAsync("Buscador", new BuscadorModel
+			{
+				Name = "busqueda",
+				Placeholder = "Buscar programa educativo...",
+				Action = Url.Action("Index", "ProgramasEducativos"),
+				Method = "get",
+				Value = Context.Request.Query["busqueda"]
+			})
 
-        <select id="entidad" name="IdEntidadAcademica" class="form-select">
-            <option value="">-- Entidad --</option>
-        </select>
-    </div>
+			<!--Botón Crear Programa Educativo-->
+			<a href="@Url.Action("CrearProgramaEducativo", "ProgramasEducativos")" style="display: inline-block; text-decoration: none;">
+				@await Component.InvokeAsync("Boton", new
+				{
+					Accion = "Agregar",
+					Texto = "Crear Programa Educativo"
+				})
+			</a>
+		</div>
 
-    <div class="input-group">
-        <input type="text"
-               name="Nombre"
-               class="form-control"
-               placeholder="Buscar por nombre" />
-
-        <!-- 🔥 inputs ocultos para paginación -->
-        <input type="hidden" name="Pagina" value="1" />
-        <input type="hidden" name="Cantidad" value="10" />
-
-        <button type="submit" class="btn btn-primary">Buscar</button>
-        <a asp-action="Index" class="btn btn-secondary ms-2">Limpiar</a>
-    </div>
-
-</form>
-
-<button class="btn btn-primary mb-3" onclick="abrirModalCrear()">Agregar Programa Educativo</button>
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Nombre</th>
-            <th>Region</th>
-            <th>Area Academica</th>
-            <th>Entidad Academica</th>
+	</form>
 
 
+	<!-- Tabla con Datos -->
+	<div style="display:flex; gap:10px; padding-top:20px;justify-content:left">
+		@await Component.InvokeAsync("Table", Model.Table)
+        
+        
+	</div>
 
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var p in Model)
-        {
-            <tr>
-                <td>@p.Nombre</td>
-                <td>@p.Region</td>
-                <td>@p.AreaAcademica</td>
-                <td>@p.EntidadAcademica</td>
 
-                <td>
-                    <button class="btn btn-sm btn-warning"
-                            onclick="abrirModalActualizar(@p.IdProgramaEducativo, '@p.Nombre')">
-                        Editar
-                    </button>
-                    <form asp-action="Eliminar" asp-route-id="@p.IdProgramaEducativo" method="post" style="display:inline">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" onclick="return confirm('¿Eliminar?')">Eliminar</button>
-                    </form>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+	<!-- Ventanas Modales-->
+	<div>
+		<!-- Ventana de Confirmación eliminación de programa educativo -->
+		<form id="formEliminarProgramaEducativo" method="post" action="@Url.Action("EliminarProgramaEducativo", "ProgramasEducativos")">
+			@Html.AntiForgeryToken()
 
-<!-- Modal compartido: Crear usa CrearProgamaEducativoDTO, Editar usa EditarProgramaEducativoDTO -->
-<div class="modal fade" id="programaEducativoModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form id="programaEducativoForm" method="post">
-                @Html.AntiForgeryToken()
+			<input type="hidden" name="id" id="deleteUserId" />
+			<input type="hidden" name="rol" id="deleteUserRol" />
+			@await Component.InvokeAsync("Modal", new ModalModel
+			{
+				Id = "modalConfirmacion",
+				Tipo = "confirm",
+				Titulo = "Confirmación",
+				Mensaje = "Confirmación",
+				OnConfirm = "confirmarModal()",
+				OnCancel = "cerrarModal('modalConfirmacion')"
+			})
+		</form>
 
-                <div class="modal-header">
-                    <h5 class="modal-title" id="tituloModal">Nuevo Programa Educativo</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
+		<!-- Ventana de éxito al realizar una acción -->
+		@if (TempData["Success"] != null)
+		{
+			@await Component.InvokeAsync("Modal", new ModalModel
+			{
+				Id = "modalSuccess",
+				Tipo = "info",
+				Titulo = "Éxito",
+				Mensaje = TempData["Success"]!.ToString(),
+				OnConfirm = "cerrarModal('modalSuccess')"
+			})
 
-                <div class="modal-body">
-                    <!-- Solo se envía al editar, EditarProgramaEducativoDTO lo requiere -->
-                    <!-- Al crear, CrearProgramaEducativoDTO no lo tiene, el binder lo ignora -->
-                    <input type="hidden" id="IdProgramaEducativo" name="IdProgramaEducativo" />
-
-                    <div class="mb-3">
-                        <label>Nombre</label>
-                        <input type="text" id="Nombre" name="Nombre" class="form-control" required />
-                     
-                       
-                    </div>
-
-                   
-                </div>
-
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Guardar</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                </div>
-            </form>
-        </div>
-    </div>
+			<script>
+						document.addEventListener("DOMContentLoaded", function () {
+							abrirModal("modalSuccess");
+						});
+			</script>
+		}
+	</div>
 </div>
 
+
 <script>
-    function abrirModalCrear() {
-        document.getElementById("tituloModal").innerText = "Nuevo Programa Educativo";
-        document.getElementById("programaEducativoForm").action = "/ProgramasEducativos/Crear";
+	document.addEventListener("DOMContentLoaded", function () {
 
-        document.getElementById("IdProgramaEducativo").value = "";
-        document.getElementById("Nombre").value = "";
+		const form = document.querySelector("form");
 
-        new bootstrap.Modal(document.getElementById('programaEducativoModal')).show();
-    }
+		const region = document.getElementById("region");
+		const area = document.getElementById("idAreaAcademica");
+		const entidad = document.getElementById("idEntidadAcademica");
+		const contenedorEntidad = document.getElementById("contenedorEntidad");
 
-    function abrirModalActualizar(id, nombre) {
-        document.getElementById("tituloModal").innerText = "Editar Programa Educativo";
-        document.getElementById("programaEducativoForm").action = "/ProgramasEducativos/Editar";
+		function toggleEntidad() {
+			if (!area || !contenedorEntidad) return;
 
-        document.getElementById("IdProgramaEducativo").value = id;
-        document.getElementById("Nombre").value = nombre;
+			if (!area.value) {
+				contenedorEntidad.style.display = "none";
+			} else {
+				contenedorEntidad.style.display = "inline-flex";
+			}
+		}
 
-        new bootstrap.Modal(document.getElementById('programaEducativoModal')).show();
-    }
+		// Estado inicial
+		toggleEntidad();
+
+		// Región cambia
+		if (region) {
+			region.addEventListener("change", function () {
+                
+				if (entidad) entidad.value = "";
+				form.submit();
+			});
+		}
+
+		// Área cambia
+		if (area) {
+			area.addEventListener("change", function () {
+				if (entidad) entidad.value = "";
+				toggleEntidad();
+				form.submit();
+			});
+		}
+
+		// Entidad cambia
+		if (entidad) {
+			entidad.addEventListener("change", function () {
+				form.submit();
+			});
+		}
+
+	});
 </script>
+
 <script>
-    const region = document.getElementById('region');
-    const area = document.getElementById('area');
-    const entidad = document.getElementById('entidad');
+		function eliminarProgramaEducativo(id, rol) {
 
-    async function cargarEntidades() {
-        if (region.value && area.value) {
-            entidad.disabled = false;
-            entidad.innerHTML = '<option>Cargando...</option>';
+		document.getElementById("deleteProgramaEducativoId").value = id;
 
-            try {
-                const response = await fetch(`/ProgramasEducativos/ObtenerEntidadesAcademicas?region=${region.value}&idArea=${area.value}`);
-
-                // 🔴 Si el backend responde error (404, 500, etc)
-                if (!response.ok) {
-                    throw new Error(`HTTP error: ${response.status}`);
-                }
-
-                const data = await response.json();
-
-                entidad.innerHTML = '<option value="">-- Selecciona entidad --</option>';
-
-                data.forEach(e => {
-                    const option = document.createElement('option');
-                    option.value = e.idEntidadAcademica;
-                    option.textContent = e.nombre;
-                    entidad.appendChild(option);
-                });
-
-            } catch (error) {
-                console.error('Error real:', error);
-
-                entidad.innerHTML = '<option>Error al cargar</option>';
-                entidad.disabled = true;
-            }
-
-        } else {
-            entidad.disabled = true;
-            entidad.innerHTML = '<option value="">-- Selecciona entidad --</option>';
-        }
-    }
-
-    region.addEventListener('change', cargarEntidades);
-    area.addEventListener('change', cargarEntidades);
+		document.getElementById("formEliminarProgramaEducativo").submit();
+	}
 </script>

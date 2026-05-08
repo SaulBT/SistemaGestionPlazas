@@ -59,19 +59,15 @@ namespace SGPla.Services.Implementations
             return await _programaEducativoRepository.EliminarAsync(id);
         }
 
-        public async Task<List<OpcionAreaAcademicaDTO>> ObtenerOpcionesAreaAcademicaAsync()
+        public async Task<List<AreaAcademica>> ObtenerOpcionesAreaAcademicaAsync()
         {
             await _areaAcademicaRepository.ObtenerTodosAsync();
-            var obtenidos = await _areaAcademicaRepository.ObtenerTodosAsync();
-            List<OpcionAreaAcademicaDTO> resultados = obtenidos.Select(AreaAcademicaMapper.ToOpcionDTO).ToList();
-            return resultados;
+            return await _areaAcademicaRepository.ObtenerTodosAsync();
         }
 
-        public async Task<List<OpcionEntidadAcademicaDTO>> ObtenerOpcionesEntidadAcademicaAsync(string region, int idAreaAcademica)
+        public async Task<List<EntidadAcademica>> ObtenerOpcionesEntidadAcademicaAsync(string region, int idAreaAcademica)
         {
-            var obtenidos = await _entidadAcademicaRepository.ObtenerOpcionesAsync(region, idAreaAcademica);
-            List<OpcionEntidadAcademicaDTO> resultados = obtenidos.Select(EntidadAcademicaMapper.ToOpcionDTO).ToList();
-            return resultados;
+            return await _entidadAcademicaRepository.ObtenerOpcionesAsync(region, idAreaAcademica);
         }
 
         public async Task<DetallesProgramaEducativoDTO?> ObtenerPorIdAsync(int id)
