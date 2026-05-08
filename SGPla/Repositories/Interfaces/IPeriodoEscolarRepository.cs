@@ -8,6 +8,7 @@ namespace SGPla.Repositories.Interfaces
         Task<List<Periodo>> ObtenerTodosAsync();
         Task<Periodo?> ObtenerPorIdAsync(int idPeriodoEscolar);
         Task<List<Periodo>> ObtenerPorFiltroAsync(BuscarPeriodoEscolarDTO filtro);
+        Task<int> ContarPorFiltroAsync(BuscarPeriodoEscolarDTO filtro);
         Task<Periodo?> ExisteAsync(Periodo periodoEscolar);
         Task<Periodo> CrearAsync(Periodo periodoEscolar);
         Task<Periodo?> ActualizarAsync(Periodo periodoEscolar);

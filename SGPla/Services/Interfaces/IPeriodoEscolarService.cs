@@ -17,6 +17,8 @@ namespace SGPla.Services.Interfaces
 
         Task<List<DetallesPeriodoEscolarDTO>> BuscarPorFiltroAsync(BuscarPeriodoEscolarDTO   filtro);
 
-       
+        Task<(List<DetallesPeriodoEscolarDTO> Items, int TotalCount)> BuscarPorFiltroPaginadoConTotalAsync(BuscarPeriodoEscolarDTO filtro);
+
+
     }
 }

@@ -8,51 +8,49 @@
 
 <div>
 	<!--Acciones-->
-	<div style="display:flex; gap:10px; padding-bottom:30px; align-items:center; justify-content:space-between">
-		<form method="get" action="@Url.Action("Index", "PeriodosEscolares")">
-			<div style="display:inline-flex; gap:10px; padding-bottom:30px;">
-				@await Component.InvokeAsync("SelectField", new SelectFieldModel
-				{
-					Label = "Periodo",
-					Name = "periodo",
-					Options = new List<OptionModel>
-					{
-						new OptionModel { Value = "Febrero-Julio", Text = "Febrero-Julio" },
-						new OptionModel { Value = "Agosto-Enero", Text = "Agosto-Enero" }
-					}
-				})
-        
-			</div>
+    <div style="display:flex; gap:10px; padding-bottom:30px; align-items:center; justify-content:space-between">
+        <form id="filtrosForm" method="get" action="@Url.Action("Index", "PeriodosEscolares")">
+            <div style="display:inline-flex; gap:10px; padding-bottom:30px;">
+                @await Component.InvokeAsync("SelectField", new SelectFieldModel
+                {
+                    Label = "Periodo",
+                    Name = "periodo",
+                    Options = new List<OptionModel>
+                    {
+                        new OptionModel { Value = "Febrero-Julio", Text = "Febrero-Julio" },
+                        new OptionModel { Value = "Agosto-Enero", Text = "Agosto-Enero" }
+                    }
+                })
+            </div>
 
-			<div>
-				<!-- Barra de búsqueda -->
-				@await Component.InvokeAsync("Buscador", new BuscadorModel
-				{
-					Name = "anio",
-					Placeholder = "Buscar por año...",
-					Value = Context.Request.Query["anio"]
+            <div>
+                <!-- Barra de búsqueda -->
+                @await Component.InvokeAsync("Buscador", new BuscadorModel
+                {
+                    Name = "anio",
+                    Placeholder = "Buscar por año...",
+                    Value = Context.Request.Query["anio"]
+                })
+            </div>
+            
+            <!-- Campos ocultos para paginación -->
+            <input type="hidden" name="pagina" id="paginaHidden" value="@Model.PaginaActual" />
+            <input type="hidden" name="cantidad" id="cantidadHidden" value="@Model.CantidadPorPagina" />
+        </form>
 
-				})
+        <!-- Botón agregar -->
+        @await Component.InvokeAsync("Boton", new
+        {
+            Accion = "Agregar",
+            Texto = "Agregar Periodo Escolar",
+            OnClick = "abrirModalCrearPeriodoEscolar()"
+        })
+    </div>
 
-
-			</div>
-			
-		</form>
-
-		<!-- Botón agregar -->
-		@await Component.InvokeAsync("Boton", new
-		{
-			Accion = "Agregar",
-			Texto = "Agregar Periodo Escolar",
-			OnClick = "abrirModalCrearPeriodoEscolar()"
-		})
-	</div>
-
-
-	<!-- Tabla -->
-	<div style="display:flex; gap:10px; padding-top:20px; justify-content:left">
-		@await Component.InvokeAsync("Table", Model.Table)
-	</div>
+    <!-- Tabla -->
+    <div class="table-container" style="display:flex; gap:10px; padding-top:20px; justify-content:left">
+        @await Component.InvokeAsync("Table", Model.Table)
+    </div>
 
 	<!-- ========================= -->
 	<!-- MODALES -->
@@ -163,7 +161,35 @@
 	}
 </div>
 
-
+<script>
+    // =========================
+    // FUNCIÓN PARA CAMBIAR DE PÁGINA
+    // =========================
+    window.cambiarPagina = function(page, isPageSizeChange = false) {
+        console.log('Cambiando a página:', page, 'isPageSizeChange:', isPageSizeChange);
+        
+        const form = document.getElementById('filtrosForm');
+        const paginaHidden = document.getElementById('paginaHidden');
+        const cantidadHidden = document.getElementById('cantidadHidden');
+        
+        if (isPageSizeChange) {
+            // Cambiar tamaño de página - volver a página 1
+            cantidadHidden.value = page;
+            paginaHidden.value = 1;
+        } else {
+            // Cambiar página normal
+            paginaHidden.value = page;
+        }
+        
+        // Enviar el formulario
+        form.submit();
+    };
+    
+    // También agregar la función para cambiar tamaño de página si se usa el select
+    window.cambiarTamanioPagina = function(size) {
+        cambiarPagina(size, true);
+    };
+</script>
                 
 <script>
 
