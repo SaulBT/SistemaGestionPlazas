@@ -111,7 +111,7 @@ namespace SGPla.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al llenar la tabla de períodos");
-                TempData["Error"] = "Ocurrió un error al cargar los períodos. Por favor, inténtelo de nuevo más tarde.";
+                TempData["Error"] = ex.Message;
 
                 return new TableModel();
             }

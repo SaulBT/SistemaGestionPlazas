@@ -334,14 +334,15 @@ namespace SGPla.Controllers
             }
             catch (ArgumentException ex)
             {
-                ModelState.AddModelError("Correo", ex.Message);
+                //ModelState.AddModelError("Correo", ex.Message);
+                TempData["Error"] = ex.Message;
                 await CargarCombos(model);
                 return View(model);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al crear usuario");
-                ModelState.AddModelError("", "Error al crear el usuario");
+                TempData["Error"] = ex.Message;
                 await CargarCombos(model);
                 return View(model);
             }
@@ -470,7 +471,7 @@ namespace SGPla.Controllers
             }
             catch (ArgumentException ex)
             {
-                ModelState.AddModelError("Rol", ex.Message);
+                TempData["Error"] = ex.Message;
                 await CargarCombos(model);
                 return View(model);
             }
