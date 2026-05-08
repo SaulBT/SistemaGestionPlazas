@@ -328,7 +328,7 @@ namespace SGPla.Controllers
             try
             {
                 await _entidadAcademicaService.EliminarAsync(id);
-                TempData["Success"] = "Entidad académica aliminada correctamente";
+                TempData["Success"] = "Entidad académica eliminada correctamente";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
