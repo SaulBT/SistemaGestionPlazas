@@ -138,11 +138,11 @@ public class BotonViewComponent : ViewComponent
                     break;
                 case "programa educativo":
                 case "programa":
-                    model.Icono = "bi bi-journal-text";
+                    model.Icono = "bi bi-mortarboard-fill";
                     break;
                 case "plan de estudios":
                 case "plan":
-                    model.Icono = "bi bi-mortarboard-fill";
+                    model.Icono = "bi bi-journal-text";
                     break;
                 case "agregar":
                     model.Icono = "bi bi-plus-circle";
