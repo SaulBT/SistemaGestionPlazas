@@ -72,25 +72,7 @@
             })
 
         </form>
-
-        <!-- Ventana de éxito al realizar una acción -->
-        @if (TempData["Success"] != null)
-        {
-            @await Component.InvokeAsync("Toast", new ToastModel
-            {
-                Id = "toastSuccess",
-                Titulo = "Éxito",
-                Mensaje = TempData["Success"]!.ToString(),
-                Tipo = "success"
-            })
-
-            <script>
-                        document.addEventListener("DOMContentLoaded", function() {
-                            mostrarToast("toastSuccess");
-                        });
-            </script>
-        }
-        
+   
     </div>
 
 </div>
