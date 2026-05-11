@@ -124,35 +124,7 @@
 	}
 </div>
 
-<script>
-    // =========================
-    // FUNCIÓN PARA CAMBIAR DE PÁGINA
-    // =========================
-    window.cambiarPagina = function(page, isPageSizeChange = false) {
-        console.log('Cambiando a página:', page, 'isPageSizeChange:', isPageSizeChange);
-        
-        const form = document.getElementById('filtrosForm');
-        const paginaHidden = document.getElementById('paginaHidden');
-        const cantidadHidden = document.getElementById('cantidadHidden');
-        
-        if (isPageSizeChange) {
-            // Cambiar tamaño de página - volver a página 1
-            cantidadHidden.value = page;
-            paginaHidden.value = 1;
-        } else {
-            // Cambiar página normal
-            paginaHidden.value = page;
-        }
-        
-        // Enviar el formulario
-        form.submit();
-    };
-    
-    // También agregar la función para cambiar tamaño de página si se usa el select
-    window.cambiarTamanioPagina = function(size) {
-        cambiarPagina(size, true);
-    };
-</script>
+
                 
 <script>
 

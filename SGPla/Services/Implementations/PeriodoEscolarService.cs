@@ -32,7 +32,7 @@ namespace SGPla.Services.Implementations
         }
 
         // Nuevo método que devuelve los items paginados con el total
-        public async Task<(List<DetallesPeriodoEscolarDTO> Items, int TotalCount)> BuscarPorFiltroPaginadoConTotalAsync(BuscarPeriodoEscolarDTO filtro)
+        public async Task<(List<DetallesPeriodoEscolarDTO> Items, int TotalCount)> BuscarPorFiltroPaginadoAsync(BuscarPeriodoEscolarDTO filtro)
         {
             await _periodoEscolarValidator.ValidarBusquedaPorFiltroAsync(filtro);
 

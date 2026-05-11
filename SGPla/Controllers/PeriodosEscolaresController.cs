@@ -33,14 +33,6 @@ namespace SGPla.Controllers
         }
 
 
-        // Action para recargar solo la tabla (por si quieres usar AJAX después)
-        [HttpGet]
-        public async Task<IActionResult> RecargarTabla(int? anio, string? periodo, int pagina = 1, int cantidad = 10)
-        {
-            var tabla = await LlenarTabla(anio, periodo, pagina, cantidad);
-            return PartialView("_TablaPeriodos", tabla);
-        }
-
         private async Task<TableModel> LlenarTabla(int? anio, string? periodo, int pagina = 1, int cantidad = 10)
         {
             try
@@ -53,7 +45,7 @@ namespace SGPla.Controllers
                     Cantidad = cantidad
                 };
 
-                var resultado = await _periodoEscolarService.BuscarPorFiltroPaginadoConTotalAsync(filtro);
+                var resultado = await _periodoEscolarService.BuscarPorFiltroPaginadoAsync(filtro);
 
                 if (resultado.Items == null || !resultado.Items.Any())
                 {
