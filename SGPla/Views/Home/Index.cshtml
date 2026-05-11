@@ -365,10 +365,55 @@
         <br />
     </div>
 
-
+    <!-- tabla -->
+    <div style="margin-left: 20px;">
+        <h4>Tabla</h4>
+        @await Component.InvokeAsync("Table", new TableModel
+        {
+            Headers = new List<string> { "Nombre", "Correo", "Acciones" },
+            Rows = new List<TableRowModel>
+            {
+                new TableRowModel
+                {
+                    Cells = new List<TableCellModel>
+                    {
+                        new() { Value = "Juan" },
+                        new() { Value = "juan@mail.com" },
+                        new()
+                        {
+                            Actions = new List<TableActionModel>
+                            {
+                                new() { Accion = "editar"},
+                                new() { Accion = "eliminar"}
+                            }
+                        }
+                    }
+                },
+                new TableRowModel
+                {
+                    Cells = new List<TableCellModel>
+                    {
+                        new() { Value = "Miguel" },
+                        new() { Value = "miguel@mail.com" },
+                        new()
+                        {
+                            Actions = new List<TableActionModel>
+                            {
+                                new() { Accion = "editar"},
+                                new() { Accion = "eliminar"}
+                            }
+                        }
+                    }
+                }
+            }
+        })
+        <br />
+        <br />
+    </div>
     
 
     <br />
 </div>
+
 
 

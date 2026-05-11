@@ -50,7 +50,7 @@
 
 /* Estado ON */
 .switch input:checked + .slider {
-    background-color: #4f46e5;
+    background-color: var(--AzulPrimario);
 }
 
     .switch input:checked + .slider::before {

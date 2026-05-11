@@ -65,7 +65,7 @@ namespace SGPla.Services.Implementations
                 return await ObtenerCoordinadoresDgaaPorFiltroAsync(filtro);
             }
 
-            return await ObtenerTodosPorFiltroAsync(filtro);
+            return await BuscarConFiltrosAsync(filtro);
         }
 
         public async Task<DetallesUsuarioDTO?> ObtenerPorIdAsync(ReferenciaUsuarioDTO dto)
@@ -176,10 +176,11 @@ namespace SGPla.Services.Implementations
         //Obtener por filtros
         private async Task<List<ListaUsuarioDTO>> ObtenerCoordinadoresEaPorFiltroAsync(FiltrosUsuarioDTO filtro)
         {
-            var coordinadoresEa = await _coordinadorEaRepository.ObtenerPorFiltrosAsync(
+            var coordinadoresEa = await _coordinadorEaRepository.BuscarConFiltros(
                 filtro.Region,
                 filtro.IdAreaAcademica,
-                filtro.IdEntidadAcademica);
+                filtro.IdEntidadAcademica,
+                filtro.Busqueda);
 
             return coordinadoresEa
                 .Select(MapearCoordinadorEaAListaDTO)
@@ -189,8 +190,9 @@ namespace SGPla.Services.Implementations
 
         private async Task<List<ListaUsuarioDTO>> ObtenerCoordinadoresDgaaPorFiltroAsync(FiltrosUsuarioDTO filtro)
         {
-            var coordinadoresDgaa = await _coordinadorDgaaRepository.ObtenerPorFiltrosAsync(
-                filtro.IdAreaAcademica);
+            var coordinadoresDgaa = await _coordinadorDgaaRepository.BuscarConFiltros(
+                filtro.IdAreaAcademica,
+                filtro.Busqueda);
 
             return coordinadoresDgaa
                 .Select(MapearCoordinadorDgaaAListaDTO)
@@ -198,15 +200,17 @@ namespace SGPla.Services.Implementations
                 .ToList();
         }
 
-        private async Task<List<ListaUsuarioDTO>> ObtenerTodosPorFiltroAsync(FiltrosUsuarioDTO filtro)
+        public async Task<List<ListaUsuarioDTO>> BuscarConFiltrosAsync(FiltrosUsuarioDTO filtro)
         {
-            var coordinadoresEa = await _coordinadorEaRepository.ObtenerPorFiltrosAsync(
+            var coordinadoresEa = await _coordinadorEaRepository.BuscarConFiltros(
                 filtro.Region,
                 filtro.IdAreaAcademica,
-                filtro.IdEntidadAcademica);
+                filtro.IdEntidadAcademica,
+                filtro.Busqueda);
 
-            var coordinadoresDgaa = await _coordinadorDgaaRepository.ObtenerPorFiltrosAsync(
-                filtro.IdAreaAcademica);
+            var coordinadoresDgaa = await _coordinadorDgaaRepository.BuscarConFiltros(
+                filtro.IdAreaAcademica,
+                filtro.Busqueda);
 
             var listaCoordinadoresEa = coordinadoresEa.Select(MapearCoordinadorEaAListaDTO);
             var listaCoordinadoresDgaa = coordinadoresDgaa.Select(MapearCoordinadorDgaaAListaDTO);

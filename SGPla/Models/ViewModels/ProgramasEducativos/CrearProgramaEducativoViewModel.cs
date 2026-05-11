@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using SGPla.Models.Components;
 using System.ComponentModel.DataAnnotations;
 
@@ -14,7 +15,18 @@ namespace SGPla.Models.ViewModels.ProgramasEducativos
         //public string Campus { get; set; }
 
         [Required(ErrorMessage = "Debe seleccionar una entidad académica")]
-        public int IdEntidadAcademica { get; set; } 
+        public int IdEntidadAcademica { get; set; }
+
+        public int? IdAreaAcademica { get; set; }
+
+        public string? Region { get; set; }
+
+        [Required(ErrorMessage = "El campus es obligatorio")]
+
+        public string Campus { get; set; } 
+
+        public int IdProgramaEducativo { get; set; }
+
 
 
         // 🔹 Combos (para la vista)
@@ -26,6 +38,9 @@ namespace SGPla.Models.ViewModels.ProgramasEducativos
 
         [ValidateNever]
         public List<OptionModel> Entidades { get; set; }
+
+        //[ValidateNever]
+       // public List<OptionModel> ListaCampus { get; set; } 
 
     }
 }

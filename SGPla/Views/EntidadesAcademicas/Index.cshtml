@@ -1,0 +1,103 @@
+﻿@using SGPla.Models.Componentes
+@using SGPla.Models.ViewModels.EntidadesAcademicas
+
+@model IndexViewModel
+@{
+    Layout = "_LayoutSuperUsuario";
+    ViewData["Title"] = "Entidades Académicas"; 
+}
+
+<div>
+    <form method="get" action="@Url.Action("Index", "EntidadesAcademicas")">
+        <!-- Filtros -->
+        <div style="display:inline-flex; gap:10px; padding-bottom:20px;">
+            @await Component.InvokeAsync("SelectField", new SelectFieldModel
+            {
+                Label = "Región",
+                Options = Model.Regiones,
+                Name = "region"
+            })
+            @await Component.InvokeAsync("SelectField", new SelectFieldModel
+            {
+                Label = "Área Académica",
+                Options = Model.Areas,
+                Name = "idAreaAcademica"
+            })
+        </div>
+        <!-- Acciones -->
+        <div style="display:flex; gap:10px; padding-bottom:20px; align-items:center; justify-content:space-between">
+            <!--Barra de Búsqueda-->
+            @await Component.InvokeAsync("Buscador", new BuscadorModel
+            {
+                Name = "busqueda",
+                Placeholder = "Buscar entidad académica...",
+                Action = Url.Action("Index", "EntidadesAcademicas"),
+                Method = "get",
+                Value = Context.Request.Query["busqueda"]
+            })
+            <!--Botón Crear Entidad Académica-->
+            <a href="@Url.Action("CrearEntidadAcademica", "EntidadesAcademicas")" style="display: inline-block; text-decoration: none;">
+                @await Component.InvokeAsync("Boton", new
+                {
+                    Accion = "Agregar",
+                    Texto = "Crear Entidad Académica"
+                })
+            </a>
+        </div>
+    </form>
+
+    <!-- Tabla de Resultados -->
+    <div style="display:flex; gap:10px; padding-top:0px;justify-content:left">
+        @await Component.InvokeAsync("Table", Model.Table)
+
+        
+    </div>
+
+    <!-- Ventanas Modales -->
+    <div>
+        <!-- Ventana de Confirmación eliminación -->
+        <form id="formEliminarEntidadAcademica" method="post" action="@Url.Action("EliminarEntidadAcademica", "EntidadesAcademicas")">
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" name="id" id="deleteEntidadId" />
+
+            @await Component.InvokeAsync("Modal", new ModalModel
+            {
+                Id = "modalConfirmacion",
+                Tipo = "confirm",
+                Titulo = "Confirmación",
+                Mensaje = "¿Estás seguro de que deseas eliminar esta entidad académica?",
+                OnConfirm = "confirmarModal()",
+                OnCancel = "cerrarModal('modalConfirmacion')",
+            })
+
+        </form>
+
+        <!-- Ventana de éxito al realizar una acción -->
+        @if (TempData["Success"] != null)
+        {
+            @await Component.InvokeAsync("Toast", new ToastModel
+            {
+                Id = "toastSuccess",
+                Titulo = "Éxito",
+                Mensaje = TempData["Success"]!.ToString(),
+                Tipo = "success"
+            })
+
+            <script>
+                        document.addEventListener("DOMContentLoaded", function() {
+                            mostrarToast("toastSuccess");
+                        });
+            </script>
+        }
+        
+    </div>
+
+</div>
+
+<script>
+    function eliminarEntidadAcademica(id) {
+        document.getElementById("deleteEntidadId").value = id;
+        document.getElementById("formEliminarEntidadAcademica").submit(); 
+    }
+</script>

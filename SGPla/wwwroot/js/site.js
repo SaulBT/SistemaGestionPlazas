@@ -1,4 +1,37 @@
-﻿// Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
-// for details on configuring this project to bundle and minify static web assets.
+﻿
+/* * * * * * Componentes * * * * * */
 
-// Write your JavaScript code.
+// Modal
+
+function abrirModal(id) {
+    document.getElementById(id).classList.add("show");
+}
+
+function cerrarModal(id) {
+    document.getElementById(id).classList.remove("show");
+}
+
+// Modal Confirmacion
+let accionConfirmacion = null;
+
+function abrirModalConfirmacion(mensaje, onConfirm) {
+
+    document.querySelector("#modalConfirmacion .modal-body p")
+        .innerText = mensaje;
+
+    accionConfirmacion = onConfirm;
+
+    abrirModal("modalConfirmacion");
+}
+
+function confirmarModal() {
+
+    if (accionConfirmacion) {
+        accionConfirmacion();
+    }
+
+    cerrarModal("modalConfirmacion");
+}
+
+
+

@@ -1,12 +1,13 @@
 ﻿.search-field {
     display: flex;
     align-items: center;
-    width: var(--width-fields);
+    
     gap: 8px;
 }
 
 .search-input {
     flex: 1;
+    width: var(--width-fields);
 }
 
 /* Botón */

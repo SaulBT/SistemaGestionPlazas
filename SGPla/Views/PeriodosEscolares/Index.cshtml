@@ -1,0 +1,248 @@
+﻿@using SGPla.Models.ViewModels.PeriodosEscolares
+@model IndexViewModel
+
+@{
+	Layout = "_LayoutSuperUsuario";
+	ViewData["Title"] = "Periodos Escolares";
+}
+
+<div>
+	<!--Acciones-->
+	<form method="get" action="@Url.Action("Index", "PeriodosEscolares")">
+
+		<!-- 🔹 FILA 1: COMBOBOX -->
+		<div style="display:flex; gap:10px; padding-bottom:20px;">
+			@await Component.InvokeAsync("SelectField", new SelectFieldModel
+			{
+				Label = "Periodo",
+				Name = "periodo",
+				Options = new List<OptionModel>
+			{
+				new OptionModel { Value = "Febrero-Julio", Text = "Febrero-Julio" },
+				new OptionModel { Value = "Agosto-Enero", Text = "Agosto-Enero" }
+			}
+			})
+		</div>
+
+		<!-- 🔹 FILA 2: BUSCADOR + BOTÓN -->
+		<div style="display:flex; justify-content:space-between; align-items:center;">
+
+			<!-- izquierda -->
+			<div>
+				@await Component.InvokeAsync("Buscador", new BuscadorModel
+				{
+					Name = "anio",
+					Placeholder = "Buscar por año...",
+					Value = Context.Request.Query["anio"]
+				})
+			</div>
+
+			<!-- derecha -->
+			<div>
+				@await Component.InvokeAsync("Boton", new
+				{
+					Accion = "Agregar",
+					Texto = "Agregar Periodo Escolar",
+					OnClick = "abrirModalCrearPeriodoEscolar()"
+				})
+			</div>
+
+		</div>
+
+	</form>
+
+
+	<!-- Tabla -->
+	<div style="display:flex; gap:10px; padding-top:20px; justify-content:left">
+		@await Component.InvokeAsync("Table", Model.Table)
+	</div>
+
+	<!-- ========================= -->
+	<!-- MODALES -->
+	<!-- ========================= -->
+	<div>
+
+		<!-- Modal Crear / Editar -->
+		<form id="formPeriodoEscolar" method="post">
+
+			@Html.AntiForgeryToken()
+            
+			@await Component.InvokeAsync("ModalFormulario", new ModalFormularioModel
+			{
+				Id = "modalPeriodoEscolar",
+				Titulo = "Periodo Escolar",
+				PartialView = "_FormularioPeriodoEscolar",
+				PartialModel = Model.Formulario,
+				OnConfirm = "submitFormPeriodoEscolar()",
+				OnCancel = "cerrarModal('modalPeriodoEscolar')"
+			})
+
+		</form>
+
+
+		<!-- Modal eliminar -->
+		<form id="formEliminarPeriodoEscolar"
+			  method="post"
+			  action="@Url.Action("Eliminar", "PeriodosEscolares")">
+
+			@Html.AntiForgeryToken()
+
+			<input type="hidden"
+				   name="id"
+				   id="deletePeriodoEscolarId" />
+
+			@await Component.InvokeAsync("Modal", new ModalModel
+			{
+				Id = "modalConfirmacion",
+				Tipo = "confirm",
+				Titulo = "Confirmación",
+				Mensaje = "¿Deseas eliminar este periodo?",
+				OnConfirm = "confirmarModal()",
+				OnCancel = "cerrarModal('modalConfirmacion')"
+			})
+
+		</form>
+
+		<!-- Modal éxito -->
+		@if (TempData["Success"] != null)
+		{
+			@await Component.InvokeAsync("Modal", new ModalModel
+			{
+				Id = "modalSuccess",
+				Tipo = "info",
+				Titulo = "Éxito",
+				Mensaje = TempData["Success"]!.ToString(),
+				OnConfirm = "cerrarModal('modalSuccess')"
+			})
+
+			<script>
+						document.addEventListener("DOMContentLoaded", function () {
+							abrirModal("modalSuccess");
+						});
+			</script>
+		}
+
+		<!-- Modal error -->
+		@if (TempData["Error"] != null)
+		{
+			@await Component.InvokeAsync("Modal", new ModalModel
+			{
+				Id = "modalError",
+				Tipo = "info",
+				Titulo = "Error",
+				Mensaje = TempData["Error"]!.ToString(),
+				OnConfirm = "cerrarModal('modalError')"
+			})
+
+			<script>
+						document.addEventListener("DOMContentLoaded", function () {
+							abrirModal("modalError");
+						});
+			</script>
+		}
+
+	</div>
+
+	@if (!ViewData.ModelState.IsValid)
+	{
+		<script>
+
+				document.addEventListener("DOMContentLoaded", function () {
+
+					document.getElementById("formPeriodoEscolar").action =
+						"@Url.Action("Crear", "PeriodosEscolares")";
+
+					abrirModal("modalPeriodoEscolar");
+
+					history.replaceState(
+						null,
+						"",
+						"@Url.Action("Index", "PeriodosEscolares")"
+					);
+
+				});
+
+		</script>
+	}
+</div>
+
+
+                
+<script>
+
+	// =========================
+	// CREAR
+	// =========================
+	function abrirModalCrearPeriodoEscolar() {
+
+		limpiarErroresFormularioPeriodoEscolar();
+
+		document.getElementById("formPeriodoEscolar").action =
+			"@Url.Action("Crear", "PeriodosEscolares")";
+
+		document.getElementById("IdPeriodoEscolar").value = "";
+		document.getElementById("Anio").value = "";
+		document.getElementById("Periodo").value = "";
+
+		abrirModal("modalPeriodoEscolar");
+	}
+
+	// =========================
+	// EDITAR
+	// =========================
+	function abrirModalEditarPeriodoEscolar(id, anio, periodo) {
+
+		limpiarErroresFormularioPeriodoEscolar();
+
+		document.getElementById("formPeriodoEscolar").action =
+			"@Url.Action("Editar", "PeriodosEscolares")";
+
+		document.getElementById("IdPeriodoEscolar").value = id;
+		document.getElementById("Anio").value = anio;
+		document.getElementById("Periodo").value = periodo;
+
+		abrirModal("modalPeriodoEscolar");
+	}
+
+	// =========================
+	// SUBMIT FORM
+	// =========================
+	function submitFormPeriodoEscolar() {
+		document.getElementById("formPeriodoEscolar").submit();
+	}
+
+	function limpiarErroresFormularioPeriodoEscolar() {
+
+		document.querySelectorAll(".input-error-text")
+			.forEach(e => {
+				e.innerText = "";
+			});
+
+	}
+
+</script>
+
+<script>
+	function eliminarPeriodoEscolar(id) {
+
+		document.getElementById("deletePeriodoEscolarId").value = id;
+
+		document.getElementById("formEliminarPeriodoEscolar").submit();
+	}
+</script>
+
+<script>
+	document.addEventListener("DOMContentLoaded", function () {
+
+		const form = document.querySelector("form");
+		const periodo = document.querySelector("select[name='periodo']");
+
+		if (periodo) {
+			periodo.addEventListener("change", function () {
+				form.submit();
+			});
+		}
+
+	});
+</script>
+

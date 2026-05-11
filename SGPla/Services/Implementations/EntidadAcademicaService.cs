@@ -26,7 +26,7 @@ namespace SGPla.Services.Implementations
             string nombre = $"{dto.Clave}-{dto.Nombre}";
             var entidad = new EntidadAcademica
             {
-                IdAreaAcademica = dto.IdAreaAcademica,
+                IdAreaAcademica = dto.IdAreaAcademica.Value,
                 Nombre = nombre,
                 CalleNumero = dto.CalleNumero,
                 Colonia = dto.Colonia,
@@ -140,7 +140,7 @@ namespace SGPla.Services.Implementations
                 Nombre = entidad.Nombre,
                 Domicilio = domicilio,
                 Telefono = telefono,
-                NombreEntidadAcademica = entidad.IdAreaAcademicaNavigation.Nombre,
+                NombreAreaAcademica = entidad.IdAreaAcademicaNavigation.Nombre,
                 Region = entidad.Region
             };
         }

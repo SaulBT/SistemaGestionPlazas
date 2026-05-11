@@ -62,7 +62,7 @@
                 </a>
 
                 <!-- Direcciones de Área Académica -->
-                <a href="/DireccionesAA" class="menu-item @(IsActiveController("DireccionesAA"))">
+                <a href="/DireccionesAreaAcademica" class="menu-item @(IsActiveController("DireccionesAreaAcademica"))">
                     <span>Direcciones de Área Académica</span>
                 </a>
 
@@ -76,8 +76,8 @@
                     <span>Programas Educativos</span>
                 </a>
 
-                <!-- Periodos Escolares -->
-                <a href="/PlanesEstudio" class="menu-item @(IsActiveController("PlanesEstudio"))">
+                <!-- Planes de Estudios -->
+                <a href="/PlanesEstudios" class="menu-item @(IsActiveController("PlanesEstudios"))">
                     <span>Planes de Estudio</span>
                 </a>
 
@@ -92,10 +92,10 @@
         <main class="contenido-principal">
             <div class="contenido-pagina">
                 @{
-                    var currentController = ViewContext.RouteData.Values["Controller"]?.ToString();
-                    var currentAction = ViewContext.RouteData.Values["Action"]?.ToString();
+                    var controller = ViewContext.RouteData.Values["Controller"]?.ToString();
+                    var action = ViewContext.RouteData.Values["Action"]?.ToString();
 
-                    var esInicio = currentController == "Home" && currentAction == "Index";
+                    var esInicio = controller == "Home" && action == "Index";
                 }
                 <!-- CABECERA DINÁMICA -->
                 <div class="cabecera-seccion mb-3">
@@ -103,6 +103,8 @@
                     <h2 class="titulo-seccion">
                         @ViewData["Title"]
                     </h2>
+
+                    
 
                     @if (!esInicio)
                     {
@@ -113,16 +115,19 @@
                                     <a href="/">Inicio</a>
                                 </li>
 
-                                @if (ViewData["SeccionPadre"] != null)
+                                @if (!string.IsNullOrEmpty(controller))
                                 {
                                     <li class="breadcrumb-item">
-                                        @ViewData["SeccionPadre"]
+                                        @Humanize(controller)
                                     </li>
                                 }
 
-                                <li class="breadcrumb-item active">
-                                    @ViewData["Title"]
-                                </li>
+                                @if (!string.IsNullOrEmpty(action) && action != "Index")
+                                {
+                                    <li class="breadcrumb-item active">
+                                        @Humanize(action)
+                                    </li>
+                                }
 
                             </ol>
                         </nav>
@@ -150,5 +155,16 @@
     {
         var currentController = ViewContext.RouteData.Values["Controller"]?.ToString();
         return currentController == controllerName ? "active" : "";
+    }
+
+    private string Humanize(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return text;
+
+        // Separar camel case: VerUsuario -> Ver Usuario
+        var result = System.Text.RegularExpressions.Regex
+            .Replace(text, "([a-z])([A-Z])", "$1 $2");
+
+        return result;
     }
 }

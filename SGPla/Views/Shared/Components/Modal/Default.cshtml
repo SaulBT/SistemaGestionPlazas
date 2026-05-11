@@ -1,0 +1,47 @@
+﻿@model ModalModel
+
+<div class="modal-overlay" id="@Model.Id">
+
+    <div class="modal-container">
+
+        <!-- Header -->
+        <div class="modal-header">
+            <h3>@Model.Titulo</h3>
+        </div>
+
+        <!-- Body -->
+        <div class="modal-body">
+
+            @if (!string.IsNullOrEmpty(Model.Body))
+            {
+                @Html.Raw(Model.Body)
+            }
+            else
+            {
+                <p id="@Model.Id-mensaje">@Model.Mensaje</p>
+            }
+
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-footer">
+
+            @if (Model.Tipo == "confirm")
+            {
+                @await Component.InvokeAsync("Boton", new
+                {
+                    Accion = "Cancelar",
+                    OnClick = Model.OnCancel
+                })
+            }
+            @await Component.InvokeAsync("Boton", new
+            {
+                Accion = Model.Accion,
+                OnClick = Model.OnConfirm
+            })
+
+        </div>
+
+    </div>
+
+</div>

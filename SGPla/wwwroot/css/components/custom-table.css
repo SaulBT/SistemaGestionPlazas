@@ -1,0 +1,47 @@
+﻿.custom-table {
+    width: 100%;
+    border-collapse: collapse; 
+}
+
+    /* Cabecera */
+    .custom-table th {
+        background-color: var(--AzulPrimario); 
+        color: white;
+        font-weight: bold;
+        text-align: left;
+        padding: 12px;
+    }
+
+    /* Celdas */
+    .custom-table td {
+        padding: 10px;
+        border-bottom: 1px solid #ddd; /* línea horizontal */
+    }
+
+    /* 🔥 LÍNEAS ENTRE COLUMNAS */
+    .custom-table th,
+    .custom-table td {
+        border-right: 1px solid #ddd;
+    }
+
+        /* ❌ quitar la última línea derecha */
+        .custom-table th:last-child,
+        .custom-table td:last-child {
+            border-right: none;
+        }
+
+    /* filas alternadas (opcional pero recomendado) */
+    .custom-table tbody tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+    /* hover (UX pro) */
+    .custom-table tbody tr:hover {
+        background-color: #f1f5f9;
+    }
+
+/* acciones */
+.table-actions {
+    display: flex;
+    gap: 6px;
+}

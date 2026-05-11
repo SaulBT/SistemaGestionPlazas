@@ -1,0 +1,214 @@
+﻿@using SGPla.Models.ViewModels.EntidadesAcademicas
+
+@model CrearEntidadAcademicaViewModel
+@{
+    ViewData["Title"] = "Editar Entidad Académica";
+}
+
+<!-- Campos -->
+<form method="post" action="@Url.Action("EditarEntidadAcademica", "EntidadesAcademicas")">
+    @Html.AntiForgeryToken()
+
+    <input type="hidden" name="IdEntidadAcademica" value="@Model.IdEntidadAcademica" />
+
+    <div style="padding-bottom:var(--padding-end); ">
+        <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:flex-start; justify-content:space-evenly;">
+            <div style="width:100%">
+                @await Component.InvokeAsync("InputField", new InputFieldModel
+                {
+                    Id = "clave",
+                    Name = "clave",
+                    Label = "Clave:",
+                    Valor = Model.Clave,
+                    Flexible = true,
+                    Error = ViewData.ModelState["clave"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                    MaximoCaracteres = 5
+                })
+            </div>
+            
+            <div style="width:300%">
+                @await Component.InvokeAsync("InputField", new InputFieldModel
+                {
+                    Id = "nombre",
+                    Name = "nombre",
+                    Label = "Nombre",
+                    Valor = Model.Nombre,
+                    Flexible = true,
+                    Error = ViewData.ModelState["nombre"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                    MaximoCaracteres = 94
+                })
+            </div>
+        </div>
+
+        <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:flex-start; justify-content:space-evenly;">
+            <div style="width:200%">
+                @await Component.InvokeAsync("InputField", new InputFieldModel
+                {
+                    Id = "calleNumero",
+                    Name = "calleNumero",
+                    Label = "Domicilio (Calle y Número):",
+                    Valor = Model.CalleNumero,
+                    Flexible = true,
+                    Error = ViewData.ModelState["calleNumero"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                    MaximoCaracteres = 150
+                })
+            </div>
+            
+            <div style="width:100%">
+                @await Component.InvokeAsync("InputField", new InputFieldModel
+                {
+                    Id = "colonia",
+                    Name = "colonia",
+                    Label = "Colonia:",
+                    Valor = Model.Colonia,
+                    Flexible = true,
+                    Error = ViewData.ModelState["colonia"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                    MaximoCaracteres = 100
+                })
+            </div>
+            
+            <div style="width:50%">
+                @await Component.InvokeAsync("InputField", new InputFieldModel
+                {
+                    Id = "cp",
+                    Name = "cp",
+                    Label = "C.P. :",
+                    Valor = Model.Cp,
+                    Flexible = true,
+                    Error = ViewData.ModelState["cp"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                    MaximoCaracteres = 5
+                })
+            </div>
+            
+            <div style="width:100%">
+                @await Component.InvokeAsync("InputField", new InputFieldModel
+                {
+                    Id = "municipio",
+                    Name = "municipio",
+                    Label = "Municipio:",
+                    Valor = Model.Municipio,
+                    Flexible = true,
+                    Error = ViewData.ModelState["municipio"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                    MaximoCaracteres = 100
+                })
+            </div>
+            
+        </div>
+
+        <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:flex-start; justify-content:space-evenly;">
+            <div style="width:100%">
+                @await Component.InvokeAsync("InputField", new InputFieldModel
+                {
+                    Id = "telefono",
+                    Name = "telefono",
+                    Label = "Teléfono:",
+                    Valor = Model.Telefono,
+                    Flexible = true,
+                    Error = ViewData.ModelState["telefono"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                    MaximoCaracteres = 30
+                })
+            </div>
+
+            <div style="width:100%">
+                @await Component.InvokeAsync("InputField", new InputFieldModel
+                {
+                    Id = "conmutador",
+                    Name = "conmutador",
+                    Label = "Conmutador:",
+                    Valor = Model.Conmutador,
+                    Flexible = true,
+                    Error = ViewData.ModelState["conmutador"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                    MaximoCaracteres = 20
+                })
+            </div>
+        
+            <div style="width:100%">
+                @await Component.InvokeAsync("InputField", new InputFieldModel
+                {
+                    Id = "extension",
+                    Name = "extension",
+                    Label = "Extensión:",
+                    Valor = Model.Extension,
+                    Flexible = true,
+                    Error = ViewData.ModelState["extension"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                    MaximoCaracteres = 5
+                })
+            </div>
+
+            <div style="width:100%">
+                @await Component.InvokeAsync("InputField", new InputFieldModel
+                {
+                    Id = "fax",
+                    Name = "fax",
+                    Label = "Fax:",
+                    Valor = Model.Fax,
+                    Flexible = true,
+                    Error = ViewData.ModelState["fax"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                    MaximoCaracteres = 20
+                })
+            </div>
+        </div>
+
+        <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:flex-start; justify-content:space-evenly; width:100%;">
+            <div id="contenedorArea" style="flex:1 1 0; min-width:0;">
+                @await Component.InvokeAsync("SelectField", new SelectFieldModel
+                {
+                    Label = "Área Académica",
+                    Options = Model.Areas,
+                    Name = "IdAreaAcademica",
+                    SelectedValue = Model.IdAreaAcademica?.ToString(),
+                    Flexible = true,
+                    Error = ViewData.ModelState["areas"]?.Errors.FirstOrDefault()?.ErrorMessage
+                    
+                })
+            </div>
+
+            <div id="contenedorRegion" style="flex:1 1 0; min-width:0;">
+                @await Component.InvokeAsync("SelectField", new SelectFieldModel
+                {
+                    Label = "Región",
+                    Options = Model.Regiones,
+                    Name = "Region",
+                    SelectedValue = Model.Region?.ToString(),
+                    Flexible = true,
+                    Error = ViewData.ModelState["regiones"]?.Errors.FirstOrDefault()?.ErrorMessage
+                })
+            </div>
+        </div>
+    </div>
+
+    <!-- Botones -->
+    <div style="display:flex; justify-content:flex-end; gap:var(--button-gap)">
+        <a href="@Url.Action("Index", "EntidadesAcademicas")" style="display: inline-block; text-decoration: none;">
+            @await Component.InvokeAsync("Boton", new
+            {
+                Accion = "Cancelar"
+            })
+        </a>
+        @await Component.InvokeAsync("Boton", new
+        {
+            Accion = "Guardar",
+            ButtonType = "submit"
+        })
+    </div>
+
+</form>
+
+<!-- Ventana de error al realizar una acción -->
+@if (TempData["Error"] != null)
+{
+    @await Component.InvokeAsync("Modal", new ModalModel
+    {
+        Id = "modalError",
+        Tipo = "info",
+        Titulo = "Error",
+        Mensaje = TempData["Error"]!.ToString(),
+        OnConfirm = "cerrarModal('modalError')"
+    })
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            abrirModal("modalError");
+        });
+    </script>
+}

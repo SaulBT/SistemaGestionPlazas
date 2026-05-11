@@ -8,7 +8,7 @@ namespace SGPla.Repositories.Interfaces
         Task<bool> ExisteCorreoAsync(string correo);
         Task<CoordinadorDgaa?> ObtenerPorIdAsync(int idCoordinadorDgaa);
         Task<List<CoordinadorDgaa>> ObtenerTodosAsync();
-        Task<List<CoordinadorDgaa>> ObtenerPorFiltrosAsync(int? idAreaAcademica);
+        Task<List<CoordinadorDgaa>> BuscarConFiltros(int? idAreaAcademica, string? busqueda);
         Task ActualizarAsync(CoordinadorDgaa coordinadorDgaa);
         Task EliminarAsync(CoordinadorDgaa coordinadorDgaa);
     }

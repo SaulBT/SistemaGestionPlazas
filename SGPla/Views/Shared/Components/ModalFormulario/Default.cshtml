@@ -1,0 +1,41 @@
+﻿@model ModalFormularioModel
+
+<div class="modal-overlay" id="@Model.Id">
+
+    <div class="modal-container">
+
+        <!-- Header -->
+        <div class="modal-header">
+            <h3>@Model.Titulo</h3>
+        </div>
+
+        <!-- Body -->
+        <div class="modal-body", style="gap:var(--button-gap); display:flex; flex-direction:column">
+
+            @await Html.PartialAsync(
+                Model.PartialView,
+                Model.PartialModel
+            )
+
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-footer">
+
+            @await Component.InvokeAsync("Boton", new
+            {
+                Accion = "Cancelar",
+                OnClick = Model.OnCancel
+            })
+
+            @await Component.InvokeAsync("Boton", new
+            {
+                Accion = Model.Accion,
+                OnClick = Model.OnConfirm
+            })
+
+        </div>
+
+    </div>
+
+</div>

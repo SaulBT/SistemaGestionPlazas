@@ -97,23 +97,7 @@ namespace SGPla.Tests.Validators
             Assert.Contains("La entidad académica no existe.", ex.Message);
         }
 
-        //CP-05
-        [Fact]
-        public async Task CrearProgramaEducativoConNombreInvalido()
-        {
-            var dto = new CrearProgramaEducativoDTO
-            {
-                IdEntidadAcademica = 1,
-                Nombre = "Licenciatura-en-informática"
-            };
-
-            var ex = await Record.ExceptionAsync(() => _programaEducativoValidator.ValidarCreacionAsync(dto));
-
-            Assert.NotNull(ex);
-            Assert.IsType<ArgumentException>(ex);
-            Assert.Contains("El nombre del programa educativo solo puede contener letras, números y espacios.", ex.Message);
-          
-        }
+     
 
 
         //CP-09

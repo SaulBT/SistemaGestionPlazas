@@ -74,8 +74,7 @@
 		<form id="formEliminarProgramaEducativo" method="post" action="@Url.Action("EliminarProgramaEducativo", "ProgramasEducativos")">
 			@Html.AntiForgeryToken()
 
-			<input type="hidden" name="id" id="deleteUserId" />
-			<input type="hidden" name="rol" id="deleteUserRol" />
+			<input type="hidden" name="id" id="deleteProgramaEducativoId" />
 			@await Component.InvokeAsync("Modal", new ModalModel
 			{
 				Id = "modalConfirmacion",
@@ -161,7 +160,7 @@
 </script>
 
 <script>
-		function eliminarProgramaEducativo(id, rol) {
+		function eliminarProgramaEducativo(id) {
 
 		document.getElementById("deleteProgramaEducativoId").value = id;
 

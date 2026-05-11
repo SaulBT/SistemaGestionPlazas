@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using SGPla.Models;
+using SGPla.Models.Components;
 
 namespace SGPla.ViewComponents
 {

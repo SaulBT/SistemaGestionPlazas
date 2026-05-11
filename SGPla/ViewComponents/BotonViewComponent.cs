@@ -4,7 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 public class BotonViewComponent : ViewComponent
 {
     
-    public IViewComponentResult Invoke(string texto = "", string tipo = "", string accion = "", bool disabled = false, bool fondo = true)
+    public IViewComponentResult Invoke(string texto = "", string tipo = "", string accion = "", bool disabled = false, bool fondo = true, string buttonType = "button", string onClick = "")
     {
         var model = new BotonModel
         {
@@ -13,7 +13,9 @@ public class BotonViewComponent : ViewComponent
             Accion = accion.ToLower(),
             Disabled = disabled,
             Icono = "",
-            Fondo = fondo
+            Fondo = fondo,
+            ButtonType = buttonType,
+            OnClick = onClick
         };
         ConfigurarTipoAccion(model);
 
@@ -26,6 +28,7 @@ public class BotonViewComponent : ViewComponent
         if (model.Fondo)
         {
             string tipo = model.Tipo;
+            string texto = model.Texto;
             switch (model.Accion)
             {
                 //Botones con colores específicos según la acción
@@ -68,6 +71,7 @@ public class BotonViewComponent : ViewComponent
                     model.Tipo = "secundario";
                     model.Texto = "Buscar";
                     model.Icono = "bi bi-search";
+                    model.ButtonType = "submit";
                     break;
                 case "firmar":
                     model.Tipo = "secundario";
@@ -107,6 +111,10 @@ public class BotonViewComponent : ViewComponent
             {
                 model.Tipo = tipo;
             }
+            if (!texto.IsNullOrEmpty())
+            {
+                model.Texto = texto;
+            }
         } else
         {
             switch (model.Accion)
@@ -130,11 +138,11 @@ public class BotonViewComponent : ViewComponent
                     break;
                 case "programa educativo":
                 case "programa":
-                    model.Icono = "bi bi-journal-text";
+                    model.Icono = "bi bi-mortarboard-fill";
                     break;
                 case "plan de estudios":
                 case "plan":
-                    model.Icono = "bi bi-mortarboard-fill";
+                    model.Icono = "bi bi-journal-text";
                     break;
                 case "agregar":
                     model.Icono = "bi bi-plus-circle";

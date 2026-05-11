@@ -1,0 +1,196 @@
+﻿@model SGPla.Models.ViewModels.PlanesEstudios.CargarPlanEstudiosPaso1ViewModel
+
+@{
+    ViewData["Title"] = "Cargar Plan de Estudios";
+}
+
+<form method="get" action="@Url.Action("ProcesarArchivo", "PlanesEstudios")" enctype="multipart/form-data">
+    <div class="d-flex flex-column gap-3">
+        @await Component.InvokeAsync("SelectField", new SelectFieldModel
+        {
+            Label = "Región",
+            Options = Model.ListaRegiones,
+            Name = "region"
+        })
+
+        <div id="contenedorArea" style="display:none;">
+            @await Component.InvokeAsync("SelectField", new SelectFieldModel
+            {
+                Label = "Área Académica",
+                Options = Model.ListaAreas,
+                Name = "idAreaAcademica"
+            })
+        </div>
+
+        <div id="contenedorEntidad" style="display:none">
+            @await Component.InvokeAsync("SelectField", new SelectFieldModel
+            {
+                Label = "Entidad Académica",
+                Options = Model.ListaEntidades,
+                Name = "idEntidadAcademica"
+            })
+        </div>
+
+        <div id="contenedorPrograma" style="display:none;">
+            @await Component.InvokeAsync("SelectField", new SelectFieldModel
+            {
+                Label = "Programa Educativo",
+                Options = Model.ListaProgramas,
+                Name = "idProgramaEducativo"
+            })
+        </div>
+
+        <div style="display:inline;">
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "Plan",
+                Name = "plan",
+                Label = "Plan:",
+                Valor = Model.Plan,
+                Disabled = false,
+                Flexible = false
+            })
+        </div>
+
+        <div style="display:inline;">
+            @await Component.InvokeAsync("SelectField", new SelectFieldModel
+            {
+                Label = "Sistema",
+                Options = Model.ListaSistema,
+                Name = "modalidad"
+            })
+        </div>
+
+        <!-- BOTÓN -->
+        <div style="display:inline;">
+            @await Component.InvokeAsync("Boton", new
+            {
+                Accion = "cargar",
+                Texto = "Subir Archivo",
+                OnClick = "abrirModalArchivo()"
+            })
+        </div>
+    </div>
+
+    <!-- BOTONES -->
+    <div style="display:flex; justify-content:flex-end; gap:var(--button-gap)">
+        <a href="@Url.Action("Index", "Usuarios")" style="display: inline-block; text-decoration: none;">
+            @await Component.InvokeAsync("Boton", new
+            {
+                Accion = "Cancelar"
+            })
+        </a>
+        @await Component.InvokeAsync("Boton", new
+        {
+            Accion = "siguiente"
+        })
+    </div>
+
+    <!-- MODAL -->
+    <div>
+        @await Component.InvokeAsync("ModalArchivo", new ModalArchivoModel
+        {
+            Id = "modalArchivo",
+            OnConfirm = "cerrarModal('modalArchivo')",
+            OnCancel = "cerrarModal('modalArchivo')",
+            FormatosAceptados = ".xlsx",
+            TamanioMaximo = 20
+            //NombreArchivo = Model.Archivo.FileName
+        })
+    </div>
+</form>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+
+        const form = document.querySelector("form");
+
+        const region = document.getElementById("region");
+        const area = document.getElementById("idAreaAcademica");
+        const entidad = document.getElementById("idEntidadAcademica");
+        const programa = document.getElementById("idProgramaEducativo");
+        const sistema = document.getElementById("sistema");
+
+        const contenedorArea = document.getElementById("contenedorArea");
+        const contenedorEntidad = document.getElementById("contenedorEntidad");
+        const contenedorPrograma = document.getElementById("contenedorPrograma");
+
+        function toggleArea() {
+            if (!region || !contenedorArea) return;
+            if (!region.value) {
+                contenedorArea.style.display = "none";
+            } else {
+                contenedorArea.style.display = "inline";
+            }
+        }
+
+        function toggleEntidad() {
+            if (!area || !contenedorEntidad) return;
+
+            if (!area.value) {
+                contenedorEntidad.style.display = "none";
+            } else {
+                contenedorEntidad.style.display = "inline";
+            }
+        }
+
+        function togglePrograma() {
+            if (!area || !contenedorPrograma) return;
+
+            if (!entidad.value) {
+                contenedorPrograma.style.display = "none";
+            } else {
+                contenedorPrograma.style.display = "inline";
+            }
+        }
+
+        // Estado inicial
+        toggleArea();
+        toggleEntidad();
+        togglePrograma();
+
+        // Región cambia
+        if (region) {
+            region.addEventListener("change", function() {
+                
+                if (area) area.value = "";
+                toggleArea();
+                form.submit();
+            });
+        }
+
+        // Área cambia
+        if (area) {
+            area.addEventListener("change", function() {
+                if (entidad) entidad.value = "";
+                toggleEntidad();
+                form.submit();
+            });
+        }
+
+        // Entidad cambia
+        if (entidad) {
+            entidad.addEventListener("change", function() {
+                if (programa) programa.value = "";
+                togglePrograma();
+                form.submit();
+            });
+        }
+
+        // Programa cambia
+        if (programa) {
+            programa.addEventListener("change", function() {
+                form.submit();
+            })
+        }
+
+    });
+
+    function abrirModalArchivo() {
+        abrirModal("modalArchivo");
+    }
+</script>
+
+@section Scripts {
+    <script src="~/js/cargarArchivo.js"></script>
+}

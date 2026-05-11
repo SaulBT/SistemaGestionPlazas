@@ -1,0 +1,58 @@
+﻿@model TableModel
+
+<table class="custom-table">
+    
+    <thead>
+        <tr>
+            @foreach (var header in Model.Headers)
+            {
+                <th>@header</th>
+            }
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var row in Model.Rows)
+        {
+            <tr>
+                @foreach (var cell in row.Cells)
+                {
+                    <td>
+                        @if (cell.Actions != null && cell.Actions.Any())
+                        {
+                            <div class="table-actions">
+                                @foreach (var action in cell.Actions)
+                                {
+                                    @if (!action.OnClick.IsWhiteSpace())
+                                    {
+                                        @await Component.InvokeAsync("Boton", new
+                                        {
+                                            accion = action.Accion,
+                                            fondo = false,
+                                            onClick = action.OnClick
+                                        })
+                                    }
+                                    else
+                                    {
+                                        <a href="@action.Url">
+                                            @await Component.InvokeAsync("Boton", new
+                                            {
+                                                accion = action.Accion,
+                                                fondo = false
+                                            })
+                                        </a>
+                                    }
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            @cell.Value
+                        }
+                    </td>
+                }
+            </tr>
+        }
+    </tbody>
+
+</table>

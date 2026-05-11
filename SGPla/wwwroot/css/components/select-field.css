@@ -1,16 +1,36 @@
-﻿.select-wrapper {
-    position: relative;
-    width: var(--width-fields);
-}
-
+﻿/* ===== SELECT FIELD ===== */
 .select-field {
     display: flex;
     flex-direction: column;
-    width: var(--width-fields);
+    width: var(--width-fields); /* ← Igual que input-field */
     gap: var(--border-gap);
 }
 
-    .select-field .text-wrapper {
+    /* Modo flexible - se estira */
+    .select-field.flexible {
+        flex: 1 1 var(--width-fields); /* ← Igual que input-field */
+        width: auto;
+        min-width: 0;
+    }
+
+.select-field .text-wrapper {
+    font-weight: bold;
+    font-family: var(--labels-font-family);
+    font-size: var(--labels-font-size);
+    color: var(--color-text-default-default);
+}
+
+/* Modo no flexible - ya tiene width: var(--width-fields) del selector base */
+
+.select-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 100%; /* ← Ocupa todo el ancho del select-field */
+    gap: var(--border-gap);
+    position: relative;
+}
+
+    .select-wrapper .text-wrapper {
         font-weight: bold;
         font-family: var(--labels-font-family);
         font-size: var(--labels-font-size);
@@ -21,34 +41,58 @@
         font-family: var(--body-font-family);
         font-size: var(--body-font-size);
         color: var(--body);
-
         width: 100%;
         height: 44px;
         padding: 0 var(--padding-lg);
         padding-right: 40px; /* espacio para el ícono */
-
         background-color: var(--bg-white);
         border: 2px solid var(--border-default);
         border-radius: var(--border-radius);
         appearance: none;
         -webkit-appearance: none;
         -moz-appearance: none;
+        outline: none;
+        box-sizing: border-box;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
-        .select:required:invalid {
-            color: rgba(0, 0, 0, 0.4);
+
+        .select-wrapper .select:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
         }
 
-        .select option {
-            color: black;
-        }
+.select:required:invalid {
+    color: rgba(0, 0, 0, 0.4);
+}
 
-    /* Ícono */
-    .select-wrapper .select-icon {
-        position: absolute;
-        right: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        pointer-events: none; /* importante */
-        font-size: 14px;
-        color: #666;
+.select option {
+    color: black;
+}
+
+/* Ícono */
+.select-wrapper .select-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    font-size: 14px;
+    color: #666;
+}
+
+.select-error {
+    border: 2px solid #e53935;
+    background-color: #fff5f5;
+}
+
+    .select-error:focus {
+        outline: none;
+        border-color: #c62828;
+        box-shadow: 0 0 0 2px rgba(229, 57, 53, 0.2);
     }
+
+.select-error-text {
+    color: #e53935;
+    font-size: 12px;
+    margin-top: 4px;
+}

@@ -49,39 +49,32 @@ namespace SGPla.Repositories.Implementations
 
         public async Task<List<ProgramaEducativo>> ObtenerPorFiltroAsync(BuscarProgramaEducativoDTO filtro)
         {
-            var query = _context.ProgramaEducativo.AsQueryable();
-
-            query = query.Where(a =>
-                (string.IsNullOrEmpty(filtro.Nombre) || a.Nombre.Contains(filtro.Nombre)) &&
-                (!filtro.IdEntidadAcademica.HasValue || a.IdEntidadAcademica == filtro.IdEntidadAcademica) &&
-                (!filtro.IdAreaAcademica.HasValue ||
-                    (a.IdEntidadAcademicaNavigation != null &&
-                     a.IdEntidadAcademicaNavigation.IdAreaAcademica == filtro.IdAreaAcademica)) &&
-                (string.IsNullOrEmpty(filtro.Region) ||
-                    (a.IdEntidadAcademicaNavigation != null &&
-                     a.IdEntidadAcademicaNavigation.Region.Contains(filtro.Region)))
-            );
-
-            query = query.OrderBy(a => a.Nombre);
-
-            int pagina = filtro.Pagina <= 0 ? 1 : filtro.Pagina;
-            int cantidad = filtro.Cantidad <= 0 ? 10 : filtro.Cantidad;
-
-            int skip = (pagina - 1) * cantidad;
-
-            var resultados = await query
+            var lista = _context.ProgramaEducativo
+                .AsNoTracking()
                 .Include(p => p.IdEntidadAcademicaNavigation)
-                .ThenInclude(e => e.IdAreaAcademicaNavigation)
-                .Skip(skip)
-                .Take(cantidad)
-                .ToListAsync();
+                    .ThenInclude(e => e.IdAreaAcademicaNavigation)
+                .AsQueryable();
 
-            return resultados;
+            if (filtro.IdAreaAcademica.HasValue && filtro.IdAreaAcademica.Value > 0)
+                lista = lista.Where(a => a.IdEntidadAcademicaNavigation.IdAreaAcademica == filtro.IdAreaAcademica.Value);
+            if (filtro.IdEntidadAcademica.HasValue && filtro.IdEntidadAcademica.Value > 0)
+                lista = lista.Where(a => a.IdEntidadAcademica == filtro.IdEntidadAcademica.Value);
+            if (!string.IsNullOrWhiteSpace(filtro.Nombre))
+                lista = lista.Where(a => a.Nombre.Contains(filtro.Nombre.Trim()));
+
+            return lista
+                .OrderBy(a => a.Nombre)
+                .Take(filtro.Cantidad)
+                .ToList();
         }
 
         public async Task<ProgramaEducativo?> ObtenerPorIdAsync(int id)
         {
-            return await _context.ProgramaEducativo.FindAsync(id);
+            return await _context.ProgramaEducativo
+                .AsNoTracking()
+                .Include(p => p.IdEntidadAcademicaNavigation)
+                    .ThenInclude(e => e.IdAreaAcademicaNavigation)
+                .FirstOrDefaultAsync(p => p.IdProgramaEducativo == id);
         }
 
         public async Task<List<ProgramaEducativo>> ObtenerTodosAsync()

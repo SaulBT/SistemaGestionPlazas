@@ -1,0 +1,85 @@
+﻿@using SGPla.Models.ViewModels.DireccionesAreaAcademica
+@model IndexViewModel
+
+@{
+    Layout = "_LayoutSuperUsuario";
+    ViewData["Title"] = "Direcciones de Áreas Académicas"; 
+}
+
+<div>
+    <!-- Acciones -->
+    <div style="display:flex; gap:10px; padding-bottom:20px; align-items:center; justify-content:space-between">
+        <form>
+            <!-- Barra de búsqueda -->
+            @await Component.InvokeAsync("Buscador", new BuscadorModel
+            {
+                Name = "busqueda",
+                Placeholder = "Buscar dirección de área académica...",
+                Action = Url.Action("Index", "DireccionesAreaAcademica"),
+                Method = "get",
+                Value = Context.Request.Query["busqueda"]
+            })
+        </form>
+
+        
+        <!-- Botón agregar -->
+        <a href="@Url.Action("CrearDireccionAreaAcademica", "DireccionesAreaAcademica")" style="display: inline-block; text-decoration: none;">
+            @await Component.InvokeAsync("Boton", new
+            {
+                Accion = "Agregar",
+                Texto = "Agregar Dirección"
+            })
+        </a>
+    </div>
+
+    <!-- Tabla -->
+    <div style="display:flex; gap:10px; padding-top:0px; justify-content:left">
+        @await Component.InvokeAsync("Table", Model.Table)
+    </div>
+
+    <!-- Modales -->
+    <div>
+        <!-- Ventana de Confirmación eliminación  -->
+        <form id="formEliminarDireccionAreaAcademica" method="post" action="@Url.Action("EliminarDireccionAreaAcademica", "DireccionesAreaAcademica")">
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" name="id" id="idEliminarDireccionAreaAcademica" />
+            @await Component.InvokeAsync("Modal", new ModalModel
+            {
+                Id = "modalConfirmacion",
+                Tipo = "confirm",
+                Titulo = "Confirmación",
+                OnConfirm = "confirmarModal()",
+                OnCancel = "cerrarModal('modalConfirmacion')"
+            })
+        </form>
+
+        <!-- Ventana de éxito al realizar una acción -->
+        @if (TempData["Success"] != null)
+        {
+            @await Component.InvokeAsync("Modal", new ModalModel
+            {
+                Id = "modalSuccess",
+                Tipo = "info",
+                Titulo = "Éxito",
+                Mensaje = TempData["Success"]!.ToString(),
+                OnConfirm = "cerrarModal('modalSuccess')"
+            })
+
+            <script>
+                        document.addEventListener("DOMContentLoaded", function() {
+                            abrirModal("modalSuccess");
+                        });
+            </script>
+        }
+    </div>
+</div>
+
+<script>
+    function eliminarDireccionAreaAcademica(id) {
+
+        document.getElementById("idEliminarDireccionAreaAcademica").value = id;
+
+        document.getElementById("formEliminarDireccionAreaAcademica").submit();
+    }
+</script>

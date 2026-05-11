@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using SGPla.Models;
+using SGPla.Models.Components;
 
 namespace SGPla.ViewComponents
 {
@@ -7,7 +7,23 @@ namespace SGPla.ViewComponents
     {
         public IViewComponentResult Invoke(SelectFieldModel model)
         {
-            model.Id ??= model.Name;
+            if (string.IsNullOrWhiteSpace(model.Id))
+            {
+                model.Id = model.Name;
+            }
+
+            var state = ViewContext.ViewData.ModelState[model.Name];
+
+            var selected = state?.AttemptedValue ?? model.SelectedValue;
+
+            foreach (var opt in model.Options)
+            {
+                opt.Selected = opt.Value == selected;
+            }
+
+            model.Error = state?.Errors.FirstOrDefault()?.ErrorMessage;
+
+
             return View(model);
         }
     }
