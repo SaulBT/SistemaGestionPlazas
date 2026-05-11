@@ -35,7 +35,7 @@ namespace SGPla.Controllers
             _logger = logger;
         }
 
-        //GET: Usuarios
+        //Menú
         public async Task<IActionResult> Index(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int? idProgramaEducativo)
         {
             var regionesCombo = generarCatalogoRegiones(region);
@@ -148,7 +148,7 @@ namespace SGPla.Controllers
             }
         }
 
-        //GET planesEstudios/verPlanEstudio
+        //Ver Plan de Estudios
         public async Task<IActionResult> VerPlanEstudios(int id)
         {
             if (id == 0)
@@ -206,9 +206,17 @@ namespace SGPla.Controllers
             };
         }
         
-        //GET ProcesarArchivo
-        public async Task<IActionResult> ProcesarArchivo(string? region, int? idAreaAcademica, int? idEntidadAcademica, int? idProgramaEducativo, string? plan, string? modalidad)
+        //Paso 1
+        public async Task<IActionResult> CargarPlanPaso1(CargarPlanPaso1ViewModel modelo)
         {
+            Console.WriteLine("Archivo: " + modelo.Archivo?.Name);
+            var region = modelo.Region;
+            var plan = modelo.Plan;
+            var modalidad = modelo.Sistema;
+            var idAreaAcademica = modelo.Area;
+            var idEntidadAcademica = modelo.Entidad;
+            var idProgramaEducativo = modelo.Programa;
+
             var regionesCombo = generarCatalogoRegiones(region);
             var areasCombo = new List<OptionModel>();
             var entidadesCombo = new List<OptionModel>();
@@ -238,13 +246,14 @@ namespace SGPla.Controllers
                 idProgramaEducativo = null;
             }
 
-            return View(new CargarPlanEstudiosPaso1ViewModel
+            return View(new CargarPlanPaso1ViewModel
             {
-                RegionSeleccionada = region,
-                AreaSeleccionada = idAreaAcademica,
-                EntidadSeleccionada = idEntidadAcademica,
-                ProgramaSeleccionado = idProgramaEducativo,
+                Region = region,
+                Area = idAreaAcademica,
+                Entidad = idEntidadAcademica,
+                Programa = idProgramaEducativo,
                 Plan = nombre,
+                Archivo = modelo.Archivo,
                 
                 ListaRegiones = regionesCombo,
                 ListaAreas = areasCombo,
@@ -280,6 +289,15 @@ namespace SGPla.Controllers
                 .ToList();
         }
 
+        [HttpGet]
+        public async Task<JsonResult> ObtenerAreasAsync()
+        {
+            var areas =
+                await generarCatalogoAreasAsync(null);
+
+            return Json(areas);
+        }
+
         private async Task<List<OptionModel>> generarCatalogoEntidadesAsync(int idAreaAcademica, string region, int? idEntidadAcademica)
         {
             var filtros = new FiltroEntidadAcademicaDTO
@@ -298,6 +316,15 @@ namespace SGPla.Controllers
                 Selected = idEntidadAcademica.HasValue &&
                     e.IdEntidadAcademica == idEntidadAcademica
             }).ToList();
+        }
+
+        [HttpGet]
+        public async Task<JsonResult> ObtenerEntidadesAsync(int idAreaAcademica, string region)
+        {
+            var entidades =
+                await generarCatalogoEntidadesAsync(idAreaAcademica, region, 1);
+
+            return Json(entidades);
         }
 
         private async Task<List<OptionModel>> generarCatalogoProgramasAsync(int idAreaAcademica, string region, int idEntidadAcademica, int? idProgramaEducativo)
@@ -320,6 +347,15 @@ namespace SGPla.Controllers
             }).ToList();
         }
 
+        [HttpGet]
+        public async Task<JsonResult> ObtenerProgramasAsync(int idAreaAcademica, string region, int idEntidadAcademica)
+        {
+            var entidades =
+                await generarCatalogoProgramasAsync(idAreaAcademica, region, idEntidadAcademica, null);
+
+            return Json(entidades);
+        }
+
         private List<OptionModel> generarCatalogoModalidades(string? modalidad)
         {
             return Constantes.Modalidades
@@ -330,6 +366,42 @@ namespace SGPla.Controllers
                     Selected = r == modalidad
                 })
                 .ToList();
+        }
+
+        //Procesar Archivo
+        public async Task ProcesarArchivoAsync(CargarPlanPaso1ViewModel modelo)
+        {
+            try
+            {
+                var archivo = modelo.Archivo;
+                var listaEE = _planEstudiosService.ProcesarArchivo(new ArchivoPlanEstudiosDTO
+                {
+                    Archivo = archivo.OpenReadStream(),
+                    NombreArchivo = archivo.Name
+                });
+
+                var area = await _areaAcademicaService.ObtenerPorIdAsync((int)modelo.Area);
+                var programa = await _programaEducativoService.ObtenerPorIdAsync((int)modelo.Programa);
+
+                await CargarPlanPaso2(new CargarPlanPaso2ViewModel
+                {
+                    Region = modelo.Region,
+                    Area = area.Nombre,
+                    ProgramaEducativo = programa.Nombre,
+                    Plan = modelo.Plan,
+                    Sistema = modelo.Sistema
+                });
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+
+        //Paso 2
+        public async Task<IActionResult> CargarPlanPaso2(CargarPlanPaso2ViewModel modelo)
+        {
+            return View(modelo);
         }
     }
 }
