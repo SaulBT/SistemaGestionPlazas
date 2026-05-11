@@ -7,7 +7,7 @@
     ViewData["Title"] = "Usuarios";
 }
 <div> 
-    <form method="get" action="@Url.Action("Index", "Usuarios")">
+    <form id="filtrosForm" method="get" action="@Url.Action("Index", "Usuarios")">
 
         <!-- Filtros -->
         <div style="display:inline-flex; gap:10px; padding-bottom:20px;">
@@ -47,6 +47,10 @@
                 Method = "get",
                 Value = Context.Request.Query["busqueda"]
             })
+            
+            <!-- Campos ocultos para paginación -->
+            <input type="hidden" name="pagina" id="paginaHidden" value="@Model.PaginaActual" />
+            <input type="hidden" name="cantidad" id="cantidadHidden" value="@Model.CantidadPorPagina" />
 
             <!--Botón Crear Usuario-->
             <a href="@Url.Action("CrearUsuario", "Usuarios")" style="display: inline-block; text-decoration: none;">

@@ -17,5 +17,7 @@ namespace SGPla.Services.Interfaces
         Task EditarAsync(EditarUsuarioDTO dto);
 
         Task EliminarAsync(ReferenciaUsuarioDTO dto);
+
+        Task<(List<ListaUsuarioDTO> Items, int TotalCount)> BuscarPorFiltroPaginadoAsync(FiltrosUsuarioDTO filtro);
     }
 }
