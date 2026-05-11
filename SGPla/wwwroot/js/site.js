@@ -40,14 +40,11 @@ function confirmarModal() {
     // =========================
     window.cambiarPagina = function(page, isPageSizeChange = false) {
 
+        window.cambiandoPagina = true;
+
         const form = document.getElementById('filtrosForm');
         const paginaHidden = document.getElementById('paginaHidden');
         const cantidadHidden = document.getElementById('cantidadHidden');
-
-        if (!form || !paginaHidden || !cantidadHidden) {
-            console.warn("No se encontraron elementos de paginación.");
-            return;
-        }
 
         if (isPageSizeChange) {
             cantidadHidden.value = page;
@@ -59,7 +56,54 @@ function confirmarModal() {
         form.submit();
     };
 
-    window.cambiarTamanioPagina = function(size) {
-        cambiarPagina(size, true);
-    };
+    // =========================
+    // FILTROS Y PAGINACIÓN GENÉRICA
+    // =========================
+    document.addEventListener("DOMContentLoaded", function() {
+
+        const form = document.getElementById("filtrosForm");
+
+        if (!form) return;
+
+        const paginaHidden = document.getElementById("paginaHidden");
+
+        // =========================
+        // REINICIAR PAGINACIÓN
+        // =========================
+        function reiniciarPaginacion() {
+
+            if (paginaHidden) {
+                paginaHidden.value = 1;
+            }
+        }
+
+        // =========================
+        // SUBMIT GENERAL
+        // =========================
+        form.addEventListener("submit", function() {
+
+            if (!window.cambiandoPagina) {
+                reiniciarPaginacion();
+            }
+
+            window.cambiandoPagina = false;
+        });
+
+        // =========================
+        // SELECTS AUTO-SUBMIT
+        // =========================
+        const autoSubmitSelects = form.querySelectorAll("[data-autosubmit='true']");
+
+        autoSubmitSelects.forEach(select => {
+
+            select.addEventListener("change", function() {
+
+                reiniciarPaginacion();
+
+                form.submit();
+            });
+
+        });
+
+    });
 

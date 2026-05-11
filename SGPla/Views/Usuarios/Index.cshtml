@@ -9,20 +9,29 @@
 <div> 
     <form id="filtrosForm" method="get" action="@Url.Action("Index", "Usuarios")">
 
+
         <!-- Filtros -->
         <div style="display:inline-flex; gap:10px; padding-bottom:20px;">
             @await Component.InvokeAsync("SelectField", new SelectFieldModel
             {
                 Label = "Región",
                 Options = Model.Regiones,
-                Name = "region"
+                Name = "region",
+                HtmlAttributes = new Dictionary<string, string>
+                    {
+                        { "data-autosubmit", "true" }
+                    }
             })
 
             @await Component.InvokeAsync("SelectField", new SelectFieldModel
             {
                 Label = "Área Académica",
                 Options = Model.Areas,
-                Name = "idAreaAcademica"
+                Name = "idAreaAcademica",
+                HtmlAttributes = new Dictionary<string, string>
+                    {
+                        { "data-autosubmit", "true" }
+                    }
             })
 
             <div id="contenedorEntidad">
@@ -30,7 +39,11 @@
                 {
                     Label = "Entidad Académica",
                     Options = Model.Entidades,
-                    Name = "idEntidadAcademica"
+                    Name = "idEntidadAcademica",
+                    HtmlAttributes = new Dictionary<string, string>
+                    {
+                        { "data-autosubmit", "true" }
+                    }
                 })
             </div>
         

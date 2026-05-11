@@ -19,7 +19,11 @@
                     {
                         new OptionModel { Value = "Febrero-Julio", Text = "Febrero-Julio" },
                         new OptionModel { Value = "Agosto-Enero", Text = "Agosto-Enero" }
-                    }
+                    },
+					HtmlAttributes = new Dictionary<string, string>
+					{
+						{ "data-autosubmit", "true" }
+					}
                 })
             </div>
 
@@ -52,9 +56,7 @@
         @await Component.InvokeAsync("Table", Model.Table)
     </div>
 
-	<!-- ========================= -->
-	<!-- MODALES -->
-	<!-- ========================= -->
+	<!-- Modales -->
 	<div>
 
 		<!-- Modal Crear / Editar -->
