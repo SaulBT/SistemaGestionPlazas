@@ -13,6 +13,10 @@ namespace SGPla.Models.ViewModels.Usuarios
         public int? IdAreaSeleccionada { get; set; }
         public int? IdEntidadSeleccionada { get; set; }
         public string? Busqueda { get; set; }
+
+        //paginación
+        public int PaginaActual { get; set; } = 1;
+        public int CantidadPorPagina { get; set; } = 10;
     }
 }
 

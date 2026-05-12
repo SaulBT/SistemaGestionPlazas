@@ -31,6 +31,24 @@ namespace SGPla.Services.Implementations
                 .ToList();
         }
 
+        // Nuevo método que devuelve los items paginados con el total
+        public async Task<(List<DetallesPeriodoEscolarDTO> Items, int TotalCount)> BuscarPorFiltroPaginadoAsync(BuscarPeriodoEscolarDTO filtro)
+        {
+            await _periodoEscolarValidator.ValidarBusquedaPorFiltroAsync(filtro);
+
+            // Ejecutar las operaciones de forma secuencial para evitar conflictos con DbContext
+            var totalCount = await _periodoEscolarRepository.ContarPorFiltroAsync(filtro);
+            var obtenidos = await _periodoEscolarRepository.ObtenerPorFiltroAsync(filtro) ?? new List<Periodo>();
+
+            var dtos = obtenidos
+                .Where(x => x != null)
+                .Select(PeriodoEscolarMapper.ToDTO)
+                .ToList();
+
+            return (dtos, totalCount);
+        }
+
+
         public async Task<DetallesPeriodoEscolarDTO> CrearAsync(CrearPeriodoEscolarDTO periodoEscolarDTO)
         {
             await _periodoEscolarValidator.ValidarCreacionAsync(periodoEscolarDTO);

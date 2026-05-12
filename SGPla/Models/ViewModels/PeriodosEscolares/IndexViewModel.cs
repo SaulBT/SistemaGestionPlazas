@@ -15,6 +15,8 @@ namespace SGPla.Models.ViewModels.PeriodosEscolares
 
         public PeriodoEscolarFormularioViewModel Formulario { get; set; }
 
-
+        // Propiedades para paginación
+        public int PaginaActual { get; set; } = 1;
+        public int CantidadPorPagina { get; set; } = 10;
     }
 }

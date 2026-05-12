@@ -122,7 +122,7 @@ namespace SGPla.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener la lista de entidades académicas");
-                TempData["Error"] = "Error al cargar las entidades académicas. Por favor, inténtelo de nuevo más tarde.";
+                TempData["Error"] = ex.Message;
 
                 return new TableModel();
             }
@@ -244,7 +244,7 @@ namespace SGPla.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener la entidad académica");
-                TempData["Error"] = "Error al cargar la entidad académica. Por favor, inténtelo de nuevo más tarde.";
+                TempData["Error"] = ex.Message;
                 return RedirectToAction("Index");
             }
         }
@@ -334,7 +334,7 @@ namespace SGPla.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al eliminar la entidad académica {Id}", id);
-                TempData["Error"] = "Error al eliminar la entidad académica: " + ex.Message;
+                TempData["Error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
         }

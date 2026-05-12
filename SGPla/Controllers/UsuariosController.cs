@@ -17,21 +17,27 @@ namespace SGPla.Controllers
         private readonly ILogger<UsuariosController> _logger;
         private readonly IAreaAcademicaRepository _areaAcademicaRepository;
         private readonly IEntidadAcademicaRepository _entidadAcademicaRepository;
+        private readonly IAreaAcademicaService _areaAcademicaService; //TODO: Reemplazar los métodos que usan el repository
+        private readonly IEntidadAcademicaService _entidadAcademicaService; //TODO: Reemplazar los métodos que usan el repository
 
         public UsuariosController(
             IUsuarioService usuarioService,
             ILogger<UsuariosController> logger,
             IAreaAcademicaRepository areaAcademicaRepository,
-            IEntidadAcademicaRepository entidadAcademicaRepository)
+            IAreaAcademicaService areaAcademicaService,
+            IEntidadAcademicaRepository entidadAcademicaRepository,
+            IEntidadAcademicaService entidadAcademicaService)
         {
             _usuarioService = usuarioService;
             _logger = logger;
             _areaAcademicaRepository = areaAcademicaRepository;
             _entidadAcademicaRepository = entidadAcademicaRepository;
+            _areaAcademicaService = areaAcademicaService;
+            _entidadAcademicaService = entidadAcademicaService;
         }
 
         // GET: Usuarios
-        public async Task<IActionResult> Index(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica)
+        public async Task<IActionResult> Index(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int pagina = 1, int cantidad = 10)
         {
             // combos
             var regionesCombo = Constantes.Regiones
@@ -43,7 +49,7 @@ namespace SGPla.Controllers
                 })
                 .ToList();
 
-            var areas = await _areaAcademicaRepository.ObtenerTodosAsync();
+            var areas = await _areaAcademicaService.ObtenerTodasAsync();
 
             var areasCombo = areas
                 .Select(a => new OptionModel
@@ -80,7 +86,7 @@ namespace SGPla.Controllers
 
             return View(new IndexViewModel
             {
-                Table = await LlenarTabla(busqueda, region, idAreaAcademica, idEntidadAcademica),
+                Table = await LlenarTabla(busqueda, region, idAreaAcademica, idEntidadAcademica, pagina, cantidad),
                 Regiones = regionesCombo,
                 Areas = areasCombo,
                 Entidades = entidadesCombo,
@@ -88,11 +94,15 @@ namespace SGPla.Controllers
                 RegionSeleccionada = region,
                 IdAreaSeleccionada = idAreaAcademica,
                 IdEntidadSeleccionada = idEntidadAcademica,
-                Busqueda = busqueda
+                Busqueda = busqueda,
+
+                PaginaActual = pagina,
+                CantidadPorPagina = cantidad
             });
         }
 
-        private async Task<TableModel> LlenarTabla(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica)
+
+        private async Task<TableModel> LlenarTabla(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int pagina = 1, int cantidad = 10)
         {
             try
             {
@@ -101,9 +111,11 @@ namespace SGPla.Controllers
                     Busqueda = busqueda,
                     Region = region,
                     IdAreaAcademica = idAreaAcademica,
-                    IdEntidadAcademica = idEntidadAcademica
+                    IdEntidadAcademica = idEntidadAcademica,
+                    Pagina = pagina,
+                    Cantidad = cantidad
                 };
-                var usuarios = await _usuarioService.BuscarConFiltrosAsync(filtros);
+                var usuarios = await _usuarioService.BuscarPorFiltroPaginadoAsync(filtros);
 
                 return new TableModel
                 {
@@ -111,7 +123,7 @@ namespace SGPla.Controllers
                         {
                             "Nombre", "Correo", "Cargo", "Rol", "Entidad/Área", "Región", "Acciones"
                         },
-                    Rows = usuarios.Select(usuario => new TableRowModel
+                    Rows = usuarios.Items.Select(usuario => new TableRowModel
                     {
                         Cells = new List<TableCellModel>
                         {
@@ -148,7 +160,14 @@ namespace SGPla.Controllers
                         }
                     }
                 }
-                    }).ToList()
+                    }).ToList(),
+                    Pagination = new PaginationInfo
+                    {
+                        CurrentPage = pagina,
+                        PageSize = cantidad,
+                        TotalItems = usuarios.TotalCount,
+                        OnPageChange = "cambiarPagina"
+                    }
                 };
             }
             catch (Exception ex)
@@ -334,14 +353,15 @@ namespace SGPla.Controllers
             }
             catch (ArgumentException ex)
             {
-                ModelState.AddModelError("Correo", ex.Message);
+                //ModelState.AddModelError("Correo", ex.Message);
+                TempData["Error"] = ex.Message;
                 await CargarCombos(model);
                 return View(model);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al crear usuario");
-                ModelState.AddModelError("", "Error al crear el usuario");
+                TempData["Error"] = ex.Message;
                 await CargarCombos(model);
                 return View(model);
             }
@@ -470,7 +490,7 @@ namespace SGPla.Controllers
             }
             catch (ArgumentException ex)
             {
-                ModelState.AddModelError("Rol", ex.Message);
+                TempData["Error"] = ex.Message;
                 await CargarCombos(model);
                 return View(model);
             }

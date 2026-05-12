@@ -62,19 +62,18 @@ namespace SGPla.Repositories.Implementations
 
         public async Task<List<Periodo>> ObtenerPorFiltroAsync(BuscarPeriodoEscolarDTO filtro)
         {
+            // Crear una nueva consulta independiente
             var query = _context.Periodo.AsQueryable();
 
             if (filtro.Anio > 0)
             {
                 string anio = filtro.AnioCodigo.ToString();
-
                 query = query.Where(p => p.Codigo.StartsWith(anio));
             }
 
             if (!string.IsNullOrWhiteSpace(filtro.Periodo))
             {
                 string periodo = filtro.PeriodoCodigo;
-
                 query = query.Where(p => p.Codigo.EndsWith(periodo));
             }
 
@@ -82,13 +81,32 @@ namespace SGPla.Repositories.Implementations
 
             int pagina = filtro.Pagina <= 0 ? 1 : filtro.Pagina;
             int cantidad = filtro.Cantidad <= 0 ? 10 : filtro.Cantidad;
-
             int skip = (pagina - 1) * cantidad;
 
             return await query
                 .Skip(skip)
                 .Take(cantidad)
                 .ToListAsync();
+        }
+
+        public async Task<int> ContarPorFiltroAsync(BuscarPeriodoEscolarDTO filtro)
+        {
+            // Crear una nueva consulta independiente (no usar la misma instancia de query)
+            var query = _context.Periodo.AsQueryable();
+
+            if (filtro.Anio > 0)
+            {
+                string anio = filtro.AnioCodigo.ToString();
+                query = query.Where(p => p.Codigo.StartsWith(anio));
+            }
+
+            if (!string.IsNullOrWhiteSpace(filtro.Periodo))
+            {
+                string periodo = filtro.PeriodoCodigo;
+                query = query.Where(p => p.Codigo.EndsWith(periodo));
+            }
+
+            return await query.CountAsync();
         }
 
         public async Task<Periodo?> ObtenerPorIdAsync(int idPeriodoEscolar)

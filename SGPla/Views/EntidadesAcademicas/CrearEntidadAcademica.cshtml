@@ -192,22 +192,3 @@
     </div>
 
 </form>
-
-<!-- Ventana de error al realizar una acción -->
-@if (TempData["Error"] != null)
-{
-    @await Component.InvokeAsync("Modal", new ModalModel
-    {
-        Id = "modalError",
-        Tipo = "info",
-        Titulo = "Error",
-        Mensaje = TempData["Error"]!.ToString(),
-        OnConfirm = "cerrarModal('modalError')"
-    })
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            abrirModal("modalError");
-        });
-    </script>
-}
