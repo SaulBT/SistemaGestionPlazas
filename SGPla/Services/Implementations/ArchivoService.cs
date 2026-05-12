@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.StaticFiles;
+using SGPla.Models;
 using SGPla.Models.DTOs.Archivo;
 using SGPla.Repositories.Interfaces;
 using SGPla.Services.Interfaces;
@@ -24,12 +25,16 @@ namespace SGPla.Services.Implementations
             _archivoRepository = archivoRepository;
         }
 
-        public async Task<DatosArchivoGuardadoDTO> GuardarAsync(Stream archivo, string nombreOriginal, string carpeta)
+        public async Task<DatosArchivoGuardadoDTO> GuardarAsync(string rutaOrigen, string nombreOriginal, string carpeta)
         {
-            ArgumentNullException.ThrowIfNull(archivo);
+            if (string.IsNullOrWhiteSpace(rutaOrigen))
+                throw new ArgumentException("La ruta del archivo es obligatoria.");
 
             if (string.IsNullOrWhiteSpace(nombreOriginal))
                 throw new ArgumentException("El nombre del archivo es obligatorio.");
+
+            if (string.IsNullOrWhiteSpace(carpeta))
+                throw new ArgumentException("La carpeta de destino es obligatoria.");
 
             var extension = Path.GetExtension(nombreOriginal);
             var nombreGuardado = $"{Guid.NewGuid()}{extension}";
@@ -38,12 +43,10 @@ namespace SGPla.Services.Implementations
 
             Directory.CreateDirectory(carpetaFisica);
 
-            if (archivo.CanSeek)
-                archivo.Position = 0;
-
-            using (var fileStream = new FileStream(rutaFisica, FileMode.Create, FileAccess.Write, FileShare.None))
+            using (var origen = new FileStream(rutaOrigen, FileMode.Open, FileAccess.Read))
             {
-                await archivo.CopyToAsync(fileStream);
+                using (var destino = new FileStream(rutaFisica, FileMode.Create, FileAccess.Write, FileShare.None))
+                    await origen.CopyToAsync(destino);
             }
 
             var rutaRelativa = Path.Combine(carpeta, nombreGuardado).Replace("\\", "/");
