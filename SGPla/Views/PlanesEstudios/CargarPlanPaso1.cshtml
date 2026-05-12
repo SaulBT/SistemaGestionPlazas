@@ -4,7 +4,7 @@
     ViewData["Title"] = "Cargar Plan de Estudios";
 }
 
-<form method="get" action="@Url.Action("CargarPlanPaso1", "PlanesEstudios")" enctype="multipart/form-data">
+<form id="form" method="post" action="@Url.Action("CargarPlanPaso2", "PlanesEstudios")" enctype="multipart/form-data">
     <div class="d-flex flex-column gap-3">
         @await Component.InvokeAsync("SelectField", new SelectFieldModel
         {
@@ -80,12 +80,11 @@
                 Accion = "Cancelar"
             })
         </a>
-        <a href="@Url.Action("ProcesarArchivoAsync", "PlanesEstudios")" style="display: inline-block; text-decoration: none;">
-            @await Component.InvokeAsync("Boton", new
-            {
-                Accion = "siguiente"
-            })
-        </a>
+        @await Component.InvokeAsync("Boton", new
+        {
+            Accion = "siguiente",
+            OnClick = "document.getElementById('form').submit()"
+        })
     </div>
 
     <!-- MODAL -->
@@ -95,7 +94,7 @@
             Id = "modalArchivo",
             OnConfirm = "cerrarModal('modalArchivo')",
             OnCancel = "cerrarModal('modalArchivo')",
-            FormatosAceptados = ".xlsx",
+            FormatosAceptados = ".xlsx, .xls",
             TamanioMaximo = 20
         })
     </div>
@@ -109,9 +108,7 @@
     const urlObtenerProgramas =
         '@Url.Action("ObtenerProgramas", "PlanesEstudios")';
 
-    function abrirModalArchivo() {
-        abrirModal("modalArchivo");
-    }
+    
 </script>
 
 @section Scripts {

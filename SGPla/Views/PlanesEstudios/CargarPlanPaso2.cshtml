@@ -2,3 +2,107 @@
 @{
 	ViewData["Title"] = "Cargar Plan de Estudios";
 }
+
+<form method="post" action="@Url.Action("GuardarPlanEstudios", "PlanesEstudios")" enctype="multipart/form-data">
+    <!-- BLOQUE SUPERIOR -->
+    <div class="d-flex row gap-2" style="margin-block-end: 1em">
+        <!-- PRIMERA LÍNEA-->
+        <div class="d-flex gap-2">
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Name = "Region",
+                Label = "Región:",
+                Valor = Model.Region,
+                Disabled = true,
+                Flexible = true
+            })
+            <input type="hidden" name="Region" value="@Model.Region" />
+
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "ifArea",
+                Name = "Area",
+                Label = "Área:",
+                Valor = Model.Area,
+                Disabled = true,
+                Flexible = true
+            })
+
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "ifProgramaEducativo",
+                Name = "ProgramaEducativo",
+                Label = "Programa Educativo:",
+                Valor = Model.ProgramaEducativo,
+                Disabled = true,
+                Flexible = true
+            })
+        </div>
+
+        <!-- SEGUNDA LÍNEA -->
+        <div class="d-flex gap-4">
+            <div class="d-flex gap-2">
+                @await Component.InvokeAsync("InputField", new InputFieldModel
+                {
+                    Id = "ifPlan",
+                    Name = "Plan",
+                    Label = "Plan:",
+                    Valor = Model.Plan,
+                    Disabled = true,
+                    Flexible = false
+                })
+
+                @await Component.InvokeAsync("InputField", new InputFieldModel
+                {
+                    Id = "ifSistema",
+                    Name = "Sistema",
+                    Label = "Sistema:",
+                    Valor = Model.Sistema,
+                    Disabled = true,
+                    Flexible = false
+                })
+            </div>
+        </div>
+        <!-- BOTÓN AGREGAR EXPERIENCIA EDUCATIVA -->
+        <div class="d-flex col-12 justify-content-end">
+            @await Component.InvokeAsync("Boton", new
+            {
+                accion = "Agregar",
+                tipo = "secundario",
+                texto = "Agregar Experiencia Educativa"
+            })
+        </div>
+    </div>
+
+    <!-- TABLA -->
+    <div class="gap:10px;" style="margin-block-end: 1em">
+        @await Component.InvokeAsync("Table", Model.Table)
+        <input type="hidden" name="Experiencias" value="@Model.Experiencias" />
+    </div>
+
+    <div class="d-flex row">
+        <div class="d-flex col-6">
+            <a href="@Url.Action("Index", "PlanesEstudios")" style="display: inline-block; text-decoration: none;">
+                @await Component.InvokeAsync("Boton", new
+                {
+                    Accion = "Regresar"
+                })
+            </a>
+        </div>
+        <div class="d-flex col-6 column-gap-3 justify-content-end">
+            <a href="@Url.Action("Index", "PlanesEstudios")" style="display: inline-block; text-decoration: none;">
+                @await Component.InvokeAsync("Boton", new
+                {
+                    Accion = "Cancelar"
+                })
+            </a>
+            @await Component.InvokeAsync("Boton", new
+            {
+                Accion = "Guardar",
+                ButtonType = "submit"
+            })
+        </div>
+    </div>
+    
+    
+</form>
