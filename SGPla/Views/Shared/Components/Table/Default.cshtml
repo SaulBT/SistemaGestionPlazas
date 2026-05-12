@@ -1,58 +1,157 @@
 ﻿@model TableModel
 
-<table class="custom-table">
-    
-    <thead>
-        <tr>
-            @foreach (var header in Model.Headers)
-            {
-                <th>@header</th>
-            }
-        </tr>
-    </thead>
-
-    <tbody>
-        @foreach (var row in Model.Rows)
-        {
+<div class="table-container">
+    <table class="custom-table">
+        <thead>
             <tr>
-                @foreach (var cell in row.Cells)
+                @foreach (var header in Model.Headers)
                 {
-                    <td>
-                        @if (cell.Actions != null && cell.Actions.Any())
-                        {
-                            <div class="table-actions">
-                                @foreach (var action in cell.Actions)
-                                {
-                                    @if (!action.OnClick.IsWhiteSpace())
+                    <th>@header</th>
+                }
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var row in Model.Rows)
+            {
+                <tr>
+                    @foreach (var cell in row.Cells)
+                    {
+                        <td>
+                            @if (cell.Actions != null && cell.Actions.Any())
+                            {
+                                <div class="table-actions">
+                                    @foreach (var action in cell.Actions)
                                     {
-                                        @await Component.InvokeAsync("Boton", new
+                                        @if (!string.IsNullOrWhiteSpace(action.OnClick))
                                         {
-                                            accion = action.Accion,
-                                            fondo = false,
-                                            onClick = action.OnClick
-                                        })
-                                    }
-                                    else
-                                    {
-                                        <a href="@action.Url">
                                             @await Component.InvokeAsync("Boton", new
                                             {
                                                 accion = action.Accion,
-                                                fondo = false
+                                                fondo = false,
+                                                onClick = action.OnClick
                                             })
-                                        </a>
+                                        }
+                                        else
+                                        {
+                                            <a href="@action.Url">
+                                                @await Component.InvokeAsync("Boton", new
+                                                {
+                                                    accion = action.Accion,
+                                                    fondo = false
+                                                })
+                                            </a>
+                                        }
                                     }
-                                }
-                            </div>
-                        }
-                        else
-                        {
-                            @cell.Value
-                        }
-                    </td>
-                }
-            </tr>
-        }
-    </tbody>
+                                </div>
+                            }
+                            else
+                            {
+                                @cell.Value
+                            }
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
 
-</table>
+    @if (Model.Pagination.TotalItems > 0)
+    {
+        <div class="pagination-container">
+            <div class="pagination-info">
+                Mostrando @((Model.Pagination.CurrentPage - 1) * Model.Pagination.PageSize + 1) a
+                @Math.Min(Model.Pagination.CurrentPage * Model.Pagination.PageSize, Model.Pagination.TotalItems) de
+                @Model.Pagination.TotalItems registros
+            </div>
+            
+            <div class="pagination-controls">
+                @if (Model.Pagination.HasPreviousPage)
+                {
+                    <button type="button" class="pagination-btn" onclick="@GetPageChangeFunction(Model.Pagination.CurrentPage - 1)">
+                        Anterior
+                    </button>
+                }
+                else
+                {
+                    <button type="button" class="pagination-btn disabled" disabled>Anterior</button>
+                }
+                
+                <div class="pagination-pages">
+                    @for (int i = 1; i <= Model.Pagination.TotalPages; i++)
+                    {
+                        if (i == Model.Pagination.CurrentPage)
+                        {
+                            <button type="button" class="pagination-btn active" disabled>@i</button>
+                        }
+                        else if (ShouldShowPage(i, Model.Pagination.CurrentPage, Model.Pagination.TotalPages))
+                        {
+                            <button type="button" class="pagination-btn" onclick="@GetPageChangeFunction(i)">
+                                @i
+                            </button>
+                        }
+                        else if (ShouldShowEllipsis(i, Model.Pagination.CurrentPage, Model.Pagination.TotalPages))
+                        {
+                            <span class="pagination-ellipsis">...</span>
+                        }
+                    }
+                </div>
+                
+                @if (Model.Pagination.HasNextPage)
+                {
+                    <button type="button" class="pagination-btn" onclick="@GetPageChangeFunction(Model.Pagination.CurrentPage + 1)">
+                        Siguiente
+                    </button>
+                }
+                else
+                {
+                    <button type="button" class="pagination-btn disabled" disabled>Siguiente</button>
+                }
+            </div>
+            
+            <div class="pagination-page-size">
+                <label>
+                    Mostrar:
+                    <select onchange="@GetPageSizeChangeFunction()" class="page-size-select">
+                        <option value="5" selected="@(Model.Pagination.PageSize == 5)">5</option>
+                        <option value="10" selected="@(Model.Pagination.PageSize == 10)">10</option>
+                        <option value="20" selected="@(Model.Pagination.PageSize == 20)">20</option>
+                        <option value="50" selected="@(Model.Pagination.PageSize == 50)">50</option>
+                    </select>
+                </label>
+            </div>
+        </div>
+    }
+</div>
+
+@functions {
+    private string GetPageChangeFunction(int page)
+    {
+        if (!string.IsNullOrWhiteSpace(Model.Pagination.OnPageChange))
+        {
+            return $"{Model.Pagination.OnPageChange}({page})";
+        }
+        return $"changePage({page})";
+    }
+    
+    private string GetPageSizeChangeFunction()
+    {
+        if (!string.IsNullOrWhiteSpace(Model.Pagination.OnPageChange))
+        {
+            return $"{Model.Pagination.OnPageChange}(this.value, true)";
+        }
+        return "changePageSize(this.value)";
+    }
+    
+    private bool ShouldShowPage(int page, int currentPage, int totalPages)
+    {
+        // Muestra las primeras 2 páginas, últimas 2 páginas, y páginas alrededor de la actual
+        return page <= 2 || page >= totalPages - 1 || Math.Abs(page - currentPage) <= 1;
+    }
+    
+    private bool ShouldShowEllipsis(int page, int currentPage, int totalPages)
+    {
+        // Muestra elipsis después de las primeras 2 páginas y antes de las últimas 2 páginas
+        return page == 3 && currentPage > 3 || page == totalPages - 2 && currentPage < totalPages - 2;
+    }
+}

@@ -73,7 +73,7 @@ namespace SGPla.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al llenar la tabla de artículos");
-                TempData["Error"] = "Ocurrió un error al cargar los artículos. Por favor, inténtelo de nuevo más tarde.";
+                TempData["Error"] = ex.Message;
 
                 return new TableModel();
             }
@@ -176,7 +176,7 @@ namespace SGPla.Controllers
                 }
                 catch (ArgumentException ex)
                 {
-                    ModelState.AddModelError("", ex.Message);
+                    TempData["Error"] = ex.Message;
                     return View("Index");
                 }
             }

@@ -8,7 +8,7 @@
 }
 
 <div>
-    <form method="get" action="@Url.Action("Index", "EntidadesAcademicas")">
+    <form id="filtrosForm" method="get" action="@Url.Action("Index", "EntidadesAcademicas")">
         <!-- Filtros -->
         <div style="display:inline-flex; gap:10px; padding-bottom:20px;">
             @await Component.InvokeAsync("SelectField", new SelectFieldModel
@@ -72,28 +72,32 @@
             })
 
         </form>
-
-        <!-- Ventana de éxito al realizar una acción -->
-        @if (TempData["Success"] != null)
-        {
-            @await Component.InvokeAsync("Toast", new ToastModel
-            {
-                Id = "toastSuccess",
-                Titulo = "Éxito",
-                Mensaje = TempData["Success"]!.ToString(),
-                Tipo = "success"
-            })
-
-            <script>
-                        document.addEventListener("DOMContentLoaded", function() {
-                            mostrarToast("toastSuccess");
-                        });
-            </script>
-        }
-        
+   
     </div>
 
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const form = document.getElementById("filtrosForm")
+        const region = document.getElementById("region");
+        const area = document.getElementById("idAreaAcademica");
+
+        // Región cambia
+        if (region) {
+            region.addEventListener("change", function() {
+                form.submit();
+            });
+        }
+
+        // Área cambia
+        if (area) {
+            area.addEventListener("change", function() {
+                form.submit();
+            });
+        }
+    });
+</script>
 
 <script>
     function eliminarEntidadAcademica(id) {

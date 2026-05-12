@@ -37,6 +37,22 @@ namespace SGPla.Services.Implementations
                 .ToList();
         }
 
+        public async Task<(List<DetallesProgramaEducativoDTO> Items, int TotalCount)> BuscarPorFiltroPaginadoAsync(BuscarProgramaEducativoDTO filtro)
+        {
+            await _programaEducativoValidator.ValidarBusquedaPorFiltroAsync(filtro);
+
+            var totalCount = await _programaEducativoRepository.ContarPorFiltroAsync(filtro);
+            var obtenidos = await _programaEducativoRepository.ObtenerPorFiltroAsync(filtro)
+                             ?? new List<ProgramaEducativo>();
+
+            var dtos = obtenidos
+                .Where(x => x != null)
+                .Select(ProgramaEducativoMapper.ToDTO)
+                .ToList();
+
+            return (dtos, totalCount);
+        }
+
         public async Task<DetallesProgramaEducativoDTO> CrearAsync(CrearProgramaEducativoDTO programaEducativo)
         {
             await _programaEducativoValidator.ValidarCreacionAsync(programaEducativo);

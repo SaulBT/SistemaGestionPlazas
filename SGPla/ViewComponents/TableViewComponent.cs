@@ -6,6 +6,12 @@ namespace SGPla.ViewComponents
     {
         public IViewComponentResult Invoke(TableModel model)
         {
+            // Validar que la paginación esté configurada
+            if (model.Pagination == null)
+            {
+                model.Pagination = new PaginationInfo();
+            }
+
             return View(model);
         }
     }

@@ -102,6 +102,27 @@ namespace SGPla.Repositories.Implementations
             }
             return false;
         }
+
+        public async Task<int> ContarPorFiltroAsync(BuscarProgramaEducativoDTO filtro)
+        {
+            // Crear una nueva consulta independiente (no usar la misma instancia de query)
+            var query = _context.ProgramaEducativo.AsQueryable();
+
+         
+
+            if (filtro.IdAreaAcademica.HasValue && filtro.IdAreaAcademica.Value > 0)
+                query = query.Where(a => a.IdEntidadAcademicaNavigation.IdAreaAcademica == filtro.IdAreaAcademica.Value);
+            if (filtro.IdEntidadAcademica.HasValue && filtro.IdEntidadAcademica.Value > 0)
+                query = query.Where(a => a.IdEntidadAcademica == filtro.IdEntidadAcademica.Value);
+            if (!string.IsNullOrWhiteSpace(filtro.Nombre))
+                query = query.Where(a => a.Nombre.Contains(filtro.Nombre.Trim()));
+            if (!string.IsNullOrWhiteSpace(filtro.Region))
+                query = query.Where(a => a.IdEntidadAcademicaNavigation.Region == filtro.Region);
+
+           
+
+            return await query.CountAsync();
+        }
     }
 }
 

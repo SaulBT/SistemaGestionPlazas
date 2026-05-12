@@ -12,6 +12,9 @@ namespace SGPla.Repositories.Interfaces
         Task<ProgramaEducativo> CrearAsync(ProgramaEducativo programaEducativo);
         Task<ProgramaEducativo?> ActualizarAsync(ProgramaEducativo programaEducativo);
 
+        Task<int> ContarPorFiltroAsync(BuscarProgramaEducativoDTO filtro);
+
+
         Task<bool> EliminarAsync(int id);
     }
 }

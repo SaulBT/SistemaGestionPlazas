@@ -6,7 +6,7 @@
 	ViewData["Title"] = "Programas Educativos";
 }
 <div>
-	<form method="get" action="@Url.Action("Index", "ProgramasEducativos")">
+	<form id="filtrosForm" method="get" action="@Url.Action("Index", "ProgramasEducativos")">
 
 		<!-- Filtros -->
 		<div style="display:inline-flex; gap:10px; padding-bottom:30px;">
@@ -56,6 +56,9 @@
 				})
 			</a>
 		</div>
+		<!-- Campos ocultos para paginación -->
+		<input type="hidden" name="pagina" id="paginaHidden" value="@Model.PaginaActual" />
+		<input type="hidden" name="cantidad" id="cantidadHidden" value="@Model.CantidadPorPagina" />
 
 	</form>
 
@@ -167,3 +170,19 @@
 		document.getElementById("formEliminarProgramaEducativo").submit();
 	}
 </script>
+
+<script>
+	document.addEventListener("DOMContentLoaded", function () {
+
+		const form = document.querySelector("form");
+		//const periodo = document.querySelector("select[name='programaEducativo']");
+
+		if (periodo) {
+			periodo.addEventListener("change", function () {
+				form.submit();
+			});
+		}
+
+	});
+</script>
+

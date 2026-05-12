@@ -8,58 +8,55 @@
 
 <div>
 	<!--Acciones-->
-	<form method="get" action="@Url.Action("Index", "PeriodosEscolares")">
+    <div style="display:flex; gap:10px; padding-bottom:30px; align-items:center; justify-content:space-between">
+        <form id="filtrosForm" method="get" action="@Url.Action("Index", "PeriodosEscolares")">
+            <div style="display:inline-flex; gap:10px; padding-bottom:30px;">
+                @await Component.InvokeAsync("SelectField", new SelectFieldModel
+                {
+                    Label = "Periodo",
+                    Name = "periodo",
+                    Options = new List<OptionModel>
+                    {
+                        new OptionModel { Value = "Febrero-Julio", Text = "Febrero-Julio" },
+                        new OptionModel { Value = "Agosto-Enero", Text = "Agosto-Enero" }
+                    },
+					HtmlAttributes = new Dictionary<string, string>
+					{
+						{ "data-autosubmit", "true" }
+					}
+                })
+            </div>
 
-		<!-- 🔹 FILA 1: COMBOBOX -->
-		<div style="display:flex; gap:10px; padding-bottom:20px;">
-			@await Component.InvokeAsync("SelectField", new SelectFieldModel
-			{
-				Label = "Periodo",
-				Name = "periodo",
-				Options = new List<OptionModel>
-			{
-				new OptionModel { Value = "Febrero-Julio", Text = "Febrero-Julio" },
-				new OptionModel { Value = "Agosto-Enero", Text = "Agosto-Enero" }
-			}
-			})
-		</div>
+            <div>
+                <!-- Barra de búsqueda -->
+                @await Component.InvokeAsync("Buscador", new BuscadorModel
+                {
+                    Name = "anio",
+                    Placeholder = "Buscar por año...",
+                    Value = Context.Request.Query["anio"]
+                })
+            </div>
+            
+            <!-- Campos ocultos para paginación -->
+            <input type="hidden" name="pagina" id="paginaHidden" value="@Model.PaginaActual" />
+            <input type="hidden" name="cantidad" id="cantidadHidden" value="@Model.CantidadPorPagina" />
+        </form>
 
-		<!-- 🔹 FILA 2: BUSCADOR + BOTÓN -->
-		<div style="display:flex; justify-content:space-between; align-items:center;">
+        <!-- Botón agregar -->
+        @await Component.InvokeAsync("Boton", new
+        {
+            Accion = "Agregar",
+            Texto = "Agregar Periodo Escolar",
+            OnClick = "abrirModalCrearPeriodoEscolar()"
+        })
+    </div>
 
-			<!-- izquierda -->
-			<div>
-				@await Component.InvokeAsync("Buscador", new BuscadorModel
-				{
-					Name = "anio",
-					Placeholder = "Buscar por año...",
-					Value = Context.Request.Query["anio"]
-				})
-			</div>
+    <!-- Tabla -->
+    <div class="table-container" style="display:flex; gap:10px; padding-top:20px; justify-content:left">
+        @await Component.InvokeAsync("Table", Model.Table)
+    </div>
 
-			<!-- derecha -->
-			<div>
-				@await Component.InvokeAsync("Boton", new
-				{
-					Accion = "Agregar",
-					Texto = "Agregar Periodo Escolar",
-					OnClick = "abrirModalCrearPeriodoEscolar()"
-				})
-			</div>
-
-		</div>
-
-	</form>
-
-
-	<!-- Tabla -->
-	<div style="display:flex; gap:10px; padding-top:20px; justify-content:left">
-		@await Component.InvokeAsync("Table", Model.Table)
-	</div>
-
-	<!-- ========================= -->
-	<!-- MODALES -->
-	<!-- ========================= -->
+	<!-- Modales -->
 	<div>
 
 		<!-- Modal Crear / Editar -->
@@ -103,43 +100,6 @@
 
 		</form>
 
-		<!-- Modal éxito -->
-		@if (TempData["Success"] != null)
-		{
-			@await Component.InvokeAsync("Modal", new ModalModel
-			{
-				Id = "modalSuccess",
-				Tipo = "info",
-				Titulo = "Éxito",
-				Mensaje = TempData["Success"]!.ToString(),
-				OnConfirm = "cerrarModal('modalSuccess')"
-			})
-
-			<script>
-						document.addEventListener("DOMContentLoaded", function () {
-							abrirModal("modalSuccess");
-						});
-			</script>
-		}
-
-		<!-- Modal error -->
-		@if (TempData["Error"] != null)
-		{
-			@await Component.InvokeAsync("Modal", new ModalModel
-			{
-				Id = "modalError",
-				Tipo = "info",
-				Titulo = "Error",
-				Mensaje = TempData["Error"]!.ToString(),
-				OnConfirm = "cerrarModal('modalError')"
-			})
-
-			<script>
-						document.addEventListener("DOMContentLoaded", function () {
-							abrirModal("modalError");
-						});
-			</script>
-		}
 
 	</div>
 

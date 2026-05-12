@@ -1,4 +1,5 @@
-﻿@using SGPla.Models.ViewModels.Usuarios
+﻿@using SGPla.Models.Componentes
+@using SGPla.Models.ViewModels.Usuarios
 @model IndexViewModel
 
 @{
@@ -6,7 +7,8 @@
     ViewData["Title"] = "Usuarios";
 }
 <div> 
-    <form method="get" action="@Url.Action("Index", "Usuarios")">
+    <form id="filtrosForm" method="get" action="@Url.Action("Index", "Usuarios")">
+
 
         <!-- Filtros -->
         <div style="display:inline-flex; gap:10px; padding-bottom:20px;">
@@ -14,14 +16,22 @@
             {
                 Label = "Región",
                 Options = Model.Regiones,
-                Name = "region"
+                Name = "region",
+                HtmlAttributes = new Dictionary<string, string>
+                    {
+                        { "data-autosubmit", "true" }
+                    }
             })
 
             @await Component.InvokeAsync("SelectField", new SelectFieldModel
             {
                 Label = "Área Académica",
                 Options = Model.Areas,
-                Name = "idAreaAcademica"
+                Name = "idAreaAcademica",
+                HtmlAttributes = new Dictionary<string, string>
+                    {
+                        { "data-autosubmit", "true" }
+                    }
             })
 
             <div id="contenedorEntidad">
@@ -29,7 +39,11 @@
                 {
                     Label = "Entidad Académica",
                     Options = Model.Entidades,
-                    Name = "idEntidadAcademica"
+                    Name = "idEntidadAcademica",
+                    HtmlAttributes = new Dictionary<string, string>
+                    {
+                        { "data-autosubmit", "true" }
+                    }
                 })
             </div>
         
@@ -46,6 +60,10 @@
                 Method = "get",
                 Value = Context.Request.Query["busqueda"]
             })
+            
+            <!-- Campos ocultos para paginación -->
+            <input type="hidden" name="pagina" id="paginaHidden" value="@Model.PaginaActual" />
+            <input type="hidden" name="cantidad" id="cantidadHidden" value="@Model.CantidadPorPagina" />
 
             <!--Botón Crear Usuario-->
             <a href="@Url.Action("CrearUsuario", "Usuarios")" style="display: inline-block; text-decoration: none;">
@@ -87,24 +105,6 @@
             })
         </form>
 
-        <!-- Ventana de éxito al realizar una acción -->
-        @if (TempData["Success"] != null)
-        {
-            @await Component.InvokeAsync("Modal", new ModalModel
-            {
-                Id = "modalSuccess",
-                Tipo = "info",
-                Titulo = "Éxito",
-                Mensaje = TempData["Success"]!.ToString(),
-                OnConfirm = "cerrarModal('modalSuccess')"
-            })
-
-            <script>
-                        document.addEventListener("DOMContentLoaded", function () {
-                            abrirModal("modalSuccess");
-                        });
-            </script>
-        }
     </div>
 </div>
 

@@ -13,5 +13,9 @@ namespace SGPla.Models.ViewModels.ProgramasEducativos
         public int? IdAreaSeleccionada { get; set; }
         public int? IdEntidadSeleccionada { get; set; }
         public string? Busqueda { get; set; }
+
+        // Propiedades para paginación
+        public int PaginaActual { get; set; } = 1;
+        public int CantidadPorPagina { get; set; } = 10;
     }
 }

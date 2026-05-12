@@ -1,8 +1,8 @@
-﻿using SGPla.Models.DTOs.EntidadAcademica;
-using SGPla.Models.DTOs.ProgramaEducativo;
-using SGPla.Models.DTOs.AreaAcademica;
+﻿using Microsoft.Identity.Client;
 using SGPla.Models;
-using Microsoft.Identity.Client;
+using SGPla.Models.DTOs.AreaAcademica;
+using SGPla.Models.DTOs.EntidadAcademica;
+using SGPla.Models.DTOs.ProgramaEducativo;
 
 namespace SGPla.Services.Interfaces
 {
@@ -19,8 +19,9 @@ namespace SGPla.Services.Interfaces
 
         Task<List<DetallesProgramaEducativoDTO>> BuscarPorFiltroAsync(BuscarProgramaEducativoDTO filtro);
 
-        Task<List<EntidadAcademica>> ObtenerOpcionesEntidadAcademicaAsync(string region, int idAreaAcademica);
+        Task<(List<DetallesProgramaEducativoDTO> Items, int TotalCount)> BuscarPorFiltroPaginadoAsync(BuscarProgramaEducativoDTO filtro);
 
+        Task<List<EntidadAcademica>> ObtenerOpcionesEntidadAcademicaAsync(string region, int idAreaAcademica);
 
         Task<List<AreaAcademica>> ObtenerOpcionesAreaAcademicaAsync();
     }

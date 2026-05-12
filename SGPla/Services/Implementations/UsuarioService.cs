@@ -220,6 +220,46 @@ namespace SGPla.Services.Implementations
                 .OrderBy(u => u.Nombre)
                 .ToList();
         }
+        // Método con paginación
+        public async Task<(List<ListaUsuarioDTO> Items, int TotalCount)> BuscarPorFiltroPaginadoAsync(FiltrosUsuarioDTO filtro)
+        {
+            // Obtener resultados de ambas tablas
+            var coordinadoresEa = await _coordinadorEaRepository.BuscarConFiltros(
+                filtro.Region,
+                filtro.IdAreaAcademica,
+                filtro.IdEntidadAcademica,
+                filtro.Busqueda);
+
+            var coordinadoresDgaa = await _coordinadorDgaaRepository.BuscarConFiltros(
+                filtro.IdAreaAcademica,
+                filtro.Busqueda);
+
+            // Mapear a DTO
+            var listaCoordinadoresEa = coordinadoresEa
+                .Where(x => x != null)
+                .Select(MapearCoordinadorEaAListaDTO);
+
+            var listaCoordinadoresDgaa = coordinadoresDgaa
+                .Where(x => x != null)
+                .Select(MapearCoordinadorDgaaAListaDTO);
+
+            // Unir ambas listas
+            var listaCompleta = listaCoordinadoresEa
+                .Concat(listaCoordinadoresDgaa)
+                .OrderBy(u => u.Nombre)
+                .ToList();
+
+            // Total antes de paginar
+            var totalRegistros = listaCompleta.Count;
+
+            // Aplicar paginación
+            var itemsPaginados = listaCompleta
+                .Skip((filtro.Pagina - 1) * filtro.Cantidad)
+                .Take(filtro.Cantidad)
+                .ToList();
+
+            return (itemsPaginados, totalRegistros);
+        }
 
         //Editar
         private async Task EditarCoordinadorEaAsync(EditarUsuarioDTO dto)
