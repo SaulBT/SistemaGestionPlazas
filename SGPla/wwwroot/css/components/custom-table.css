@@ -45,3 +45,110 @@
     display: flex;
     gap: 6px;
 }
+
+/* Contenedor de la tabla */
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+}
+
+/* Estilos de paginación */
+.pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.pagination-info {
+    font-size: 14px;
+    color: #6c757d;
+}
+
+.pagination-controls {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.pagination-pages {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.pagination-btn {
+    padding: 6px 12px;
+    border: 1px solid #dee2e6;
+    background-color: white;
+    color: #007bff;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+    .pagination-btn:hover:not(.disabled):not(.active) {
+        background-color: #e9ecef;
+        border-color: #dee2e6;
+    }
+
+    .pagination-btn.active {
+        background-color: var(--AzulPrimario, #007bff);
+        color: white;
+        border-color: var(--AzulPrimario, #007bff);
+        cursor: default;
+    }
+
+    .pagination-btn.disabled {
+        color: #6c757d;
+        cursor: not-allowed;
+        background-color: #f8f9fa;
+    }
+
+.pagination-ellipsis {
+    padding: 6px 8px;
+    color: #6c757d;
+}
+
+.pagination-page-size {
+    display: flex;
+    align-items: center;
+}
+
+.page-size-select {
+    margin-left: 8px;
+    padding: 4px 8px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    background-color: white;
+    cursor: pointer;
+}
+
+    .page-size-select:focus {
+        outline: none;
+        border-color: var(--AzulPrimario, #007bff);
+    }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .pagination-container {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+    }
+
+    .pagination-controls {
+        justify-content: center;
+    }
+
+    .pagination-page-size {
+        justify-content: center;
+    }
+}

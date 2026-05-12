@@ -54,25 +54,6 @@
             })
         </form>
 
-        <!-- Ventana de éxito al realizar una acción -->
-        @if (TempData["Success"] != null)
-        {
-            @await Component.InvokeAsync("Modal", new ModalModel
-            {
-                Id = "modalSuccess",
-                Tipo = "info",
-                Titulo = "Éxito",
-                Mensaje = TempData["Success"]!.ToString(),
-                OnConfirm = "cerrarModal('modalSuccess')"
-            })
-
-            <script>
-                        document.addEventListener("DOMContentLoaded", function() {
-                            abrirModal("modalSuccess");
-                        });
-            </script>
-        }
-    </div>
 </div>
 
 <script>

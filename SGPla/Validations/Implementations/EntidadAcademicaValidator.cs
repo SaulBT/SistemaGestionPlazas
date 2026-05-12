@@ -24,7 +24,7 @@ namespace SGPla.Validations.Implementations
         {
             ArgumentNullException.ThrowIfNull(crearEntidadAcademicaDTO);
 
-            await validarIdAreaAcademica(crearEntidadAcademicaDTO.IdAreaAcademica);
+            await validarIdAreaAcademica(crearEntidadAcademicaDTO.IdAreaAcademica.Value);
 
             if (crearEntidadAcademicaDTO.Nombre.IsNullOrEmpty())
                 throw new ArgumentException("El Nombre es obligatorio.");
@@ -78,7 +78,7 @@ namespace SGPla.Validations.Implementations
             if (datosEntidadAcademicaDTO.Region.IsNullOrEmpty())
                 throw new ArgumentException("La Region es obligatoria.");
 
-            await validarClaveAsync(datosEntidadAcademicaDTO.Clave, datosEntidadAcademicaDTO.Region);
+            await validarClaveAsync(datosEntidadAcademicaDTO.Clave, datosEntidadAcademicaDTO.Region, datosEntidadAcademicaDTO.IdEntidadAcademica);
         }
 
         public void ValidarIndice(int indice)
@@ -115,7 +115,7 @@ namespace SGPla.Validations.Implementations
         }
 
         //Clave
-        private async Task validarClaveAsync(string clave, string region)
+        private async Task validarClaveAsync(string clave, string region, int? id = -1)
         {
             if (clave.IsNullOrEmpty())
                 throw new ArgumentException("La Clave es obligatoria.");
@@ -123,10 +123,14 @@ namespace SGPla.Validations.Implementations
             bool soloNumeros = clave.All(char.IsDigit);
             if (clave.Count() != 5 || !soloNumeros)
                 throw new ArgumentException("La Clave es inválida.");
-
-            bool existe = await _entidadAcademicaRepository.ExistePorClaveAsync(clave);
-            if (existe)
-                throw new ArgumentException("La Clave ya está en uso.");
+            
+            if (id >= 0)
+            {
+                bool existe = await _entidadAcademicaRepository.ExistePorClaveAsync(clave, id.Value);
+                if (existe)
+                    throw new ArgumentException("La Clave ya está en uso.");
+            }
+            
 
             bool error = false;
             switch (region)

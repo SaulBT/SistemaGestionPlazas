@@ -82,7 +82,7 @@ namespace SGPla.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al llenar la tabla de artículos");
-                TempData["Error"] = "Ocurrió un error al cargar los artículos. Por favor, inténtelo de nuevo más tarde.";
+                TempData["Error"] = ex.Message;
 
                 return new TableModel();
             }
@@ -108,18 +108,18 @@ namespace SGPla.Controllers
             try
             {
                 await _areaAcademicaService.CrearAsync(model);
-                TempData["Success"] = "Usuario creado correctamente";
+                TempData["Success"] = "Dirección de área académica creada correctamente";
                 return RedirectToAction("Index");
             }
             catch(ArgumentException ex)
             {
-                ModelState.AddModelError("nombre", ex.Message);
+                TempData["Error"] = ex.Message;
                 return View(model);
             }
             catch(Exception ex)
             {
                 _logger.LogError(ex, "Error al crear la dirección de área académica");
-                ModelState.AddModelError("", "Error al crear la dirección de área académica");
+                TempData["Error"] = ex.Message;
                 return View(model);
             }
 
@@ -146,7 +146,7 @@ namespace SGPla.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error al obtener la dirección de área académica con ID {id}");
-                TempData["Error"] = "Ocurrió un error al cargar la dirección de área académica. Por favor, inténtelo de nuevo más tarde.";
+                TempData["Error"] = ex.Message;
                 return RedirectToAction("Index");
             }
         }
@@ -174,13 +174,12 @@ namespace SGPla.Controllers
             try
             {
                 await _areaAcademicaService.EditarAsync(model);
-                TempData["Success"] = "Dirección agregada correctamente";
+                TempData["Success"] = "Dirección editada correctamente";
                 return RedirectToAction("Index");
             }
             catch (ArgumentException ex)
             {
-                //ModelState.AddModelError()
-                TempData["Error"] = "Ha ocurrido un error: " + ex.Message;
+                TempData["Error"] = ex.Message;
                 return View(model);
             }
         }
@@ -206,7 +205,7 @@ namespace SGPla.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al eliminar la dirección de área académica {Id}", id);
-                TempData["Error"] = "Error al eliminar la dirección de área académica";
+                TempData["Error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
         }

@@ -12,11 +12,13 @@ namespace SGPla.Validations.Implementations
     {
         private readonly IProgramaEducativoRepository _programaEducativoRepository;
         private readonly IEntidadAcademicaRepository _entidadAcademicaRepository;
+        private readonly IPlanEstudiosRepository _planEstudiosRepository;
 
-        public ProgramaEducativoValidator(IProgramaEducativoRepository programaEducativoRepository, IEntidadAcademicaRepository entidadAcademicaRepository)
+        public ProgramaEducativoValidator(IProgramaEducativoRepository programaEducativoRepository, IEntidadAcademicaRepository entidadAcademicaRepository, IPlanEstudiosRepository planEstudiosRepository)
         {
             _programaEducativoRepository = programaEducativoRepository;
             _entidadAcademicaRepository = entidadAcademicaRepository;
+            _planEstudiosRepository = planEstudiosRepository;
         }
 
         public async Task ValidarBusquedaPorFiltroAsync(BuscarProgramaEducativoDTO buscarProgramaEducativoDTO)
@@ -115,6 +117,11 @@ namespace SGPla.Validations.Implementations
 
             if (existe is null)
                 throw new ArgumentException("El programa educativo no existe.");
+
+            if (await _planEstudiosRepository.ExisteProgramaEducativoPorIdAsync(id))
+            {
+                throw new ArgumentException("No se puede eliminar el programa educativo porque está asociado a un plan de estudio.");
+            }
         }
 
         public async Task ValidarObtenerPorIdAsync(int id)

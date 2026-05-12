@@ -2,7 +2,7 @@
 {
     public class CrearEntidadAcademicaDTO
     {
-        public int IdAreaAcademica { get; set; }
+        public int? IdAreaAcademica { get; set; }
         public string Clave { get; set; } = string.Empty;
         public string Nombre { get; set; } = string.Empty;
         public string CalleNumero { get; set; } = string.Empty;

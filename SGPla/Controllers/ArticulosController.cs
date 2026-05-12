@@ -1,8 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using SGPla.Mappers;
-using SGPla.Models;
 using SGPla.Models.DTOs.Articulo;
 using SGPla.Models.ViewModels.Articulos;
 using SGPla.Services.Interfaces;
@@ -76,7 +73,7 @@ namespace SGPla.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al llenar la tabla de artículos");
-                TempData["Error"] = "Ocurrió un error al cargar los artículos. Por favor, inténtelo de nuevo más tarde.";
+                TempData["Error"] = ex.Message;
 
                 return new TableModel();
             }
@@ -179,7 +176,7 @@ namespace SGPla.Controllers
                 }
                 catch (ArgumentException ex)
                 {
-                    ModelState.AddModelError("", ex.Message);
+                    TempData["Error"] = ex.Message;
                     return View("Index");
                 }
             }

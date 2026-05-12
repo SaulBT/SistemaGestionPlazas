@@ -10,6 +10,7 @@ namespace SGPla.Mappers
             return new ProgramaEducativo
             {
                 Nombre = dto.Nombre,
+                Campus = dto.Campus, 
                 IdEntidadAcademica = dto.IdEntidadAcademica,
             };
         }
@@ -20,6 +21,7 @@ namespace SGPla.Mappers
             {
                 IdProgramaEducativo = dto.IdProgramaEducativo,
                 Nombre = dto.Nombre,
+                Campus = dto.Campus,
                 IdEntidadAcademica = dto.IdEntidadAcademica
             };
 
@@ -41,7 +43,8 @@ namespace SGPla.Mappers
                 AreaAcademica = programaEducativo
                     .IdEntidadAcademicaNavigation?
                     .IdAreaAcademicaNavigation?
-                    .Nombre
+                    .Nombre,
+                Campus = programaEducativo.Campus
             };
         }
     }

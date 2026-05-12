@@ -10,5 +10,7 @@ namespace SGPla.Services.Interfaces
         Task<DatosAreaAcademicaDTO> ObtenerPorIdAsync(int id);
         Task EditarAsync(DatosAreaAcademicaDTO dto);
         Task EliminarAsync(int id);
+
+        //Task<(List<Detalles>)>
     }
 }

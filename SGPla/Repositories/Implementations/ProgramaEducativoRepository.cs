@@ -25,6 +25,7 @@ namespace SGPla.Repositories.Implementations
                 return null;
 
             actualizado.Nombre = programaEducativo.Nombre;
+            actualizado.Campus = programaEducativo.Campus;
             actualizado.IdEntidadAcademica = programaEducativo.IdEntidadAcademica;
             await _context.SaveChangesAsync();
 
@@ -42,7 +43,8 @@ namespace SGPla.Repositories.Implementations
         {
             return await _context.ProgramaEducativo.FirstOrDefaultAsync(a =>
                 a.Nombre == programaEducativo.Nombre &&
-                a.IdEntidadAcademica == programaEducativo.IdEntidadAcademica
+                a.IdEntidadAcademica == programaEducativo.IdEntidadAcademica &&
+                a.Campus == programaEducativo.Campus
             );
 
         }
@@ -61,6 +63,8 @@ namespace SGPla.Repositories.Implementations
                 lista = lista.Where(a => a.IdEntidadAcademica == filtro.IdEntidadAcademica.Value);
             if (!string.IsNullOrWhiteSpace(filtro.Nombre))
                 lista = lista.Where(a => a.Nombre.Contains(filtro.Nombre.Trim()));
+            if (!string.IsNullOrWhiteSpace(filtro.Region))
+                lista = lista.Where(a => a.IdEntidadAcademicaNavigation.Region == filtro.Region);
 
             return lista
                 .OrderBy(a => a.Nombre)
@@ -70,7 +74,11 @@ namespace SGPla.Repositories.Implementations
 
         public async Task<ProgramaEducativo?> ObtenerPorIdAsync(int id)
         {
-            return await _context.ProgramaEducativo.FindAsync(id);
+            return await _context.ProgramaEducativo
+                .AsNoTracking()
+                .Include(p => p.IdEntidadAcademicaNavigation)
+                    .ThenInclude(e => e.IdAreaAcademicaNavigation)
+                .FirstOrDefaultAsync(p => p.IdProgramaEducativo == id);
         }
 
         public async Task<List<ProgramaEducativo>> ObtenerTodosAsync()
@@ -93,6 +101,27 @@ namespace SGPla.Repositories.Implementations
                 return true;
             }
             return false;
+        }
+
+        public async Task<int> ContarPorFiltroAsync(BuscarProgramaEducativoDTO filtro)
+        {
+            // Crear una nueva consulta independiente (no usar la misma instancia de query)
+            var query = _context.ProgramaEducativo.AsQueryable();
+
+         
+
+            if (filtro.IdAreaAcademica.HasValue && filtro.IdAreaAcademica.Value > 0)
+                query = query.Where(a => a.IdEntidadAcademicaNavigation.IdAreaAcademica == filtro.IdAreaAcademica.Value);
+            if (filtro.IdEntidadAcademica.HasValue && filtro.IdEntidadAcademica.Value > 0)
+                query = query.Where(a => a.IdEntidadAcademica == filtro.IdEntidadAcademica.Value);
+            if (!string.IsNullOrWhiteSpace(filtro.Nombre))
+                query = query.Where(a => a.Nombre.Contains(filtro.Nombre.Trim()));
+            if (!string.IsNullOrWhiteSpace(filtro.Region))
+                query = query.Where(a => a.IdEntidadAcademicaNavigation.Region == filtro.Region);
+
+           
+
+            return await query.CountAsync();
         }
     }
 }

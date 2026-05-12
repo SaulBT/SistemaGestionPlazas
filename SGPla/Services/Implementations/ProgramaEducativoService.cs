@@ -37,6 +37,22 @@ namespace SGPla.Services.Implementations
                 .ToList();
         }
 
+        public async Task<(List<DetallesProgramaEducativoDTO> Items, int TotalCount)> BuscarPorFiltroPaginadoAsync(BuscarProgramaEducativoDTO filtro)
+        {
+            await _programaEducativoValidator.ValidarBusquedaPorFiltroAsync(filtro);
+
+            var totalCount = await _programaEducativoRepository.ContarPorFiltroAsync(filtro);
+            var obtenidos = await _programaEducativoRepository.ObtenerPorFiltroAsync(filtro)
+                             ?? new List<ProgramaEducativo>();
+
+            var dtos = obtenidos
+                .Where(x => x != null)
+                .Select(ProgramaEducativoMapper.ToDTO)
+                .ToList();
+
+            return (dtos, totalCount);
+        }
+
         public async Task<DetallesProgramaEducativoDTO> CrearAsync(CrearProgramaEducativoDTO programaEducativo)
         {
             await _programaEducativoValidator.ValidarCreacionAsync(programaEducativo);
@@ -61,19 +77,15 @@ namespace SGPla.Services.Implementations
             return await _programaEducativoRepository.EliminarAsync(id);
         }
 
-        public async Task<List<OpcionAreaAcademicaDTO>> ObtenerOpcionesAreaAcademicaAsync()
+        public async Task<List<AreaAcademica>> ObtenerOpcionesAreaAcademicaAsync()
         {
             await _areaAcademicaRepository.ObtenerTodosAsync();
-            var obtenidos = await _areaAcademicaRepository.ObtenerTodosAsync();
-            List<OpcionAreaAcademicaDTO> resultados = obtenidos.Select(AreaAcademicaMapper.ToOpcionDTO).ToList();
-            return resultados;
+            return await _areaAcademicaRepository.ObtenerTodosAsync();
         }
 
-        public async Task<List<OpcionEntidadAcademicaDTO>> ObtenerOpcionesEntidadAcademicaAsync(string region, int idAreaAcademica)
+        public async Task<List<EntidadAcademica>> ObtenerOpcionesEntidadAcademicaAsync(string region, int idAreaAcademica)
         {
-            var obtenidos = await _entidadAcademicaRepository.ObtenerOpcionesAsync(region, idAreaAcademica);
-            List<OpcionEntidadAcademicaDTO> resultados = obtenidos.Select(EntidadAcademicaMapper.ToOpcionDTO).ToList();
-            return resultados;
+            return await _entidadAcademicaRepository.ObtenerOpcionesAsync(region, idAreaAcademica);
         }
 
         public async Task<DetallesProgramaEducativoDTO?> ObtenerPorIdAsync(int id)
