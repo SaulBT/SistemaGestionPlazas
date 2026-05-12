@@ -28,6 +28,8 @@ function inicializarControles() {
         entidad);
 
     configurarCambioEntidad(
+        region,
+        area,
         entidad,
         programa);
 
@@ -95,9 +97,9 @@ async function configurarCambioArea(
 
                 return;
             }
-
+            
             await cargarOpcionesAsync(
-                `${urlObtenerEntidades}?idAreaAcademica=${area.value}?region=${region.value}`,
+                `${urlObtenerEntidades}?idAreaAcademica=${area.value}&region=${region.value}`,
                 entidad,
                 "Seleccione una entidad");
 
@@ -128,9 +130,9 @@ async function configurarCambioEntidad(
 
                 return;
             }
-
+            
             await cargarOpcionesAsync(
-                `/PlanesEstudios/ObtenerProgramasAsync?idAreaAcademica=${area.value}?region=${region.value}?idEntidadAcademica=${entidad.value}?idProgramaEducativo=${programa.value}`,
+                `${urlObtenerProgramas}?idAreaAcademica=${area.value}&region=${region.value}&idEntidadAcademica=${entidad.value}`,
                 programa,
                 "Seleccione un programa");
 
