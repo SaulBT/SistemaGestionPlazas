@@ -2,7 +2,7 @@
 {
     public class ArchivoPlanEstudiosDTO
     {
-        public Stream Archivo { get; set; } = new MemoryStream();
+        public string Ruta { get; set; } = string.Empty;
         public string NombreArchivo { get; set; } = string.Empty;
     }
 }
