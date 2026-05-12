@@ -1,5 +1,107 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model SGPla.Models.DTOs.ProgramaEducativo.DetallesProgramaEducativoDTO
+
 @{
+    ViewData["Title"] = "Ver Programa educativo";
 }
+
+<!-- Campos -->
+<div style="padding-bottom:var(--padding-end); ">
+    <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:center; justify-content:space-between; background-color:var(--bg-gris)">
+        @await Component.InvokeAsync("InputField", new InputFieldModel
+        {
+            Id = "nombre",
+            Name = "nombre",
+            Label = "Nombre:",
+            Valor = Model.Nombre,
+            Disabled = true,
+            Flexible = true
+        })
+    </div>
+    <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:center; justify-content:space-between; background-color:var(--bg-gris)">
+
+        <div id="contenedoCampus" style="flex:1 1 0; min-width:0;">
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "campus",
+                Name = "campus",
+                Label = "Campus:",
+                Valor = Model.Campus,
+                Disabled = true,
+                Flexible = true
+            })
+        </div>
+
+        <div id="contenedorRegion" style="flex:1 1 0; min-width:0;">
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "region",
+                Name = "region",
+                Label = "Region:",
+                Valor = Model.Region,
+                Disabled = true,
+                Flexible = true
+            })
+        </div>
+
+    </div>
+
+    <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:center; justify-content:space-between; background-color:var(--bg-gris)">
+        
+
+        <div style="width:100%">
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "areaAcademica",
+                Name = "areaAcademica",
+                Label = "Área Académica:",
+                Valor = Model.AreaAcademica,
+                Disabled = true,
+                Flexible = true
+            })
+        </div>
+        
+        <div id="contenedorEntidad" style="width:100%">
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "entidadAcademica",
+                Name = "entidadAcademica",
+                Label = "Entidad Académica:",
+                Valor = Model.EntidadAcademica,
+                Disabled = true,
+                Flexible = true
+            })
+        </div>
+    </div>
+</div>
+
+<!-- Botón Regresar -->
+<div>
+    <a href="@Url.Action("Index", "Usuarios")" style="display: inline-block; text-decoration: none;">
+        @await Component.InvokeAsync("Boton", new
+        {
+            Accion = "Regresar"
+        })
+    </a>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Obtener referencias a los elementos
+        const contenedorRegion = document.getElementById('contenedorRegion');
+        const contenedorEntidad = document.getElementById('contenedorEntidad');
+        
+        function configurarVistaCoordinadorAA() {
+            // Verificar si NombreEntidadAcademica está vacío o solo contiene espacios
+            const nombreEntidadAcademica = '@Model.EntidadAcademica';
+            
+            if (!nombreEntidadAcademica || nombreEntidadAcademica.trim() === "") {
+                if (contenedorEntidad) contenedorEntidad.style.display = "none";
+                if (contenedorRegion) contenedorRegion.style.display = "none";
+            }
+        }
+        
+        // Ejecutar la función
+        configurarVistaCoordinadorAA();
+    });
+</script>
+

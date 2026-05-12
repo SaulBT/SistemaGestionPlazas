@@ -3,6 +3,7 @@ using SGPla.Commons;
 using SGPla.Models;
 using SGPla.Models.Components;
 using SGPla.Models.DTOs.ProgramaEducativo;
+using SGPla.Models.DTOs.Usuarios;
 using SGPla.Models.ViewModels.ProgramasEducativos;
 using SGPla.Repositories.Interfaces;
 using SGPla.Services.Implementations;
@@ -354,7 +355,37 @@ namespace SGPla.Controllers
             }
         }
 
-        [HttpPost]
+        public async Task<IActionResult> VerProgramaEducativo(int id)
+        {
+
+            if (id == 0)
+            {
+                return BadRequest();
+            }
+
+            try
+            {
+
+
+                var programaEducativo = await _programaEducativoService.ObtenerPorIdAsync(id);
+
+                if (programaEducativo == null)
+                {
+                    return NotFound();
+                }
+
+                return View(programaEducativo);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener detalles del programa educativo", id);
+                TempData["Error"] = "Error al cargar los detalles del programa educativo";
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+
+                [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditarProgramaEducativo(EditarProgramaEducativoDTO dto)
         {
