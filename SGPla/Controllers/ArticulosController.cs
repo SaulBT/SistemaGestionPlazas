@@ -1,8 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using SGPla.Mappers;
-using SGPla.Models;
 using SGPla.Models.DTOs.Articulo;
 using SGPla.Models.ViewModels.Articulos;
 using SGPla.Services.Interfaces;

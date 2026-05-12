@@ -489,7 +489,7 @@ namespace SGPla.Controllers
                     IdUsuario = id,
                     Rol = rol
                 };
-
+               
                 await _usuarioService.EliminarAsync(referencia);
                 TempData["Success"] = "Usuario eliminado exitosamente";
                 return RedirectToAction(nameof(Index));

@@ -25,6 +25,7 @@ namespace SGPla.Repositories.Implementations
                 return null;
 
             actualizado.Nombre = programaEducativo.Nombre;
+            actualizado.Campus = programaEducativo.Campus;
             actualizado.IdEntidadAcademica = programaEducativo.IdEntidadAcademica;
             await _context.SaveChangesAsync();
 
@@ -42,7 +43,8 @@ namespace SGPla.Repositories.Implementations
         {
             return await _context.ProgramaEducativo.FirstOrDefaultAsync(a =>
                 a.Nombre == programaEducativo.Nombre &&
-                a.IdEntidadAcademica == programaEducativo.IdEntidadAcademica
+                a.IdEntidadAcademica == programaEducativo.IdEntidadAcademica &&
+                a.Campus == programaEducativo.Campus
             );
 
         }
@@ -61,6 +63,8 @@ namespace SGPla.Repositories.Implementations
                 lista = lista.Where(a => a.IdEntidadAcademica == filtro.IdEntidadAcademica.Value);
             if (!string.IsNullOrWhiteSpace(filtro.Nombre))
                 lista = lista.Where(a => a.Nombre.Contains(filtro.Nombre.Trim()));
+            if (!string.IsNullOrWhiteSpace(filtro.Region))
+                lista = lista.Where(a => a.IdEntidadAcademicaNavigation.Region == filtro.Region);
 
             return lista
                 .OrderBy(a => a.Nombre)

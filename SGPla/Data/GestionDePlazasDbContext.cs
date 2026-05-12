@@ -744,6 +744,10 @@ public partial class GestionDePlazasDbContext : DbContext
             entity.HasIndex(e => e.IdEntidadAcademica, "IX_ProgramaEducativo_idEntidadAcademica");
 
             entity.Property(e => e.IdProgramaEducativo).HasColumnName("idProgramaEducativo");
+            entity.Property(e => e.Campus)
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .HasColumnName("campus");
             entity.Property(e => e.IdEntidadAcademica).HasColumnName("idEntidadAcademica");
             entity.Property(e => e.Nombre)
                 .HasMaxLength(100)

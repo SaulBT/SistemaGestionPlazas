@@ -3,11 +3,8 @@ using SGPla.Commons;
 using SGPla.Models;
 using SGPla.Models.Components;
 using SGPla.Models.DTOs.ProgramaEducativo;
-using SGPla.Models.DTOs.Usuarios;
 using SGPla.Models.ViewModels.ProgramasEducativos;
-using SGPla.Repositories.Implementations;
 using SGPla.Repositories.Interfaces;
-using SGPla.Services.Implementations;
 using SGPla.Services.Interfaces;
 
 
@@ -273,7 +270,7 @@ namespace SGPla.Controllers
             {
                 IdProgramaEducativo = id,
                 Nombre = programaEducativo.Nombre,
-               // Campus = programaEducativo.Campus,
+                Campus = programaEducativo.Campus,
                 IdEntidadAcademica = programaEducativo.IdEntidadAcademica,
                 IdAreaAcademica = programaEducativo.IdAreaAcademica,
                 Region = programaEducativo.Region,
@@ -362,6 +359,7 @@ namespace SGPla.Controllers
             }
             catch (ArgumentException ex)
             {
+                _logger.LogWarning(ex, "Error al eliminar el programa educativo {Id}", id);
                 TempData["Error"] = ex.Message;
             }
             return RedirectToAction(nameof(Index));

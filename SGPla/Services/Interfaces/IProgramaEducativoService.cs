@@ -2,6 +2,7 @@
 using SGPla.Models.DTOs.ProgramaEducativo;
 using SGPla.Models.DTOs.AreaAcademica;
 using SGPla.Models;
+using Microsoft.Identity.Client;
 
 namespace SGPla.Services.Interfaces
 {

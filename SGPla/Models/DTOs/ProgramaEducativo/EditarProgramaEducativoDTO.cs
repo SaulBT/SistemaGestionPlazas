@@ -7,5 +7,7 @@ namespace SGPla.Models.DTOs.ProgramaEducativo
         public int IdProgramaEducativo { get; set; }
         public string Nombre { get; set; } = string.Empty;
         public int IdEntidadAcademica { get; set; }
+
+        public string Campus { get; set; } = string.Empty;
     }
 }

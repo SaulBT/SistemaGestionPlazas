@@ -6,6 +6,8 @@
 
         public string Nombre { get; set; } = null!;
 
+        public string Campus { get; set; } = null!;
+
         public int IdEntidadAcademica { get; set; }
 
         public string Region { get; set; } = string.Empty;
