@@ -10,6 +10,7 @@ using SGPla.Models.ViewModels.PlanesEstudios;
 using SGPla.Services.Implementations;
 using SGPla.Services.Interfaces;
 using System.Numerics;
+using System.Text.Json;
 
 namespace SGPla.Controllers
 {
@@ -20,25 +21,34 @@ namespace SGPla.Controllers
         private readonly IEntidadAcademicaService _entidadAcademicaService;
         private readonly IProgramaEducativoService _programaEducativoService;
         private readonly ILogger<PlanesEstudiosController> _logger;
+        private readonly IWebHostEnvironment _environment;
+        private const string NOMBRE_LOGGER = "FRONT-PLANES:";
 
         public PlanesEstudiosController(
             IPlanEstudiosService planEstudiosService,
             IAreaAcademicaService areaAcademicaService,
             IEntidadAcademicaService entidadAcademicaService,
             IProgramaEducativoService programaEducativoService,
-            ILogger<PlanesEstudiosController> logger)
+            ILogger<PlanesEstudiosController> logger,
+            IWebHostEnvironment environment)
         {
             _planEstudiosService = planEstudiosService;
             _areaAcademicaService = areaAcademicaService;
             _entidadAcademicaService = entidadAcademicaService;
             _programaEducativoService = programaEducativoService;
             _logger = logger;
+            _environment = environment;
         }
 
-        //Menú
-        public async Task<IActionResult> Index(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int? idProgramaEducativo)
+        /*
+         * VISTAS
+         */
+
+        //Ver todos los Planes de Estudios
+        [HttpGet]
+        public async Task<IActionResult> IndexAsync(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int? idProgramaEducativo)
         {
-            var regionesCombo = generarCatalogoRegiones(region);
+            var regionesCombo = generarCatalogoRegiones();
             var areasCombo = new List<OptionModel>();
             var entidadesCombo = new List<OptionModel>();
             var programasCombo = new List<OptionModel>();
@@ -50,39 +60,261 @@ namespace SGPla.Controllers
                 idAreaAcademica = null;
 
             //Llenar Entidades
-            if (idAreaAcademica.HasValue && !region.IsNullOrEmpty())
+            if (idAreaAcademica.HasValue)
                 entidadesCombo = await generarCatalogoEntidadesAsync(idAreaAcademica.Value, region, idEntidadAcademica);
             else
-            {
                 idEntidadAcademica = null;
-            }
 
             //Llenar Programas Educativos
-            if (idEntidadAcademica.HasValue && idAreaAcademica.HasValue)
+            if (idEntidadAcademica.HasValue)
                 programasCombo = await generarCatalogoProgramasAsync(idAreaAcademica.Value, region, idEntidadAcademica.Value, idProgramaEducativo);
             else
-            {
                 idProgramaEducativo = null;
-            }
 
             return View(new IndexViewModel
             {
-                Table = await LlenarTablaIndex(busqueda, region, idAreaAcademica, idEntidadAcademica, idProgramaEducativo),
+                Table = await LlenarTablaIndexAsync(busqueda, region, idAreaAcademica, idEntidadAcademica, idProgramaEducativo),
                 Regiones = regionesCombo,
                 Areas = areasCombo,
                 Entidades = entidadesCombo,
                 ProgramasEducativos = programasCombo,
-
-                RegionSeleccionada = region,
-                IdAreaSeleccionada = idAreaAcademica,
-                IdEntidadSeleccionada = idEntidadAcademica,
-                IdProgramaSeleccionado = idProgramaEducativo,
-                Busqueda = busqueda
             });
         }
 
-        private async Task<TableModel> LlenarTablaIndex(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int? idProgramaEducativo)
+        //Ver Plan de Estudios
+        [HttpGet]
+        public async Task<IActionResult> VerPlanEstudiosAsync(int id)
         {
+            _logger.LogInformation("{NOMBRE_LOGGER} Visualizando Plan de Estudios con Id: {id}", NOMBRE_LOGGER, id);
+            if (id == 0) return BadRequest();
+
+            try
+            {
+                var plan = await _planEstudiosService.ObtenerPorIdAsync(id);
+                if (plan == null)
+                    return NotFound();
+
+                return View(new VerPlanEstudiosViewModel
+                {
+                    IdPlanEstudios = plan.IdPlanEstudios,
+                    NombreProgramaEducativo = plan.NombreProgramaEducativo,
+                    Modalidad = plan.Modalidad,
+                    Nombre = plan.Nombre,
+                    NombreAreaAcademica = plan.NombreAreaAcademica,
+                    ExperienciasEducativas = plan.ExperienciasEducativas,
+                    Table = LlenarTablaVerPlanEstudios(plan.ExperienciasEducativas)
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{NOMBRE_LOGGER} Error al obtener detalles del Plan de Estudios con Id: {id}", NOMBRE_LOGGER, id);
+                TempData["Error"] = "Error al cargar los detalles del Plan de Estudios";
+                return RedirectToAction(nameof(IndexAsync));
+            }
+        }
+
+        //Cargar Plan Paso 1
+        [HttpGet]
+        public async Task<IActionResult> CargarPlanPaso1(CargarPlanPaso1ViewModel modelo)
+        {
+            var region = modelo.Region;
+            var plan = modelo.Plan;
+            var modalidad = modelo.Sistema;
+            var idAreaAcademica = modelo.Area;
+            var idEntidadAcademica = modelo.Entidad;
+            var idProgramaEducativo = modelo.Programa;
+
+            var regionesCombo = generarCatalogoRegiones();
+            var areasCombo = new List<OptionModel>();
+            var entidadesCombo = new List<OptionModel>();
+            var programasCombo = new List<OptionModel>();
+            var nombre = plan;
+            var modalidadesCombo = generarCatalogoModalidades(modalidad);
+
+            //Llenar Areas
+            if (!region.IsNullOrEmpty())
+                areasCombo = await generarCatalogoAreasAsync(idAreaAcademica);
+            else
+                idAreaAcademica = null;
+
+            //Llenar Entidades
+            if (idAreaAcademica.HasValue)
+                entidadesCombo = await generarCatalogoEntidadesAsync(idAreaAcademica.Value, region, idEntidadAcademica);
+            else
+                idEntidadAcademica = null;
+
+            //Llenar Programas Educativos
+            if (idEntidadAcademica.HasValue)
+                programasCombo = await generarCatalogoProgramasAsync(idAreaAcademica.Value, region, idEntidadAcademica.Value, idProgramaEducativo);
+            else
+                idProgramaEducativo = null;
+
+            return View(new CargarPlanPaso1ViewModel
+            {
+                Region = region,
+                Area = idAreaAcademica,
+                Entidad = idEntidadAcademica,
+                Programa = idProgramaEducativo,
+                Plan = nombre,
+                Archivo = modelo.Archivo,
+
+                ListaRegiones = regionesCombo,
+                ListaAreas = areasCombo,
+                ListaEntidades = entidadesCombo,
+                ListaProgramas = programasCombo,
+                ListaSistema = modalidadesCombo
+            });
+        }
+
+        //Cargar Plan Paso 2
+        [HttpPost]
+        public async Task<IActionResult> CargarPlanPaso2(CargarPlanPaso2ViewModel modelo)
+        {
+            _logger.LogInformation("{NOMBRE_LOGGER} Paso 2 de Cargar Plan de Estudios.", NOMBRE_LOGGER);
+
+            var archivo = modelo.Archivo;
+            await guardarArchivoTemporalmente(archivo);
+
+            var ruta = HttpContext.Session.GetString("Ruta");
+            if (!string.IsNullOrEmpty(ruta))
+            {
+                var archivoDto = new ArchivoPlanEstudiosDTO
+                {
+                    Ruta = ruta,
+                    NombreArchivo = archivo.FileName
+                };
+                var listaEe = await ProcesarArchivoAsync(archivoDto);
+
+                HttpContext.Session.SetString("Experiencias", JsonSerializer.Serialize(listaEe));
+
+                var area = await _areaAcademicaService.ObtenerPorIdAsync(modelo.Area);
+                var programa = await _programaEducativoService.ObtenerPorIdAsync(modelo.Programa);
+
+                return View(new CargarPlanPaso2ViewModel
+                {
+                    Region = modelo.Region,
+                    NombreArea = area.Nombre,
+                    NombrePrograma = programa.Nombre,
+                    IdProgramaEducativo = modelo.Programa,
+                    Plan = modelo.Plan,
+                    Sistema = modelo.Sistema,
+                    Table = LlenarTablaCargarPaso2(listaEe)
+                });
+            }
+            else
+            {
+                _logger.LogError("{NOMBRE_LOGGER} La ruta del archivo es nula.", NOMBRE_LOGGER);
+                TempData["Error"] = "La ruta del archivo es nula.";
+                return RedirectToAction(nameof(CargarPlanPaso1));
+            }
+        }
+
+        /*
+         * Llamadas Http
+         */
+
+        [HttpGet]
+        public async Task<JsonResult> ObtenerAreasAsync(int? idAreaAcademica)
+        {
+            var areas = await generarCatalogoAreasAsync(idAreaAcademica);
+
+            return Json(areas);
+        }
+
+        [HttpGet]
+        public async Task<JsonResult> ObtenerEntidadesAsync(int idAreaAcademica, string region, int? idEntidadAcademica)
+        {
+            var entidades = await generarCatalogoEntidadesAsync(idAreaAcademica, region, idEntidadAcademica);
+
+            return Json(entidades);
+        }
+
+        [HttpGet]
+        public async Task<JsonResult> ObtenerProgramasAsync(int idAreaAcademica, string region, int idEntidadAcademica, int? idProgramaEducativo)
+        {
+            var entidades = await generarCatalogoProgramasAsync(idAreaAcademica, region, idEntidadAcademica, idProgramaEducativo);
+
+            return Json(entidades);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GuardarPlanEstudiosAsync(GuardarNuevoPlanViewModel modelo)
+        {
+            try
+            {
+                var jsonEe = HttpContext.Session.GetString("Experiencias");
+                if (!string.IsNullOrEmpty(jsonEe))
+                {
+                    var experiencias = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(jsonEe);
+                    var rutaArchivo = HttpContext.Session.GetString("Ruta");
+                    if (!string.IsNullOrEmpty(rutaArchivo))
+                    {
+                        var nombreArchivo = HttpContext.Session.GetString("NombreArchivo");
+                        if (!string.IsNullOrEmpty(nombreArchivo))
+                        {
+                            var archivoDTO = new ArchivoPlanEstudiosDTO
+                            {
+                                Ruta = rutaArchivo,
+                                NombreArchivo = nombreArchivo
+                            };
+
+                            await _planEstudiosService.AgregarAsync(new CrearPlanEstudiosDTO
+                            {
+                                IdProgramaEducativo = (int)modelo.IdProgramaEducativo,
+                                Nombre = modelo.Plan,
+                                Sistema = modelo.Sistema,
+                                Archivo = archivoDTO,
+                                ExperienciasEducativas = experiencias.Select(ee => new AgregarExperienciaEducativaDTO
+                                {
+                                    Codigo = ee.Codigo,
+                                    Nombre = ee.Nombre,
+                                    PerfilDocente = ee.PerfilDocente
+                                }).ToList()
+                            });
+
+                            System.IO.File.Delete(rutaArchivo);
+                            HttpContext.Session.Clear();
+                            return RedirectToAction(nameof(IndexAsync));
+                        }
+                        else
+                        {
+                            _logger.LogError("{NOMBRE_LOGGER} El nombre del archivo es nulo.", NOMBRE_LOGGER);
+                            TempData["Error"] = "El nombre del archivo es nulo.";
+                            return RedirectToAction(nameof(CargarPlanPaso1), new CargarPlanPaso1ViewModel());
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogError("{NOMBRE_LOGGER} La ruta del archivo es nula.", NOMBRE_LOGGER);
+                        TempData["Error"] = "La ruta del archivo es nula.";
+                        return RedirectToAction(nameof(CargarPlanPaso1), new CargarPlanPaso1ViewModel());
+                    }
+                }
+                else
+                {
+                    _logger.LogError("{NOMBRE_LOGGER} La lista de Experiencias está vacía.", NOMBRE_LOGGER);
+                    TempData["Error"] = "La lista de Experiencias está vacía.";
+                    return RedirectToAction(nameof(CargarPlanPaso1), new CargarPlanPaso1ViewModel());
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al guardar el Plan de Estudios.");
+                TempData["Error"] = "Error al guardar el Plan de Estudios.";
+                return RedirectToAction(nameof(CargarPlanPaso1), new CargarPlanPaso1ViewModel());
+            }
+        }
+
+        /*
+         * Utils
+         */
+
+        private async Task<TableModel> LlenarTablaIndexAsync(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int? idProgramaEducativo)
+        {
+            _logger.LogInformation("{NOMBRE_LOGGER} Obteniendo tabla de Planes de Estudios con filtros:\n" +
+                " - Búsqueda: {busqueda}\n - Región: {region}\n - idAreaAcademica: {idAreaAcademica}\n - idEntidadAcademica: {idEntidadAcademica}\n" +
+                " - idProgramaEducativo: {idProgramaEducativo}",
+                NOMBRE_LOGGER, busqueda, region, idAreaAcademica, idEntidadAcademica, idProgramaEducativo);
             try
             {
                 int idEntidad = 0;
@@ -141,52 +373,24 @@ namespace SGPla.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener la lista de Planes de Estudios.");
+                _logger.LogError(ex, $"{NOMBRE_LOGGER} Error al obtener la lista de Planes de Estudios.");
                 TempData["Error"] = "Error al cargar los Planes de Estudios.";
 
                 return new TableModel();
             }
         }
 
-        //Ver Plan de Estudios
-        public async Task<IActionResult> VerPlanEstudios(int id)
-        {
-            if (id == 0)
-                return BadRequest();
-
-            try
-            {
-                var plan = await _planEstudiosService.ObtenerPorIdAsync(id);
-                if (plan == null)
-                    return NotFound();
-
-                return View(new VerPlanEstudiosViewModel
-                {
-                    IdPlanEstudios = plan.IdPlanEstudios,
-                    NombreProgramaEducativo = plan.NombreProgramaEducativo,
-                    Modalidad = plan.Modalidad,
-                    Nombre = plan.Nombre,
-                    NombreAreaAcademica = plan.NombreAreaAcademica,
-                    ExperienciasEducativas = plan.ExperienciasEducativas,
-                    Table = LlenarTablaVerPlanEstudios(plan.ExperienciasEducativas)
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener detalles del Plan de Estudios {Id}", id);
-                TempData["Error"] = "Error al cargar los detalles del Plan de Estudios";
-                return RedirectToAction(nameof(Index));
-            }
-        }
-
         private TableModel LlenarTablaVerPlanEstudios(List<DatosExperienciaEducativaDTO> experiencias)
         {
-            return new TableModel
+            _logger.LogInformation("{NOMBRE_LOGGER} Generando tabla con Experiencias Educativas.", NOMBRE_LOGGER);
+            try
             {
-                Headers = new List<string> { "Codigo", "Experiencia Educativa", "Perfil Docente" },
-                Rows = experiencias.Select(ee => new TableRowModel
+                return new TableModel
                 {
-                    Cells = new List<TableCellModel>
+                    Headers = new List<string> { "Codigo", "Experiencia Educativa", "Perfil Docente" },
+                    Rows = experiencias.Select(ee => new TableRowModel
+                    {
+                        Cells = new List<TableCellModel>
                     {
                         new() { Value = ee.Codigo },
                         new() { Value = ee.Nombre },
@@ -202,74 +406,25 @@ namespace SGPla.Controllers
                             }
                         }
                     }
-                }).ToList()
-            };
+                    }).ToList()
+                };
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, "{NOMBRE_LOGGER} Error al generar la tabla de Experiencias Educativas.", NOMBRE_LOGGER);
+                TempData["Error"] = "Error al generar la tabla de Experiencias Educativas.";
+
+                return new TableModel();
+            }
         }
 
-        //Paso 1
-        public async Task<IActionResult> CargarPlanPaso1(CargarPlanPaso1ViewModel modelo)
-        {
-            var region = modelo.Region;
-            var plan = modelo.Plan;
-            var modalidad = modelo.Sistema;
-            var idAreaAcademica = modelo.Area;
-            var idEntidadAcademica = modelo.Entidad;
-            var idProgramaEducativo = modelo.Programa;
-
-            var regionesCombo = generarCatalogoRegiones(region);
-            var areasCombo = new List<OptionModel>();
-            var entidadesCombo = new List<OptionModel>();
-            var programasCombo = new List<OptionModel>();
-            var nombre = plan;
-            var modalidadesCombo = generarCatalogoModalidades(modalidad);
-
-            //Llenar Areas
-            if (!region.IsNullOrEmpty())
-                areasCombo = await generarCatalogoAreasAsync(idAreaAcademica);
-            else
-                idAreaAcademica = null;
-
-            //Llenar Entidades
-            if (idAreaAcademica.HasValue && !region.IsNullOrEmpty())
-                entidadesCombo = await generarCatalogoEntidadesAsync(idAreaAcademica.Value, region, idEntidadAcademica);
-            else
-            {
-                idEntidadAcademica = null;
-            }
-
-            //Llenar Programas Educativos
-            if (idEntidadAcademica.HasValue && idAreaAcademica.HasValue)
-                programasCombo = await generarCatalogoProgramasAsync(idAreaAcademica.Value, region, idEntidadAcademica.Value, idProgramaEducativo);
-            else
-            {
-                idProgramaEducativo = null;
-            }
-
-            return View(new CargarPlanPaso1ViewModel
-            {
-                Region = region,
-                Area = idAreaAcademica,
-                Entidad = idEntidadAcademica,
-                Programa = idProgramaEducativo,
-                Plan = nombre,
-                Archivo = modelo.Archivo,
-
-                ListaRegiones = regionesCombo,
-                ListaAreas = areasCombo,
-                ListaEntidades = entidadesCombo,
-                ListaProgramas = programasCombo,
-                ListaSistema = modalidadesCombo
-            });
-        }
-
-        private List<OptionModel> generarCatalogoRegiones(string region)
+        private List<OptionModel> generarCatalogoRegiones()
         {
             return Constantes.Regiones
                 .Select(r => new OptionModel
                 {
                     Value = r,
-                    Text = r,
-                    Selected = r == region
+                    Text = r
                 })
                 .ToList();
         }
@@ -286,15 +441,6 @@ namespace SGPla.Controllers
                                a.IdAreaAcademica == idAreaAcademica.Value
             })
                 .ToList();
-        }
-
-        [HttpGet]
-        public async Task<JsonResult> ObtenerAreasAsync()
-        {
-            var areas =
-                await generarCatalogoAreasAsync(null);
-
-            return Json(areas);
         }
 
         private async Task<List<OptionModel>> generarCatalogoEntidadesAsync(int idAreaAcademica, string region, int? idEntidadAcademica)
@@ -317,15 +463,6 @@ namespace SGPla.Controllers
             }).ToList();
         }
 
-        [HttpGet]
-        public async Task<JsonResult> ObtenerEntidadesAsync(int idAreaAcademica, string region)
-        {
-            var entidades =
-                await generarCatalogoEntidadesAsync(idAreaAcademica, region, 1);
-
-            return Json(entidades);
-        }
-
         private async Task<List<OptionModel>> generarCatalogoProgramasAsync(int idAreaAcademica, string region, int idEntidadAcademica, int? idProgramaEducativo)
         {
             var filtros = new BuscarProgramaEducativoDTO
@@ -346,15 +483,6 @@ namespace SGPla.Controllers
             }).ToList();
         }
 
-        [HttpGet]
-        public async Task<JsonResult> ObtenerProgramasAsync(int idAreaAcademica, string region, int idEntidadAcademica)
-        {
-            var entidades =
-                await generarCatalogoProgramasAsync(idAreaAcademica, region, idEntidadAcademica, null);
-
-            return Json(entidades);
-        }
-
         private List<OptionModel> generarCatalogoModalidades(string? modalidad)
         {
             return Constantes.Modalidades
@@ -367,7 +495,6 @@ namespace SGPla.Controllers
                 .ToList();
         }
 
-        //Procesar Archivo
         public async Task<List<DatosExperienciaEducativaDTO>> ProcesarArchivoAsync(ArchivoPlanEstudiosDTO archivo)
         {
             try
@@ -379,34 +506,6 @@ namespace SGPla.Controllers
             {
                 return [];
             }
-        }
-
-        //Paso 2
-        public async Task<IActionResult> CargarPlanPaso2(CargarPlanPaso1ViewModel modelo)
-        {
-            var archivo = modelo.Archivo;
-            var archivoDto = new ArchivoPlanEstudiosDTO
-            {
-                Archivo = archivo.OpenReadStream(),
-                NombreArchivo = archivo.FileName
-            };
-            var listaEe = await ProcesarArchivoAsync(archivoDto);
-
-            var area = await _areaAcademicaService.ObtenerPorIdAsync((int)modelo.Area);
-            var programa = await _programaEducativoService.ObtenerPorIdAsync((int)modelo.Programa);
-
-            return View(new CargarPlanPaso2ViewModel
-            {
-                Region = modelo.Region,
-                Area = area.Nombre,
-                ProgramaEducativo = programa.Nombre,
-                IdProgramaEducativo = (int)modelo.Programa,
-                Plan = modelo.Plan,
-                Sistema = modelo.Sistema,
-                Table = LlenarTablaCargarPaso2(listaEe),
-                Archivo = archivoDto,
-                Experiencias = listaEe
-            });
         }
 
         private TableModel LlenarTablaCargarPaso2(List<DatosExperienciaEducativaDTO> experiencias)
@@ -452,32 +551,17 @@ namespace SGPla.Controllers
             };
         }
 
-        [HttpPost]
-        public async Task<IActionResult> GuardarPlanEstudiosAsync(CargarPlanPaso2ViewModel modelo)
+        private async Task guardarArchivoTemporalmente(IFormFile archivo)
         {
-            try
-            {
-                await _planEstudiosService.AgregarAsync(new CrearPlanEstudiosDTO
-                {
-                    IdProgramaEducativo = (int)modelo.IdProgramaEducativo,
-                    Nombre = modelo.Plan,
-                    Sistema = modelo.Sistema,
-                    Archivo = modelo.Archivo,
-                    ExperienciasEducativas = modelo.Experiencias.Select(ee => new AgregarExperienciaEducativaDTO
-                    {
-                        Codigo = ee.Codigo,
-                        Nombre = ee.Nombre,
-                        PerfilDocente = ee.PerfilDocente
-                    }).ToList()
-                });
-                return RedirectToAction(nameof(Index));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al guardar el Plan de Estudios.");
-                TempData["Error"] = "Error al guardar el Plan de Estudios.";
-                return RedirectToAction(nameof(CargarPlanPaso1), modelo);
-            }
+            var carpetaTemp = Path.Combine(_environment.ContentRootPath, "TempUploads");
+            Directory.CreateDirectory(carpetaTemp);
+            var extension = Path.GetExtension(archivo.FileName);
+            var rutaArchivo = Path.Combine(carpetaTemp, $"{Guid.NewGuid()}{extension}");
+            using var stream = new FileStream(rutaArchivo, FileMode.Create);
+            await archivo.CopyToAsync(stream);
+
+            HttpContext.Session.SetString("Ruta", rutaArchivo);
+            HttpContext.Session.SetString("NombreArchivo", archivo.FileName);
         }
     }
 }
