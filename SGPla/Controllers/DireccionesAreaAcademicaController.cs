@@ -38,7 +38,7 @@ namespace SGPla.Controllers
             {
                 var areas = await _areaAcademicaService.BuscarPorFiltroPaginadoAsync(busqueda, pagina, cantidad);
                 
-                if (areas.TotalCount <= cantidad)
+                if (areas.Items.Count == 0)
                 {
                     paginaActual = 1;
                     areas = await _areaAcademicaService.BuscarPorFiltroPaginadoAsync(busqueda, paginaActual, cantidad);
