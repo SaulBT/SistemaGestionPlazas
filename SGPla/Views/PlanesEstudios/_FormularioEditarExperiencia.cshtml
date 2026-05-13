@@ -1,0 +1,35 @@
+﻿@model SGPla.Models.ViewModels.PlanesEstudios.FormularioExperienciaEducativaViewModel
+
+<input type="hidden"
+       id="IdExperienciaEducativa"
+       name="IdExperienciaEducativa"
+       value="@Model?.IdExperienciaEducativa" />
+
+@await Component.InvokeAsync("InputField", new InputFieldModel
+{
+    Id = "CodigoEditar",
+    Name = "Codigo",
+    Label = "Código:",
+    Valor = Model?.Codigo,
+    Flexible = true,
+    MaximoCaracteres = 10
+})
+
+@await Component.InvokeAsync("InputField", new InputFieldModel
+{
+    Id = "NombreEditar",
+    Name = "Nombre",
+    Label = "Nombre:",
+    Valor = Model?.Nombre,
+    Flexible = true,
+    MaximoCaracteres = 150
+})
+
+@await Component.InvokeAsync("InputField", new InputFieldModel
+{
+    Id = "PerfilDocenteEditar",
+    Name = "PerfilDocente",
+    Label = "Perfil Docente:",
+    Valor = Model?.PerfilDocente,
+    Flexible = true,
+})
