@@ -23,7 +23,7 @@ namespace SGPla.Controllers
 
         // GET: EntidadesAcademicas
 
-        public async Task<IActionResult> Index(string? busqueda, string? region, int? idAreaAcademica)
+        public async Task<IActionResult> Index(string? busqueda, string? region, int? idAreaAcademica, int pagina = 1, int cantidad = 10)
         {
             // combos
             var regionesCombo = Constantes.Regiones
@@ -49,16 +49,18 @@ namespace SGPla.Controllers
 
             return View(new IndexViewModel
             {
-                Table = await LlenarTabla(busqueda, region, idAreaAcademica),
+                Table = await LlenarTabla(busqueda, region, idAreaAcademica, pagina, cantidad),
                 Regiones = regionesCombo,
                 Areas = areasCombo,
                 RegionSeleccionada = region,
                 idAreaSeleccionada = idAreaAcademica,
-                Busqueda = busqueda?.ToString()
+                Busqueda = busqueda?.ToString(),
+                PaginaActual= pagina,
+                CantidadPorPagina = cantidad
             });
         }
 
-        private async Task<TableModel> LlenarTabla(string? busqueda, string? region, int? idAreaAcademica)
+        private async Task<TableModel> LlenarTabla(string? busqueda, string? region, int? idAreaAcademica, int pagina = 1, int cantidad= 10)
         {
             try
             {
@@ -66,9 +68,11 @@ namespace SGPla.Controllers
                 {
                     Nombre = busqueda ?? string.Empty,
                     Region = region ?? string.Empty,
-                    IdAreaAcademica = idAreaAcademica ?? -1
+                    IdAreaAcademica = idAreaAcademica ?? -1,
+                    Pagina = pagina,
+                    Cantidad  = cantidad
                 };
-                var entidades = await _entidadAcademicaService.ObtenerPorFiltroAsync(filtros, 1);
+                var entidades = await _entidadAcademicaService.BuscarPorFiltroPaginadoAsync(filtros);
 
                 return new TableModel
                 {
@@ -77,7 +81,7 @@ namespace SGPla.Controllers
                         "Nombre", "Domicilio", "Telefono",
                         "Área Académica", "Región", "Acciones"
                     },
-                    Rows = entidades.Select(e => new TableRowModel
+                    Rows = entidades.Items.Select(e => new TableRowModel
                     {
                         Cells = new List<TableCellModel>
                         {
@@ -100,7 +104,10 @@ namespace SGPla.Controllers
                                         Accion = "programa educativo",
                                         Url = Url.Action("Buscar", "ProgramasEducativos", new
                                         {
-                                            IdEntidadAcademica = e.IdEntidadAcademica
+                                            idEntidadAcademica = e.IdEntidadAcademica,
+                                            region = e.Region,
+                                            idAreaAcademica =e.IdAreaAcademica
+
                                         })
                                     },
                                     new()
@@ -116,7 +123,14 @@ namespace SGPla.Controllers
                                 }
                             }
                         }
-                    }).ToList()
+                    }).ToList(),
+                    Pagination = new PaginationInfo
+                    {
+                        CurrentPage = pagina,
+                        PageSize = cantidad,
+                        TotalItems = entidades.TotalCount,
+                        OnPageChange = "cambiarPagina"
+                    }
                 };
             }
             catch (Exception ex)

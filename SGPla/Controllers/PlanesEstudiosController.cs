@@ -35,7 +35,7 @@ namespace SGPla.Controllers
             _logger = logger;
         }
 
-        //GET: Usuarios
+        //GET: planes
         public async Task<IActionResult> Index(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int? idProgramaEducativo)
         {
             var regionesCombo = generarCatalogoRegiones(region);

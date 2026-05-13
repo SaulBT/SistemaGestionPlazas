@@ -48,7 +48,6 @@ namespace SGPla.Repositories.Implementations
             );
 
         }
-
         public async Task<List<ProgramaEducativo>> ObtenerPorFiltroAsync(BuscarProgramaEducativoDTO filtro)
         {
             var lista = _context.ProgramaEducativo
@@ -59,17 +58,21 @@ namespace SGPla.Repositories.Implementations
 
             if (filtro.IdAreaAcademica.HasValue && filtro.IdAreaAcademica.Value > 0)
                 lista = lista.Where(a => a.IdEntidadAcademicaNavigation.IdAreaAcademica == filtro.IdAreaAcademica.Value);
+
             if (filtro.IdEntidadAcademica.HasValue && filtro.IdEntidadAcademica.Value > 0)
                 lista = lista.Where(a => a.IdEntidadAcademica == filtro.IdEntidadAcademica.Value);
+
             if (!string.IsNullOrWhiteSpace(filtro.Nombre))
                 lista = lista.Where(a => a.Nombre.Contains(filtro.Nombre.Trim()));
+
             if (!string.IsNullOrWhiteSpace(filtro.Region))
                 lista = lista.Where(a => a.IdEntidadAcademicaNavigation.Region == filtro.Region);
 
-            return lista
+            return await lista
                 .OrderBy(a => a.Nombre)
+                .Skip((filtro.Pagina - 1) * filtro.Cantidad)
                 .Take(filtro.Cantidad)
-                .ToList();
+                .ToListAsync();
         }
 
         public async Task<ProgramaEducativo?> ObtenerPorIdAsync(int id)
@@ -88,6 +91,12 @@ namespace SGPla.Repositories.Implementations
                 .Include(aa => aa.IdEntidadAcademicaNavigation.IdAreaAcademicaNavigation)
                 .OrderBy(a => a.Nombre)
                 .ToListAsync();
+        }
+
+        public async Task<bool> EstaAsociadoAPlan(int id)
+        {
+            return await _context.PlanEstudios.AnyAsync(plan => plan.IdProgramaEducativo == id);
+
         }
 
         public async Task<bool> EliminarAsync(int id)
