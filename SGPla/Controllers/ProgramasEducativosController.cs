@@ -14,6 +14,7 @@ namespace SGPla.Controllers
         private readonly IProgramaEducativoService _programaEducativoService;
         private readonly IEntidadAcademicaRepository _entidadAcademicaRepository;
         private readonly ILogger<ProgramasEducativosController> _logger;
+        private int paginaActual = 1;
 
         public ProgramasEducativosController(
             IProgramaEducativoService programaEducativoService,
@@ -28,6 +29,7 @@ namespace SGPla.Controllers
         // GET: ProgramasEducativos
         public async Task<IActionResult> Index(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int pagina = 1, int cantidad = 10)
         {
+            paginaActual = pagina;
             var regionesCombo = Constantes.Regiones
                 .Select(r => new OptionModel { Value = r, Text = r, Selected = r == region })
                 .ToList();
@@ -72,7 +74,7 @@ namespace SGPla.Controllers
                 IdAreaSeleccionada = idAreaAcademica,
                 IdEntidadSeleccionada = idEntidadAcademica,
                 Busqueda = busqueda,
-                PaginaActual = pagina,
+                PaginaActual = paginaActual,
                 CantidadPorPagina = cantidad
             });
         }
@@ -92,6 +94,12 @@ namespace SGPla.Controllers
                 };
 
                 var resultado = await _programaEducativoService.BuscarPorFiltroPaginadoAsync(filtros);
+                if (resultado.Items.Count == 0)
+                {
+                    paginaActual = 1;
+                    filtros.Pagina = paginaActual;
+                    resultado = await _programaEducativoService.BuscarPorFiltroPaginadoAsync(filtros);
+                }
 
                 if (resultado.Items == null || !resultado.Items.Any())
                 {
@@ -101,7 +109,7 @@ namespace SGPla.Controllers
                         Rows = new List<TableRowModel>(),
                         Pagination = new PaginationInfo
                         {
-                            CurrentPage = pagina,
+                            CurrentPage = paginaActual,
                             PageSize = cantidad,
                             TotalItems = 0,
                             OnPageChange = "cambiarPagina"
@@ -157,7 +165,7 @@ namespace SGPla.Controllers
                     }).ToList(),
                     Pagination = new PaginationInfo
                     {
-                        CurrentPage = pagina,
+                        CurrentPage = paginaActual,
                         PageSize = cantidad,
                         TotalItems = resultado.TotalCount,
                         OnPageChange = "cambiarPagina"

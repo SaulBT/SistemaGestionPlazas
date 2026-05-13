@@ -13,6 +13,7 @@ namespace SGPla.Controllers
         private readonly IEntidadAcademicaService _entidadAcademicaService;
         private readonly IAreaAcademicaService _areaAcademicaService;
         private readonly ILogger<EntidadesAcademicasController> _logger;
+        private int paginaActual = 1;
 
         public EntidadesAcademicasController(IEntidadAcademicaService entidadAcademicaService, ILogger<EntidadesAcademicasController> logger, IAreaAcademicaService areaAcademicaService)
         {
@@ -25,6 +26,7 @@ namespace SGPla.Controllers
 
         public async Task<IActionResult> Index(string? busqueda, string? region, int? idAreaAcademica, int pagina = 1, int cantidad = 10)
         {
+            paginaActual = pagina;
             // combos
             var regionesCombo = Constantes.Regiones
                 .Select(r => new OptionModel
@@ -55,7 +57,7 @@ namespace SGPla.Controllers
                 RegionSeleccionada = region,
                 idAreaSeleccionada = idAreaAcademica,
                 Busqueda = busqueda?.ToString(),
-                PaginaActual= pagina,
+                PaginaActual= paginaActual,
                 CantidadPorPagina = cantidad
             });
         }
@@ -73,6 +75,12 @@ namespace SGPla.Controllers
                     Cantidad  = cantidad
                 };
                 var entidades = await _entidadAcademicaService.BuscarPorFiltroPaginadoAsync(filtros);
+                if (entidades.Items.Count == 0)
+                {
+                    paginaActual = 1;
+                    filtros.Pagina = paginaActual;
+                    entidades = await _entidadAcademicaService.BuscarPorFiltroPaginadoAsync(filtros);
+                }
 
                 return new TableModel
                 {
@@ -126,7 +134,7 @@ namespace SGPla.Controllers
                     }).ToList(),
                     Pagination = new PaginationInfo
                     {
-                        CurrentPage = pagina,
+                        CurrentPage = paginaActual,
                         PageSize = cantidad,
                         TotalItems = entidades.TotalCount,
                         OnPageChange = "cambiarPagina"
