@@ -46,7 +46,7 @@ namespace SGPla.Repositories.Implementations
                 .ToListAsync();
         }
 
-        public async Task<List<EntidadAcademica>> ObtenerPorFiltroAsync(string? region, int? idAreaAcademica, string? nombre)
+        public async Task<List<EntidadAcademica>> ObtenerPorFiltroAsync(string? region, int? idAreaAcademica, string? nombre, int pagina, int cantidad)
         {
             var lista = _context.EntidadAcademica
                 .Include(e => e.IdAreaAcademicaNavigation)
@@ -59,7 +59,9 @@ namespace SGPla.Repositories.Implementations
             if (!string.IsNullOrEmpty(nombre))
                 lista = lista.Where(e => e.Nombre.Contains(nombre));
 
-            return await lista.ToListAsync();
+            return await lista.Skip((pagina - 1) * cantidad)
+                .Take(cantidad)
+                .ToListAsync();
         }
 
         public async Task<EntidadAcademica?> ObtenerPorIdAsync(int idEntidadAcademica)
@@ -139,6 +141,21 @@ namespace SGPla.Repositories.Implementations
 
             _context.EntidadAcademica.Remove(entidadAcademica);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<int> ContarPorFiltroAsync(string? region, int? idAreaAcademica, string? nombre)
+        {
+            var query = _context.EntidadAcademica
+                .Include(e => e.IdAreaAcademicaNavigation)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(region))
+                query = query.Where(e => e.Region == region);
+            if (idAreaAcademica != null && idAreaAcademica >= 0)
+                query = query.Where(e => e.IdAreaAcademica == idAreaAcademica);
+            if (!string.IsNullOrEmpty(nombre))
+                query = query.Where(e => e.Nombre.Contains(nombre));
+            return await query.CountAsync();
         }
     }
 }

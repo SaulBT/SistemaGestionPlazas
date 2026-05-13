@@ -2,187 +2,129 @@
 @model IndexViewModel
 
 @{
-	Layout = "_LayoutSuperUsuario";
-	ViewData["Title"] = "Programas Educativos";
+    Layout = "_LayoutSuperUsuario";
+    ViewData["Title"] = "Programas Educativos";
 }
+
 <div>
-	<form id="filtrosForm" method="get" action="@Url.Action("Index", "ProgramasEducativos")">
+    <form id="filtrosForm" method="get" action="@Url.Action("Index", "ProgramasEducativos")">
 
-		<!-- Filtros -->
-		<div style="display:inline-flex; gap:10px; padding-bottom:30px;">
-			@await Component.InvokeAsync("SelectField", new SelectFieldModel
-			{
-				Label = "Región",
-				Options = Model.Regiones,
-				Name = "region"
-			})
+        <!-- Filtros -->
+        <div style="display:inline-flex; gap:10px; padding-bottom:30px;">
+            @await Component.InvokeAsync("SelectField", new SelectFieldModel
+            {
+                Label = "Región",
+                Options = Model.Regiones,
+                Name = "region"
+            })
+            @await Component.InvokeAsync("SelectField", new SelectFieldModel
+            {
+                Label = "Área Académica",
+                Options = Model.Areas,
+                Name = "idAreaAcademica"
+            })
+            <div id="contenedorEntidad">
+                @await Component.InvokeAsync("SelectField", new SelectFieldModel
+                {
+                    Label = "Entidad Académica",
+                    Options = Model.Entidades,
+                    Name = "idEntidadAcademica"
+                })
+            </div>
+        </div>
 
-			@await Component.InvokeAsync("SelectField", new SelectFieldModel
-			{
-				Label = "Área Académica",
-				Options = Model.Areas,
-				Name = "idAreaAcademica"
-			})
+        <!-- Acciones -->
+        <div style="display:flex; gap:10px; padding-bottom:30px; align-items:center; justify-content:space-between">
+            @await Component.InvokeAsync("Buscador", new BuscadorModel
+            {
+                Name = "busqueda",
+                Placeholder = "Buscar programa educativo...",
+                Action = Url.Action("Index", "ProgramasEducativos"),
+                Method = "get",
+                Value = Context.Request.Query["busqueda"]
+            })
+            <a href="@Url.Action("CrearProgramaEducativo", "ProgramasEducativos")" style="display: inline-block; text-decoration: none;">
+                @await Component.InvokeAsync("Boton", new
+                {
+                    Accion = "Agregar",
+                    Texto = "Crear Programa Educativo"
+                })
+            </a>
+        </div>
 
-			<div id="contenedorEntidad">
-				@await Component.InvokeAsync("SelectField", new SelectFieldModel
-				{
-					Label = "Entidad Académica",
-					Options = Model.Entidades,
-					Name = "idEntidadAcademica"
-				})
-			</div>
-        
-		</div>
+        <!-- Campos ocultos para paginación -->
+        <input type="hidden" name="pagina" id="paginaHidden" value="@Model.PaginaActual" />
+        <input type="hidden" name="cantidad" id="cantidadHidden" value="@Model.CantidadPorPagina" />
 
-		<!-- Acciones -->
-		<div style="display:flex; gap:10px; padding-bottom:30px; align-items:center; justify-content:space-between">
-			<!--Barra de Búsqueda-->
-			@await Component.InvokeAsync("Buscador", new BuscadorModel
-			{
-				Name = "busqueda",
-				Placeholder = "Buscar programa educativo...",
-				Action = Url.Action("Index", "ProgramasEducativos"),
-				Method = "get",
-				Value = Context.Request.Query["busqueda"]
-			})
+    </form>
 
-			<!--Botón Crear Programa Educativo-->
-			<a href="@Url.Action("CrearProgramaEducativo", "ProgramasEducativos")" style="display: inline-block; text-decoration: none;">
-				@await Component.InvokeAsync("Boton", new
-				{
-					Accion = "Agregar",
-					Texto = "Crear Programa Educativo"
-				})
-			</a>
-		</div>
-		<!-- Campos ocultos para paginación -->
-		<input type="hidden" name="pagina" id="paginaHidden" value="@Model.PaginaActual" />
-		<input type="hidden" name="cantidad" id="cantidadHidden" value="@Model.CantidadPorPagina" />
+    <!-- Tabla con Datos -->
+    <div style="display:flex; gap:10px; padding-top:20px; justify-content:left">
+        @await Component.InvokeAsync("Table", Model.Table)
+    </div>
 
-	</form>
+    <!-- Ventanas Modales -->
+    <div>
+        <!-- Confirmación eliminación -->
+        <form id="formEliminarProgramaEducativo" method="post" action="@Url.Action("EliminarProgramaEducativo", "ProgramasEducativos")">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" id="deleteProgramaEducativoId" />
+            @await Component.InvokeAsync("Modal", new ModalModel
+            {
+                Id = "modalConfirmacion",
+                Tipo = "confirm",
+                Titulo = "Confirmación",
+                Mensaje = "¿Estás seguro de que deseas eliminar este programa educativo?",
+                OnConfirm = "confirmarModal()",
+                OnCancel = "cerrarModal('modalConfirmacion')"
+            })
+        </form>
 
-
-	<!-- Tabla con Datos -->
-	<div style="display:flex; gap:10px; padding-top:20px;justify-content:left">
-		@await Component.InvokeAsync("Table", Model.Table)
-        
-        
-	</div>
-
-
-	<!-- Ventanas Modales-->
-	<div>
-		<!-- Ventana de Confirmación eliminación de programa educativo -->
-		<form id="formEliminarProgramaEducativo" method="post" action="@Url.Action("EliminarProgramaEducativo", "ProgramasEducativos")">
-			@Html.AntiForgeryToken()
-
-			<input type="hidden" name="id" id="deleteProgramaEducativoId" />
-			@await Component.InvokeAsync("Modal", new ModalModel
-			{
-				Id = "modalConfirmacion",
-				Tipo = "confirm",
-				Titulo = "Confirmación",
-				Mensaje = "Confirmación",
-				OnConfirm = "confirmarModal()",
-				OnCancel = "cerrarModal('modalConfirmacion')"
-			})
-		</form>
-
-		<!-- Ventana de éxito al realizar una acción -->
-		@if (TempData["Success"] != null)
-		{
-			@await Component.InvokeAsync("Modal", new ModalModel
-			{
-				Id = "modalSuccess",
-				Tipo = "info",
-				Titulo = "Éxito",
-				Mensaje = TempData["Success"]!.ToString(),
-				OnConfirm = "cerrarModal('modalSuccess')"
-			})
-
-			<script>
-						document.addEventListener("DOMContentLoaded", function () {
-							abrirModal("modalSuccess");
-						});
-			</script>
-		}
-	</div>
+       
+    </div>
 </div>
 
-
 <script>
-	document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.getElementById("filtrosForm");
+        const region = document.getElementById("region");
+        const area = document.getElementById("idAreaAcademica");
+        const entidad = document.getElementById("idEntidadAcademica");
+        const contenedorEntidad = document.getElementById("contenedorEntidad");
 
-		const form = document.querySelector("form");
+        function toggleEntidad() {
+            if (!area || !contenedorEntidad) return;
+            contenedorEntidad.style.display = area.value ? "inline-flex" : "none";
+        }
 
-		const region = document.getElementById("region");
-		const area = document.getElementById("idAreaAcademica");
-		const entidad = document.getElementById("idEntidadAcademica");
-		const contenedorEntidad = document.getElementById("contenedorEntidad");
+        toggleEntidad();
 
-		function toggleEntidad() {
-			if (!area || !contenedorEntidad) return;
+        if (region) {
+            region.addEventListener("change", function () {
+                if (entidad) entidad.value = "";
+                form.submit();
+            });
+        }
 
-			if (!area.value) {
-				contenedorEntidad.style.display = "none";
-			} else {
-				contenedorEntidad.style.display = "inline-flex";
-			}
-		}
+        if (area) {
+            area.addEventListener("change", function () {
+                if (entidad) entidad.value = "";
+                toggleEntidad();
+                form.submit();
+            });
+        }
 
-		// Estado inicial
-		toggleEntidad();
-
-		// Región cambia
-		if (region) {
-			region.addEventListener("change", function () {
-                
-				if (entidad) entidad.value = "";
-				form.submit();
-			});
-		}
-
-		// Área cambia
-		if (area) {
-			area.addEventListener("change", function () {
-				if (entidad) entidad.value = "";
-				toggleEntidad();
-				form.submit();
-			});
-		}
-
-		// Entidad cambia
-		if (entidad) {
-			entidad.addEventListener("change", function () {
-				form.submit();
-			});
-		}
-
-	});
+        if (entidad) {
+            entidad.addEventListener("change", function () {
+                form.submit();
+            });
+        }
+    });
 </script>
 
 <script>
-		function eliminarProgramaEducativo(id) {
-
-		document.getElementById("deleteProgramaEducativoId").value = id;
-
-		document.getElementById("formEliminarProgramaEducativo").submit();
-	}
+    function eliminarProgramaEducativo(id) {
+        document.getElementById("deleteProgramaEducativoId").value = id;
+        document.getElementById("formEliminarProgramaEducativo").submit();
+    }
 </script>
-
-<script>
-	document.addEventListener("DOMContentLoaded", function () {
-
-		const form = document.querySelector("form");
-		//const periodo = document.querySelector("select[name='programaEducativo']");
-
-		if (periodo) {
-			periodo.addEventListener("change", function () {
-				form.submit();
-			});
-		}
-
-	});
-</script>
-

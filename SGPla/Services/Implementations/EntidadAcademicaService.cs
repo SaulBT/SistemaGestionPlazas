@@ -19,6 +19,17 @@ namespace SGPla.Services.Implementations
             _entidadAcademicaValidator = entidadAcademicaValidator;
         }
 
+        public async Task<(List<ListaEntidadAcademicaDTO> Items, int TotalCount)> BuscarPorFiltroPaginadoAsync(FiltroEntidadAcademicaDTO filtro)
+        {
+            _entidadAcademicaValidator.ValidarIndice(filtro.Pagina);
+
+            var entidades = await _entidadAcademicaRepository.ObtenerPorFiltroAsync(filtro.Region, filtro.IdAreaAcademica, filtro.Nombre, filtro.Pagina, filtro.Cantidad);
+            var cantidad = await _entidadAcademicaRepository.ContarPorFiltroAsync(filtro.Region, filtro.IdAreaAcademica, filtro.Nombre);
+            var dtos = entidades.Select(mapearLista);
+
+            return (dtos.ToList(), cantidad);
+        }
+
         public async Task<int> CrearAsync(CrearEntidadAcademicaDTO dto)
         {
             await _entidadAcademicaValidator.ValidarCreacionAsync(dto);
@@ -89,7 +100,7 @@ namespace SGPla.Services.Implementations
         {
             _entidadAcademicaValidator.ValidarIndice(indice);
 
-            var entidades = await _entidadAcademicaRepository.ObtenerPorFiltroAsync(filtro.Region, filtro.IdAreaAcademica, filtro.Nombre);
+            var entidades = await _entidadAcademicaRepository.ObtenerPorFiltroAsync(filtro.Region, filtro.IdAreaAcademica, filtro.Nombre, indice, filtro.Cantidad);
             var dtos = entidades.Select(mapearLista);
 
             return dtos.ToList();
