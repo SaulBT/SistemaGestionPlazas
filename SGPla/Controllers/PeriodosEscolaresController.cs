@@ -122,17 +122,18 @@ namespace SGPla.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Crear(CrearPeriodoEscolarDTO dto)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                try
-                {
-                    var resultado = await _periodoEscolarService.CrearAsync(dto);
-                    TempData["Success"] = $"Periodo Escolar creado exitosamente";
-                }
-                catch (ArgumentException ex)
-                {
-                    TempData["Error"] = ex.Message;
-                }
+                ModelState.AddModelError("Anio", "El campo es obligatorio");
+            }
+            try
+            {
+                var resultado = await _periodoEscolarService.CrearAsync(dto);
+                TempData["Success"] = $"Periodo Escolar creado exitosamente";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = ex.Message;
             }
             return RedirectToAction(nameof(Index));
 
@@ -161,18 +162,16 @@ namespace SGPla.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Editar(EditarPeriodoEscolarDTO dto)
         {
-            if (ModelState.IsValid)
-            {
-                try
-                {
 
-                    var resultado = await _periodoEscolarService.EditarAsync(dto);
-                    TempData["Success"] = $"Periodo Escolar editado exitosamente";
-                }
-                catch (ArgumentException ex)
-                {
-                    TempData["Error"] = ex.Message;
-                }
+            try
+            {
+
+                var resultado = await _periodoEscolarService.EditarAsync(dto);
+                TempData["Success"] = $"Periodo Escolar editado exitosamente";
+            }
+            catch (ArgumentException ex)
+            {
+                TempData["Error"] = ex.Message;
             }
             return RedirectToAction(nameof(Index));
 
