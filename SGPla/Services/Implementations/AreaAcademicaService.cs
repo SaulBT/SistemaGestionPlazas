@@ -1,5 +1,7 @@
-﻿using SGPla.Models;
+﻿using SGPla.Mappers;
+using SGPla.Models;
 using SGPla.Models.DTOs.AreaAcademica;
+using SGPla.Repositories.Implementations;
 using SGPla.Repositories.Interfaces;
 using SGPla.Services.Interfaces;
 using SGPla.Validations.Interfaces;
@@ -55,6 +57,16 @@ namespace SGPla.Services.Implementations
             var listaDtos = listaAreasAcademicas.Select(generarListaAreaAcademicaDTO);
 
             return listaDtos.ToList();
+        }
+
+        public async Task<(List<ListaAreaAcademicaDTO> Items, int TotalCount)> BuscarPorFiltroPaginadoAsync(string busqueda, int pagina, int cantidad)
+        {
+            var totalCount = await _areaAcademicaRepository.ContarPorFiltroAsync(busqueda);
+            var obtenidos = await _areaAcademicaRepository.ObtenerPorFiltroAsync(busqueda, pagina, cantidad) ?? new List<AreaAcademica>();
+
+            var dtos = obtenidos.Select(generarListaAreaAcademicaDTO);// obtenidos.Items.Select(generarListaAreaAcademicaDTO);
+
+            return (dtos.ToList(), totalCount);
         }
 
         public async Task<DatosAreaAcademicaDTO> ObtenerPorIdAsync(int id)
