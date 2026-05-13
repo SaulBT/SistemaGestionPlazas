@@ -13,6 +13,7 @@ namespace SGPla.Controllers
     {
         private readonly IPeriodoEscolarService _periodoEscolarService;
         private readonly ILogger<PeriodosEscolaresController> _logger;
+        private int paginaActual = 1;
 
         public PeriodosEscolaresController(IPeriodoEscolarService periodoEscolarService, ILogger<PeriodosEscolaresController> logger)
         {
@@ -22,12 +23,13 @@ namespace SGPla.Controllers
 
         public async Task<IActionResult> Index(int? anio, string? periodo, int pagina = 1, int cantidad = 10)
         {
+            paginaActual = pagina;
             return View(new IndexViewModel
             {
                 Table = await LlenarTabla(anio, periodo, pagina, cantidad),
                 Anio = anio,
                 Periodo = periodo,
-                PaginaActual = pagina,
+                PaginaActual = paginaActual,
                 CantidadPorPagina = cantidad
             });
         }
@@ -46,6 +48,12 @@ namespace SGPla.Controllers
                 };
 
                 var resultado = await _periodoEscolarService.BuscarPorFiltroPaginadoAsync(filtro);
+                if (resultado.Items.Count == 0)
+                {
+                    paginaActual = 1;
+                    filtro.Pagina = paginaActual;
+                    resultado = await _periodoEscolarService.BuscarPorFiltroPaginadoAsync(filtro);
+                }
 
                 if (resultado.Items == null || !resultado.Items.Any())
                 {
@@ -55,7 +63,7 @@ namespace SGPla.Controllers
                         Rows = new List<TableRowModel>(),
                         Pagination = new PaginationInfo
                         {
-                            CurrentPage = pagina,
+                            CurrentPage = paginaActual,
                             PageSize = cantidad,
                             TotalItems = 0,
                             OnPageChange = "cambiarPaginaPeriodos"
@@ -93,7 +101,7 @@ namespace SGPla.Controllers
                     }).ToList(),
                     Pagination = new PaginationInfo
                     {
-                        CurrentPage = pagina,
+                        CurrentPage = paginaActual,
                         PageSize = cantidad,
                         TotalItems = resultado.TotalCount,
                         OnPageChange = "cambiarPagina"

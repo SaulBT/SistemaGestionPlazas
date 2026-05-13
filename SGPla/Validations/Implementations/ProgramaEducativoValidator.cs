@@ -118,7 +118,7 @@ namespace SGPla.Validations.Implementations
             if (existe is null)
                 throw new ArgumentException("El programa educativo no existe.");
 
-            if (await _planEstudiosRepository.ExisteProgramaEducativoPorIdAsync(id))
+            if (await _programaEducativoRepository.EstaAsociadoAPlan(id))
             {
                 throw new ArgumentException("No se puede eliminar el programa educativo porque está asociado a un plan de estudio.");
             }

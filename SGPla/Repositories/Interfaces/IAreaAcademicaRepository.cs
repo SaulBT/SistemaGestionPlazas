@@ -13,6 +13,8 @@ namespace SGPla.Repositories.Interfaces
         Task EliminarAsync(AreaAcademica areaAcademica);
 
         Task<List<AreaAcademica>> ObtenerTodosOpcionesAsync();
+        Task<int> ContarPorFiltroAsync(string busqueda);
+        Task<List<AreaAcademica>> ObtenerPorFiltroAsync(string busqueda, int pagina, int cantidad);
 
     }
 }

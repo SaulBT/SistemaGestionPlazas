@@ -9,16 +9,19 @@
 <div>
     <!-- Acciones -->
     <div style="display:flex; gap:10px; padding-bottom:20px; align-items:center; justify-content:space-between">
-        <form>
+        <form id="filtrosForm" method="get" action="@Url.Action("Index", "DireccionesAreaAcademica")">
             <!-- Barra de búsqueda -->
             @await Component.InvokeAsync("Buscador", new BuscadorModel
             {
                 Name = "busqueda",
                 Placeholder = "Buscar dirección de área académica...",
-                Action = Url.Action("Index", "DireccionesAreaAcademica"),
-                Method = "get",
                 Value = Context.Request.Query["busqueda"]
             })
+
+            <!-- Campos ocultos para paginación -->
+            <input type="hidden" name="pagina" id="paginaHidden" value="@Model.PaginaActual" />
+            <input type="hidden" name="cantidad" id="cantidadHidden" value="@Model.CantidadPorPagina" />
+        
         </form>
 
         
@@ -57,6 +60,7 @@
 </div>
 
 <script>
+
     function eliminarDireccionAreaAcademica(id) {
 
         document.getElementById("idEliminarDireccionAreaAcademica").value = id;
