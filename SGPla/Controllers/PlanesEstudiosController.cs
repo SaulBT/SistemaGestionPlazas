@@ -10,6 +10,7 @@ using SGPla.Models.ViewModels.PlanesEstudios;
 using SGPla.Services.Implementations;
 using SGPla.Services.Interfaces;
 using System.Numerics;
+using System.Runtime.ConstrainedExecution;
 using System.Text.Json;
 
 namespace SGPla.Controllers
@@ -46,7 +47,7 @@ namespace SGPla.Controllers
 
         //Ver todos los Planes de Estudios
         [HttpGet]
-        public async Task<IActionResult> IndexAsync(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int? idProgramaEducativo)
+        public async Task<IActionResult> Index(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int? idProgramaEducativo)
         {
             var regionesCombo = generarCatalogoRegiones();
             var areasCombo = new List<OptionModel>();
@@ -109,7 +110,7 @@ namespace SGPla.Controllers
             {
                 _logger.LogError(ex, "{NOMBRE_LOGGER} Error al obtener detalles del Plan de Estudios con Id: {id}", NOMBRE_LOGGER, id);
                 TempData["Error"] = "Error al cargar los detalles del Plan de Estudios";
-                return RedirectToAction(nameof(IndexAsync));
+                return RedirectToAction(nameof(Index));
             }
         }
 
@@ -190,7 +191,7 @@ namespace SGPla.Controllers
                 var area = await _areaAcademicaService.ObtenerPorIdAsync(modelo.Area);
                 var programa = await _programaEducativoService.ObtenerPorIdAsync(modelo.Programa);
 
-                return View(new CargarPlanPaso2ViewModel
+                var vista = new CargarPlanPaso2ViewModel
                 {
                     Region = modelo.Region,
                     NombreArea = area.Nombre,
@@ -199,7 +200,11 @@ namespace SGPla.Controllers
                     Plan = modelo.Plan,
                     Sistema = modelo.Sistema,
                     Table = LlenarTablaCargarPaso2(listaEe)
-                });
+                };
+
+                HttpContext.Session.SetString("Vista", JsonSerializer.Serialize(vista));
+
+                return View(vista);
             }
             else
             {
@@ -274,7 +279,7 @@ namespace SGPla.Controllers
 
                             System.IO.File.Delete(rutaArchivo);
                             HttpContext.Session.Clear();
-                            return RedirectToAction(nameof(IndexAsync));
+                            return RedirectToAction(nameof(Index));
                         }
                         else
                         {
@@ -302,6 +307,67 @@ namespace SGPla.Controllers
                 _logger.LogError(ex, "Error al guardar el Plan de Estudios.");
                 TempData["Error"] = "Error al guardar el Plan de Estudios.";
                 return RedirectToAction(nameof(CargarPlanPaso1), new CargarPlanPaso1ViewModel());
+            }
+        }
+
+        [HttpGet]
+        public JsonResult AgregarExperienciaEducativaCreacion(string codigo, string nombre, string perfilDocente)
+        {
+            var listaEeJson = HttpContext.Session.GetString("Experiencias");
+            if (!string.IsNullOrEmpty(listaEeJson))
+            {
+                var listaEe = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(listaEeJson);
+                var experiencia = new DatosExperienciaEducativaDTO
+                {
+                    Codigo = codigo,
+                    Nombre = nombre,
+                    PerfilDocente = perfilDocente
+                };
+
+                listaEe.Add(experiencia);
+
+                listaEeJson = JsonSerializer.Serialize(listaEe);
+                HttpContext.Session.SetString("Experiencias", listaEeJson);
+
+                return Json(experiencia);
+            }
+            else
+            {
+                _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias Educativas.", NOMBRE_LOGGER);
+                TempData["Error"] = "Error al obtener la lista de Experiencias Educativas.";
+                return null;
+            }
+        }
+
+        [HttpGet]
+        public JsonResult EditarExperienciaEducativaCreacion(string codigo, string nombre, string perfilDocente, string codigoOriginal)
+        {
+            var listaEeJson = HttpContext.Session.GetString("Experiencias");
+            if (!string.IsNullOrEmpty(listaEeJson))
+            {
+                var listaEe = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(listaEeJson);
+                var experiencia = listaEe.FirstOrDefault(ee => ee.Codigo == codigoOriginal);
+                
+                if (experiencia != null)
+                {
+                    experiencia.Codigo = codigo;
+                    experiencia.Nombre = nombre;
+                    experiencia.PerfilDocente = perfilDocente;
+                    listaEeJson = JsonSerializer.Serialize(listaEe);
+                    HttpContext.Session.SetString("Experiencias", listaEeJson);
+
+                    return Json(listaEe);
+                }
+
+                _logger.LogError("{NOMBRE_LOGGER} Error al obtener la Experiencia Educativa.", NOMBRE_LOGGER);
+                TempData["Error"] = "Error al obtener la Experiencia Educativa.";
+                return null;
+            }
+            else
+            {
+                _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias Educativas.", NOMBRE_LOGGER);
+                TempData["Error"] = "Error al obtener la lista de Experiencias Educativas.";
+                return null;
             }
         }
 
@@ -530,22 +596,17 @@ namespace SGPla.Controllers
                                 }
                             }
                         },
-                        new()
+                        new TableCellModel()
+                        {
+                            Actions = new List<TableActionModel>
                             {
-                                Actions = new List<TableActionModel>
+                                new TableActionModel()
                                 {
-                                    new()
-                                    {
-                                        Accion = "editar",
-                                        //Url = Url.Action("EditarUsuario", "Usuarios", new { id = plan.IdUsuario, rol = plan.Rol })
-                                    },
-                                    new()
-                                    {
-                                        Accion = "eliminar",
-                                        //Url = Url.Action("Delete", "Usuarios", new { id = plan.IdUsuario, rol = plan.Rol })
-                                    }
+                                    Accion = "editar",
+                                    OnClick = $"abrirModalEditarExperiencia('{ee.Codigo}', '{ee.Nombre}', '{ee.PerfilDocente}')"
                                 }
                             }
+                        }
                     }
                 }).ToList()
             };
