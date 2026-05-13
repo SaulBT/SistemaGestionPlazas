@@ -6,9 +6,7 @@ using SGPla.Models.DTOs.ProgramaEducativo;
 using SGPla.Models.DTOs.Usuarios;
 using SGPla.Models.ViewModels.ProgramasEducativos;
 using SGPla.Repositories.Interfaces;
-using SGPla.Services.Implementations;
 using SGPla.Services.Interfaces;
-
 
 namespace SGPla.Controllers
 {
@@ -18,43 +16,37 @@ namespace SGPla.Controllers
         private readonly IEntidadAcademicaRepository _entidadAcademicaRepository;
         private readonly ILogger<ProgramasEducativosController> _logger;
 
-        public ProgramasEducativosController(IProgramaEducativoService programaEducativoService, IEntidadAcademicaRepository entidadAcademicaRepository, ILogger<ProgramasEducativosController> logger)
+        public ProgramasEducativosController(
+            IProgramaEducativoService programaEducativoService,
+            IEntidadAcademicaRepository entidadAcademicaRepository,
+            ILogger<ProgramasEducativosController> logger)
         {
             _programaEducativoService = programaEducativoService;
             _entidadAcademicaRepository = entidadAcademicaRepository;
             _logger = logger;
         }
 
-        // GET: Programas Educativos
-        public async Task<IActionResult> Index(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int pagina =1, int cantidad = 10)
+        // GET: ProgramasEducativos
+        public async Task<IActionResult> Index(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int pagina = 1, int cantidad = 10)
         {
-            // combos
             var regionesCombo = Constantes.Regiones
-                .Select(r => new OptionModel
-                {
-                    Value = r,
-                    Text = r,
-                    Selected = r == region
-                })
+                .Select(r => new OptionModel { Value = r, Text = r, Selected = r == region })
                 .ToList();
 
             var areas = await _programaEducativoService.ObtenerOpcionesAreaAcademicaAsync();
-
             var areasCombo = areas
                 .Select(a => new OptionModel
                 {
                     Value = a.IdAreaAcademica.ToString(),
                     Text = a.Nombre,
-                    Selected = idAreaAcademica.HasValue &&
-                               a.IdAreaAcademica == idAreaAcademica.Value
+                    Selected = idAreaAcademica.HasValue && a.IdAreaAcademica == idAreaAcademica.Value
                 })
                 .ToList();
-            List<EntidadAcademica> entidades;
 
+            List<EntidadAcademica> entidades;
             if (idAreaAcademica.HasValue)
             {
-                entidades = await _programaEducativoService
-                    .ObtenerOpcionesEntidadAcademicaAsync(region, idAreaAcademica.Value);
+                entidades = await _programaEducativoService.ObtenerOpcionesEntidadAcademicaAsync(region, idAreaAcademica.Value);
             }
             else
             {
@@ -67,8 +59,7 @@ namespace SGPla.Controllers
                 {
                     Value = e.IdEntidadAcademica.ToString(),
                     Text = e.Nombre,
-                    Selected = idEntidadAcademica.HasValue &&
-                               e.IdEntidadAcademica == idEntidadAcademica.Value
+                    Selected = idEntidadAcademica.HasValue && e.IdEntidadAcademica == idEntidadAcademica.Value
                 })
                 .ToList();
 
@@ -78,7 +69,6 @@ namespace SGPla.Controllers
                 Regiones = regionesCombo,
                 Areas = areasCombo,
                 Entidades = entidadesCombo,
-
                 RegionSeleccionada = region,
                 IdAreaSeleccionada = idAreaAcademica,
                 IdEntidadSeleccionada = idEntidadAcademica,
@@ -86,14 +76,13 @@ namespace SGPla.Controllers
                 PaginaActual = pagina,
                 CantidadPorPagina = cantidad
             });
-
         }
 
-        private async Task<TableModel> LlenarTabla(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int pagina =1, int cantidad = 10)
+        private async Task<TableModel> LlenarTabla(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int pagina = 1, int cantidad = 10)
         {
             try
             {
-                BuscarProgramaEducativoDTO filtros = new BuscarProgramaEducativoDTO
+                var filtros = new BuscarProgramaEducativoDTO
                 {
                     Nombre = busqueda,
                     Region = region,
@@ -102,31 +91,28 @@ namespace SGPla.Controllers
                     Pagina = pagina,
                     Cantidad = cantidad
                 };
+
                 var resultado = await _programaEducativoService.BuscarPorFiltroPaginadoAsync(filtros);
 
                 if (resultado.Items == null || !resultado.Items.Any())
                 {
                     return new TableModel
                     {
-                        Headers = new List<string> { "Código", "Año", "Periodo", "Acciones" },
+                        Headers = new List<string> { "Nombre", "Región", "Área Académica", "Entidad Académica", "Acciones" },
                         Rows = new List<TableRowModel>(),
                         Pagination = new PaginationInfo
                         {
                             CurrentPage = pagina,
                             PageSize = cantidad,
                             TotalItems = 0,
-                            OnPageChange = "cambiarPaginaPeriodos"
+                            OnPageChange = "cambiarPagina"
                         }
                     };
                 }
 
-
                 return new TableModel
                 {
-                    Headers = new List<string>
-                        {
-                            "Nombre", "Región", "Área Académica", "Entidad Académica", "Acciones"
-                        },
+                    Headers = new List<string> { "Nombre", "Región", "Área Académica", "Entidad Académica", "Acciones" },
                     Rows = resultado.Items.Select(programa => new TableRowModel
                     {
                         Cells = new List<TableCellModel>
@@ -136,28 +122,39 @@ namespace SGPla.Controllers
                             new() { Value = programa.AreaAcademica },
                             new() { Value = programa.EntidadAcademica },
                             new()
-                        {
-                        Actions = new List<TableActionModel>
-                        {
-                            new()
                             {
-                                Accion = "ver",
-                                Url = Url.Action("VerProgramaEducativo", "ProgramasEducativos", new { id = programa.IdProgramaEducativo })
-                            },
-                            new()
-                            {
-                                Accion = "editar",
-                                Url = Url.Action("EditarProgramaEducativo", "ProgramasEducativos", new { id = programa.IdProgramaEducativo })
-                            },
-                            new()
-                            {
-                                Accion = "eliminar",
-                                OnClick = $"abrirModalConfirmacion('¿Desea eliminar este programa educativo?', function() {{ eliminarProgramaEducativo({programa.IdProgramaEducativo}); }})"
+                                Actions = new List<TableActionModel>
+                                {
+                                    new()
+                                    {
+                                        Accion = "ver",
+                                        Url = Url.Action("VerProgramaEducativo", "ProgramasEducativos", new { id = programa.IdProgramaEducativo })
+                                    },
+                                    new()
+                                    {
+                                        Accion = "plan de estudios",
+                                        Url = Url.Action("Index", "PlanesEstudios", new
+                                        {
+                                            region = programa.Region,
+                                            idEntidadAcademica = programa.IdEntidadAcademica,
+                                            idAreaAcademica=programa.IdAreaAcademica,
+                                            idProgramaEducativo = programa.IdProgramaEducativo
+
+                                        })
+                                    },
+                                    new()
+                                    {
+                                        Accion = "editar",
+                                        Url = Url.Action("EditarProgramaEducativo", "ProgramasEducativos", new { id = programa.IdProgramaEducativo })
+                                    },
+                                    new()
+                                    {
+                                        Accion = "eliminar",
+                                        OnClick = $"abrirModalConfirmacion('¿Desea eliminar este programa educativo?', function() {{ eliminarProgramaEducativo({programa.IdProgramaEducativo}); }})"
+                                    }
+                                }
                             }
                         }
-                    },
-
-                }
                     }).ToList(),
                     Pagination = new PaginationInfo
                     {
@@ -172,32 +169,24 @@ namespace SGPla.Controllers
             {
                 _logger.LogError(ex, "Error al obtener la lista de programas educativos");
                 TempData["Error"] = "Error al cargar los programas educativos";
-
                 return new TableModel();
             }
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CrearProgramaEducativo(CrearProgramaEducativoDTO dto)
+        [HttpGet]
+        public IActionResult Buscar(BuscarProgramaEducativoDTO filtro)
         {
-            if (ModelState.IsValid)
+            return RedirectToAction(nameof(Index), new
             {
-                try
-                {
-                    var resultado = await _programaEducativoService.CrearAsync(dto);
-                    TempData["Success"] = $"Programa educativo creado correctamente";
-                }
-                catch (ArgumentException ex)
-                {
-                    TempData["Error"] = ex.Message;
-                }
-            }
-            return RedirectToAction(nameof(Index));
-
+                busqueda = filtro.Nombre,
+                region = filtro.Region,
+                idAreaAcademica = filtro.IdAreaAcademica,
+                idEntidadAcademica = filtro.IdEntidadAcademica
+            });
         }
 
-        //GET: ProgramasEducativos/CrearProgramaEducativo
+        // Crear
+
         public async Task<IActionResult> CrearProgramaEducativo(string? region, int? idAreaAcademica, int? idEntidadAcademica)
         {
             return View(await ObtenerModelo(region, idAreaAcademica, idEntidadAcademica));
@@ -205,35 +194,24 @@ namespace SGPla.Controllers
 
         private async Task<CrearProgramaEducativoViewModel> ObtenerModelo(string? region, int? idAreaAcademica, int? idEntidadAcademica)
         {
-
-
             var regionesCombo = Constantes.Regiones
-                .Select(r => new OptionModel
-                {
-                    Value = r,
-                    Text = r,
-                    Selected = r == region
-                })
+                .Select(r => new OptionModel { Value = r, Text = r, Selected = r == region })
                 .ToList();
 
             var areas = await _programaEducativoService.ObtenerOpcionesAreaAcademicaAsync();
-
             var areasCombo = areas
                 .Select(a => new OptionModel
                 {
                     Value = a.IdAreaAcademica.ToString(),
                     Text = a.Nombre,
-                    Selected = idAreaAcademica.HasValue &&
-                               a.IdAreaAcademica == idAreaAcademica.Value
+                    Selected = idAreaAcademica.HasValue && a.IdAreaAcademica == idAreaAcademica.Value
                 })
                 .ToList();
 
             List<EntidadAcademica> entidades;
-
             if (idAreaAcademica.HasValue)
             {
-                entidades = await _entidadAcademicaRepository
-                    .ObtenerPorIdAreaAcademicaAsync(idAreaAcademica.Value);
+                entidades = await _entidadAcademicaRepository.ObtenerPorIdAreaAcademicaAsync(idAreaAcademica.Value);
             }
             else
             {
@@ -246,51 +224,147 @@ namespace SGPla.Controllers
                 {
                     Value = e.IdEntidadAcademica.ToString(),
                     Text = e.Nombre,
-                    Selected = idEntidadAcademica.HasValue &&
-                               e.IdEntidadAcademica == idEntidadAcademica.Value
+                    Selected = idEntidadAcademica.HasValue && e.IdEntidadAcademica == idEntidadAcademica.Value
                 })
                 .ToList();
-            return (new CrearProgramaEducativoViewModel
+
+            return new CrearProgramaEducativoViewModel
             {
                 Regiones = regionesCombo,
                 Areas = areasCombo,
-                Entidades = entidadesCombo,
-            });
+                Entidades = entidadesCombo
+            };
         }
 
-        [HttpGet]
-        public async Task<IActionResult> ObtenerEntidades(string region, int idArea)
+        private async Task CargarCombos(CrearProgramaEducativoViewModel model)
         {
-            var entidades = await _programaEducativoService
-        .ObtenerOpcionesEntidadAcademicaAsync(region, idArea);
+            model.Regiones = Constantes.Regiones
+                .Select(r => new OptionModel { Value = r, Text = r, Selected = r == model.Region })
+                .ToList();
 
-            var result = entidades.Select(e => new
+            var areas = await _programaEducativoService.ObtenerOpcionesAreaAcademicaAsync();
+            model.Areas = areas
+                .Select(a => new OptionModel
+                {
+                    Value = a.IdAreaAcademica.ToString(),
+                    Text = a.Nombre,
+                    Selected = model.IdAreaAcademica.HasValue && a.IdAreaAcademica == model.IdAreaAcademica.Value
+                })
+                .ToList();
+
+            if (model.IdAreaAcademica.HasValue && !string.IsNullOrEmpty(model.Region))
             {
-                value = e.IdEntidadAcademica,
-                text = e.Nombre
-            });
+                var entidades = await _entidadAcademicaRepository
+                    .ObtenerPorIdAreaAcademicaYRegionAsync(model.IdAreaAcademica.Value, model.Region);
 
-            return Json(result);
+                model.Entidades = entidades
+                    .Select(e => new OptionModel
+                    {
+                        Value = e.IdEntidadAcademica.ToString(),
+                        Text = e.Nombre,
+                        Selected = model.IdEntidadAcademica > 0 && e.IdEntidadAcademica == model.IdEntidadAcademica
+                    })
+                    .ToList();
+            }
+            else
+            {
+                model.Entidades = new List<OptionModel>();
+            }
         }
 
-
-        [HttpGet]
-        public async Task<IActionResult> Buscar(BuscarProgramaEducativoDTO filtro)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CrearProgramaEducativo(CrearProgramaEducativoViewModel model)
         {
+            if (!ModelState.IsValid)
+            {
+                await CargarCombos(model);
+                return View(model);
+            }
+
+            var dto = new CrearProgramaEducativoDTO
+            {
+                Nombre = model.Nombre,
+                Campus = model.Campus,
+                IdEntidadAcademica = model.IdEntidadAcademica,
+
+            };
+
             try
             {
-                var resultados = await _programaEducativoService.BuscarPorFiltroAsync(filtro);
-
-                ViewBag.AreasAcademicas = await _programaEducativoService.ObtenerOpcionesAreaAcademicaAsync();
-
-                return View("Index", resultados);
+                await _programaEducativoService.CrearAsync(dto);
+                TempData["Success"] = "Programa educativo creado correctamente.";
+                return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error al crear el programa educativo");
                 TempData["Error"] = ex.Message;
+                await CargarCombos(model);
+                return View(model);
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditarProgramaEducativo(CrearProgramaEducativoViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                await CargarCombos(model);
+                return View(model);
+            }
+
+            var dto = new EditarProgramaEducativoDTO
+            {
+                IdProgramaEducativo = model.IdProgramaEducativo,
+                Nombre = model.Nombre,
+                Campus = model.Campus,
+                IdEntidadAcademica = model.IdEntidadAcademica,
+
+            };
+
+            try
+            {
+                await _programaEducativoService.EditarAsync(dto);
+                TempData["Success"] = "Programa educativo actualizado correctamente.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al editar el programa educativo");
+                TempData["Error"] = ex.Message;
+                await CargarCombos(model);
+                return View(model);
+            }
+        }
+
+        // Ver
+
+        public async Task<IActionResult> VerProgramaEducativo(int id)
+        {
+            if (id == 0)
+                return BadRequest();
+
+            try
+            {
+                var programaEducativo = await _programaEducativoService.ObtenerPorIdAsync(id);
+                if (programaEducativo == null)
+                {
+                    TempData["Error"] = "No se encontró el programa educativo.";
+                    return RedirectToAction(nameof(Index));
+                }
+                return View(programaEducativo);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener detalles del programa educativo {Id}", id);
+                TempData["Error"] = "Error al cargar los detalles del programa educativo.";
                 return RedirectToAction(nameof(Index));
             }
         }
+
+        // Editar
 
         public async Task<IActionResult> EditarProgramaEducativo(int id)
         {
@@ -303,57 +377,15 @@ namespace SGPla.Controllers
                 Campus = programaEducativo.Campus,
                 IdEntidadAcademica = programaEducativo.IdEntidadAcademica,
                 IdAreaAcademica = programaEducativo.IdAreaAcademica,
-                Region = programaEducativo.Region,
-
+                Region = programaEducativo.Region
             };
 
             await CargarCombos(model);
-
             return View(model);
         }
 
-        private async Task CargarCombos(CrearProgramaEducativoViewModel model)
-        {
 
 
-            model.Regiones = Constantes.Regiones
-                .Select(r => new OptionModel
-                {
-                    Value = r,
-                    Text = r,
-                    Selected = r == model.Region
-                }).ToList();
-
-
-            var areas = await _programaEducativoService.ObtenerOpcionesAreaAcademicaAsync();
-
-            model.Areas = areas.Select(a => new OptionModel
-            {
-                Value = a.IdAreaAcademica.ToString(),
-                Text = a.Nombre,
-                Selected = model.IdAreaAcademica.HasValue &&
-                           a.IdAreaAcademica == model.IdAreaAcademica.Value
-            }).ToList();
-
-
-            if (model.IdAreaAcademica.HasValue && !string.IsNullOrEmpty(model.Region))
-            {
-                var entidades = await _entidadAcademicaRepository
-                    .ObtenerPorIdAreaAcademicaYRegionAsync(model.IdAreaAcademica.Value, model.Region);
-
-                model.Entidades = entidades.Select(e => new OptionModel
-                {
-                    Value = e.IdEntidadAcademica.ToString(),
-                    Text = e.Nombre,
-                    Selected = model.IdEntidadAcademica > 0 &&
-                               e.IdEntidadAcademica == model.IdEntidadAcademica
-                }).ToList();
-            }
-            else
-            {
-                model.Entidades = new List<OptionModel>();
-            }
-        }
 
         public async Task<IActionResult> VerProgramaEducativo(int id)
         {
@@ -404,6 +436,7 @@ namespace SGPla.Controllers
             return RedirectToAction(nameof(Index));
 
         }
+        // Eliminar
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -411,22 +444,25 @@ namespace SGPla.Controllers
         {
             try
             {
-                var resultado = await _programaEducativoService.EliminarAsync(id);
-                if (resultado)
-                    TempData["Success"] = "Programa educativo eliminado exitosamente";
-                else
-                    TempData["Error"] = $"Error al eliminar el programa educativo";
+                await _programaEducativoService.EliminarAsync(id);
+                TempData["Success"] = "Programa educativo eliminado correctamente.";
             }
-            catch (ArgumentException ex)
+            catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Error al eliminar el programa educativo {Id}", id);
+                _logger.LogError(ex, "Error al eliminar el programa educativo {Id}", id);
                 TempData["Error"] = ex.Message;
             }
             return RedirectToAction(nameof(Index));
-
         }
 
+        // Ajax
 
-
+        [HttpGet]
+        public async Task<IActionResult> ObtenerEntidades(string region, int idArea)
+        {
+            var entidades = await _programaEducativoService.ObtenerOpcionesEntidadAcademicaAsync(region, idArea);
+            var result = entidades.Select(e => new { value = e.IdEntidadAcademica, text = e.Nombre });
+            return Json(result);
+        }
     }
 }

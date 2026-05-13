@@ -16,5 +16,8 @@ namespace SGPla.Repositories.Interfaces
 
 
         Task<bool> EliminarAsync(int id);
+
+        Task<bool> EstaAsociadoAPlan(int id);
+
     }
 }

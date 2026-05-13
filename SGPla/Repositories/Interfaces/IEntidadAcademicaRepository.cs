@@ -6,7 +6,7 @@ namespace SGPla.Repositories.Interfaces
     {
         Task<List<EntidadAcademica>> ObtenerTodosAsync();
         Task<List<EntidadAcademica>> ObtenerDiezAsync(int indiceInicial);
-        Task<List<EntidadAcademica>> ObtenerPorFiltroAsync(string? region, int? idAreaAcademica, string? nombre);
+        Task<List<EntidadAcademica>> ObtenerPorFiltroAsync(string? region, int? idAreaAcademica, string? nombre, int pagina, int cantidad);
         Task<EntidadAcademica?> ObtenerPorIdAsync(int idEntidadAcademica);
         Task<List<EntidadAcademica>> ObtenerPorIdAreaAcademicaAsync(int idAreaAcademica);
         Task<List<EntidadAcademica>> ObtenerPorIdAreaAcademicaYRegionAsync(int idAreaAcademica, string region);
@@ -18,6 +18,9 @@ namespace SGPla.Repositories.Interfaces
         Task EliminarAsync(EntidadAcademica entidadAcademica);
 
         Task<List<EntidadAcademica>> ObtenerOpcionesAsync(string region, int idAreaAcademica);
+
+        Task<int> ContarPorFiltroAsync(string? region, int? idAreaAcademica, string? nombre);
+
 
     }
 }
