@@ -19,6 +19,7 @@ namespace SGPla.Controllers
         private readonly IEntidadAcademicaRepository _entidadAcademicaRepository;
         private readonly IAreaAcademicaService _areaAcademicaService; //TODO: Reemplazar los métodos que usan el repository
         private readonly IEntidadAcademicaService _entidadAcademicaService; //TODO: Reemplazar los métodos que usan el repository
+        private int paginaActual = 1;
 
         public UsuariosController(
             IUsuarioService usuarioService,
@@ -39,6 +40,7 @@ namespace SGPla.Controllers
         // GET: Usuarios
         public async Task<IActionResult> Index(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int pagina = 1, int cantidad = 10)
         {
+            paginaActual = pagina;
             // combos
             var regionesCombo = Constantes.Regiones
                 .Select(r => new OptionModel
@@ -96,7 +98,7 @@ namespace SGPla.Controllers
                 IdEntidadSeleccionada = idEntidadAcademica,
                 Busqueda = busqueda,
 
-                PaginaActual = pagina,
+                PaginaActual = paginaActual,
                 CantidadPorPagina = cantidad
             });
         }
@@ -116,7 +118,12 @@ namespace SGPla.Controllers
                     Cantidad = cantidad
                 };
                 var usuarios = await _usuarioService.BuscarPorFiltroPaginadoAsync(filtros);
-
+                if (usuarios.Items.Count == 0)
+                {
+                    paginaActual = 1;
+                    filtros.Pagina = paginaActual;
+                    usuarios = await _usuarioService.BuscarPorFiltroPaginadoAsync(filtros);
+                }
                 return new TableModel
                 {
                     Headers = new List<string>
@@ -163,7 +170,7 @@ namespace SGPla.Controllers
                     }).ToList(),
                     Pagination = new PaginationInfo
                     {
-                        CurrentPage = pagina,
+                        CurrentPage = paginaActual,
                         PageSize = cantidad,
                         TotalItems = usuarios.TotalCount,
                         OnPageChange = "cambiarPagina"

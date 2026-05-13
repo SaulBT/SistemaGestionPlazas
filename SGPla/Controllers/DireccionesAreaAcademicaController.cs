@@ -11,6 +11,7 @@ namespace SGPla.Controllers
     {
         private readonly IAreaAcademicaService _areaAcademicaService;
         private readonly ILogger<DireccionesAreaAcademicaController> _logger;
+        private int paginaActual = 1;
 
         public DireccionesAreaAcademicaController(IAreaAcademicaService areaAcademicaService, ILogger<DireccionesAreaAcademicaController> logger)
         {
@@ -20,32 +21,33 @@ namespace SGPla.Controllers
 
         //GET: DireccionesAreaAcademica
 
-        public async Task<IActionResult> Index(string? busqueda)
-            {
+        public async Task<IActionResult> Index(string? busqueda, int pagina = 1, int cantidad = 10)
+        {
+            paginaActual = pagina;
                 return View(new Models.ViewModels.DireccionesAreaAcademica.IndexViewModel
                 {
-                    Table = await LlenarTabla(busqueda),
-                    Busqueda = busqueda
+                    Table = await LlenarTabla(busqueda, pagina, cantidad),
+                    Busqueda = busqueda,
+                    PaginaActual = paginaActual,
+                    CantidadPorPagina = cantidad
                 });
         }
-        private async Task<TableModel> LlenarTabla(string? busqueda)
+        private async Task<TableModel> LlenarTabla(string? busqueda, int pagina = 1, int cantidad = 10)
         {
             try
             {
-                IEnumerable<ListaAreaAcademicaDTO> areas;
-                if (busqueda.IsNullOrEmpty())
+                var areas = await _areaAcademicaService.BuscarPorFiltroPaginadoAsync(busqueda, pagina, cantidad);
+                
+                if (areas.Items.Count == 0)
                 {
-                    areas = await _areaAcademicaService.ObtenerTodasAsync();
-                }
-                else
-                {
-                    areas = await _areaAcademicaService.ObtenerPorNombreAsync(busqueda);
+                    paginaActual = 1;
+                    areas = await _areaAcademicaService.BuscarPorFiltroPaginadoAsync(busqueda, paginaActual, cantidad);
                 }
 
                 return new TableModel
                 {
                     Headers = new List<string> { "Nombre de la Dirección", "Domicillio", "Teléfono", "Acciones" },
-                    Rows = areas.Select(a => new TableRowModel
+                    Rows = areas.Items.Select(a => new TableRowModel
                     {
                         Cells = new List<TableCellModel>
                     {
@@ -75,7 +77,14 @@ namespace SGPla.Controllers
                         }
                     },
 
-                    }).ToList()
+                    }).ToList(),
+                    Pagination = new PaginationInfo
+                    {
+                        TotalItems = areas.TotalCount,
+                        PageSize = cantidad,
+                        CurrentPage = paginaActual,
+                        OnPageChange = "cambiarPagina"
+                    }
                 };
             }
 

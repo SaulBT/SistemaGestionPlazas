@@ -46,6 +46,38 @@
                 .OrderBy(a => a.Nombre)
                 .ToListAsync();
         }
+        
+
+        public async Task<List<AreaAcademica>> ObtenerPorFiltroAsync(string busqueda, int pagina, int cantidad)
+        {
+            var query = _context.AreaAcademica.AsNoTracking();
+
+            if (!string.IsNullOrWhiteSpace(busqueda))
+            {
+                busqueda = busqueda.Trim();
+                query = query.Where(a => a.Nombre.Contains(busqueda));
+            }
+
+            query = query.OrderBy(a => a.Nombre);
+
+            int skip = (pagina - 1) * cantidad;
+
+            return await query
+                .Skip(skip)
+                .Take(cantidad)
+                .ToListAsync();
+        }
+
+        public async Task<int> ContarPorFiltroAsync(string busqueda)
+        {
+            var query = _context.AreaAcademica.AsNoTracking();
+            if (!string.IsNullOrWhiteSpace(busqueda))
+            {
+                busqueda = busqueda.Trim();
+                query = query.Where(a => a.Nombre.Contains(busqueda));
+            }
+            return await query.CountAsync();
+        }
 
         public async Task<AreaAcademica?> ObtenerPorIdAsync(int idAreaAcademica)
         {
