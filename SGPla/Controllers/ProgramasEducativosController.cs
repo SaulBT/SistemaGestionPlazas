@@ -3,7 +3,6 @@ using SGPla.Commons;
 using SGPla.Models;
 using SGPla.Models.Components;
 using SGPla.Models.DTOs.ProgramaEducativo;
-using SGPla.Models.DTOs.Usuarios;
 using SGPla.Models.ViewModels.ProgramasEducativos;
 using SGPla.Repositories.Interfaces;
 using SGPla.Services.Interfaces;
@@ -132,7 +131,7 @@ namespace SGPla.Controllers
                                     },
                                     new()
                                     {
-                                        Accion = "plan de estudios",
+                                         Accion = "plan de estudios",
                                         Url = Url.Action("Index", "PlanesEstudios", new
                                         {
                                             region = programa.Region,
@@ -173,6 +172,7 @@ namespace SGPla.Controllers
             }
         }
 
+        // Buscar (llamado desde EntidadesAcademicas)
         [HttpGet]
         public IActionResult Buscar(BuscarProgramaEducativoDTO filtro)
         {
@@ -271,7 +271,6 @@ namespace SGPla.Controllers
                 model.Entidades = new List<OptionModel>();
             }
         }
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CrearProgramaEducativo(CrearProgramaEducativoViewModel model)
@@ -287,7 +286,7 @@ namespace SGPla.Controllers
                 Nombre = model.Nombre,
                 Campus = model.Campus,
                 IdEntidadAcademica = model.IdEntidadAcademica,
-
+               
             };
 
             try
@@ -321,7 +320,7 @@ namespace SGPla.Controllers
                 Nombre = model.Nombre,
                 Campus = model.Campus,
                 IdEntidadAcademica = model.IdEntidadAcademica,
-
+                
             };
 
             try
@@ -385,57 +384,6 @@ namespace SGPla.Controllers
         }
 
 
-
-
-        public async Task<IActionResult> VerProgramaEducativo(int id)
-        {
-
-            if (id == 0)
-            {
-                return BadRequest();
-            }
-
-            try
-            {
-
-
-                var programaEducativo = await _programaEducativoService.ObtenerPorIdAsync(id);
-
-                if (programaEducativo == null)
-                {
-                    return NotFound();
-                }
-
-                return View(programaEducativo);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener detalles del programa educativo", id);
-                TempData["Error"] = "Error al cargar los detalles del programa educativo";
-                return RedirectToAction(nameof(Index));
-            }
-        }
-
-
-                [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditarProgramaEducativo(EditarProgramaEducativoDTO dto)
-        {
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    var resultado = await _programaEducativoService.EditarAsync(dto);
-                    TempData["Success"] = $"Programa educativo actualizado correctamente";
-                }
-                catch (ArgumentException ex)
-                {
-                    TempData["Error"] = ex.Message;
-                }
-            }
-            return RedirectToAction(nameof(Index));
-
-        }
         // Eliminar
 
         [HttpPost]
