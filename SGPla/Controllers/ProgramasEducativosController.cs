@@ -385,45 +385,6 @@ namespace SGPla.Controllers
 
 
 
-<<<<<<< Updated upstream
-            model.Regiones = Constantes.Regiones
-                .Select(r => new OptionModel
-                {
-                    Value = r,
-                    Text = r,
-                    Selected = r == model.Region
-                }).ToList();
-
-
-            var areas = await _programaEducativoService.ObtenerOpcionesAreaAcademicaAsync();
-
-            model.Areas = areas.Select(a => new OptionModel
-            {
-                Value = a.IdAreaAcademica.ToString(),
-                Text = a.Nombre,
-                Selected = model.IdAreaAcademica.HasValue &&
-                           a.IdAreaAcademica == model.IdAreaAcademica.Value
-            }).ToList();
-
-
-            if (model.IdAreaAcademica.HasValue && !string.IsNullOrEmpty(model.Region))
-            {
-                var entidades = await _entidadAcademicaRepository
-                    .ObtenerPorIdAreaAcademicaYRegionAsync(model.IdAreaAcademica.Value, model.Region);
-
-                model.Entidades = entidades.Select(e => new OptionModel
-                {
-                    Value = e.IdEntidadAcademica.ToString(),
-                    Text = e.Nombre,
-                    Selected = model.IdEntidadAcademica > 0 &&
-                               e.IdEntidadAcademica == model.IdEntidadAcademica
-                }).ToList();
-            }
-            else
-            {
-                model.Entidades = new List<OptionModel>();
-            }
-        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -444,9 +405,7 @@ namespace SGPla.Controllers
             return RedirectToAction(nameof(Index));
 
         }
-=======
         // Eliminar
->>>>>>> Stashed changes
 
         [HttpPost]
         [ValidateAntiForgeryToken]
