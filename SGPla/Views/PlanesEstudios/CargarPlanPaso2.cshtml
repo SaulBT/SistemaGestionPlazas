@@ -72,13 +72,14 @@
             {
                 accion = "Agregar",
                 tipo = "secundario",
-                texto = "Agregar Experiencia Educativa"
+                texto = "Agregar Experiencia Educativa",
+                OnClick = "abrirModalAgregarExperiencia()"
             })
         </div>
     </div>
 
     <!-- TABLA -->
-    <div class="gap:10px;" style="margin-block-end: 1em">
+    <div id="tabla" class="gap:10px;" style="margin-block-end: 1em">
         @await Component.InvokeAsync("Table", Model.Table)
     </div>
 
@@ -105,6 +106,59 @@
             })
         </div>
     </div>
-    
-    
+
+    <!-- ========================= -->
+    <!-- MODALES -->
+    <!-- ========================= -->
+    <div>
+        <!-- Modal Agregar -->
+        @Html.AntiForgeryToken()
+            
+        @await Component.InvokeAsync("ModalFormulario", new ModalFormularioModel
+        {
+            Id = "modalAgregarExperiencia",
+            Titulo = "Agregar Experiencia Educativa",
+            PartialView = "_FormularioAgregarExperiencia",
+            PartialModel = Model.Formulario,
+            OnConfirm = "agregarExperienciaCreacion()",
+            OnCancel = "cerrarModal('modalAgregarExperiencia')"
+        })
+
+        <!-- Modal Editar -->
+        @Html.AntiForgeryToken()
+            
+        @await Component.InvokeAsync("ModalFormulario", new ModalFormularioModel
+        {
+            Id = "modalEditarExperiencia",
+            Titulo = "Editar Experiencia Educativa",
+            PartialView = "_FormularioEditarExperiencia",
+            PartialModel = Model.Formulario,
+            OnConfirm = "editarExperienciaCreacion()",
+            OnCancel = "cerrarModal('modalEditarExperiencia')"
+        })
+
+        <!-- Modal eliminar -->
+        @Html.AntiForgeryToken()
+
+        <input type="hidden" name="id" id="deleteArticuloId" />
+
+        @await Component.InvokeAsync("Modal", new ModalModel
+        {
+            Id = "modalEliminarExperiencia",
+            Tipo = "confirm",
+            Titulo = "Eliminar Experiencia Educativa",
+            Mensaje = "Esta acción es irreversible ¿Está seguro de eliminar la Experiencia Educativa del Plan de Estudios?",
+            OnConfirm = "eliminarExperiencia()",
+            OnCancel = "cerrarModal('modalEliminarExperiencia')"
+        })
+    </div>
 </form>
+
+<script>
+    const UrlAgregarExperiencia = '@Url.Action("AgregarExperienciaEducativaCreacion", "PlanesEstudios")';
+    const UrlEditarExperiencia = '@Url.Action("EditarExperienciaEducativaCreacion", "PlanesEstudios")';
+</script>
+
+@section Scripts {
+    <script src="~/js/gestionarExperiencias.js"></script>
+}
