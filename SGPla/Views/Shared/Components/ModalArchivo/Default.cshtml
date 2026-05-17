@@ -38,11 +38,22 @@
             })
 
             <div id="btnConfirmar" style="display: none;">
-                @await Component.InvokeAsync("Boton", new
+                @if (!string.IsNullOrEmpty(Model.OnConfirm))
                 {
-                    Accion = "Confirmar",
-                    OnClick = $"confirmar(\"{Model.Id}\")"
-                })
+                    @await Component.InvokeAsync("Boton", new
+                    {
+                        Accion = "Confirmar",
+                        OnClick = $"{Model.OnConfirm}"
+                    })
+                }
+                else
+                {
+                    @await Component.InvokeAsync("Boton", new
+                    {
+                        Accion = "Confirmar",
+                        OnClick = $"confirmar(\"{Model.Id}\")",
+                    })
+                }
             </div>
             <div id="btnCargar">
                 @await Component.InvokeAsync("Boton", new

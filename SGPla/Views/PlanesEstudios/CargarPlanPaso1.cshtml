@@ -92,8 +92,6 @@
         @await Component.InvokeAsync("ModalArchivo", new ModalArchivoModel
         {
             Id = "modalArchivo",
-            OnConfirm = "cerrarModal('modalArchivo')",
-            OnCancel = "cerrarModal('modalArchivo')",
             FormatosAceptados = ".xlsx, .xls",
             TamanioMaximo = 20
         })
