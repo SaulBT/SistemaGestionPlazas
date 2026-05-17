@@ -9,11 +9,5 @@ namespace SGPla.Models.ViewModels.PlanesEstudios
         public List<OptionModel> Areas { get; set; } = [];
         public List<OptionModel> Entidades { get; set; } = [];
         public List<OptionModel> ProgramasEducativos { get; set; } = [];
-
-        public string? RegionSeleccionada { get; set; }
-        public int? IdAreaSeleccionada { get; set; }
-        public int? IdEntidadSeleccionada { get; set; }
-        public string? Busqueda { get; set; }
-        public int? IdProgramaSeleccionado { get; set; }
     }
 }

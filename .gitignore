@@ -61,5 +61,5 @@ Thumbs.db
 # =========================
 # Archivos
 # =========================
-Archivos/*
-!Archivos/.gitkeep
+SGPla/Archivos/*
+SGPla/TempUploads/*

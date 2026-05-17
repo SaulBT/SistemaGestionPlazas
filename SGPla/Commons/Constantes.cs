@@ -16,7 +16,7 @@
         public const string RegionCotazacoalcosMinatitlan = "5-Coatzacoalcos-Minatitlán";
         public static List<string> Regiones = new List<string> { RegionXalapa, RegionVeracruz, RegionOrizabaCordoba, RegionPozaRicaTuxpan, RegionCotazacoalcosMinatitlan };
 
-        public const string ModalidadEscolarizada = "Escolarizada";
+        public const string ModalidadEscolarizada = "Escolarizado";
         public const string ModalidadAbierta = "Abierto";
         public const string ModalidadVirtual = "Virtual";
         public const string ModalidadMixta = "Mixta";

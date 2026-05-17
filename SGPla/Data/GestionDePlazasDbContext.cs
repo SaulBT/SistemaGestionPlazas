@@ -106,9 +106,7 @@ public partial class GestionDePlazasDbContext : DbContext
         {
             entity.HasKey(e => e.IdArchivo);
 
-            entity.Property(e => e.IdArchivo)
-                .ValueGeneratedNever()
-                .HasColumnName("idArchivo");
+            entity.Property(e => e.IdArchivo).HasColumnName("idArchivo");
             entity.Property(e => e.Nombre)
                 .HasMaxLength(250)
                 .IsUnicode(false)

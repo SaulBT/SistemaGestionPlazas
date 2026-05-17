@@ -2,14 +2,14 @@
 
 namespace SGPla.Models.ViewModels.PlanesEstudios
 {
-    public class CargarPlanEstudiosPaso1ViewModel
+    public class CargarPlanPaso1ViewModel
     {
-        public string RegionSeleccionada { get; set; } = string.Empty;
-        public int? AreaSeleccionada { get; set; }
-        public int? EntidadSeleccionada { get; set; }
-        public int? ProgramaSeleccionado { get; set; }
+        public string Region { get; set; } = string.Empty;
+        public int? Area { get; set; }
+        public int? Entidad { get; set; }
+        public int? Programa { get; set; }
         public string Plan { get; set; } = string.Empty;
-        public string SistemaSeleccionado { get; set; } = string.Empty;
+        public string Sistema { get; set; } = string.Empty;
         public IFormFile Archivo { get; set; }
 
         public List<OptionModel> ListaRegiones { get; set; } = [];

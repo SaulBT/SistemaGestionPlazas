@@ -1,0 +1,178 @@
+﻿@model SGPla.Models.ViewModels.PlanesEstudios.CargarPlanPaso2ViewModel
+@{
+	ViewData["Title"] = "Cargar Plan de Estudios";
+}
+
+<form method="post" action="@Url.Action("GuardarPlanEstudios", "PlanesEstudios")" enctype="multipart/form-data">
+    <!-- BLOQUE SUPERIOR -->
+    <div class="d-flex row gap-2" style="margin-block-end: 1em">
+        <!-- PRIMERA LÍNEA-->
+        <div class="d-flex gap-2">
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Name = "Region",
+                Label = "Región:",
+                Valor = Model.Region,
+                Disabled = true,
+                Flexible = true
+            })
+            <input type="hidden" name="Region" value="@Model.Region" />
+
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "ifArea",
+                Name = "Area",
+                Label = "Área:",
+                Valor = Model.NombreArea,
+                Disabled = true,
+                Flexible = true
+            })
+
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "ifProgramaEducativo",
+                Name = "ProgramaEducativo",
+                Label = "Programa Educativo:",
+                Valor = Model.NombrePrograma,
+                Disabled = true,
+                Flexible = true
+            })
+            <input type="hidden" name="IdProgramaEducativo" value="@Model.IdProgramaEducativo" />
+        </div>
+
+        <!-- SEGUNDA LÍNEA -->
+        <div class="d-flex gap-4">
+            <div class="d-flex gap-2">
+                @await Component.InvokeAsync("InputField", new InputFieldModel
+                {
+                    Id = "ifPlan",
+                    Name = "Plan",
+                    Label = "Plan:",
+                    Valor = Model.Plan,
+                    Disabled = true,
+                    Flexible = false
+                })
+                <input type="hidden" name="Plan" value="@Model.Plan" />
+
+                @await Component.InvokeAsync("InputField", new InputFieldModel
+                {
+                    Id = "ifSistema",
+                    Name = "Sistema",
+                    Label = "Sistema:",
+                    Valor = Model.Sistema,
+                    Disabled = true,
+                    Flexible = false
+                })
+                <input type="hidden" name="Sistema" value="@Model.Sistema" />
+            </div>
+        </div>
+        <!-- BOTÓN AGREGAR EXPERIENCIA EDUCATIVA -->
+        <div class="d-flex col-12 justify-content-end">
+            @await Component.InvokeAsync("Boton", new
+            {
+                accion = "Agregar",
+                tipo = "secundario",
+                texto = "Agregar Experiencia Educativa",
+                OnClick = "abrirModalAgregarExperiencia()"
+            })
+        </div>
+    </div>
+
+    <!-- TABLA -->
+    <div id="tabla" class="gap:10px;" style="margin-block-end: 1em">
+        @await Component.InvokeAsync("Table", Model.Table)
+    </div>
+
+    <div class="d-flex row">
+        <div class="d-flex col-6">
+            <a href="@Url.Action("Index", "PlanesEstudios")" style="display: inline-block; text-decoration: none;">
+                @await Component.InvokeAsync("Boton", new
+                {
+                    Accion = "Regresar"
+                })
+            </a>
+        </div>
+        <div class="d-flex col-6 column-gap-3 justify-content-end">
+            <a href="@Url.Action("Index", "PlanesEstudios")" style="display: inline-block; text-decoration: none;">
+                @await Component.InvokeAsync("Boton", new
+                {
+                    Accion = "Cancelar"
+                })
+            </a>
+            @await Component.InvokeAsync("Boton", new
+            {
+                Accion = "Guardar",
+                ButtonType = "submit"
+            })
+        </div>
+    </div>
+
+    <!-- MODALES -->
+    <div>
+        <!-- Modal Perfil Docente -->
+        @await Component.InvokeAsync("Modal", new ModalModel
+        {
+            Id = "modalPerfilDocente",
+            Tipo = "info",
+            Titulo = "Pefil docente",
+            Mensaje = "",
+            OnConfirm = "cerrarModal('modalPerfilDocente')"
+
+        })
+        <!-- Modal Agregar -->
+        @Html.AntiForgeryToken()
+            
+        @await Component.InvokeAsync("ModalFormulario", new ModalFormularioModel
+        {
+            Id = "modalAgregarExperiencia",
+            Titulo = "Agregar Experiencia Educativa",
+            PartialView = "_FormularioAgregarExperiencia",
+            PartialModel = Model.Formulario,
+            OnConfirm = "agregarExperienciaCreacion()",
+            OnCancel = "cerrarModal('modalAgregarExperiencia')"
+        })
+
+        <!-- Modal Editar -->
+        @Html.AntiForgeryToken()
+            
+        @await Component.InvokeAsync("ModalFormulario", new ModalFormularioModel
+        {
+            Id = "modalEditarExperiencia",
+            Titulo = "Editar Experiencia Educativa",
+            PartialView = "_FormularioEditarExperiencia",
+            PartialModel = Model.Formulario,
+            OnConfirm = "editarExperienciaCreacion()",
+            OnCancel = "cerrarModal('modalEditarExperiencia')"
+        })
+
+        <!-- Modal eliminar -->
+        @Html.AntiForgeryToken()
+
+        <input type="hidden" name="id" id="deleteArticuloId" />
+
+        @await Component.InvokeAsync("Modal", new ModalModel
+        {
+            Id = "modalEliminarExperiencia",
+            Tipo = "confirm",
+            Titulo = "Eliminar Experiencia Educativa",
+            Mensaje = "Esta acción es irreversible ¿Está seguro de eliminar la Experiencia Educativa del Plan de Estudios?",
+            OnConfirm = "eliminarExperienciaCreacion()",
+            OnCancel = "cerrarModal('modalEliminarExperiencia')"
+        })
+    </div>
+</form>
+
+<script>
+    const UrlAgregarExperiencia = '@Url.Action("AgregarExperienciaEducativaCreacion", "PlanesEstudios")';
+    const UrlEditarExperiencia = '@Url.Action("EditarExperienciaEducativaCreacion", "PlanesEstudios")';
+    const UrlEliminarExperiencia = '@Url.Action("EliminarExperienciaEducativaCreacion", "PlanesEstudios")';
+
+    function abrirModalPerfilDocente(perfilDocente){
+        document.getElementById("modalPerfilDocente-mensaje").innerText = perfilDocente;
+        abrirModal("modalPerfilDocente");
+    }
+</script>
+
+@section Scripts {
+    <script src="~/js/gestionarExperiencias.js"></script>
+}

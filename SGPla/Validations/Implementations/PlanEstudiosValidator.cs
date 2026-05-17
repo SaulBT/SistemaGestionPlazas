@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using SGPla.Commons;
 using SGPla.Models.DTOs.PlanEstudios;
 using SGPla.Repositories.Interfaces;
 using SGPla.Validations.Interfaces;
@@ -7,15 +8,6 @@ namespace SGPla.Validations.Implementations
 {
     public class PlanEstudiosValidator : IPlanEstudiosValidator
     {
-        private static readonly string[] modalidadesValidas =
-        [
-            "Escolarizado",
-            "Abierto",
-            "Virtual",
-            "Mixto",
-            "Semi escolarizado",
-            "A distancia"
-        ];
 
         private static readonly Regex regexCodigoExperienciaEducativa = new(
             "^[A-Z]{4} [0-9]{5}$",
@@ -39,7 +31,7 @@ namespace SGPla.Validations.Implementations
         {
             ArgumentNullException.ThrowIfNull(archivoPlanEstudiosDTO);
 
-            if (archivoPlanEstudiosDTO.Archivo is null)
+            if (string.IsNullOrEmpty(archivoPlanEstudiosDTO.Ruta))
                 throw new ArgumentException("El Archivo es obligatorio.");
             if (string.IsNullOrWhiteSpace(archivoPlanEstudiosDTO.NombreArchivo))
                 throw new ArgumentException("El NombreArchivo es obligatorio.");
@@ -168,7 +160,7 @@ namespace SGPla.Validations.Implementations
                 throw new ArgumentException("La Modalidad es obligatoria.");
             if (modalidad.Trim().Length > 100)
                 throw new ArgumentException("La Modalidad no puede exceder 100 caracteres.");
-            if (!modalidadesValidas.Contains(modalidad.Trim()))
+            if (!Constantes.Modalidades.Contains(modalidad.Trim()))
                 throw new ArgumentException("La Modalidad es inválida.");
         }
 

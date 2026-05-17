@@ -40,11 +40,10 @@ namespace SGPla.Services.Implementations
 
             _planEstudiosValidator.ValidarArchivo(archivoPlanEstudiosDTO);
 
-            archivoPlanEstudiosDTO.Archivo.Position = 0;
-
             var experienciasEducativas = new List<DatosExperienciaEducativaDTO>();
 
-            using var reader = ExcelReaderFactory.CreateReader(archivoPlanEstudiosDTO.Archivo);
+            using var stream = new FileStream(archivoPlanEstudiosDTO.Ruta, FileMode.Open, FileAccess.Read);
+            using var reader = ExcelReaderFactory.CreateReader(stream);
 
             var esPrimeraFila = true;
 
@@ -92,7 +91,7 @@ namespace SGPla.Services.Implementations
             try
             {
                 archivoGuardado = await _archivoService.GuardarAsync(
-                    crearPlanEstudiosDTO.Archivo.Archivo,
+                    crearPlanEstudiosDTO.Archivo.Ruta,
                     crearPlanEstudiosDTO.Archivo.NombreArchivo,
                     "planes-estudios");
                 archivoRegistrado = await _archivoRepository.CrearAsync(new Archivo
@@ -191,7 +190,7 @@ namespace SGPla.Services.Implementations
                 if (editarPlanEstudiosDTO.NuevaLista && editarPlanEstudiosDTO.Archivo != null)
                 {
                     archivoNuevoGuardado = await _archivoService.GuardarAsync(
-                        editarPlanEstudiosDTO.Archivo.Archivo,
+                        editarPlanEstudiosDTO.Archivo.Ruta,
                         editarPlanEstudiosDTO.Archivo.NombreArchivo,
                         "planes-estudios");
 
@@ -256,8 +255,13 @@ namespace SGPla.Services.Implementations
             var planEstudios = await _planEstudiosRepository.ObtenerPorIdAsync(idPlanEstudios);
             var experiencias = await _experienciaEducativaRepository.ObtenerExperienciasEducativasPorIdPlanEstudiosAsync(idPlanEstudios);
             var ids = experiencias.Select(experienciaEducativa => experienciaEducativa.IdExperienciaEducativa).ToList();
+            var idArchivo = planEstudios.IdArchivoPlan;
+            var archivo = await _archivoRepository.ObtenerPorIdAsync(idArchivo);
+
             await _experienciaEducativaRepository.EliminarExperienciasEducativasPorIdsAsync(ids);
             await _planEstudiosRepository.EliminarAsync(planEstudios!);
+            await _archivoRepository.EliminarAsync(archivo!);
+            await _archivoService.EliminarAsync(archivo.Ruta);
         }
 
         private static string ObtenerTextoCelda(IExcelDataReader reader, int columnIndex)

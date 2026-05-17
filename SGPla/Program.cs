@@ -12,6 +12,14 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddDistributedMemoryCache();
+
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 
 //ConectionString
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
@@ -64,7 +72,11 @@ if (!app.Environment.IsDevelopment())
 }
 app.UseRouting();
 
+app.UseAuthentication();
+
 app.UseAuthorization();
+
+app.UseSession();
 
 app.MapStaticAssets();
 
