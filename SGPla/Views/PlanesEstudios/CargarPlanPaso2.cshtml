@@ -107,10 +107,18 @@
         </div>
     </div>
 
-    <!-- ========================= -->
     <!-- MODALES -->
-    <!-- ========================= -->
     <div>
+        <!-- Modal Perfil Docente -->
+        @await Component.InvokeAsync("Modal", new ModalModel
+        {
+            Id = "modalPerfilDocente",
+            Tipo = "info",
+            Titulo = "Pefil docente",
+            Mensaje = "",
+            OnConfirm = "cerrarModal('modalPerfilDocente')"
+
+        })
         <!-- Modal Agregar -->
         @Html.AntiForgeryToken()
             
@@ -148,7 +156,7 @@
             Tipo = "confirm",
             Titulo = "Eliminar Experiencia Educativa",
             Mensaje = "Esta acción es irreversible ¿Está seguro de eliminar la Experiencia Educativa del Plan de Estudios?",
-            OnConfirm = "eliminarExperiencia()",
+            OnConfirm = "eliminarExperienciaCreacion()",
             OnCancel = "cerrarModal('modalEliminarExperiencia')"
         })
     </div>
@@ -157,6 +165,12 @@
 <script>
     const UrlAgregarExperiencia = '@Url.Action("AgregarExperienciaEducativaCreacion", "PlanesEstudios")';
     const UrlEditarExperiencia = '@Url.Action("EditarExperienciaEducativaCreacion", "PlanesEstudios")';
+    const UrlEliminarExperiencia = '@Url.Action("EliminarExperienciaEducativaCreacion", "PlanesEstudios")';
+
+    function abrirModalPerfilDocente(perfilDocente){
+        document.getElementById("modalPerfilDocente-mensaje").innerText = perfilDocente;
+        abrirModal("modalPerfilDocente");
+    }
 </script>
 
 @section Scripts {
