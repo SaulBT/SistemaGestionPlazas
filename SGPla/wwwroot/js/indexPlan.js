@@ -1,4 +1,7 @@
-﻿document.addEventListener("DOMContentLoaded", function () {
+﻿const form = document.getElementById("form");
+var idPlanEliminar = 0;
+
+document.addEventListener("DOMContentLoaded", function () {
 
     inicializarControles();
 
@@ -126,4 +129,16 @@ function actualizarVisibilidad(region, area, entidad, programa) {
     if (region?.value) mostrarContenedor("contenedorArea");
     if (area?.value) mostrarContenedor("contenedorEntidad");
     if (entidad?.value) mostrarContenedor("contenedorPrograma");
+}
+
+function abrirModalEliminarPlan(idPlanEstudios) {
+    idPlanEliminar = idPlanEstudios;
+    abrirModal("modalEliminarPlan");
+}
+async function eliminarPlanEstudios() {
+    const response = await fetch(`${UrlEliminarPlan}?idPlanEstudios=${idPlanEliminar}`);
+    if (response.ok) {
+        form.submit();
+    }
+    
 }
