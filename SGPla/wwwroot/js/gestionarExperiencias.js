@@ -8,9 +8,25 @@ const perfilDocenteEditar = document.getElementById("PerfilDocenteEditar");
 
 const tbody = document.querySelector("#tabla tbody");
 var codigoOriginal = "";
+var codigoEliminar = "";
 
 function abrirModalAgregarExperiencia() {
     abrirModal("modalAgregarExperiencia");
+}
+
+function abrirModalEditarExperiencia(codigo, nombre, perfilDocente) {
+    codigoOriginal = codigo;
+    codigoEditar.value = codigo;
+    nombreEditar.value = nombre;
+    perfilDocenteEditar.value = perfilDocente;
+
+    abrirModal("modalEditarExperiencia");
+}
+
+function abrirModalEliminarExperiencia(codigo) {
+    codigoEliminar = codigo;
+
+    abrirModal("modalEliminarExperiencia");
 }
 
 async function agregarExperienciaCreacion() {
@@ -23,15 +39,6 @@ async function agregarExperienciaCreacion() {
     cerrarModal("modalAgregarExperiencia")
 }
 
-function abrirModalEditarExperiencia(codigo, nombre, perfilDocente) {
-    codigoOriginal = codigo;
-    codigoEditar.value = codigo;
-    nombreEditar.value = nombre;
-    perfilDocenteEditar.value = perfilDocente;
-
-    abrirModal("modalEditarExperiencia");
-}
-
 async function editarExperienciaCreacion() {
     const response = await fetch(`${UrlEditarExperiencia}?codigo=${encodeURIComponent(codigoEditar.value)}&nombre=${encodeURIComponent(nombreEditar.value)}&perfilDocente=${encodeURIComponent(perfilDocenteEditar.value)}&codigoOriginal=${encodeURIComponent(codigoOriginal)}`);
     const experiencias = await response.json();
@@ -42,6 +49,20 @@ async function editarExperienciaCreacion() {
         tbody.appendChild(fila);
 
         cerrarModal("modalEditarExperiencia")
+    });
+}
+
+async function eliminarExperienciaCreacion() {
+    console.log("Codigo: " + codigoEliminar);
+    const response = await fetch(`${UrlEliminarExperiencia}?codigo=${encodeURIComponent(codigoEliminar)}`);
+    const experiencias = await response.json();
+
+    tbody.innerHTML = "";
+    experiencias.forEach(ee => {
+        const fila = generarFila(ee.codigo, ee.nombre, ee.perfilDocente);
+        tbody.appendChild(fila);
+
+        cerrarModal("modalEliminarExperiencia")
     });
 }
 
@@ -65,13 +86,14 @@ function generarFila(codigo, nombre, perfilDocente) {
                     <button
                         type="button"
                         class="boton-primario boton-icono"
-                        onclick="abrirModalEditarExperiencia('${codigo}', '${nombre}', '${perfilDocente}')"">
+                        onclick="abrirModalEditarExperiencia('${codigo}', '${nombre}', '${perfilDocente}')">
 
                         <i class="bi bi-pencil-fill"></i>
                     </button>
                     <button
                         type="button"
-                        class="boton-primario boton-icono">
+                        class="boton-primario boton-icono"
+                        onclick="abrirModalEliminarExperiencia('${codigo}')">
                         <i class="bi bi-trash-fill"></i>
                     </button>
                 </div>
