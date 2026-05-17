@@ -92,15 +92,27 @@
 </div>
 
 <script>
-    const urlObtenerAreas =
-        '@Url.Action("ObtenerAreas", "PlanesEstudios")';
-    const urlObtenerEntidades =
-        '@Url.Action("ObtenerEntidades", "PlanesEstudios")';
-    const urlObtenerProgramas =
-        '@Url.Action("ObtenerProgramas", "PlanesEstudios")';
+    const UrlObtenerAreas = '@Url.Action("ObtenerAreas", "PlanesEstudios")';
+    const UrlObtenerEntidades = '@Url.Action("ObtenerEntidades", "PlanesEstudios")';
+    const UrlObtenerProgramas = '@Url.Action("ObtenerProgramas", "PlanesEstudios")';
     const UrlEliminarPlan = '@Url.Action("EliminarPlanEstudios", "PlanesEstudios")';
+
+    var idPlanEliminar = 0;
+    const form = document.getElementById("form");
+
+    function abrirModalEliminarPlan(idPlanEstudios) {
+        idPlanEliminar = idPlanEstudios;
+        abrirModal("modalEliminarPlan");
+    }
+    async function eliminarPlanEstudios() {
+        const response = await fetch(`${UrlEliminarPlan}?idPlanEstudios=${idPlanEliminar}`);
+        if (response.ok) {
+            form.submit();
+        }
+    
+    }
 </script>
 
 @section Scripts {
-    <script src="~/js/indexPlan.js"></script>
+    <script src="~/js/cargarCatalogosPlan.js"></script>
 }
