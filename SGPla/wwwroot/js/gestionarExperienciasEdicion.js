@@ -6,6 +6,9 @@ const codigoEditar = document.getElementById("CodigoEditar");
 const nombreEditar = document.getElementById("NombreEditar");
 const perfilDocenteEditar = document.getElementById("PerfilDocenteEditar");
 
+const archivoInput = document.getElementById("inputFile");
+const nuevoArchivo = document.getElementById("nuevoArchivo");
+
 const tbody = document.querySelector("#tabla tbody");
 var idExperienciaEducativa = 0;
 
@@ -26,6 +29,10 @@ function abrirModalEliminarExperiencia(idExperiencia) {
     idExperienciaEducativa = idExperiencia;
 
     abrirModal("modalEliminarExperiencia");
+}
+
+function abrirModalArchivo() {
+    abrirModal("modalArchivo");
 }
 
 async function agregarExperienciaEdicion() {
@@ -62,6 +69,24 @@ async function eliminarExperienciaCreacion() {
 
         cerrarModal("modalEliminarExperiencia")
     });
+}
+
+async function recargarExperiencias() {
+    const formData = new FormData();
+    formData.append("archivo", archivoInput.files[0]);
+
+    const response = await fetch(UrlCargarArchivo, {method: "POST", body: formData});
+    const experiencias = await response.json();
+
+    tbody.innerHTML = "";
+    experiencias.forEach(ee => {
+        const fila = generarFila(ee.codigo, ee.nombre, ee.perfilDocente, ee.idExperienciaEducativa);
+        tbody.appendChild(fila);
+
+        cerrarModal("modalArchivo")
+    });
+
+    nuevoArchivo.value = "true";
 }
 
 function generarFila(codigo, nombre, perfilDocente, idExperiencia) {

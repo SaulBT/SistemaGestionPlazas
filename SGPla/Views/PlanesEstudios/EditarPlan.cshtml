@@ -5,7 +5,7 @@
 
 <form method="post" action="@Url.Action("GuardarPlanEstudiosEditado", "PlanesEstudios")" enctype="multipart/form-data">
     <input name="IdPlanEstudios" value="@Model.IdPlanEstudios" type="hidden"/>
-    <input name="NuevoArchivo" itemid="nuevoArchivo" value="@Model.NuevoArchivo" type="hidden"/>
+    <input name="NuevoArchivo" id="nuevoArchivo" value="false" type="hidden"/>
     <!-- BLOQUE SUPERIOR -->
     <div class="d-flex row gap-4" style="margin-block-end: 1em">
         <!-- PRIMERA LÍNEA-->
@@ -155,7 +155,7 @@
         @await Component.InvokeAsync("ModalArchivo", new ModalArchivoModel
         {
             Id = "modalArchivo",
-            OnConfirm = "cerrarModal('modalArchivo')",
+            OnConfirm = "recargarExperiencias()",
             OnCancel = "cerrarModal('modalArchivo')",
             FormatosAceptados = ".xlsx, .xls",
             TamanioMaximo = 20
@@ -167,6 +167,7 @@
     const UrlAgregarExperiencia = '@Url.Action("AgregarExperienciaEducativaEdicion", "PlanesEstudios")';
     const UrlEditarExperiencia = '@Url.Action("EditarExperienciaEducativaEdicion", "PlanesEstudios")';
     const UrlEliminarExperiencia = '@Url.Action("EliminarExperienciaEducativaEdicion", "PlanesEstudios")';
+    const UrlCargarArchivo = '@Url.Action("CargarNuevoArchivo", "PlanesEstudios")';
 
     function abrirModalPerfilDocente(perfilDocente){
         document.getElementById("modalPerfilDocente-mensaje").innerText = perfilDocente;

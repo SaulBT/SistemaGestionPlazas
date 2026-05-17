@@ -575,7 +575,7 @@ namespace SGPla.Controllers
             }
         }
 
-        //[HttpDelete]
+        [HttpGet]
         public async Task EliminarPlanEstudiosAsync(int idPlanEstudios)
         {
             try
@@ -590,7 +590,7 @@ namespace SGPla.Controllers
             }
         }
 
-        [HttpPut]
+        [HttpPost]
         public async Task<IActionResult> GuardarPlanEstudiosEditadoAsync(EditarPlanViewModel modelo)
         {
             try
@@ -603,6 +603,25 @@ namespace SGPla.Controllers
                     ExperienciasEditadas = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(HttpContext.Session.GetString("EeEditadas")),
                     IdsExperienciasEliminadas = JsonSerializer.Deserialize<List<int>>(HttpContext.Session.GetString("EeEliminadas"))
                 };
+                if (modelo.NuevoArchivo)
+                {
+                    var rutaArchivo = HttpContext.Session.GetString("Ruta");
+                    var nombreArchivo = HttpContext.Session.GetString("NombreArchivo");
+                    if (!string.IsNullOrEmpty(rutaArchivo) && !string.IsNullOrEmpty(nombreArchivo))
+                    {
+                        plan.Archivo = new ArchivoPlanEstudiosDTO
+                        {
+                            Ruta = rutaArchivo,
+                            NombreArchivo = nombreArchivo
+                        };
+                    }
+                    else
+                    {
+                        _logger.LogError("{NOMBRE_LOGGER} La ruta o el nombre del nuevo archivo son nulos.", NOMBRE_LOGGER);
+                        TempData["Error"] = "La ruta o el nombre del nuevo archivo son nulos.";
+                        return RedirectToAction(nameof(Index));
+                    }
+                }
 
                 await _planEstudiosService.EditarAsync(plan);
 
@@ -614,20 +633,82 @@ namespace SGPla.Controllers
             }
         }
 
+        [HttpPost]
         public async Task<JsonResult> CargarNuevoArchivo(IFormFile archivo)
         {
             await guardarArchivoTemporalmente(archivo);
-            var listaEe = await ProcesarArchivoAsync(new ArchivoPlanEstudiosDTO
+
+            var ruta = HttpContext.Session.GetString("Ruta");
+            if (ruta != null)
             {
-                Ruta = HttpContext.Session.GetString("Ruta"),
-                NombreArchivo = HttpContext.Session.GetString("NombreArchivo")
-            });
+                var nombreArchivo = HttpContext.Session.GetString("NombreArchivo");
+                if (nombreArchivo != null)
+                {
+                    var archivoDTO = new ArchivoPlanEstudiosDTO
+                    {
+                        Ruta = ruta,
+                        NombreArchivo = nombreArchivo
+                    };
+                    var listaEeNueva = await ProcesarArchivoAsync(archivoDTO);
+                    
+                    var eeNuevas = new List<AgregarExperienciaEducativaDTO>();
+                    foreach (var ee in listaEeNueva)
+                    {
+                        eeNuevas.Add(new AgregarExperienciaEducativaDTO
+                        {
+                            Codigo = ee.Codigo,
+                            Nombre = ee.Nombre,
+                            PerfilDocente = ee.PerfilDocente
+                        });
+                    }
+                    HttpContext.Session.SetString("EeNuevas", JsonSerializer.Serialize(eeNuevas));
 
-            var listaEeJson = JsonSerializer.Serialize(listaEe);
-            HttpContext.Session.SetString("Experiencias", listaEeJson);
+                    var listaEeJson = HttpContext.Session.GetString("Experiencias");
+                    if (!string.IsNullOrEmpty(listaEeJson))
+                    {
+                        var listaEeVieja = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(listaEeJson);
+                        var eeEliminadasJson = HttpContext.Session.GetString("EeEliminadas");
+                        if (!string.IsNullOrEmpty(eeEliminadasJson))
+                        {
+                            var eeEliminadas = JsonSerializer.Deserialize<List<int>>(eeEliminadasJson);
+                            foreach (var ee in listaEeVieja)
+                            {
+                                if (!eeEliminadas.Contains(ee.IdExperienciaEducativa))
+                                    eeEliminadas.Add(ee.IdExperienciaEducativa);
+                            }
+                            HttpContext.Session.SetString("EeEliminadas", JsonSerializer.Serialize(eeEliminadas));
+                            HttpContext.Session.SetString("EeEditadas", JsonSerializer.Serialize(new List<DatosExperienciaEducativaDTO>()));
+                            HttpContext.Session.SetString("Experiencias", JsonSerializer.Serialize(listaEeNueva));
 
-            var eeNuevasJson = HttpContext.Session.GetString("EeNuevas");
-            if ()
+                            return Json(listaEeNueva);
+                        }
+                        else
+                        {
+                            _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias eliminadas.", NOMBRE_LOGGER);
+                            TempData["Error"] = "Error al obtener la lista de Experiencias eliminadas.";
+                            return Json(null);
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias Educativas.", NOMBRE_LOGGER);
+                        TempData["Error"] = "Error al obtener la lista de Experiencias Educativas.";
+                        return Json(null);
+                    }
+                }
+                else
+                {
+                    _logger.LogError("{NOMBRE_LOGGER} El nombre del archivo es nulo.", NOMBRE_LOGGER);
+                    TempData["Error"] = "El nombre del archivo es nulo.";
+                    return Json(null);
+                }
+            }
+            else
+            {
+                _logger.LogError("{NOMBRE_LOGGER} La ruta es nula.", NOMBRE_LOGGER);
+                TempData["Error"] = "La ruta es nula.";
+                return Json(null);
+            }
         }
 
         /*
