@@ -255,8 +255,13 @@ namespace SGPla.Services.Implementations
             var planEstudios = await _planEstudiosRepository.ObtenerPorIdAsync(idPlanEstudios);
             var experiencias = await _experienciaEducativaRepository.ObtenerExperienciasEducativasPorIdPlanEstudiosAsync(idPlanEstudios);
             var ids = experiencias.Select(experienciaEducativa => experienciaEducativa.IdExperienciaEducativa).ToList();
+            var idArchivo = planEstudios.IdArchivoPlan;
+            var archivo = await _archivoRepository.ObtenerPorIdAsync(idArchivo);
+
             await _experienciaEducativaRepository.EliminarExperienciasEducativasPorIdsAsync(ids);
             await _planEstudiosRepository.EliminarAsync(planEstudios!);
+            await _archivoRepository.EliminarAsync(archivo!);
+            await _archivoService.EliminarAsync(archivo.Ruta);
         }
 
         private static string ObtenerTextoCelda(IExcelDataReader reader, int columnIndex)
