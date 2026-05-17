@@ -6,7 +6,7 @@
     ViewData["Title"] = "Planes de Estudios";
 }
 
-<form method="get" action="@Url.Action("Index", "PlanesEstudios")">
+<form id="form" method="get" action="@Url.Action("Index", "PlanesEstudios")">
 
     <!-- Filtros -->
     <div style="display:inline-flex; gap:10px; padding-bottom:30px;">
@@ -78,6 +78,19 @@
     
 </div>
 
+<!-- Modal -->
+<div>
+    @await Component.InvokeAsync("Modal", new ModalModel
+    {
+        Id = "modalEliminarPlan",
+        Tipo = "confirm",
+        Titulo = "Eliminar Plan de Estudios",
+        Mensaje = "Esta acción es irreversible ¿Está seguro de eliminar el Plan de Estudios?",
+        OnConfirm = "eliminarPlanEstudios()",
+        OnCancel = "cerrarModal('modalEliminarPlan')"
+    })
+</div>
+
 <script>
     const urlObtenerAreas =
         '@Url.Action("ObtenerAreas", "PlanesEstudios")';
@@ -85,6 +98,7 @@
         '@Url.Action("ObtenerEntidades", "PlanesEstudios")';
     const urlObtenerProgramas =
         '@Url.Action("ObtenerProgramas", "PlanesEstudios")';
+    const UrlEliminarPlan = '@Url.Action("EliminarPlanEstudios", "PlanesEstudios")';
 </script>
 
 @section Scripts {
