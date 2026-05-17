@@ -194,9 +194,11 @@ namespace SGPla.Controllers
                 var vista = new CargarPlanPaso2ViewModel
                 {
                     Region = modelo.Region,
+                    Area = modelo.Area,
                     NombreArea = area.Nombre,
+                    Entidad = modelo.Entidad,
                     NombrePrograma = programa.Nombre,
-                    IdProgramaEducativo = modelo.Programa,
+                    Programa = modelo.Programa,
                     Plan = modelo.Plan,
                     Sistema = modelo.Sistema,
                     Table = LlenarTablaGestionExperiencias(listaEe, false)
@@ -265,6 +267,29 @@ namespace SGPla.Controllers
             var entidades = await generarCatalogoProgramasAsync(idAreaAcademica, region, idEntidadAcademica, idProgramaEducativo);
 
             return Json(entidades);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RegresarPaso1Async([FromBody] CargarPlanPaso1ViewModel modelo)
+        {
+            var rutaArchivo = HttpContext.Session.GetString("Ruta");
+            if (!string.IsNullOrEmpty(rutaArchivo))
+            {
+                System.IO.File.Delete(rutaArchivo);
+                HttpContext.Session.Remove("Ruta");
+            }
+
+            var url = Url.Action(nameof(CargarPlanPaso1), new CargarPlanPaso1ViewModel
+            {
+                Region = modelo.Region,
+                Area = modelo.Area,
+                Entidad = modelo.Entidad,
+                Programa = modelo.Programa,
+                Plan = modelo.Plan,
+                Sistema = modelo.Sistema
+            });
+
+            return Json(new { Url = url });
         }
 
         [HttpPost]
