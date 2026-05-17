@@ -617,11 +617,17 @@ namespace SGPla.Controllers
         public async Task<JsonResult> CargarNuevoArchivo(IFormFile archivo)
         {
             await guardarArchivoTemporalmente(archivo);
-            var listaEe = ProcesarArchivoAsync(new ArchivoPlanEstudiosDTO
+            var listaEe = await ProcesarArchivoAsync(new ArchivoPlanEstudiosDTO
             {
                 Ruta = HttpContext.Session.GetString("Ruta"),
                 NombreArchivo = HttpContext.Session.GetString("NombreArchivo")
             });
+
+            var listaEeJson = JsonSerializer.Serialize(listaEe);
+            HttpContext.Session.SetString("Experiencias", listaEeJson);
+
+            var eeNuevasJson = HttpContext.Session.GetString("EeNuevas");
+            if ()
         }
 
         /*
