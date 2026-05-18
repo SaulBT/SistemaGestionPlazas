@@ -387,7 +387,6 @@ namespace SGPla.Controllers
 
                 listaEeJson = JsonSerializer.Serialize(listaEe);
                 HttpContext.Session.SetString("Experiencias", listaEeJson);
-                TempData["Success"] = "Experiencia Educativa guardada con éxito.";
 
                 return Json(experiencia);
             }
@@ -430,8 +429,6 @@ namespace SGPla.Controllers
                     listaEeJson = JsonSerializer.Serialize(listaEe);
                     HttpContext.Session.SetString("Experiencias", listaEeJson);
 
-                    TempData["Success"] = "Experiencia Educativa guardada con éxito.";
-
                     return Json(experiencia);
                 }
                 else
@@ -465,8 +462,6 @@ namespace SGPla.Controllers
                     experiencia.PerfilDocente = perfilDocente;
                     listaEeJson = JsonSerializer.Serialize(listaEe);
                     HttpContext.Session.SetString("Experiencias", listaEeJson);
-
-                    TempData["Success"] = "Cambios guardados con éxito.";
 
                     return Json(listaEe);
                 }
@@ -511,8 +506,6 @@ namespace SGPla.Controllers
                         listaEeJson = JsonSerializer.Serialize(listaEe);
                         HttpContext.Session.SetString("Experiencias", listaEeJson);
 
-                        TempData["Success"] = "Cambios guardados con éxito.";
-
                         return Json(listaEe);
                     }
                     else
@@ -550,8 +543,6 @@ namespace SGPla.Controllers
                     listaEe.Remove(experiencia);
                     listaEeJson = JsonSerializer.Serialize(listaEe);
                     HttpContext.Session.SetString("Experiencias", listaEeJson);
-
-                    TempData["Success"] = "El elemento ha sido eliminado con éxito.";
 
                     return Json(listaEe);
                 }
@@ -593,8 +584,6 @@ namespace SGPla.Controllers
 
                         listaEeJson = JsonSerializer.Serialize(listaEe);
                         HttpContext.Session.SetString("Experiencias", listaEeJson);
-
-                        TempData["Success"] = "El elemento ha sido eliminado con éxito.";
 
                         return Json(listaEe);
                     }
