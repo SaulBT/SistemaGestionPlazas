@@ -24,6 +24,7 @@ namespace SGPla.Controllers
         private readonly ILogger<PlanesEstudiosController> _logger;
         private readonly IWebHostEnvironment _environment;
         private const string NOMBRE_LOGGER = "FRONT-PLANES:";
+        private int paginaActual = 1;
 
         public PlanesEstudiosController(
             IPlanEstudiosService planEstudiosService,
@@ -47,8 +48,10 @@ namespace SGPla.Controllers
 
         //Ver todos los Planes de Estudios
         [HttpGet]
-        public async Task<IActionResult> Index(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int? idProgramaEducativo)
+        public async Task<IActionResult> Index(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int? idProgramaEducativo, int pagina = 1, int cantidad = 10)
         {
+            paginaActual = pagina;
+
             var regionesCombo = generarCatalogoRegiones();
             var areasCombo = new List<OptionModel>();
             var entidadesCombo = new List<OptionModel>();
@@ -74,11 +77,13 @@ namespace SGPla.Controllers
 
             return View(new IndexViewModel
             {
-                Table = await LlenarTablaIndexAsync(busqueda, region, idAreaAcademica, idEntidadAcademica, idProgramaEducativo),
+                Table = await LlenarTablaIndexAsync(busqueda, region, idAreaAcademica, idEntidadAcademica, idProgramaEducativo, pagina, cantidad),
                 Regiones = regionesCombo,
                 Areas = areasCombo,
                 Entidades = entidadesCombo,
                 ProgramasEducativos = programasCombo,
+                PaginaActual = paginaActual,
+                CantidadPorPaginas = cantidad
             });
         }
 
@@ -759,7 +764,7 @@ namespace SGPla.Controllers
          * Utils
          */
 
-        private async Task<TableModel> LlenarTablaIndexAsync(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int? idProgramaEducativo)
+        private async Task<TableModel> LlenarTablaIndexAsync(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int? idProgramaEducativo, int pagina = 1, int cantidad = 10)
         {
             _logger.LogInformation("{NOMBRE_LOGGER} Obteniendo tabla de Planes de Estudios con filtros:\n" +
                 " - Búsqueda: {busqueda}\n - Región: {region}\n - idAreaAcademica: {idAreaAcademica}\n - idEntidadAcademica: {idEntidadAcademica}\n" +
@@ -780,7 +785,12 @@ namespace SGPla.Controllers
                     IdProgramaEducativo = idPrograma,
                     Nombre = busqueda
                 };
-                var planes = await _planEstudiosService.ObtenerPorFiltroAsync(filtros, 1);
+                var planes = await _planEstudiosService.ObtenerPorFiltroAsync(filtros, cantidad, pagina);
+                if (planes.items.Count == 0)
+                {
+                    paginaActual = 1;
+                    planes = await _planEstudiosService.ObtenerPorFiltroAsync(filtros, cantidad, paginaActual);
+                }
 
                 return new TableModel
                 {
@@ -788,7 +798,7 @@ namespace SGPla.Controllers
                         {
                             "Programa Educativo", "Modalidad", "Plan", "Área",  "Acciones"
                         },
-                    Rows = planes.Select(plan => new TableRowModel
+                    Rows = planes.items.Select(plan => new TableRowModel
                     {
                         Cells = new List<TableCellModel>
                         {
@@ -818,7 +828,14 @@ namespace SGPla.Controllers
                                 }
                             }
                         }
-                    }).ToList()
+                    }).ToList(),
+                    Pagination = new PaginationInfo
+                    {
+                        CurrentPage = paginaActual,
+                        PageSize = cantidad,
+                        TotalItems = planes.cantidad,
+                        OnPageChange = "cambiarPagina"
+                    }
                 };
             }
             catch (Exception ex)

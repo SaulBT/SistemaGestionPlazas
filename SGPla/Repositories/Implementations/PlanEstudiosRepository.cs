@@ -25,7 +25,22 @@ namespace SGPla.Repositories.Implementations
                 .ToListAsync();
         }
 
-        public async Task<List<PlanEstudios>> ObtenerDiezAsync(int indiceInicial)
+        public async Task<List<PlanEstudios>> ObtenerPorPaginaAsync(int pagina, int cantidad)
+        {
+            int skip = (pagina - 1) * cantidad;
+
+            return await _context.PlanEstudios
+                .AsNoTracking()
+                .Include(planEstudios => planEstudios.IdProgramaEducativoNavigation)
+                    .ThenInclude(programaEducativo => programaEducativo.IdEntidadAcademicaNavigation)
+                    .ThenInclude(entidadAcademica => entidadAcademica.IdAreaAcademicaNavigation)
+                .OrderBy(planEstudios => planEstudios.Nombre)
+                .Skip(skip)
+                .Take(cantidad)
+                .ToListAsync();
+        }
+
+        public async Task<int> ContarAsync()
         {
             return await _context.PlanEstudios
                 .AsNoTracking()
@@ -33,12 +48,35 @@ namespace SGPla.Repositories.Implementations
                     .ThenInclude(programaEducativo => programaEducativo.IdEntidadAcademicaNavigation)
                     .ThenInclude(entidadAcademica => entidadAcademica.IdAreaAcademicaNavigation)
                 .OrderBy(planEstudios => planEstudios.Nombre)
-                .Skip(indiceInicial - 1)
-                .Take(10)
+                .CountAsync();
+        }
+
+        public async Task<List<PlanEstudios>> ObtenerPorFiltroAsync(int idEntidadAcademica, int idProgramaEducativo, string? nombre, int cantidad, int pagina)
+        {
+            int skip = (pagina - 1) * cantidad;
+
+            var lista = _context.PlanEstudios
+                .AsNoTracking()
+                .Include(planEstudios => planEstudios.IdProgramaEducativoNavigation)
+                    .ThenInclude(programaEducativo => programaEducativo.IdEntidadAcademicaNavigation)
+                    .ThenInclude(entidadAcademica => entidadAcademica.IdAreaAcademicaNavigation)
+                .AsQueryable();
+
+            if (idEntidadAcademica > 0)
+                lista = lista.Where(planEstudios => planEstudios.IdProgramaEducativoNavigation.IdEntidadAcademica == idEntidadAcademica);
+            if (idProgramaEducativo > 0)
+                lista = lista.Where(planEstudios => planEstudios.IdProgramaEducativo == idProgramaEducativo);
+            if (!string.IsNullOrWhiteSpace(nombre))
+                lista = lista.Where(planEstudios => planEstudios.Nombre.Contains(nombre.Trim()));
+
+            return await lista
+                .OrderBy(planEstudios => planEstudios.Nombre)
+                .Skip(skip)
+                .Take(cantidad)
                 .ToListAsync();
         }
 
-        public async Task<List<PlanEstudios>> ObtenerPorFiltroAsync(int idEntidadAcademica, int idProgramaEducativo, string? nombre, int indiceInicial)
+        public async Task<int> ContarPorFiltroAsync(int idEntidadAcademica, int idProgramaEducativo, string? nombre)
         {
             var lista = _context.PlanEstudios
                 .AsNoTracking()
@@ -56,9 +94,7 @@ namespace SGPla.Repositories.Implementations
 
             return await lista
                 .OrderBy(planEstudios => planEstudios.Nombre)
-                .Skip(indiceInicial - 1)
-                .Take(10)
-                .ToListAsync();
+                .CountAsync();
         }
 
         public async Task<PlanEstudios?> ObtenerPorIdAsync(int idPlanEstudios)
