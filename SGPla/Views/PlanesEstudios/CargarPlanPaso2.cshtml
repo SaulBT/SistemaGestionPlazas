@@ -95,12 +95,11 @@
             })
         </div>
         <div class="d-flex col-6 column-gap-3 justify-content-end">
-            <a href="@Url.Action("Index", "PlanesEstudios")" style="display: inline-block; text-decoration: none;">
-                @await Component.InvokeAsync("Boton", new
-                {
-                    Accion = "Cancelar"
-                })
-            </a>
+            @await Component.InvokeAsync("Boton", new
+            {
+                Accion = "Cancelar",
+                OnClick = "cancelar()"
+            })
             @await Component.InvokeAsync("Boton", new
             {
                 Accion = "Guardar",
@@ -130,7 +129,7 @@
             Titulo = "Agregar Experiencia Educativa",
             PartialView = "_FormularioAgregarExperiencia",
             PartialModel = Model.Formulario,
-            OnConfirm = "agregarExperienciaCreacion()",
+            OnConfirm = "agregarExperiencia(false)",
             OnCancel = "cerrarModal('modalAgregarExperiencia')"
         })
 
@@ -143,7 +142,7 @@
             Titulo = "Editar Experiencia Educativa",
             PartialView = "_FormularioEditarExperiencia",
             PartialModel = Model.Formulario,
-            OnConfirm = "editarExperienciaCreacion()",
+            OnConfirm = "editarExperiencia(false)",
             OnCancel = "cerrarModal('modalEditarExperiencia')"
         })
 
@@ -158,7 +157,7 @@
             Tipo = "confirm",
             Titulo = "Eliminar Experiencia Educativa",
             Mensaje = "Esta acción es irreversible ¿Está seguro de eliminar la Experiencia Educativa del Plan de Estudios?",
-            OnConfirm = "eliminarExperienciaCreacion()",
+            OnConfirm = "eliminarExperiencia(false)",
             OnCancel = "cerrarModal('modalEliminarExperiencia')"
         })
     </div>
@@ -194,6 +193,12 @@
                 Sistema: sistema
             })
         });
+        const data = await response.json();
+        window.location.href = data.url;
+    }
+
+    async function cancelar(){
+        const response = await fetch('@Url.Action("CancelarAccion","PlanesEstudios")');
         const data = await response.json();
         window.location.href = data.url;
     }

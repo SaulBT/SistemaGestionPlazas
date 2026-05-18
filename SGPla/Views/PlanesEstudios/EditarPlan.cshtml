@@ -83,12 +83,11 @@
     <div class="d-flex">
         <div class="d-flex col-12 gap-3 justify-content-end">
             <!-- BOTÓN CANCELAR -->
-            <a href="@Url.Action("Index", "PlanesEstudios")" style="display: inline-block; text-decoration: none;">
                 @await Component.InvokeAsync("Boton", new
                 {
-                    Accion = "Cancelar"
+                    Accion = "Cancelar",
+                    OnClick = "cancelarEdicion()"
                 })
-            </a>
             <!-- BOTÓN GUARDAR -->
             @await Component.InvokeAsync("Boton", new
             {
@@ -119,7 +118,7 @@
             Titulo = "Agregar Experiencia Educativa",
             PartialView = "_FormularioAgregarExperiencia",
             PartialModel = Model.Formulario,
-            OnConfirm = "agregarExperienciaEdicion()",
+            OnConfirm = "agregarExperiencia(true)",
             OnCancel = "cerrarModal('modalAgregarExperiencia')"
         })
 
@@ -132,7 +131,7 @@
             Titulo = "Editar Experiencia Educativa",
             PartialView = "_FormularioEditarExperiencia",
             PartialModel = Model.Formulario,
-            OnConfirm = "editarExperienciaCreacion()",
+            OnConfirm = "editarExperiencia(true)",
             OnCancel = "cerrarModal('modalEditarExperiencia')"
         })
 
@@ -147,7 +146,7 @@
             Tipo = "confirm",
             Titulo = "Eliminar Experiencia Educativa",
             Mensaje = "Esta acción es irreversible ¿Está seguro de eliminar la Experiencia Educativa del Plan de Estudios?",
-            OnConfirm = "eliminarExperienciaCreacion()",
+            OnConfirm = "eliminarExperiencia(true)",
             OnCancel = "cerrarModal('modalEliminarExperiencia')"
         })
 
@@ -169,18 +168,43 @@
     const UrlEliminarExperiencia = '@Url.Action("EliminarExperienciaEducativaEdicion", "PlanesEstudios")';
     const UrlCargarArchivo = '@Url.Action("CargarNuevoArchivo", "PlanesEstudios")';
 
+    const archivoInput = document.getElementById("inputFile");
+    const nuevoArchivo = document.getElementById("nuevoArchivo");
+
     function abrirModalPerfilDocente(perfilDocente){
         document.getElementById("modalPerfilDocente-mensaje").innerText = perfilDocente;
         abrirModal("modalPerfilDocente");
     }
 
-    function cargarNuevoArchivo() {
-        document.getElementById("nuevoArchivo").value = "true";
-        cerrarModal("modalArchivo");
+    function abrirModalArchivo() {
+        abrirModal("modalArchivo");
+    }
+
+    async function recargarExperiencias() {
+        const formData = new FormData();
+        formData.append("archivo", archivoInput.files[0]);
+
+        const response = await fetch(UrlCargarArchivo, { method: "POST", body: formData });
+        const experiencias = await response.json();
+
+        tbody.innerHTML = "";
+        experiencias.forEach(ee => {
+            const fila = generarFila(true, ee.codigo, ee.nombre, ee.perfilDocente, ee.idExperienciaEducativa);
+            tbody.appendChild(fila);
+        });
+
+        nuevoArchivo.value = true;
+        cerrarModal("modalArchivo")
+    }
+
+    async function cancelarEdicion() {
+        const response = await fetch('@Url.Action("CancelarAccion", "PlanesEstudios")');
+        const data = await response.json();
+        window.location.href = data.url;
     }
 </script>
 
 @section Scripts {
-    <script src="~/js/gestionarExperienciasEdicion.js"></script>
+    <script src="~/js/gestionarExperiencias.js"></script>
     <script src="~/js/cargarArchivo.js"></script>
 }
