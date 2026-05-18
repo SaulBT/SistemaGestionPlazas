@@ -1,7 +1,4 @@
-﻿const form = document.getElementById("form");
-var idPlanEliminar = 0;
-
-document.addEventListener("DOMContentLoaded", function () {
+﻿document.addEventListener("DOMContentLoaded", function () {
 
     inicializarControles();
 
@@ -34,7 +31,7 @@ async function configurarCambioRegion(region, area) {
             return;
         }
 
-        await cargarOpcionesAsync(`${urlObtenerAreas}?idAreaAcademica=${area.value}`, area, "Seleccione un área");
+        await cargarOpcionesAsync(`${UrlObtenerAreas}?idAreaAcademica=${area.value}`, area, "Seleccione un área");
         mostrarContenedor("contenedorArea");
     });
 }
@@ -52,7 +49,7 @@ async function configurarCambioArea(region,area,entidad) {
             return;
         }
 
-        await cargarOpcionesAsync(`${urlObtenerEntidades}?idAreaAcademica=${area.value}&region=${region.value}&idEntidadAcademica=${entidad.value}`,
+        await cargarOpcionesAsync(`${UrlObtenerEntidades}?idAreaAcademica=${area.value}&region=${region.value}&idEntidadAcademica=${entidad.value}`,
             entidad, "Seleccione una entidad");
         mostrarContenedor("contenedorEntidad");
     });
@@ -69,7 +66,7 @@ async function configurarCambioEntidad(region, area, entidad, programa) {
             return;
         }
 
-        await cargarOpcionesAsync(`${urlObtenerProgramas}?idAreaAcademica=${area.value}&region=${region.value}&idEntidadAcademica=${entidad.value}&idProgramaEducativo=${programa.value}`,
+        await cargarOpcionesAsync(`${UrlObtenerProgramas}?idAreaAcademica=${area.value}&region=${region.value}&idEntidadAcademica=${entidad.value}&idProgramaEducativo=${programa.value}`,
             programa, "Seleccione un programa");
 
         mostrarContenedor("contenedorPrograma");
@@ -129,16 +126,4 @@ function actualizarVisibilidad(region, area, entidad, programa) {
     if (region?.value) mostrarContenedor("contenedorArea");
     if (area?.value) mostrarContenedor("contenedorEntidad");
     if (entidad?.value) mostrarContenedor("contenedorPrograma");
-}
-
-function abrirModalEliminarPlan(idPlanEstudios) {
-    idPlanEliminar = idPlanEstudios;
-    abrirModal("modalEliminarPlan");
-}
-async function eliminarPlanEstudios() {
-    const response = await fetch(`${UrlEliminarPlan}?idPlanEstudios=${idPlanEliminar}`);
-    if (response.ok) {
-        form.submit();
-    }
-    
 }

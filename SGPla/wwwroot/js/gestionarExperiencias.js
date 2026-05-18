@@ -7,15 +7,26 @@ const nombreEditar = document.getElementById("NombreEditar");
 const perfilDocenteEditar = document.getElementById("PerfilDocenteEditar");
 
 const tbody = document.querySelector("#tabla tbody");
+
 var codigoOriginal = "";
 var codigoEliminar = "";
+var idExperienciaEducativa = 0;
 
 function abrirModalAgregarExperiencia() {
     abrirModal("modalAgregarExperiencia");
+
+    codigoAgregar.value = "";
+    nombreAgregar.value = "";
+    perfilDocenteAgregar.value = "";
 }
 
-function abrirModalEditarExperiencia(codigo, nombre, perfilDocente) {
-    codigoOriginal = codigo;
+function abrirModalEditarExperiencia(edicion, codigo, nombre, perfilDocente, idExperiencia) {
+    if (edicion) {
+        idExperienciaEducativa = idExperiencia;
+    } else {
+        codigoOriginal = codigo;
+    }
+    
     codigoEditar.value = codigo;
     nombreEditar.value = nombre;
     perfilDocenteEditar.value = perfilDocente;
@@ -23,52 +34,70 @@ function abrirModalEditarExperiencia(codigo, nombre, perfilDocente) {
     abrirModal("modalEditarExperiencia");
 }
 
-function abrirModalEliminarExperiencia(codigo) {
-    codigoEliminar = codigo;
+function abrirModalEliminarExperiencia(edicion, identificador) {
+    if (edicion) {
+        idExperienciaEducativa = identificador;
+    } else {
+        codigoEliminar = identificador;
+    }
 
     abrirModal("modalEliminarExperiencia");
 }
 
-async function agregarExperienciaCreacion() {
+async function agregarExperiencia(edicion) {
     const response = await fetch(`${UrlAgregarExperiencia}?codigo=${encodeURIComponent(codigoAgregar.value)}&nombre=${encodeURIComponent(nombreAgregar.value)}&perfilDocente=${encodeURIComponent(perfilDocenteAgregar.value)}`);
     const experiencia = await response.json();
 
-    const fila = generarFila(experiencia.codigo, experiencia.nombre, experiencia.perfilDocente);
+    const fila = generarFila(edicion, experiencia.codigo, experiencia.nombre, experiencia.perfilDocente, 0);
     tbody.appendChild(fila);
 
     cerrarModal("modalAgregarExperiencia")
 }
 
-async function editarExperienciaCreacion() {
-    const response = await fetch(`${UrlEditarExperiencia}?codigo=${encodeURIComponent(codigoEditar.value)}&nombre=${encodeURIComponent(nombreEditar.value)}&perfilDocente=${encodeURIComponent(perfilDocenteEditar.value)}&codigoOriginal=${encodeURIComponent(codigoOriginal)}`);
+async function editarExperiencia(edicion) {
+    var ruta = "";
+    if (edicion) {
+        ruta = `${UrlEditarExperiencia}?codigo=${encodeURIComponent(codigoEditar.value)}&nombre=${encodeURIComponent(nombreEditar.value)}&perfilDocente=${encodeURIComponent(perfilDocenteEditar.value)}&idExperienciaEducativa=${encodeURIComponent(idExperienciaEducativa)}`
+    } else {
+        ruta = `${UrlEditarExperiencia}?codigo=${encodeURIComponent(codigoEditar.value)}&nombre=${encodeURIComponent(nombreEditar.value)}&perfilDocente=${encodeURIComponent(perfilDocenteEditar.value)}&codigoOriginal=${encodeURIComponent(codigoOriginal)}`
+    }
+    const response = await fetch(ruta);
     const experiencias = await response.json();
 
     tbody.innerHTML = "";
     experiencias.forEach(ee => {
-        const fila = generarFila(ee.codigo, ee.nombre, ee.perfilDocente);
+        const fila = generarFila(edicion, ee.codigo, ee.nombre, ee.perfilDocente, ee.idExperienciaEducativa);
         tbody.appendChild(fila);
-
-        cerrarModal("modalEditarExperiencia")
     });
+
+    cerrarModal("modalEditarExperiencia")
 }
 
-async function eliminarExperienciaCreacion() {
-    console.log("Codigo: " + codigoEliminar);
-    const response = await fetch(`${UrlEliminarExperiencia}?codigo=${encodeURIComponent(codigoEliminar)}`);
+async function eliminarExperiencia(edicion) {
+    var ruta = "";
+    if (edicion) {
+        ruta = `${UrlEliminarExperiencia}?idExperienciaEducativa=${encodeURIComponent(idExperienciaEducativa)}`
+    } else {
+        ruta = `${UrlEliminarExperiencia}?codigo=${encodeURIComponent(codigoEliminar)}`
+    }
+    const response = await fetch(ruta);
     const experiencias = await response.json();
 
     tbody.innerHTML = "";
     experiencias.forEach(ee => {
-        const fila = generarFila(ee.codigo, ee.nombre, ee.perfilDocente);
+        const fila = generarFila(edicion, ee.codigo, ee.nombre, ee.perfilDocente, ee.idExperienciaEducativa);
         tbody.appendChild(fila);
-
-        cerrarModal("modalEliminarExperiencia")
     });
+
+    cerrarModal("modalEliminarExperiencia")
 }
 
-function generarFila(codigo, nombre, perfilDocente) {
+function generarFila(edicion, codigo, nombre, perfilDocente, idExperiencia) {
     const fila = document.createElement("tr");
-    fila.innerHTML = `
+    var contenido = "";
+
+    if (edicion) {
+        contenido = `
             <td>${codigo}</td>
             <td>${nombre}</td>
             <td>
@@ -86,19 +115,53 @@ function generarFila(codigo, nombre, perfilDocente) {
                     <button
                         type="button"
                         class="boton-primario boton-icono"
-                        onclick="abrirModalEditarExperiencia('${codigo}', '${nombre}', '${perfilDocente}')">
+                        onclick="abrirModalEditarExperiencia(true, '${codigo}', '${nombre}', '${perfilDocente}', ${idExperiencia})">
 
                         <i class="bi bi-pencil-fill"></i>
                     </button>
                     <button
                         type="button"
                         class="boton-primario boton-icono"
-                        onclick="abrirModalEliminarExperiencia('${codigo}')">
+                        onclick="abrirModalEliminarExperiencia(true, ${idExperiencia})">
                         <i class="bi bi-trash-fill"></i>
                     </button>
                 </div>
             </td>
         `;
+    } else {
+        contenido = `
+            <td>${codigo}</td>
+            <td>${nombre}</td>
+            <td>
+                <div class="table-actions">
+                    <button
+                        type="button"
+                        class="boton-primario boton-icono"
+                        onclick="abrirModalPerfilDocente('${perfilDocente}')">
+                        <i class="bi bi-info-circle-fill"></i>
+                    </button>
+                </div>
+            </td>
+            <td>
+                <div class="table-actions">
+                    <button
+                        type="button"
+                        class="boton-primario boton-icono"
+                        onclick="abrirModalEditarExperiencia(false, '${codigo}', '${nombre}', '${perfilDocente}', 0)">
 
+                        <i class="bi bi-pencil-fill"></i>
+                    </button>
+                    <button
+                        type="button"
+                        class="boton-primario boton-icono"
+                        onclick="abrirModalEliminarExperiencia(false, '${codigo}')">
+                        <i class="bi bi-trash-fill"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+    }
+
+    fila.innerHTML = contenido
     return fila;
 }

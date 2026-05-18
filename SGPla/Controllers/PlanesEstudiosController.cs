@@ -95,6 +95,8 @@ namespace SGPla.Controllers
                 if (plan == null)
                     return NotFound();
 
+                HttpContext.Session.Clear();
+
                 return View(new VerPlanEstudiosViewModel
                 {
                     IdPlanEstudios = plan.IdPlanEstudios,
@@ -194,15 +196,15 @@ namespace SGPla.Controllers
                 var vista = new CargarPlanPaso2ViewModel
                 {
                     Region = modelo.Region,
+                    Area = modelo.Area,
                     NombreArea = area.Nombre,
+                    Entidad = modelo.Entidad,
                     NombrePrograma = programa.Nombre,
-                    IdProgramaEducativo = modelo.Programa,
+                    Programa = modelo.Programa,
                     Plan = modelo.Plan,
                     Sistema = modelo.Sistema,
                     Table = LlenarTablaGestionExperiencias(listaEe, false)
                 };
-
-                HttpContext.Session.SetString("Vista", JsonSerializer.Serialize(vista));
 
                 return View(vista);
             }
@@ -268,6 +270,29 @@ namespace SGPla.Controllers
         }
 
         [HttpPost]
+        public async Task<IActionResult> RegresarPaso1Async([FromBody] CargarPlanPaso1ViewModel modelo)
+        {
+            var rutaArchivo = HttpContext.Session.GetString("Ruta");
+            if (!string.IsNullOrEmpty(rutaArchivo))
+            {
+                System.IO.File.Delete(rutaArchivo);
+                HttpContext.Session.Remove("Ruta");
+            }
+
+            var url = Url.Action(nameof(CargarPlanPaso1), new CargarPlanPaso1ViewModel
+            {
+                Region = modelo.Region,
+                Area = modelo.Area,
+                Entidad = modelo.Entidad,
+                Programa = modelo.Programa,
+                Plan = modelo.Plan,
+                Sistema = modelo.Sistema
+            });
+
+            return Json(new { Url = url });
+        }
+
+        [HttpPost]
         public async Task<IActionResult> GuardarPlanEstudiosAsync(GuardarNuevoPlanViewModel modelo)
         {
             try
@@ -290,7 +315,7 @@ namespace SGPla.Controllers
 
                             await _planEstudiosService.AgregarAsync(new CrearPlanEstudiosDTO
                             {
-                                IdProgramaEducativo = (int)modelo.IdProgramaEducativo,
+                                IdProgramaEducativo = (int)modelo.Programa,
                                 Nombre = modelo.Plan,
                                 Sistema = modelo.Sistema,
                                 Archivo = archivoDTO,
@@ -590,6 +615,18 @@ namespace SGPla.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> CancelarAccionAsync()
+        {
+            var rutaArchivo = HttpContext.Session.GetString("Ruta");
+            if (!string.IsNullOrEmpty(rutaArchivo))
+                System.IO.File.Delete(rutaArchivo);
+
+            var url = Url.Action(nameof(Index));
+
+            return Json(new { Url = url });
+        }
+
         [HttpPost]
         public async Task<IActionResult> GuardarPlanEstudiosEditadoAsync(EditarPlanViewModel modelo)
         {
@@ -603,6 +640,7 @@ namespace SGPla.Controllers
                     ExperienciasEditadas = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(HttpContext.Session.GetString("EeEditadas")),
                     IdsExperienciasEliminadas = JsonSerializer.Deserialize<List<int>>(HttpContext.Session.GetString("EeEliminadas"))
                 };
+
                 if (modelo.NuevoArchivo)
                 {
                     var rutaArchivo = HttpContext.Session.GetString("Ruta");
@@ -614,6 +652,11 @@ namespace SGPla.Controllers
                             Ruta = rutaArchivo,
                             NombreArchivo = nombreArchivo
                         };
+
+                        await _planEstudiosService.EditarAsync(plan);
+                        System.IO.File.Delete(rutaArchivo);
+
+                        return RedirectToAction(nameof(Index));
                     }
                     else
                     {
@@ -622,10 +665,11 @@ namespace SGPla.Controllers
                         return RedirectToAction(nameof(Index));
                     }
                 }
-
-                await _planEstudiosService.EditarAsync(plan);
-
-                return RedirectToAction(nameof(Index));
+                else
+                {
+                    await _planEstudiosService.EditarAsync(plan);
+                    return RedirectToAction(nameof(Index));
+                }
             }
             catch
             {
@@ -947,12 +991,12 @@ namespace SGPla.Controllers
                                 new()
                                 {
                                     Accion = "editar",
-                                    OnClick = $"abrirModalEditarExperiencia('{ee.Codigo}', '{ee.Nombre}', '{ee.PerfilDocente}', '{ee.IdExperienciaEducativa}')"
+                                    OnClick = $"abrirModalEditarExperiencia(true, '{ee.Codigo}', '{ee.Nombre}', '{ee.PerfilDocente}', {ee.IdExperienciaEducativa})"
                                 },
                                 new()
                                 {
                                     Accion = "eliminar",
-                                    OnClick = $"abrirModalEliminarExperiencia('{ee.IdExperienciaEducativa}')"
+                                    OnClick = $"abrirModalEliminarExperiencia(true, '{ee.IdExperienciaEducativa}')"
                                 }
                             }
                         }
@@ -989,12 +1033,12 @@ namespace SGPla.Controllers
                                 new()
                                 {
                                     Accion = "editar",
-                                    OnClick = $"abrirModalEditarExperiencia('{ee.Codigo}', '{ee.Nombre}', '{ee.PerfilDocente}')"
+                                    OnClick = $"abrirModalEditarExperiencia(false, '{ee.Codigo}', '{ee.Nombre}', '{ee.PerfilDocente}', 0)"
                                 },
                                 new()
                                 {
                                     Accion = "eliminar",
-                                    OnClick = $"abrirModalEliminarExperiencia('{ee.Codigo}')"
+                                    OnClick = $"abrirModalEliminarExperiencia(false, '{ee.Codigo}')"
                                 }
                             }
                         }

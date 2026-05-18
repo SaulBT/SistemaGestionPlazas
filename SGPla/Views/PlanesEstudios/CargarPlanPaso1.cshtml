@@ -99,15 +99,16 @@
 </form>
 
 <script>
-    const urlObtenerAreas =
-        '@Url.Action("ObtenerAreas", "PlanesEstudios")';
-    const urlObtenerEntidades =
-        '@Url.Action("ObtenerEntidades", "PlanesEstudios")';
-    const urlObtenerProgramas =
-        '@Url.Action("ObtenerProgramas", "PlanesEstudios")';
+    const UrlObtenerAreas = '@Url.Action("ObtenerAreas", "PlanesEstudios")';
+    const UrlObtenerEntidades = '@Url.Action("ObtenerEntidades", "PlanesEstudios")';
+    const UrlObtenerProgramas = '@Url.Action("ObtenerProgramas", "PlanesEstudios")';
+
+    function abrirModalArchivo() {
+        abrirModal("modalArchivo");
+    }
 </script>
 
 @section Scripts {
     <script src="~/js/cargarArchivo.js"></script>
-    <script src="~/js/cargarPlanPaso1.js"></script>
+    <script src="~/js/cargarCatalogosPlan.js"></script>
 }

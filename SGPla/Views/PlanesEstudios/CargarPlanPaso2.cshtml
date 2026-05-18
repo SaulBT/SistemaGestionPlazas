@@ -3,7 +3,7 @@
 	ViewData["Title"] = "Cargar Plan de Estudios";
 }
 
-<form method="post" action="@Url.Action("GuardarPlanEstudios", "PlanesEstudios")" enctype="multipart/form-data">
+<form id="form" action="@Url.Action("GuardarPlanEstudios", "PlanesEstudios")" method="post" action="" enctype="multipart/form-data">
     <!-- BLOQUE SUPERIOR -->
     <div class="d-flex row gap-2" style="margin-block-end: 1em">
         <!-- PRIMERA LÍNEA-->
@@ -11,6 +11,7 @@
             @await Component.InvokeAsync("InputField", new InputFieldModel
             {
                 Name = "Region",
+                Id = "ifRegion",
                 Label = "Región:",
                 Valor = Model.Region,
                 Disabled = true,
@@ -20,13 +21,14 @@
 
             @await Component.InvokeAsync("InputField", new InputFieldModel
             {
-                Id = "ifArea",
                 Name = "Area",
                 Label = "Área:",
                 Valor = Model.NombreArea,
                 Disabled = true,
                 Flexible = true
             })
+            <input type="hidden" id="ifArea" value="@Model.Area" />
+            <input type="hidden" id="entidad" value="@Model.Entidad" />
 
             @await Component.InvokeAsync("InputField", new InputFieldModel
             {
@@ -37,7 +39,7 @@
                 Disabled = true,
                 Flexible = true
             })
-            <input type="hidden" name="IdProgramaEducativo" value="@Model.IdProgramaEducativo" />
+            <input type="hidden" id="IdProgramaEducativo" name="Programa" value="@Model.Programa" />
         </div>
 
         <!-- SEGUNDA LÍNEA -->
@@ -83,22 +85,21 @@
         @await Component.InvokeAsync("Table", Model.Table)
     </div>
 
+    <!-- BOTONES INFERIORES -->
     <div class="d-flex row">
         <div class="d-flex col-6">
-            <a href="@Url.Action("Index", "PlanesEstudios")" style="display: inline-block; text-decoration: none;">
-                @await Component.InvokeAsync("Boton", new
-                {
-                    Accion = "Regresar"
-                })
-            </a>
+            @await Component.InvokeAsync("Boton", new
+            {
+                Accion = "Regresar",
+                OnClick = "regresarPaso1()"
+            })
         </div>
         <div class="d-flex col-6 column-gap-3 justify-content-end">
-            <a href="@Url.Action("Index", "PlanesEstudios")" style="display: inline-block; text-decoration: none;">
-                @await Component.InvokeAsync("Boton", new
-                {
-                    Accion = "Cancelar"
-                })
-            </a>
+            @await Component.InvokeAsync("Boton", new
+            {
+                Accion = "Cancelar",
+                OnClick = "cancelar()"
+            })
             @await Component.InvokeAsync("Boton", new
             {
                 Accion = "Guardar",
@@ -128,7 +129,7 @@
             Titulo = "Agregar Experiencia Educativa",
             PartialView = "_FormularioAgregarExperiencia",
             PartialModel = Model.Formulario,
-            OnConfirm = "agregarExperienciaCreacion()",
+            OnConfirm = "agregarExperiencia(false)",
             OnCancel = "cerrarModal('modalAgregarExperiencia')"
         })
 
@@ -141,7 +142,7 @@
             Titulo = "Editar Experiencia Educativa",
             PartialView = "_FormularioEditarExperiencia",
             PartialModel = Model.Formulario,
-            OnConfirm = "editarExperienciaCreacion()",
+            OnConfirm = "editarExperiencia(false)",
             OnCancel = "cerrarModal('modalEditarExperiencia')"
         })
 
@@ -156,7 +157,7 @@
             Tipo = "confirm",
             Titulo = "Eliminar Experiencia Educativa",
             Mensaje = "Esta acción es irreversible ¿Está seguro de eliminar la Experiencia Educativa del Plan de Estudios?",
-            OnConfirm = "eliminarExperienciaCreacion()",
+            OnConfirm = "eliminarExperiencia(false)",
             OnCancel = "cerrarModal('modalEliminarExperiencia')"
         })
     </div>
@@ -170,6 +171,36 @@
     function abrirModalPerfilDocente(perfilDocente){
         document.getElementById("modalPerfilDocente-mensaje").innerText = perfilDocente;
         abrirModal("modalPerfilDocente");
+    }
+
+    async function regresarPaso1(){
+        const region = document.getElementById("ifRegion").value;
+        const area = document.getElementById("ifArea").value;
+        const entidad = document.getElementById("entidad").value;
+        const programa = document.getElementById("IdProgramaEducativo").value;
+        const sistema = document.getElementById("ifSistema").value;
+        const plan = document.getElementById("ifPlan").value;
+
+        const response = await fetch('@Url.Action("RegresarPaso1", "PlanesEstudios")', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                Region: region,
+                Area: area,
+                Entidad: entidad,
+                Programa: programa,
+                Plan: plan,
+                Sistema: sistema
+            })
+        });
+        const data = await response.json();
+        window.location.href = data.url;
+    }
+
+    async function cancelar(){
+        const response = await fetch('@Url.Action("CancelarAccion","PlanesEstudios")');
+        const data = await response.json();
+        window.location.href = data.url;
     }
 </script>
 
