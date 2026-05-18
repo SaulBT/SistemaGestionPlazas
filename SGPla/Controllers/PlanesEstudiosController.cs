@@ -89,14 +89,15 @@ namespace SGPla.Controllers
 
         //Ver Plan de Estudios
         [HttpGet]
-        public async Task<IActionResult> VerPlanEstudiosAsync(int id)
+        public async Task<IActionResult> VerPlanEstudiosAsync(int idPlanEstudios, int pagina = 1, int cantidad = 10)
         {
-            _logger.LogInformation("{NOMBRE_LOGGER} Visualizando Plan de Estudios con Id: {id}", NOMBRE_LOGGER, id);
-            if (id == 0) return BadRequest();
+            _logger.LogInformation("{NOMBRE_LOGGER} Visualizando Plan de Estudios con Id: {id}", NOMBRE_LOGGER, idPlanEstudios);
+            paginaActual = pagina;
+            if (idPlanEstudios == 0) return BadRequest();
 
             try
             {
-                var plan = await _planEstudiosService.ObtenerPorIdAsync(id);
+                var plan = await _planEstudiosService.ObtenerPorIdAsync(idPlanEstudios);
                 if (plan == null)
                     return NotFound();
 
@@ -110,12 +111,14 @@ namespace SGPla.Controllers
                     Nombre = plan.Nombre,
                     NombreAreaAcademica = plan.NombreAreaAcademica,
                     ExperienciasEducativas = plan.ExperienciasEducativas,
-                    Table = LlenarTablaVerPlanEstudios(plan.ExperienciasEducativas)
+                    Table = LlenarTablaVerPlanEstudios(plan.ExperienciasEducativas, paginaActual, cantidad),
+                    PaginaActual = paginaActual,
+                    CantidadPorPaginas = cantidad
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{NOMBRE_LOGGER} Error al obtener detalles del Plan de Estudios con Id: {id}", NOMBRE_LOGGER, id);
+                _logger.LogError(ex, "{NOMBRE_LOGGER} Error al obtener detalles del Plan de Estudios con Id: {id}", NOMBRE_LOGGER, idPlanEstudios);
                 TempData["Error"] = "Error al cargar los detalles del Plan de Estudios";
                 return RedirectToAction(nameof(Index));
             }
@@ -334,6 +337,7 @@ namespace SGPla.Controllers
 
                             System.IO.File.Delete(rutaArchivo);
                             HttpContext.Session.Clear();
+                            TempData["Success"] = "Plan de estudios guardado con éxito.";
                             return RedirectToAction(nameof(Index));
                         }
                         else
@@ -383,6 +387,7 @@ namespace SGPla.Controllers
 
                 listaEeJson = JsonSerializer.Serialize(listaEe);
                 HttpContext.Session.SetString("Experiencias", listaEeJson);
+                TempData["Success"] = "Experiencia Educativa guardada con éxito.";
 
                 return Json(experiencia);
             }
@@ -425,6 +430,8 @@ namespace SGPla.Controllers
                     listaEeJson = JsonSerializer.Serialize(listaEe);
                     HttpContext.Session.SetString("Experiencias", listaEeJson);
 
+                    TempData["Success"] = "Experiencia Educativa guardada con éxito.";
+
                     return Json(experiencia);
                 }
                 else
@@ -458,6 +465,8 @@ namespace SGPla.Controllers
                     experiencia.PerfilDocente = perfilDocente;
                     listaEeJson = JsonSerializer.Serialize(listaEe);
                     HttpContext.Session.SetString("Experiencias", listaEeJson);
+
+                    TempData["Success"] = "Cambios guardados con éxito.";
 
                     return Json(listaEe);
                 }
@@ -502,6 +511,8 @@ namespace SGPla.Controllers
                         listaEeJson = JsonSerializer.Serialize(listaEe);
                         HttpContext.Session.SetString("Experiencias", listaEeJson);
 
+                        TempData["Success"] = "Cambios guardados con éxito.";
+
                         return Json(listaEe);
                     }
                     else
@@ -539,6 +550,8 @@ namespace SGPla.Controllers
                     listaEe.Remove(experiencia);
                     listaEeJson = JsonSerializer.Serialize(listaEe);
                     HttpContext.Session.SetString("Experiencias", listaEeJson);
+
+                    TempData["Success"] = "El elemento ha sido eliminado con éxito.";
 
                     return Json(listaEe);
                 }
@@ -581,6 +594,8 @@ namespace SGPla.Controllers
                         listaEeJson = JsonSerializer.Serialize(listaEe);
                         HttpContext.Session.SetString("Experiencias", listaEeJson);
 
+                        TempData["Success"] = "El elemento ha sido eliminado con éxito.";
+
                         return Json(listaEe);
                     }
                     else
@@ -611,6 +626,7 @@ namespace SGPla.Controllers
             try
             {
                 await _planEstudiosService.EliminarAsync(idPlanEstudios);
+                TempData["Success"] = "El elemento ha sido eliminado con éxito.";
 
             }
             catch (Exception ex)
@@ -660,6 +676,7 @@ namespace SGPla.Controllers
 
                         await _planEstudiosService.EditarAsync(plan);
                         System.IO.File.Delete(rutaArchivo);
+                        TempData["Success"] = "Plan de estudios guardado con éxito.";
 
                         return RedirectToAction(nameof(Index));
                     }
@@ -813,7 +830,7 @@ namespace SGPla.Controllers
                                     new()
                                     {
                                         Accion = "ver",
-                                        Url = Url.Action("VerPlanEstudios", "PlanesEstudios", new { id = plan.IdPlanEstudios})
+                                        Url = Url.Action("VerPlanEstudios", "PlanesEstudios", new { idPlanEstudios = plan.IdPlanEstudios})
                                     },
                                     new()
                                     {
@@ -847,15 +864,18 @@ namespace SGPla.Controllers
             }
         }
 
-        private TableModel LlenarTablaVerPlanEstudios(List<DatosExperienciaEducativaDTO> experiencias)
+        private TableModel LlenarTablaVerPlanEstudios(List<DatosExperienciaEducativaDTO> experiencias, int pagina = 1, int cantidad = 10)
         {
             _logger.LogInformation("{NOMBRE_LOGGER} Generando tabla con Experiencias Educativas.", NOMBRE_LOGGER);
             try
             {
+                int skip = (pagina - 1) * cantidad;
+                var experienciasTabla = experiencias.Skip(skip).Take(cantidad).ToList();
+
                 return new TableModel
                 {
                     Headers = new List<string> { "Codigo", "Experiencia Educativa", "Perfil Docente" },
-                    Rows = experiencias.Select(ee => new TableRowModel
+                    Rows = experienciasTabla.Select(ee => new TableRowModel
                     {
                         Cells = new List<TableCellModel>
                     {
@@ -873,7 +893,14 @@ namespace SGPla.Controllers
                             }
                         }
                     }
-                    }).ToList()
+                    }).ToList(),
+                    Pagination = new PaginationInfo
+                    {
+                        CurrentPage = paginaActual,
+                        PageSize = cantidad,
+                        TotalItems = experiencias.Count(),
+                        OnPageChange = "cambiarPagina"
+                    }
                 };
             }
             catch(Exception ex)
