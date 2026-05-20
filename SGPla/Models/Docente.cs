@@ -13,9 +13,9 @@ public partial class Docente
 
     public int? IdArchivosGenerales { get; set; }
 
-    public string NumeroPersonal { get; set; } = null!;
+    public string? NumeroPersonal { get; set; }
 
-    public string Puesto { get; set; } = null!;
+    public string? Puesto { get; set; }
 
     public virtual ICollection<Dictamen> Dictamen { get; set; } = new List<Dictamen>();
 

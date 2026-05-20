@@ -7,11 +7,11 @@ public partial class Oferta
 {
     public int IdOferta { get; set; }
 
-    public int IdDocente { get; set; }
+    public int? IdDocente { get; set; }
 
     public int IdExperienciaEducativa { get; set; }
 
-    public int IdArticulo { get; set; }
+    public int? IdArticulo { get; set; }
 
     public int IdPeriodo { get; set; }
 
@@ -20,8 +20,6 @@ public partial class Oferta
     public string TipoContratacion { get; set; } = null!;
 
     public string Nrc { get; set; } = null!;
-
-    public bool Vacante { get; set; }
 
     public bool Incluida { get; set; }
 
@@ -39,9 +37,9 @@ public partial class Oferta
 
     public virtual Archivo? IdArchivoAperturaNavigation { get; set; }
 
-    public virtual Articulo IdArticuloNavigation { get; set; } = null!;
+    public virtual Articulo? IdArticuloNavigation { get; set; }
 
-    public virtual Docente IdDocenteNavigation { get; set; } = null!;
+    public virtual Docente? IdDocenteNavigation { get; set; }
 
     public virtual ExperienciaEducativa IdExperienciaEducativaNavigation { get; set; } = null!;
 
