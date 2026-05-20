@@ -50,14 +50,25 @@ namespace SGPla.Controllers
         [HttpGet]
         public async Task<IActionResult> Index(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int? idProgramaEducativo, int pagina = 1, int cantidad = 10)
         {
+            var modelo = new IndexViewModel
+            {
+                Table = generarTablaError(),
+                Regiones = new List<OptionModel>(),
+                Areas = new List<OptionModel>(),
+                Entidades = new List<OptionModel>(),
+                ProgramasEducativos = new List<OptionModel>()
+            };
+
+            paginaActual = pagina;
+
+            var regionesCombo = generarCatalogoRegiones();
+            var areasCombo = new List<OptionModel>();
+            var entidadesCombo = new List<OptionModel>();
+            var programasCombo = new List<OptionModel>();
+
             try
             {
-                paginaActual = pagina;
-
-                var regionesCombo = generarCatalogoRegiones();
-                var areasCombo = new List<OptionModel>();
-                var entidadesCombo = new List<OptionModel>();
-                var programasCombo = new List<OptionModel>();
+                
 
                 //Llenar Areas
                 if (!region.IsNullOrEmpty())
@@ -77,30 +88,29 @@ namespace SGPla.Controllers
                 else
                     idProgramaEducativo = null;
 
-                return View(new IndexViewModel
-                {
-                    Table = await LlenarTablaIndexAsync(busqueda, region, idAreaAcademica, idEntidadAcademica, idProgramaEducativo, pagina, cantidad),
-                    Regiones = regionesCombo,
-                    Areas = areasCombo,
-                    Entidades = entidadesCombo,
-                    ProgramasEducativos = programasCombo,
-                    PaginaActual = paginaActual,
-                    CantidadPorPaginas = cantidad
-                });
+                modelo.Table = await LlenarTablaIndexAsync(busqueda, region, idAreaAcademica, idEntidadAcademica, idProgramaEducativo, pagina, cantidad);
+                modelo.Regiones = regionesCombo;
+                modelo.Areas = areasCombo;
+                modelo.Entidades = entidadesCombo;
+                modelo.ProgramasEducativos = programasCombo;
+                modelo.PaginaActual = paginaActual;
+                modelo.CantidadPorPaginas = cantidad;
+
+                return View(modelo);
+            }
+            catch (ValidacionExcepction vx)
+            {
+                _logger.LogError(vx, "{NOMBRE_LOGGER} Error al cargar los catálogos.", NOMBRE_LOGGER);
+                TempData["Error"] = "Ha ocurrido un error al cargar los catálogos.";
+
+                return View(modelo);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{NOMBRE_LOGGER} Error al cargar los catálogos.", NOMBRE_LOGGER);
-                TempData["Error"] = "Ha ocurrido un error al cargar los catálogos.";
+                _logger.LogError(ex, "{NOMBRE_LOGGER} Error inesperado.", NOMBRE_LOGGER);
+                TempData["Error"] = "Ha ocurrido un error, inténtalo de nuevo más tarde.";
 
-                return View(new IndexViewModel
-                {
-                    Table = generarTablaError(),
-                    Regiones = new List<OptionModel>(),
-                    Areas = new List<OptionModel>(),
-                    Entidades = new List<OptionModel>(),
-                    ProgramasEducativos = new List<OptionModel>()
-                });
+                return View(modelo);
             }
         }
 

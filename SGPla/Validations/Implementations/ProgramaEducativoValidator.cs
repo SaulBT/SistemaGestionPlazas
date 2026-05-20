@@ -1,4 +1,5 @@
-﻿using SGPla.Mappers;
+﻿using SGPla.Commons;
+using SGPla.Mappers;
 using SGPla.Models;
 using SGPla.Models.DTOs.ProgramaEducativo;
 using SGPla.Models.InterfacesDTOs;
@@ -25,11 +26,11 @@ namespace SGPla.Validations.Implementations
         {
             
             if (buscarProgramaEducativoDTO.Nombre?.Length > 100)
-                throw new ArgumentException("El nombre no debe ser superior a 100 caracteres.");
+                throw new ValidacionExcepction("400", "El nombre no debe ser superior a 100 caracteres.");
 
            
-            if (buscarProgramaEducativoDTO.IdAreaAcademica < 0)
-                throw new ArgumentException("El área académica debe ser un número positivo.");
+            if (buscarProgramaEducativoDTO.IdAreaAcademica <= 0)
+                throw new ValidacionExcepction("400", "El área académica debe ser un número positivo.");
 
         }
 
