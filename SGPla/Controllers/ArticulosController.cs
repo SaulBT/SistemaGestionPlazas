@@ -38,7 +38,7 @@ namespace SGPla.Controllers
                 {
                     articulos = await _articuloService.BuscarPorTerminoAsync(busqueda);
                 }
-                
+
                 return new TableModel
                 {
                     Headers = new List<string> { "Artículo", "Descripción", "Acciones" },
@@ -66,7 +66,11 @@ namespace SGPla.Controllers
                         }
                     },
 
-                    }).ToList()
+                    }).ToList(),
+                    Pagination = new PaginationInfo
+                    {
+                        PaginationMode = "NA"
+                    }
                 };
             }
      
