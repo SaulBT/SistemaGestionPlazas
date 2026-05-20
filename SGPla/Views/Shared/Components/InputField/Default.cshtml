@@ -18,6 +18,6 @@
             @(Model.Disabled ? "disabled" : null) maxlength="@Model.MaximoCaracteres"/>
     @if (!string.IsNullOrEmpty(Model.Error))
     {
-        <span class="input-error-text">@Model.Error</span>
+        <span id="@Model.Id-Error" class="input-error-text">@Model.Error</span>
     }
 </div>
