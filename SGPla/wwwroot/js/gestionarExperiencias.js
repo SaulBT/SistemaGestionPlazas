@@ -50,6 +50,7 @@ async function agregarExperiencia(edicion) {
 
     const fila = generarFila(edicion, experiencia.codigo, experiencia.nombre, experiencia.perfilDocente, 0);
     tbody.appendChild(fila);
+    refrescarTablaCliente("tablaExperiencias");
 
     cerrarModal("modalAgregarExperiencia")
 }
@@ -69,6 +70,7 @@ async function editarExperiencia(edicion) {
         const fila = generarFila(edicion, ee.codigo, ee.nombre, ee.perfilDocente, ee.idExperienciaEducativa);
         tbody.appendChild(fila);
     });
+    refrescarTablaCliente("tablaExperiencias");
 
     cerrarModal("modalEditarExperiencia")
 }
@@ -88,6 +90,7 @@ async function eliminarExperiencia(edicion) {
         const fila = generarFila(edicion, ee.codigo, ee.nombre, ee.perfilDocente, ee.idExperienciaEducativa);
         tbody.appendChild(fila);
     });
+    refrescarTablaCliente("tablaExperiencias");
 
     cerrarModal("modalEliminarExperiencia")
 }

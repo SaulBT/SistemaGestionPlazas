@@ -244,6 +244,14 @@ namespace SGPla.Controllers
                     Table = LlenarTablaGestionExperiencias(listaEe, false)
                 };
 
+                vista.Table.TableId = "tablaExperiencias";
+                vista.Table.Pagination = new PaginationInfo
+                {
+                    PageSize = 10,
+                    TotalItems = listaEe.Count(),
+                    PaginationMode = "client"
+                };
+
                 return View(vista);
             }
             else
