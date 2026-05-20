@@ -8,35 +8,39 @@
     <div class="d-flex flex-column gap-3">
         @await Component.InvokeAsync("SelectField", new SelectFieldModel
         {
+            Id = "Region",
             Label = "Región",
             Options = Model.ListaRegiones,
             Name = "Region"
         })
 
-        <div id="contenedorArea" style="display:none;">
+        <div id="contenedorArea" style="display:inline;">
             @await Component.InvokeAsync("SelectField", new SelectFieldModel
             {
+                Id = "Area",
                 Label = "Área Académica",
                 Options = Model.ListaAreas,
-                Name = "Area"
+                Name = "IdAreaAcademica"
             })
         </div>
 
         <div id="contenedorEntidad" style="display:none">
             @await Component.InvokeAsync("SelectField", new SelectFieldModel
             {
+                Id = "Entidad",
                 Label = "Entidad Académica",
                 Options = Model.ListaEntidades,
-                Name = "Entidad"
+                Name = "IdEntidadAcademica"
             })
         </div>
 
         <div id="contenedorPrograma" style="display:none;">
             @await Component.InvokeAsync("SelectField", new SelectFieldModel
             {
+                Id = "Programa",
                 Label = "Programa Educativo",
                 Options = Model.ListaProgramas,
-                Name = "Programa"
+                Name = "IdProgramaEducativo"
             })
         </div>
 
@@ -49,12 +53,14 @@
                 Valor = Model.Plan,
                 Disabled = false,
                 Flexible = false,
+                Error = ViewData.ModelState["Plan"]?.Errors.FirstOrDefault()?.ErrorMessage,
             })
         </div>
 
         <div style="display:inline;">
             @await Component.InvokeAsync("SelectField", new SelectFieldModel
             {
+                Id = "Sistema",
                 Label = "Sistema",
                 Options = Model.ListaSistema,
                 Name = "Sistema"

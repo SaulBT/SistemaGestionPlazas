@@ -1,4 +1,5 @@
 ﻿using SGPla.Models.DTOs.PlanEstudios;
+using System.ComponentModel.DataAnnotations;
 
 namespace SGPla.Models.ViewModels.PlanesEstudios
 {

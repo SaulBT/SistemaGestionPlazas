@@ -50,41 +50,57 @@ namespace SGPla.Controllers
         [HttpGet]
         public async Task<IActionResult> Index(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int? idProgramaEducativo, int pagina = 1, int cantidad = 10)
         {
-            paginaActual = pagina;
-
-            var regionesCombo = generarCatalogoRegiones();
-            var areasCombo = new List<OptionModel>();
-            var entidadesCombo = new List<OptionModel>();
-            var programasCombo = new List<OptionModel>();
-
-            //Llenar Areas
-            if (!region.IsNullOrEmpty())
-                areasCombo = await generarCatalogoAreasAsync(idAreaAcademica);
-            else
-                idAreaAcademica = null;
-
-            //Llenar Entidades
-            if (idAreaAcademica.HasValue)
-                entidadesCombo = await generarCatalogoEntidadesAsync(idAreaAcademica.Value, region, idEntidadAcademica);
-            else
-                idEntidadAcademica = null;
-
-            //Llenar Programas Educativos
-            if (idEntidadAcademica.HasValue)
-                programasCombo = await generarCatalogoProgramasAsync(idAreaAcademica.Value, region, idEntidadAcademica.Value, idProgramaEducativo);
-            else
-                idProgramaEducativo = null;
-
-            return View(new IndexViewModel
+            try
             {
-                Table = await LlenarTablaIndexAsync(busqueda, region, idAreaAcademica, idEntidadAcademica, idProgramaEducativo, pagina, cantidad),
-                Regiones = regionesCombo,
-                Areas = areasCombo,
-                Entidades = entidadesCombo,
-                ProgramasEducativos = programasCombo,
-                PaginaActual = paginaActual,
-                CantidadPorPaginas = cantidad
-            });
+                paginaActual = pagina;
+
+                var regionesCombo = generarCatalogoRegiones();
+                var areasCombo = new List<OptionModel>();
+                var entidadesCombo = new List<OptionModel>();
+                var programasCombo = new List<OptionModel>();
+
+                //Llenar Areas
+                if (!region.IsNullOrEmpty())
+                    areasCombo = await generarCatalogoAreasAsync(idAreaAcademica);
+                else
+                    idAreaAcademica = null;
+
+                //Llenar Entidades
+                if (idAreaAcademica.HasValue)
+                    entidadesCombo = await generarCatalogoEntidadesAsync(idAreaAcademica.Value, region, idEntidadAcademica);
+                else
+                    idEntidadAcademica = null;
+
+                //Llenar Programas Educativos
+                if (idEntidadAcademica.HasValue)
+                    programasCombo = await generarCatalogoProgramasAsync(idAreaAcademica.Value, region, idEntidadAcademica.Value, idProgramaEducativo);
+                else
+                    idProgramaEducativo = null;
+
+                return View(new IndexViewModel
+                {
+                    Table = await LlenarTablaIndexAsync(busqueda, region, idAreaAcademica, idEntidadAcademica, idProgramaEducativo, pagina, cantidad),
+                    Regiones = regionesCombo,
+                    Areas = areasCombo,
+                    Entidades = entidadesCombo,
+                    ProgramasEducativos = programasCombo,
+                    PaginaActual = paginaActual,
+                    CantidadPorPaginas = cantidad
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{NOMBRE_LOGGER} Error al cargar los catálogos.", NOMBRE_LOGGER);
+
+                return View(new IndexViewModel
+                {
+                    Table = generarTablaError(),
+                    Regiones = new List<OptionModel>(),
+                    Areas = new List<OptionModel>(),
+                    Entidades = new List<OptionModel>(),
+                    ProgramasEducativos = new List<OptionModel>()
+                });
+            }
         }
 
         //Ver Plan de Estudios
@@ -126,21 +142,15 @@ namespace SGPla.Controllers
 
         //Cargar Plan Paso 1
         [HttpGet]
-        public async Task<IActionResult> CargarPlanPaso1(CargarPlanPaso1ViewModel modelo)
+        //public async Task<IActionResult> CargarPlanPaso1(CargarPlanPaso1ViewModel modelo)
+        public async Task<IActionResult> CargarPlanPaso1(string? region, string? plan, string? sistema, int? idAreaAcademica, int? idEntidadAcademica, int? idProgramaEducativo)
         {
-            var region = modelo.Region;
-            var plan = modelo.Plan;
-            var modalidad = modelo.Sistema;
-            var idAreaAcademica = modelo.Area;
-            var idEntidadAcademica = modelo.Entidad;
-            var idProgramaEducativo = modelo.Programa;
-
             var regionesCombo = generarCatalogoRegiones();
             var areasCombo = new List<OptionModel>();
             var entidadesCombo = new List<OptionModel>();
             var programasCombo = new List<OptionModel>();
             var nombre = plan;
-            var modalidadesCombo = generarCatalogoModalidades(modalidad);
+            var sistemasCombo = generarCatalogoModalidades();
 
             //Llenar Areas
             if (!region.IsNullOrEmpty())
@@ -163,25 +173,44 @@ namespace SGPla.Controllers
             return View(new CargarPlanPaso1ViewModel
             {
                 Region = region,
-                Area = idAreaAcademica,
-                Entidad = idEntidadAcademica,
-                Programa = idProgramaEducativo,
+                IdAreaAcademica = idAreaAcademica,
+                IdEntidadAcademica = idEntidadAcademica,
+                IdProgramaEducativo = idProgramaEducativo,
                 Plan = nombre,
-                Archivo = modelo.Archivo,
+                Sistema = sistema,
 
                 ListaRegiones = regionesCombo,
                 ListaAreas = areasCombo,
                 ListaEntidades = entidadesCombo,
                 ListaProgramas = programasCombo,
-                ListaSistema = modalidadesCombo
+                ListaSistema = sistemasCombo
             });
         }
 
         //Cargar Plan Paso 2
         [HttpPost]
-        public async Task<IActionResult> CargarPlanPaso2(CargarPlanPaso2ViewModel modelo)
+        public async Task<IActionResult> CargarPlanPaso2(CargarPlanPaso1ViewModel modelo)
         {
             _logger.LogInformation("{NOMBRE_LOGGER} Paso 2 de Cargar Plan de Estudios.", NOMBRE_LOGGER);
+
+            if (!ModelState.IsValid)
+            {
+                _logger.LogError("{NOMBRE_LOGGER} Modelo no válido en Paso 2 de Cargar Plan de Estudios.", NOMBRE_LOGGER);
+                if (modelo.Archivo == null)
+                    TempData["Error"] = "El archivo es obligatorio.";
+
+                modelo.ListaRegiones = generarCatalogoRegiones();
+                modelo.ListaSistema = generarCatalogoModalidades();
+                modelo.ListaAreas = await generarCatalogoAreasAsync(modelo.IdAreaAcademica);
+                if (modelo.IdAreaAcademica.HasValue)
+                {
+                    modelo.ListaEntidades = await generarCatalogoEntidadesAsync((int)modelo.IdAreaAcademica, modelo.Region, modelo.IdEntidadAcademica);
+                    if (modelo.IdEntidadAcademica.HasValue)
+                        modelo.ListaProgramas = await generarCatalogoProgramasAsync((int)modelo.IdAreaAcademica, modelo.Region, (int)modelo.IdEntidadAcademica, modelo.IdProgramaEducativo);
+                }
+
+                return View(nameof(CargarPlanPaso1), modelo);
+            }
 
             var archivo = modelo.Archivo;
             await guardarArchivoTemporalmente(archivo);
@@ -198,17 +227,17 @@ namespace SGPla.Controllers
 
                 HttpContext.Session.SetString("Experiencias", JsonSerializer.Serialize(listaEe));
 
-                var area = await _areaAcademicaService.ObtenerPorIdAsync(modelo.Area);
-                var programa = await _programaEducativoService.ObtenerPorIdAsync(modelo.Programa);
+                var area = await _areaAcademicaService.ObtenerPorIdAsync((int)modelo.IdAreaAcademica);
+                var programa = await _programaEducativoService.ObtenerPorIdAsync((int)modelo.IdProgramaEducativo);
 
                 var vista = new CargarPlanPaso2ViewModel
                 {
                     Region = modelo.Region,
-                    Area = modelo.Area,
+                    Area = (int)modelo.IdAreaAcademica,
                     NombreArea = area.Nombre,
-                    Entidad = modelo.Entidad,
+                    Entidad = (int)modelo.IdEntidadAcademica,
                     NombrePrograma = programa.Nombre,
-                    Programa = modelo.Programa,
+                    Programa = (int)modelo.IdProgramaEducativo,
                     Plan = modelo.Plan,
                     Sistema = modelo.Sistema,
                     Table = LlenarTablaGestionExperiencias(listaEe, false)
@@ -286,15 +315,15 @@ namespace SGPla.Controllers
                 System.IO.File.Delete(rutaArchivo);
                 HttpContext.Session.Remove("Ruta");
             }
-
-            var url = Url.Action(nameof(CargarPlanPaso1), new CargarPlanPaso1ViewModel
+            //string? region, string? plan, string? modalidad, int? idAreaAcademica, int? idEntidadAcademica, int? idProgramaEducativo
+            var url = Url.Action(nameof(CargarPlanPaso1), new 
             {
-                Region = modelo.Region,
-                Area = modelo.Area,
-                Entidad = modelo.Entidad,
-                Programa = modelo.Programa,
-                Plan = modelo.Plan,
-                Sistema = modelo.Sistema
+                region = modelo.Region,
+                plan = modelo.Plan,
+                sistema = modelo.Sistema,
+                idAreaAcademica = modelo.IdAreaAcademica,
+                idEntidadAcademica = modelo.IdEntidadAcademica,
+                idProgramaEducativo = modelo.IdProgramaEducativo
             });
 
             return Json(new { Url = url });
@@ -801,9 +830,9 @@ namespace SGPla.Controllers
                 return new TableModel
                 {
                     Headers = new List<string>
-                        {
-                            "Programa Educativo", "Modalidad", "Plan", "Área",  "Acciones"
-                        },
+                    {
+                        "Programa Educativo", "Modalidad", "Plan", "Área",  "Acciones"
+                    },
                     Rows = planes.items.Select(plan => new TableRowModel
                     {
                         Cells = new List<TableCellModel>
@@ -847,9 +876,8 @@ namespace SGPla.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"{NOMBRE_LOGGER} Error al obtener la lista de Planes de Estudios.");
-                TempData["Error"] = "Error al cargar los Planes de Estudios.";
 
-                return new TableModel();
+                return generarTablaError();
             }
         }
 
@@ -895,9 +923,8 @@ namespace SGPla.Controllers
             catch(Exception ex)
             {
                 _logger.LogError(ex, "{NOMBRE_LOGGER} Error al generar la tabla de Experiencias Educativas.", NOMBRE_LOGGER);
-                TempData["Error"] = "Error al generar la tabla de Experiencias Educativas.";
 
-                return new TableModel();
+                return generarTablaError();
             }
         }
 
@@ -966,14 +993,13 @@ namespace SGPla.Controllers
             }).ToList();
         }
 
-        private List<OptionModel> generarCatalogoModalidades(string? modalidad)
+        private List<OptionModel> generarCatalogoModalidades()
         {
             return Constantes.Modalidades
                 .Select(r => new OptionModel
                 {
                     Value = r,
-                    Text = r,
-                    Selected = r == modalidad
+                    Text = r
                 })
                 .ToList();
         }
@@ -1094,6 +1120,27 @@ namespace SGPla.Controllers
 
             HttpContext.Session.SetString("Ruta", rutaArchivo);
             HttpContext.Session.SetString("NombreArchivo", archivo.FileName);
+        }
+
+        private TableModel generarTablaError()
+        {
+            return new TableModel
+            {
+                Headers = new List<string>
+                    {
+                        ""
+                    },
+                Rows = new TableRowModel[]
+                    {
+                        new TableRowModel
+                        {
+                            Cells = new List<TableCellModel>
+                            {
+                                new() { Value = "Ha ocurrido un error, inténtalo de nuevo más tarde." }
+                            }
+                        }
+                    }.ToList(),
+            };
         }
     }
 }
