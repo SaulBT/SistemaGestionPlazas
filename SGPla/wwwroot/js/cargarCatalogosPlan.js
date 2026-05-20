@@ -75,21 +75,26 @@ async function configurarCambioEntidad(region, area, entidad, programa) {
 
 async function cargarOpcionesAsync(url, selectDestino, placeholder) {
     const response = await fetch(url);
-    const data = await response.json();
+    if (response.ok) {
+        const data = await response.json();
 
-    limpiarSelect(selectDestino);
+        limpiarSelect(selectDestino);
 
-    agregarPlaceholder(selectDestino, placeholder);
+        agregarPlaceholder(selectDestino, placeholder);
 
-    data.forEach(item => {
-        const option = document.createElement("option");
-        option.value = item.value;
-        option.text = item.text;
+        data.forEach(item => {
+            const option = document.createElement("option");
+            option.value = item.value;
+            option.text = item.text;
 
-        if (item.selected) option.selected = true;
+            if (item.selected) option.selected = true;
 
-        selectDestino.appendChild(option);
-    });
+            selectDestino.appendChild(option);
+        });
+    } else {
+        document.getElementById('form').submit();
+    }
+    
 }
 
 function limpiarSelect(select) {
