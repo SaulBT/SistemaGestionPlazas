@@ -276,6 +276,15 @@ namespace SGPla.Controllers
             var listaEe = planEstudios.ExperienciasEducativas;
             HttpContext.Session.SetString("Experiencias", JsonSerializer.Serialize(listaEe));
 
+            var tabla = LlenarTablaGestionExperiencias(listaEe, true);
+            tabla.TableId = "tablaExperiencias";
+            tabla.Pagination = new PaginationInfo
+            {
+                PageSize = 10,
+                TotalItems = listaEe.Count(),
+                PaginationMode = "client"
+            };
+
             return View(new EditarPlanViewModel
             {
                 IdPlanEstudios = planEstudios.IdPlanEstudios,
@@ -283,7 +292,7 @@ namespace SGPla.Controllers
                 Area = planEstudios.NombreAreaAcademica,
                 Plan = planEstudios.Nombre,
                 Sistema = planEstudios.Modalidad,
-                Table = LlenarTablaGestionExperiencias(listaEe, true)
+                Table = tabla
             });
         }
 
