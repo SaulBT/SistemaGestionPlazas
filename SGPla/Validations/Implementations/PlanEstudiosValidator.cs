@@ -128,11 +128,11 @@ namespace SGPla.Validations.Implementations
         public async Task ValidarIdAsync(int idPlanEstudios)
         {
             if (idPlanEstudios <= 0)
-                throw new ArgumentException("La IdPlanEstudios es inválida.");
+                throw new ValidacionExcepction("La IdPlanEstudios es inválida.", "400");
 
             bool existe = await _planEstudiosRepository.ExistePorIdAsync(idPlanEstudios);
             if (!existe)
-                throw new KeyNotFoundException("No existe ese Plan de Estudios.");
+                throw new ValidacionExcepction("No existe ese Plan de Estudios.", "404");
         }
 
         private async Task validarIdProgramaEducativoAsync(int idProgramaEducativo)

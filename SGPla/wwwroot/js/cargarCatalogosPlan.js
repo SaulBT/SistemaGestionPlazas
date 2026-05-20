@@ -92,7 +92,10 @@ async function cargarOpcionesAsync(url, selectDestino, placeholder) {
             selectDestino.appendChild(option);
         });
     } else {
-        document.getElementById('form').submit();
+        const form = document.getElementById("form");
+        form.action = UrlActual;
+        form.method = "get";
+        form.submit();
     }
     
 }
@@ -128,7 +131,6 @@ function ocultarContenedor(id) {
 }
 
 function actualizarVisibilidad(region, area, entidad, programa) {
-    console.log('Region: ' + region.value + '\nArea: ' + area.value + "\nEntidad: " + entidad.value + "\nPrograma: " + programa.value)
     if (region?.value) mostrarContenedor("contenedorArea");
     if (area?.value) mostrarContenedor("contenedorEntidad");
     if (entidad?.value) mostrarContenedor("contenedorPrograma");

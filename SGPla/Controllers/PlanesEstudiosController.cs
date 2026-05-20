@@ -50,6 +50,8 @@ namespace SGPla.Controllers
         [HttpGet]
         public async Task<IActionResult> Index(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int? idProgramaEducativo, int pagina = 1, int cantidad = 10)
         {
+            HttpContext.Session.Clear();
+
             var modelo = new IndexViewModel
             {
                 Table = generarTablaError(),
@@ -102,14 +104,12 @@ namespace SGPla.Controllers
             {
                 _logger.LogError(vx, "{NOMBRE_LOGGER} Error al cargar los catálogos.", NOMBRE_LOGGER);
                 TempData["Error"] = "Ha ocurrido un error al cargar los catálogos.";
-
                 return View(modelo);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{NOMBRE_LOGGER} Error inesperado.", NOMBRE_LOGGER);
+                _logger.LogError(ex, "{NOMBRE_LOGGER} [Index] Error inesperado.", NOMBRE_LOGGER);
                 TempData["Error"] = "Ha ocurrido un error, inténtalo de nuevo más tarde.";
-
                 return View(modelo);
             }
         }
@@ -119,83 +119,108 @@ namespace SGPla.Controllers
         public async Task<IActionResult> VerPlanEstudiosAsync(int idPlanEstudios, int pagina = 1, int cantidad = 10)
         {
             _logger.LogInformation("{NOMBRE_LOGGER} Visualizando Plan de Estudios con Id: {id}", NOMBRE_LOGGER, idPlanEstudios);
+
             paginaActual = pagina;
-            if (idPlanEstudios == 0) return BadRequest();
+            var modelo = new VerPlanEstudiosViewModel();
+            modelo.Table = generarTablaError();
 
             try
             {
                 var plan = await _planEstudiosService.ObtenerPorIdAsync(idPlanEstudios);
-                if (plan == null)
-                    return NotFound();
+                modelo.IdPlanEstudios = plan.IdPlanEstudios;
+                modelo.NombreProgramaEducativo = plan.NombreProgramaEducativo;
+                modelo.Modalidad = plan.Modalidad;
+                modelo.Nombre = plan.Nombre;
+                modelo.NombreAreaAcademica = plan.NombreAreaAcademica;
+                modelo.Table = LlenarTablaVerPlanEstudios(plan.ExperienciasEducativas, paginaActual, cantidad);
+                modelo.PaginaActual = paginaActual;
+                modelo.CantidadPorPaginas = cantidad;
+                return View(modelo);
+            }
+            catch (ValidacionExcepction vx)
+            {
+                _logger.LogError(vx, "{NOMBRE_LOGGER} Error al obtener detalles del Plan de Estudios: {id}", NOMBRE_LOGGER, idPlanEstudios);
+                TempData["Error"] = $"No se ha podido mostrar el Plan de Estudios.";
+                if (vx.Codigo.Contains("404"))
+                    TempData["Error"] = $"No se ha encontrado al Plan de Estudios.";
 
-                HttpContext.Session.Clear();
-
-                return View(new VerPlanEstudiosViewModel
-                {
-                    IdPlanEstudios = plan.IdPlanEstudios,
-                    NombreProgramaEducativo = plan.NombreProgramaEducativo,
-                    Modalidad = plan.Modalidad,
-                    Nombre = plan.Nombre,
-                    NombreAreaAcademica = plan.NombreAreaAcademica,
-                    ExperienciasEducativas = plan.ExperienciasEducativas,
-                    Table = LlenarTablaVerPlanEstudios(plan.ExperienciasEducativas, paginaActual, cantidad),
-                    PaginaActual = paginaActual,
-                    CantidadPorPaginas = cantidad
-                });
+                return View(modelo);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{NOMBRE_LOGGER} Error al obtener detalles del Plan de Estudios con Id: {id}", NOMBRE_LOGGER, idPlanEstudios);
-                TempData["Error"] = "Error al cargar los detalles del Plan de Estudios";
-                return RedirectToAction(nameof(Index));
+                _logger.LogError(ex, "{NOMBRE_LOGGER} [VerPlanEstudios] Error inesperado.", NOMBRE_LOGGER);
+                TempData["Error"] = "Ha ocurrido un error, inténtalo de nuevo más tarde.";
+                return View(modelo);
             }
         }
 
         //Cargar Plan Paso 1
         [HttpGet]
-        //public async Task<IActionResult> CargarPlanPaso1(CargarPlanPaso1ViewModel modelo)
         public async Task<IActionResult> CargarPlanPaso1(string? region, string? plan, string? sistema, int? idAreaAcademica, int? idEntidadAcademica, int? idProgramaEducativo)
         {
-            var regionesCombo = generarCatalogoRegiones();
-            var areasCombo = new List<OptionModel>();
-            var entidadesCombo = new List<OptionModel>();
-            var programasCombo = new List<OptionModel>();
-            var nombre = plan;
-            var sistemasCombo = generarCatalogoModalidades();
-
-            //Llenar Areas
-            if (!region.IsNullOrEmpty())
-                areasCombo = await generarCatalogoAreasAsync(idAreaAcademica);
-            else
-                idAreaAcademica = null;
-
-            //Llenar Entidades
-            if (idAreaAcademica.HasValue)
-                entidadesCombo = await generarCatalogoEntidadesAsync(idAreaAcademica.Value, region, idEntidadAcademica);
-            else
-                idEntidadAcademica = null;
-
-            //Llenar Programas Educativos
-            if (idEntidadAcademica.HasValue)
-                programasCombo = await generarCatalogoProgramasAsync(idAreaAcademica.Value, region, idEntidadAcademica.Value, idProgramaEducativo);
-            else
-                idProgramaEducativo = null;
-
-            return View(new CargarPlanPaso1ViewModel
+            var modelo = new CargarPlanPaso1ViewModel
             {
-                Region = region,
-                IdAreaAcademica = idAreaAcademica,
-                IdEntidadAcademica = idEntidadAcademica,
-                IdProgramaEducativo = idProgramaEducativo,
-                Plan = nombre,
-                Sistema = sistema,
+                ListaRegiones = [],
+                ListaAreas = [],
+                ListaEntidades = [],
+                ListaProgramas = [],
+            };
 
-                ListaRegiones = regionesCombo,
-                ListaAreas = areasCombo,
-                ListaEntidades = entidadesCombo,
-                ListaProgramas = programasCombo,
-                ListaSistema = sistemasCombo
-            });
+            try
+            {
+                var regionesCombo = generarCatalogoRegiones();
+                var areasCombo = new List<OptionModel>();
+                var entidadesCombo = new List<OptionModel>();
+                var programasCombo = new List<OptionModel>();
+                var nombre = plan;
+                var sistemasCombo = generarCatalogoModalidades();
+
+                //Llenar Areas
+                if (!region.IsNullOrEmpty())
+                    areasCombo = await generarCatalogoAreasAsync(idAreaAcademica);
+                else
+                    idAreaAcademica = null;
+
+                //Llenar Entidades
+                if (idAreaAcademica.HasValue)
+                    entidadesCombo = await generarCatalogoEntidadesAsync(idAreaAcademica.Value, region, idEntidadAcademica);
+                else
+                    idEntidadAcademica = null;
+
+                //Llenar Programas Educativos
+                if (idEntidadAcademica.HasValue)
+                    programasCombo = await generarCatalogoProgramasAsync(idAreaAcademica.Value, region, idEntidadAcademica.Value, idProgramaEducativo);
+                else
+                    idProgramaEducativo = null;
+
+                modelo.Region = region;
+                modelo.IdAreaAcademica = idAreaAcademica;
+                modelo.IdEntidadAcademica = idEntidadAcademica;
+                modelo.IdProgramaEducativo = idProgramaEducativo;
+                modelo.Plan = nombre ?? "";
+                modelo.Sistema = sistema ?? "";
+                modelo.ListaRegiones = regionesCombo;
+                modelo.ListaAreas = areasCombo;
+                modelo.ListaEntidades = entidadesCombo;
+                modelo.ListaProgramas = programasCombo;
+                modelo.ListaSistema = sistemasCombo;
+
+                return View(modelo);
+            }
+            catch (ValidacionExcepction vx)
+            {
+                _logger.LogError(vx, "{NOMBRE_LOGGER} [CargarPlanPaso1] Error al cargar los catálogos.", NOMBRE_LOGGER);
+                TempData["Error"] = "Ha ocurrido un error al cargar los catálogos.";
+                modelo.ListaRegiones.Clear();
+                return View(modelo);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{NOMBRE_LOGGER} [CargarPlanPaso1] Error inesperado.", NOMBRE_LOGGER);
+                TempData["Error"] = "Ha ocurrido un error, inténtalo de nuevo más tarde.";
+                return View(modelo);
+            }
+
         }
 
         //Cargar Plan Paso 2
