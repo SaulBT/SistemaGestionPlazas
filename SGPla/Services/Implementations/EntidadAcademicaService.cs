@@ -86,6 +86,18 @@ namespace SGPla.Services.Implementations
             await _entidadAcademicaRepository.EliminarAsync(entidad);
         }
 
+        public async Task<List<ListaEntidadAcademicaDTO>> ObtenerCatalogoAsync(FiltroEntidadAcademicaDTO filtro)
+        {
+            var entidades = await _entidadAcademicaRepository.ObtenerOpcionesAsync(filtro.Region, filtro.IdAreaAcademica);
+            var dtos = entidades.Select(e => new ListaEntidadAcademicaDTO
+            {
+                IdEntidadAcademica = e.IdEntidadAcademica,
+                Nombre = e.Nombre
+            });
+
+            return dtos.ToList();
+        }
+
         public async Task<List<ListaEntidadAcademicaDTO>> ObtenerListaAsync(int indice)
         {
             _entidadAcademicaValidator.ValidarIndice(indice);

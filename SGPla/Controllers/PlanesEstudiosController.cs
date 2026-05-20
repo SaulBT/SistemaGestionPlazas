@@ -91,6 +91,7 @@ namespace SGPla.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "{NOMBRE_LOGGER} Error al cargar los catálogos.", NOMBRE_LOGGER);
+                TempData["Error"] = "Ha ocurrido un error al cargar los catálogos.";
 
                 return View(new IndexViewModel
                 {
@@ -962,7 +963,7 @@ namespace SGPla.Controllers
 
             };
 
-            var entidades = await _entidadAcademicaService.ObtenerPorFiltroAsync(filtros, 1);
+            var entidades = await _entidadAcademicaService.ObtenerCatalogoAsync(filtros);
 
             return entidades.Select(e => new OptionModel
             {
