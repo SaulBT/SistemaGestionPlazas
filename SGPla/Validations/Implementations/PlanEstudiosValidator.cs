@@ -29,16 +29,16 @@ namespace SGPla.Validations.Implementations
 
         public void ValidarArchivo(ArchivoPlanEstudiosDTO archivoPlanEstudiosDTO)
         {
-            ArgumentNullException.ThrowIfNull(archivoPlanEstudiosDTO);
-
+            if (archivoPlanEstudiosDTO == null)
+                throw new ValidacionExcepction("El Archivo es nulo", "400");
             if (string.IsNullOrEmpty(archivoPlanEstudiosDTO.Ruta))
-                throw new ArgumentException("El Archivo es obligatorio.");
+                throw new ValidacionExcepction("El Archivo es obligatorio.", "400");
             if (string.IsNullOrWhiteSpace(archivoPlanEstudiosDTO.NombreArchivo))
-                throw new ArgumentException("El NombreArchivo es obligatorio.");
+                throw new ValidacionExcepction("El NombreArchivo es obligatorio.", "400");
 
             var extension = Path.GetExtension(archivoPlanEstudiosDTO.NombreArchivo).ToLowerInvariant();
             if (extension != ".xls" && extension != ".xlsx")
-                throw new ArgumentException("El formato del archivo no es soportado.");
+                throw new ValidacionExcepction("El formato del archivo no es soportado.", "400");
         }
 
         public void ValidarIndice(int indice)
@@ -46,13 +46,14 @@ namespace SGPla.Validations.Implementations
             if (indice <= 0)
             {
                 _logger.LogError("PLAN ESTUDIOS: El Índice proporcionado es inválido: {Indice}", indice);
-                throw new ArgumentException("El Índice es inválido.");
+                throw new ValidacionExcepction("El Índice es inválido.", "400");
             }
         }
 
         public async Task ValidarCreacionAsync(CrearPlanEstudiosDTO crearPlanEstudiosDTO)
         {
-            ArgumentNullException.ThrowIfNull(crearPlanEstudiosDTO);
+            if (crearPlanEstudiosDTO == null)
+                throw new ValidacionExcepction("El Plan de Estudios es nulo", "400");
 
             await validarIdProgramaEducativoAsync(crearPlanEstudiosDTO.IdProgramaEducativo);
             validarNombrePlanEstudios(crearPlanEstudiosDTO.Nombre);
@@ -66,13 +67,14 @@ namespace SGPla.Validations.Implementations
 
                 bool existeEnSistema = await _experienciaEducativaRepository.ExisteCodigoExperienciaEducativaEnSistemaAsync(experienciaEducativa.Codigo.Trim());
                 if (existeEnSistema)
-                    throw new ArgumentException($"Ya hay una Experiencia Educativa con el Código {experienciaEducativa.Codigo.Trim()} en el sistema.");
+                    throw new ValidacionExcepction($"Ya hay una Experiencia Educativa con el Código {experienciaEducativa.Codigo.Trim()} en el sistema.", "409");
             }
         }
 
         public async Task ValidarEdicionAsync(EditarPlanEstudiosDTO editarPlanEstudiosDTO)
         {
-            ArgumentNullException.ThrowIfNull(editarPlanEstudiosDTO);
+            if (editarPlanEstudiosDTO == null)
+                throw new ValidacionExcepction("El Plan de Estudios es nulo", "400");
 
             await ValidarIdAsync(editarPlanEstudiosDTO.IdPlanEstudios);
             validarIdsExperienciasEliminadas(editarPlanEstudiosDTO.IdsExperienciasEliminadas);
@@ -81,11 +83,11 @@ namespace SGPla.Validations.Implementations
             {
                 bool existe = await _experienciaEducativaRepository.ExisteExperienciaEducativaPorIdAsync(idExperienciaEducativa);
                 if (!existe)
-                    throw new KeyNotFoundException($"No existe la Experiencia Educativa con Id {idExperienciaEducativa} para eliminar.");
+                    throw new ValidacionExcepction($"No existe la Experiencia Educativa con Id {idExperienciaEducativa} para eliminar.", "422");
 
                 bool perteneceAPlan = await _experienciaEducativaRepository.ExperienciaEducativaPerteneceAPlanAsync(idExperienciaEducativa, editarPlanEstudiosDTO.IdPlanEstudios);
                 if (!perteneceAPlan)
-                    throw new ArgumentException($"La Experiencia Educativa con Id {idExperienciaEducativa} no pertenece al Plan de Estudios.");
+                    throw new ValidacionExcepction($"La Experiencia Educativa con Id {idExperienciaEducativa} no pertenece al Plan de Estudios.", "422");
             }
 
             foreach (var experienciaEducativa in editarPlanEstudiosDTO.ExperienciasEditadas)
@@ -95,18 +97,18 @@ namespace SGPla.Validations.Implementations
 
                 bool existe = await _experienciaEducativaRepository.ExisteExperienciaEducativaPorIdAsync(experienciaEducativa.IdExperienciaEducativa);
                 if (!existe)
-                    throw new KeyNotFoundException($"No existe ninguna Experiencia Educativa a editar con Id {experienciaEducativa.IdExperienciaEducativa}.");
+                    throw new ValidacionExcepction($"No existe ninguna Experiencia Educativa a editar con Id {experienciaEducativa.IdExperienciaEducativa}.", "422");
 
                 bool perteneceAPlan = await _experienciaEducativaRepository.ExperienciaEducativaPerteneceAPlanAsync(experienciaEducativa.IdExperienciaEducativa, editarPlanEstudiosDTO.IdPlanEstudios);
                 if (!perteneceAPlan)
-                    throw new ArgumentException($"La Experiencia Educativa con Id {experienciaEducativa.IdExperienciaEducativa} no pertenece al Plan de Estudios.");
+                    throw new ValidacionExcepction($"La Experiencia Educativa con Id {experienciaEducativa.IdExperienciaEducativa} no pertenece al Plan de Estudios.", "422");
 
                 bool existeEnOtroPlan = await _experienciaEducativaRepository.ExisteCodigoExperienciaEducativaEnOtroPlanAsync(
                     editarPlanEstudiosDTO.IdPlanEstudios,
                     experienciaEducativa.Codigo.Trim());
 
                 if (existeEnOtroPlan)
-                    throw new ArgumentException($"Ya hay una Experiencia Educativa con el Código {experienciaEducativa.Codigo.Trim()} en el sistema.");
+                    throw new ValidacionExcepction($"Ya hay una Experiencia Educativa con el Código {experienciaEducativa.Codigo.Trim()} en el sistema.", "409");
             }
 
             foreach (var experienciaEducativa in editarPlanEstudiosDTO.ExperienciasNuevas)
@@ -119,7 +121,7 @@ namespace SGPla.Validations.Implementations
                     experienciaEducativa.Codigo.Trim());
 
                 if (existeEnOtroPlan)
-                    throw new ArgumentException($"Ya hay una Experiencia Educativa con el Código {experienciaEducativa.Codigo.Trim()} en el sistema.");
+                    throw new ValidacionExcepction($"Ya hay una Experiencia Educativa con el Código {experienciaEducativa.Codigo.Trim()} en el sistema.", "409");
             }
 
             await validarCodigosDuplicadosDentroDeLaEdicionAsync(editarPlanEstudiosDTO);
@@ -138,30 +140,30 @@ namespace SGPla.Validations.Implementations
         private async Task validarIdProgramaEducativoAsync(int idProgramaEducativo)
         {
             if (idProgramaEducativo <= 0)
-                throw new ArgumentException("El IdProgramaEducativo es inválido.");
+                throw new ValidacionExcepction("El IdProgramaEducativo es inválido.", "400");
 
             //CAMBIAR POR PROGRAMA EDUCATIVO REPOSITORY
             bool existe = await _planEstudiosRepository.ExisteProgramaEducativoPorIdAsync(idProgramaEducativo);
             if (!existe)
-                throw new KeyNotFoundException("No existe ese Programa Educativo.");
+                throw new ValidacionExcepction("No existe ese Programa Educativo.", "404");
         }
 
         private void validarNombrePlanEstudios(string nombre)
         {
             if (string.IsNullOrWhiteSpace(nombre))
-                throw new ArgumentException("El Nombre es obligatorio.");
+                throw new ValidacionExcepction("El Nombre es obligatorio.", "400");
             if (nombre.Trim().Length > 100)
-                throw new ArgumentException("El Nombre no puede exceder 100 caracteres.");
+                throw new ValidacionExcepction("El Nombre no puede exceder 100 caracteres.", "400");
         }
 
         private void validarModalidad(string modalidad)
         {
             if (string.IsNullOrWhiteSpace(modalidad))
-                throw new ArgumentException("La Modalidad es obligatoria.");
+                throw new ValidacionExcepction("La Modalidad es obligatoria.", "400");
             if (modalidad.Trim().Length > 100)
-                throw new ArgumentException("La Modalidad no puede exceder 100 caracteres.");
+                throw new ValidacionExcepction("La Modalidad no puede exceder 100 caracteres.", "400");
             if (!Constantes.Modalidades.Contains(modalidad.Trim()))
-                throw new ArgumentException("La Modalidad es inválida.");
+                throw new ValidacionExcepction("La Modalidad es inválida.", "400");
         }
 
         private void validarExperienciasEducativasParaCreacion(List<AgregarExperienciaEducativaDTO> experienciasEducativas)
@@ -169,7 +171,7 @@ namespace SGPla.Validations.Implementations
             ArgumentNullException.ThrowIfNull(experienciasEducativas);
 
             if (experienciasEducativas.Count == 0)
-                throw new ArgumentException("No se puede crear un Plan de Estudios sin Experiencias Educativas.");
+                throw new ValidacionExcepction("No se puede crear un Plan de Estudios sin Experiencias Educativas.", "400");
 
             var codigosDuplicados = experienciasEducativas
                 .Where(experienciaEducativa => !string.IsNullOrWhiteSpace(experienciaEducativa.Codigo))
@@ -177,7 +179,7 @@ namespace SGPla.Validations.Implementations
                 .Any(grupo => grupo.Count() > 1);
 
             if (codigosDuplicados)
-                throw new ArgumentException("Hay Experiencias Educativas con código repetido.");
+                throw new ValidacionExcepction("Hay Experiencias Educativas con código repetido.", "400");
         }
 
         private void validarCamposExperienciaEducativaNueva(AgregarExperienciaEducativaDTO experienciaEducativaDTO)
@@ -185,15 +187,15 @@ namespace SGPla.Validations.Implementations
             ArgumentNullException.ThrowIfNull(experienciaEducativaDTO);
 
             if (string.IsNullOrWhiteSpace(experienciaEducativaDTO.Codigo))
-                throw new ArgumentException("El Código es obligatorio en todas las Experiencias Educativas nuevas.");
+                throw new ValidacionExcepction("El Código es obligatorio en todas las Experiencias Educativas nuevas.", "400");
             if (string.IsNullOrWhiteSpace(experienciaEducativaDTO.Nombre))
-                throw new ArgumentException("El Nombre es obligatorio en todas las Experiencias Educativas nuevas.");
+                throw new ValidacionExcepction("El Nombre es obligatorio en todas las Experiencias Educativas nuevas.", "400");
             if (string.IsNullOrWhiteSpace(experienciaEducativaDTO.PerfilDocente))
-                throw new ArgumentException("El PerfilDocente es obligatorio en todas las Experiencias Educativas nuevas.");
+                throw new ValidacionExcepction("El PerfilDocente es obligatorio en todas las Experiencias Educativas nuevas.", "400");
             if (experienciaEducativaDTO.Codigo.Trim().Length > 10)
-                throw new ArgumentException("El Código no puede exceder 10 caracteres en todas las Experiencias Educativas nuevas.");
+                throw new ValidacionExcepction("El Código no puede exceder 10 caracteres en todas las Experiencias Educativas nuevas.", "400");
             if (experienciaEducativaDTO.Nombre.Trim().Length > 150)
-                throw new ArgumentException("El Nombre no puede exceder 150 caracteres en todas las Experiencias Educativas nuevas.");
+                throw new ValidacionExcepction("El Nombre no puede exceder 150 caracteres en todas las Experiencias Educativas nuevas.", "400");
         }
 
         private void validarCamposExperienciaEducativaEditada(DatosExperienciaEducativaDTO experienciaEducativaDTO)
@@ -201,17 +203,17 @@ namespace SGPla.Validations.Implementations
             ArgumentNullException.ThrowIfNull(experienciaEducativaDTO);
 
             if (experienciaEducativaDTO.IdExperienciaEducativa <= 0)
-                throw new ArgumentException("La Id de una Experiencia Educativa a editar es inválida.");
+                throw new ValidacionExcepction("La Id de una Experiencia Educativa a editar es inválida.", "400");
             if (string.IsNullOrWhiteSpace(experienciaEducativaDTO.Codigo))
-                throw new ArgumentException("El Código es obligatorio en todas las Experiencias Educativas a editar.");
+                throw new ValidacionExcepction("El Código es obligatorio en todas las Experiencias Educativas a editar.", "400");
             if (string.IsNullOrWhiteSpace(experienciaEducativaDTO.Nombre))
-                throw new ArgumentException("El Nombre es obligatorio en todas las Experiencias Educativas a editar.");
+                throw new ValidacionExcepction("El Nombre es obligatorio en todas las Experiencias Educativas a editar.", "400");
             if (string.IsNullOrWhiteSpace(experienciaEducativaDTO.PerfilDocente))
-                throw new ArgumentException("El PerfilDocente es obligatorio en todas las Experiencias Educativas a editar.");
+                throw new ValidacionExcepction("El PerfilDocente es obligatorio en todas las Experiencias Educativas a editar.", "400");
             if (experienciaEducativaDTO.Codigo.Trim().Length > 10)
-                throw new ArgumentException("El Código no puede exceder 10 caracteres.");
+                throw new ValidacionExcepction("El Código no puede exceder 10 caracteres.", "400");
             if (experienciaEducativaDTO.Nombre.Trim().Length > 150)
-                throw new ArgumentException("El Nombre no puede exceder 150 caracteres.");
+                throw new ValidacionExcepction("El Nombre no puede exceder 150 caracteres.", "400");
         }
 
         private void validarCodigoExperienciaEducativa(string codigo, string mensajeError)
@@ -225,7 +227,7 @@ namespace SGPla.Validations.Implementations
             ArgumentNullException.ThrowIfNull(idsExperienciasEliminadas);
 
             if (idsExperienciasEliminadas.Any(idExperienciaEducativa => idExperienciaEducativa <= 0))
-                throw new ArgumentException("La Id de una Experiencia Educativa para eliminar es inválida.");
+                throw new ValidacionExcepction("La Id de una Experiencia Educativa para eliminar es inválida.", "400");
         }
 
         private async Task validarCodigosDuplicadosDentroDeLaEdicionAsync(EditarPlanEstudiosDTO editarPlanEstudiosDTO)
@@ -253,7 +255,7 @@ namespace SGPla.Validations.Implementations
                 .FirstOrDefault(grupo => grupo.Count() > 1)?.Key;
 
             if (!string.IsNullOrWhiteSpace(codigoDuplicado))
-                throw new ArgumentException($"Ya hay una Experiencia Educativa con el Código {codigoDuplicado} en el Plan de Estudios.");
+                throw new ValidacionExcepction($"Ya hay una Experiencia Educativa con el Código {codigoDuplicado} en el Plan de Estudios.", "422");
         }
     }
 }
