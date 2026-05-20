@@ -136,34 +136,40 @@ namespace SGPla.Services.Implementations
             return dtos.ToList();
         }
 
-        public async Task<List<ListaPlanEstudiosDTO>> ObtenerDiezAsync(int indice)
+        public async Task<(List<ListaPlanEstudiosDTO> items, int cantidad)> ObtenerPorPaginaAsync(int pagina, int cantidad)
         {
-            _planEstudiosValidator.ValidarIndice(indice);
+            _planEstudiosValidator.ValidarIndice(cantidad);
 
-            var planesEstudios = await _planEstudiosRepository.ObtenerDiezAsync(indice);
+            var planesEstudios = await _planEstudiosRepository.ObtenerPorPaginaAsync(pagina, cantidad);
+            var total = await _planEstudiosRepository.ContarAsync();
+
             var dtos = planesEstudios.Select(mapearLista);
 
-            return dtos.ToList();
+            return (dtos.ToList(), total);
         }
 
-        public async Task<List<ListaPlanEstudiosDTO>> ObtenerPorFiltroAsync(FiltroPlanEstudiosDTO filtroPlanEstudiosDTO, int indice)
+        public async Task<(List<ListaPlanEstudiosDTO> items, int cantidad)> ObtenerPorFiltroAsync(FiltroPlanEstudiosDTO filtroPlanEstudiosDTO, int pagina, int cantidad)
         {
             _logger.LogInformation("PLAN ESTUDIOS: Obteniendo lista de Planes de Estudio por filtro.");
 
             ArgumentNullException.ThrowIfNull(filtroPlanEstudiosDTO);
-            _planEstudiosValidator.ValidarIndice(indice);
+            _planEstudiosValidator.ValidarIndice(cantidad);
 
-            _logger.LogInformation("PLAN ESTUDIOS: Filtro recibido - IdEntidadAcademica: {IdEntidadAcademica}, IdProgramaEducativo: {IdProgramaEducativo}, Nombre: {Nombre}, Indice: {Indice}",
-                filtroPlanEstudiosDTO.IdEntidadAcademica, filtroPlanEstudiosDTO.IdProgramaEducativo, filtroPlanEstudiosDTO.Nombre, indice);
+            _logger.LogInformation("PLAN ESTUDIOS: Filtro recibido - IdEntidadAcademica: {IdEntidadAcademica}, IdProgramaEducativo: {IdProgramaEducativo}, Nombre: {Nombre}, Página: {Pagina}, Cantidad: {Cantidad}",
+                filtroPlanEstudiosDTO.IdEntidadAcademica, filtroPlanEstudiosDTO.IdProgramaEducativo, filtroPlanEstudiosDTO.Nombre ,pagina, cantidad);
 
             var planesEstudios = await _planEstudiosRepository.ObtenerPorFiltroAsync(
                 filtroPlanEstudiosDTO.IdEntidadAcademica,
                 filtroPlanEstudiosDTO.IdProgramaEducativo,
                 filtroPlanEstudiosDTO.Nombre,
-                indice);
+                pagina, cantidad);
+            var total = await _planEstudiosRepository.ContarPorFiltroAsync(
+                filtroPlanEstudiosDTO.IdEntidadAcademica,
+                filtroPlanEstudiosDTO.IdProgramaEducativo,
+                filtroPlanEstudiosDTO.Nombre);
 
             var dtos = planesEstudios.Select(mapearLista);
-            return dtos.ToList();
+            return (dtos.ToList(), total);
         }
 
         public async Task<DatosPlanEstudiosDTO> ObtenerPorIdAsync(int idPlanEstudios)

@@ -5,6 +5,7 @@ namespace SGPla.Services.Interfaces
     public interface IEntidadAcademicaService
     {
         Task<int> CrearAsync(CrearEntidadAcademicaDTO dto);
+        Task<List<ListaEntidadAcademicaDTO>> ObtenerCatalogoAsync(FiltroEntidadAcademicaDTO filtro);
         Task<List<ListaEntidadAcademicaDTO>> ObtenerListaAsync(int indice);
         Task<List<ListaEntidadAcademicaDTO>> ObtenerPorFiltroAsync(FiltroEntidadAcademicaDTO filtro, int indice);
         Task<DatosEntidadAcademicaDTO> ObtenerPorIdAsync(int id);

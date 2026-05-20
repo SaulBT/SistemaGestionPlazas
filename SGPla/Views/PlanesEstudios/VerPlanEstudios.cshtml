@@ -4,8 +4,8 @@
     ViewData["Title"] = "Plan de Estudios";
 }
 
-<div class="container-fluid">
-
+<form id="filtrosForm" method="get" action="@Url.Action("VerPlanEstudios", "PlanesEstudios")">
+    <input type="hidden" name="IdPlanEstudios" value="@Model.IdPlanEstudios" />
     <!-- BLOQUE SUPERIOR -->
     <div class="d-flex gap-2">
 
@@ -84,7 +84,10 @@
 
         })
     </div>
-</div>
+
+    <input type="hidden" name="pagina" id="paginaHidden" value="@Model.PaginaActual" />
+    <input type="hidden" name="cantidad" id="cantidadHidden" value="@Model.CantidadPorPaginas" />
+</form>
 
 <script>
     function abrirModalPerfilDocente(perfilDocente){

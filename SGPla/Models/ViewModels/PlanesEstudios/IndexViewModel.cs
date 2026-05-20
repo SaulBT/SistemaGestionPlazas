@@ -9,5 +9,8 @@ namespace SGPla.Models.ViewModels.PlanesEstudios
         public List<OptionModel> Areas { get; set; } = [];
         public List<OptionModel> Entidades { get; set; } = [];
         public List<OptionModel> ProgramasEducativos { get; set; } = [];
+
+        public int PaginaActual { get; set; } = 1;
+        public int CantidadPorPaginas { get; set; } = 10;
     }
 }
