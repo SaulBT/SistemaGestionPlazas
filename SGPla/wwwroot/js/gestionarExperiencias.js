@@ -45,34 +45,38 @@ function abrirModalEliminarExperiencia(edicion, identificador) {
 }
 
 async function agregarExperiencia(edicion) {
-    const response = await fetch(`${UrlAgregarExperiencia}?codigo=${encodeURIComponent(codigoAgregar.value)}&nombre=${encodeURIComponent(nombreAgregar.value)}&perfilDocente=${encodeURIComponent(perfilDocenteAgregar.value)}`);
-    const experiencia = await response.json();
+    if (verificarCamposAgregar()) {
+        const response = await fetch(`${UrlAgregarExperiencia}?codigo=${encodeURIComponent(codigoAgregar.value)}&nombre=${encodeURIComponent(nombreAgregar.value)}&perfilDocente=${encodeURIComponent(perfilDocenteAgregar.value)}`);
+        const experiencia = await response.json();
 
-    const fila = generarFila(edicion, experiencia.codigo, experiencia.nombre, experiencia.perfilDocente, 0);
-    tbody.appendChild(fila);
-    refrescarTablaCliente("tablaExperiencias");
+        const fila = generarFila(edicion, experiencia.codigo, experiencia.nombre, experiencia.perfilDocente, 0);
+        tbody.appendChild(fila);
+        refrescarTablaCliente("tablaExperiencias");
 
-    cerrarModal("modalAgregarExperiencia")
+        cerrarModal("modalAgregarExperiencia")
+    }
 }
 
 async function editarExperiencia(edicion) {
     var ruta = "";
-    if (edicion) {
-        ruta = `${UrlEditarExperiencia}?codigo=${encodeURIComponent(codigoEditar.value)}&nombre=${encodeURIComponent(nombreEditar.value)}&perfilDocente=${encodeURIComponent(perfilDocenteEditar.value)}&idExperienciaEducativa=${encodeURIComponent(idExperienciaEducativa)}`
-    } else {
-        ruta = `${UrlEditarExperiencia}?codigo=${encodeURIComponent(codigoEditar.value)}&nombre=${encodeURIComponent(nombreEditar.value)}&perfilDocente=${encodeURIComponent(perfilDocenteEditar.value)}&codigoOriginal=${encodeURIComponent(codigoOriginal)}`
+    if (verificarCamposEditar()) {
+        if (edicion) {
+            ruta = `${UrlEditarExperiencia}?codigo=${encodeURIComponent(codigoEditar.value)}&nombre=${encodeURIComponent(nombreEditar.value)}&perfilDocente=${encodeURIComponent(perfilDocenteEditar.value)}&idExperienciaEducativa=${encodeURIComponent(idExperienciaEducativa)}`
+        } else {
+            ruta = `${UrlEditarExperiencia}?codigo=${encodeURIComponent(codigoEditar.value)}&nombre=${encodeURIComponent(nombreEditar.value)}&perfilDocente=${encodeURIComponent(perfilDocenteEditar.value)}&codigoOriginal=${encodeURIComponent(codigoOriginal)}`
+        }
+        const response = await fetch(ruta);
+        const experiencias = await response.json();
+
+        tbody.innerHTML = "";
+        experiencias.forEach(ee => {
+            const fila = generarFila(edicion, ee.codigo, ee.nombre, ee.perfilDocente, ee.idExperienciaEducativa);
+            tbody.appendChild(fila);
+        });
+        refrescarTablaCliente("tablaExperiencias");
+
+        cerrarModal("modalEditarExperiencia")
     }
-    const response = await fetch(ruta);
-    const experiencias = await response.json();
-
-    tbody.innerHTML = "";
-    experiencias.forEach(ee => {
-        const fila = generarFila(edicion, ee.codigo, ee.nombre, ee.perfilDocente, ee.idExperienciaEducativa);
-        tbody.appendChild(fila);
-    });
-    refrescarTablaCliente("tablaExperiencias");
-
-    cerrarModal("modalEditarExperiencia")
 }
 
 async function eliminarExperiencia(edicion) {
@@ -167,4 +171,30 @@ function generarFila(edicion, codigo, nombre, perfilDocente, idExperiencia) {
 
     fila.innerHTML = contenido
     return fila;
+}
+
+function verificarCamposAgregar() {
+    const bandera = true;
+
+    if (!codigoAgregar.value)
+        bandera = false;
+    if (!nombreAgregar.value)
+        bandera = false;
+    if (!perfilDocenteAgregar.value)
+        bandera = false;
+
+    return bandera;
+}
+
+function verificarCamposEditar() {
+    const bandera = true;
+
+    if (!codigoEditar.value)
+        bandera = false;
+    if (!nombreEditar.value)
+        bandera = false;
+    if (!perfilDocenteEditar.value)
+        bandera = false;
+
+    return bandera;
 }
