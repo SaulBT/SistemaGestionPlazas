@@ -80,11 +80,9 @@ namespace SGPla.Services.Implementations
             if (!File.Exists(rutaFisica))
                 throw new FileNotFoundException("No se encontró el archivo físico.", archivo.Ruta);
 
-            var stream = new FileStream(rutaFisica, FileMode.Open, FileAccess.Read, FileShare.Read);
-
             return new ArchivoDescargadoDTO
             {
-                Contenido = stream,
+                Ruta = rutaFisica,
                 Nombre = archivo.Nombre,
                 Tipo = archivo.Tipo
             };
