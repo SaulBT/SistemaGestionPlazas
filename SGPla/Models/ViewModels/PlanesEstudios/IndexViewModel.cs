@@ -4,7 +4,7 @@ namespace SGPla.Models.ViewModels.PlanesEstudios
 {
     public class IndexViewModel
     {
-        public TableModel Table { get; set; }
+        public TableModel Table { get; set; } = new TableModel();
         public List<OptionModel> Regiones { get; set; } = [];
         public List<OptionModel> Areas { get; set; } = [];
         public List<OptionModel> Entidades { get; set; } = [];
