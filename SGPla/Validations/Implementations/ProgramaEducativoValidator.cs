@@ -26,11 +26,11 @@ namespace SGPla.Validations.Implementations
         {
             
             if (buscarProgramaEducativoDTO.Nombre?.Length > 100)
-                throw new ValidacionExcepction("400", "El nombre no debe ser superior a 100 caracteres.");
+                throw new ValidacionExcepction("El nombre no debe ser superior a 100 caracteres.", "400");
 
            
             if (buscarProgramaEducativoDTO.IdAreaAcademica <= 0)
-                throw new ValidacionExcepction("400", "El área académica debe ser un número positivo.");
+                throw new ValidacionExcepction("El área académica debe ser un número positivo.", "400");
 
         }
 
@@ -53,7 +53,7 @@ namespace SGPla.Validations.Implementations
         {
             var existe = await _programaEducativoRepository.ObtenerPorIdAsync(idProgramaEducativo);
             if (existe is null)
-                throw new ArgumentException("El programa educativo no existe.");
+                throw new ValidacionExcepction("El programa educativo no existe.", "404");
             return true;
         }
 
@@ -129,6 +129,7 @@ namespace SGPla.Validations.Implementations
         {
             if (id <= 0)
                 throw new ArgumentException("El ID del programa educativo no es válido.");
+            await ValidarExistencia(id);
         }
     }
 }

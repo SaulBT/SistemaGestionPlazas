@@ -5,12 +5,14 @@ namespace SGPla.Models.ViewModels.PlanesEstudios
 {
     public class CargarPlanPaso2ViewModel
     {
+        [Required(ErrorMessage = "El campo es obligatorio")]
         public string Region { get; set; } = string.Empty;
-        public int Area { get; set; }
+        [Required(ErrorMessage = "El campo es obligatorio")]
+        public int IdAreaAcademica { get; set; }
         public string NombreArea { get; set; } = string.Empty;
-        public int Entidad { get; set; }
+        public int IdEntidadAcademica { get; set; }
         public string NombrePrograma { get; set; } = string.Empty;
-        public int Programa { get; set; }
+        public int IdProgramaEducativo { get; set; }
         public string Plan { get; set; } = string.Empty;
         public string Sistema { get; set; } = string.Empty;
         public FormularioExperienciaEducativaViewModel Formulario { get; set; }

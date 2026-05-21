@@ -1,4 +1,5 @@
-﻿using SGPla.Models.DTOs.AreaAcademica;
+﻿using SGPla.Commons;
+using SGPla.Models.DTOs.AreaAcademica;
 using SGPla.Repositories.Interfaces;
 using SGPla.Validations.Interfaces;
 
@@ -23,12 +24,12 @@ namespace SGPla.Validations.Implementations
         public async Task ValidarIdAsync(int id)
         {
             if (id <= 0)
-                throw new ArithmeticException("La Id es inválida");
+                throw new ValidacionExcepction("La Id es inválida", "400");
 
             bool existe = await _areaAcademicaRepository.ExistePorIdAsync(id);
 
             if (!existe)
-                throw new ArgumentException("No existe esa Área Académica.");
+                throw new ValidacionExcepction("No existe esa Área Académica.", "404");
         }
 
         public async Task ValidarEdicionAsync(DatosAreaAcademicaDTO datosAreaAcademicaDTO)

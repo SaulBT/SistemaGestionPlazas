@@ -27,8 +27,8 @@
                 Disabled = true,
                 Flexible = true
             })
-            <input type="hidden" id="ifArea" value="@Model.Area" />
-            <input type="hidden" id="entidad" value="@Model.Entidad" />
+            <input type="hidden" id="ifArea" value="@Model.IdAreaAcademica" />
+            <input type="hidden" id="entidad" value="@Model.IdEntidadAcademica" />
 
             @await Component.InvokeAsync("InputField", new InputFieldModel
             {
@@ -39,7 +39,7 @@
                 Disabled = true,
                 Flexible = true
             })
-            <input type="hidden" id="IdProgramaEducativo" name="Programa" value="@Model.Programa" />
+            <input type="hidden" id="IdProgramaEducativo" name="Programa" value="@Model.IdProgramaEducativo" />
         </div>
 
         <!-- SEGUNDA LÍNEA -->

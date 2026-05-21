@@ -225,7 +225,7 @@ namespace SGPla.Controllers
 
         //Cargar Plan Paso 2
         [HttpPost]
-        public async Task<IActionResult> CargarPlanPaso2(CargarPlanPaso1ViewModel modelo)
+        public async Task<IActionResult> CargarPlanPaso2(CargarPlanPaso2ViewModel modelo)
         {
             _logger.LogInformation("{NOMBRE_LOGGER} Paso 2 de Cargar Plan de Estudios.", NOMBRE_LOGGER);
 
@@ -235,57 +235,111 @@ namespace SGPla.Controllers
                 if (modelo.Archivo == null)
                     TempData["Error"] = "El archivo es obligatorio.";
 
-                modelo.ListaRegiones = generarCatalogoRegiones();
-                modelo.ListaSistema = generarCatalogoModalidades();
-                modelo.ListaAreas = await generarCatalogoAreasAsync(modelo.IdAreaAcademica);
-                if (modelo.IdAreaAcademica.HasValue)
-                {
-                    modelo.ListaEntidades = await generarCatalogoEntidadesAsync((int)modelo.IdAreaAcademica, modelo.Region, modelo.IdEntidadAcademica);
-                    if (modelo.IdEntidadAcademica.HasValue)
-                        modelo.ListaProgramas = await generarCatalogoProgramasAsync((int)modelo.IdAreaAcademica, modelo.Region, (int)modelo.IdEntidadAcademica, modelo.IdProgramaEducativo);
-                }
-
-                return View(nameof(CargarPlanPaso1), modelo);
-            }
-
-            var archivo = modelo.Archivo;
-            await guardarArchivoTemporalmente(archivo);
-
-            var ruta = HttpContext.Session.GetString("Ruta");
-            if (!string.IsNullOrEmpty(ruta))
-            {
-                var archivoDto = new ArchivoPlanEstudiosDTO
-                {
-                    Ruta = ruta,
-                    NombreArchivo = archivo.FileName
-                };
-                var listaEe = await ProcesarArchivoAsync(archivoDto);
-
-                HttpContext.Session.SetString("Experiencias", JsonSerializer.Serialize(listaEe));
-
-                var area = await _areaAcademicaService.ObtenerPorIdAsync((int)modelo.IdAreaAcademica);
-                var programa = await _programaEducativoService.ObtenerPorIdAsync((int)modelo.IdProgramaEducativo);
-
-                var vista = new CargarPlanPaso2ViewModel
+                var modeloAnterior = new CargarPlanPaso1ViewModel
                 {
                     Region = modelo.Region,
-                    Area = (int)modelo.IdAreaAcademica,
-                    NombreArea = area.Nombre,
-                    Entidad = (int)modelo.IdEntidadAcademica,
-                    NombrePrograma = programa.Nombre,
-                    Programa = (int)modelo.IdProgramaEducativo,
+                    IdAreaAcademica = modelo.IdAreaAcademica,
+                    IdEntidadAcademica = modelo.IdEntidadAcademica,
+                    IdProgramaEducativo = modelo.IdProgramaEducativo,
                     Plan = modelo.Plan,
-                    Sistema = modelo.Sistema,
-                    Table = LlenarTablaGestionExperiencias(listaEe, false)
+                    Sistema = modelo.Sistema
                 };
+                modeloAnterior = await recargarCombosAsync(modeloAnterior);
 
-                return View(vista);
+                return View(nameof(CargarPlanPaso1), modeloAnterior);
             }
-            else
+
+            try
             {
-                _logger.LogError("{NOMBRE_LOGGER} La ruta del archivo es nula.", NOMBRE_LOGGER);
-                TempData["Error"] = "La ruta del archivo es nula.";
-                return RedirectToAction(nameof(CargarPlanPaso1));
+                var archivo = modelo.Archivo;
+                await guardarArchivoTemporalmente(archivo);
+
+                var ruta = HttpContext.Session.GetString("Ruta");
+                if (!string.IsNullOrEmpty(ruta))
+                {
+                    var archivoDto = new ArchivoPlanEstudiosDTO
+                    {
+                        Ruta = ruta,
+                        NombreArchivo = archivo.FileName
+                    };
+                    var listaEe = await ProcesarArchivoAsync(archivoDto);
+
+                    HttpContext.Session.SetString("Experiencias", JsonSerializer.Serialize(listaEe));
+
+                    var area = await _areaAcademicaService.ObtenerPorIdAsync(modelo.IdAreaAcademica);
+                    var programa = await _programaEducativoService.ObtenerPorIdAsync(modelo.IdProgramaEducativo);
+
+                    var vista = new CargarPlanPaso2ViewModel
+                    {
+                        Region = modelo.Region ?? "",
+                        IdAreaAcademica = modelo.IdAreaAcademica,
+                        NombreArea = area.Nombre,
+                        IdEntidadAcademica = modelo.IdEntidadAcademica,
+                        NombrePrograma = programa?.Nombre ?? "",
+                        IdProgramaEducativo = modelo.IdProgramaEducativo,
+                        Plan = modelo.Plan,
+                        Sistema = modelo.Sistema,
+                        Table = LlenarTablaGestionExperiencias(listaEe, false)
+                    };
+
+                    return View(vista);
+                }
+                else
+                {
+                    _logger.LogError("{NOMBRE_LOGGER} [CargarPlanPaso2] La ruta del archivo es nula.", NOMBRE_LOGGER);
+                    TempData["Error"] = "Error: La ruta del archivo es nula.";
+
+                    var modeloAnterior = new CargarPlanPaso1ViewModel
+                    {
+                        Region = modelo.Region,
+                        IdAreaAcademica = modelo.IdAreaAcademica,
+                        IdEntidadAcademica = modelo.IdEntidadAcademica,
+                        IdProgramaEducativo = modelo.IdProgramaEducativo,
+                        Plan = modelo.Plan,
+                        Sistema = modelo.Sistema
+                    };
+                    modeloAnterior = await recargarCombosAsync(modeloAnterior);
+
+                    return View(nameof(CargarPlanPaso1), modeloAnterior);
+                }
+            }
+            catch (ValidacionExcepction vx)
+            {
+                _logger.LogError(vx, "{NOMBRE_LOGGER} [CargarPlanPaso2] Error de validación.", NOMBRE_LOGGER);
+                TempData["Error"] = "No se ha podido cargar el Plan de Estudios";
+                if (vx.Codigo.Contains("404"))
+                    TempData["Error"] = vx.Message;
+
+                var modeloAnterior = new CargarPlanPaso1ViewModel
+                {
+                    Region = modelo.Region,
+                    IdAreaAcademica = modelo.IdAreaAcademica,
+                    IdEntidadAcademica = modelo.IdEntidadAcademica,
+                    IdProgramaEducativo = modelo.IdProgramaEducativo,
+                    Plan = modelo.Plan,
+                    Sistema = modelo.Sistema
+                };
+                modeloAnterior = await recargarCombosAsync(modeloAnterior);
+
+                return View(nameof(CargarPlanPaso1), modeloAnterior);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{NOMBRE_LOGGER} [CargarPlanPaso2] Error inesperado.", NOMBRE_LOGGER);
+                TempData["Error"] = "Ha ocurrido un error, inténtalo de nuevo más tarde.";
+
+                var modeloAnterior = new CargarPlanPaso1ViewModel
+                {
+                    Region = modelo.Region,
+                    IdAreaAcademica = modelo.IdAreaAcademica,
+                    IdEntidadAcademica = modelo.IdEntidadAcademica,
+                    IdProgramaEducativo = modelo.IdProgramaEducativo,
+                    Plan = modelo.Plan,
+                    Sistema = modelo.Sistema
+                };
+                modeloAnterior = await recargarCombosAsync(modeloAnterior);
+
+                return View(nameof(CargarPlanPaso1), modeloAnterior);
             }
         }
 
@@ -1177,6 +1231,21 @@ namespace SGPla.Controllers
                         }
                     }.ToList(),
             };
+        }
+
+        private async Task<CargarPlanPaso1ViewModel> recargarCombosAsync(CargarPlanPaso1ViewModel modelo)
+        {
+            modelo.ListaRegiones = generarCatalogoRegiones();
+            modelo.ListaSistema = generarCatalogoModalidades();
+            modelo.ListaAreas = await generarCatalogoAreasAsync(modelo.IdAreaAcademica);
+            if (modelo.IdAreaAcademica.HasValue && modelo.IdAreaAcademica != 0)
+            {
+                modelo.ListaEntidades = await generarCatalogoEntidadesAsync((int)modelo.IdAreaAcademica, modelo.Region, modelo.IdEntidadAcademica);
+                if (modelo.IdEntidadAcademica.HasValue && modelo.IdEntidadAcademica != 0)
+                    modelo.ListaProgramas = await generarCatalogoProgramasAsync((int)modelo.IdAreaAcademica, modelo.Region, (int)modelo.IdEntidadAcademica, modelo.IdProgramaEducativo);
+            }
+
+            return modelo;
         }
     }
 }
