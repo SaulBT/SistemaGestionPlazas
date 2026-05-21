@@ -45,11 +45,11 @@ namespace SGPla.Controllers
             _environment = environment;
         }
 
-        /*
-         * VISTAS
-         */
+        // ==========
+        // INDEX
+        // ==========
 
-        //Ver todos los Planes de Estudios
+        //Vista
         [HttpGet]
         public async Task<IActionResult> Index(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int? idProgramaEducativo, int pagina = 1, int cantidad = 10)
         {
@@ -75,19 +75,16 @@ namespace SGPla.Controllers
             {
                 
 
-                //Llenar Areas
                 if (!region.IsNullOrEmpty())
                     areasCombo = await generarCatalogoAreasAsync(idAreaAcademica);
                 else
                     idAreaAcademica = null;
 
-                //Llenar Entidades
                 if (idAreaAcademica.HasValue)
                     entidadesCombo = await generarCatalogoEntidadesAsync(idAreaAcademica.Value, region, idEntidadAcademica);
                 else
                     idEntidadAcademica = null;
 
-                //Llenar Programas Educativos
                 if (idEntidadAcademica.HasValue)
                     programasCombo = await generarCatalogoProgramasAsync(idAreaAcademica.Value, region, idEntidadAcademica.Value, idProgramaEducativo);
                 else
@@ -117,7 +114,109 @@ namespace SGPla.Controllers
             }
         }
 
-        //Ver Plan de Estudios
+        private async Task<TableModel> LlenarTablaIndexAsync(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int? idProgramaEducativo, int pagina = 1, int cantidad = 10)
+        {
+            _logger.LogInformation("{NOMBRE_LOGGER} Obteniendo tabla de Planes de Estudios con filtros:\n" +
+                " - Búsqueda: {busqueda}\n - Región: {region}\n - idAreaAcademica: {idAreaAcademica}\n - idEntidadAcademica: {idEntidadAcademica}\n" +
+                " - idProgramaEducativo: {idProgramaEducativo}",
+                NOMBRE_LOGGER, busqueda, region, idAreaAcademica, idEntidadAcademica, idProgramaEducativo);
+            try
+            {
+                int idEntidad = 0;
+                int idPrograma = 0;
+                if (idEntidadAcademica.HasValue)
+                    idEntidad = idEntidadAcademica.Value;
+                if (idProgramaEducativo.HasValue)
+                    idPrograma = idProgramaEducativo.Value;
+
+                FiltroPlanEstudiosDTO filtros = new FiltroPlanEstudiosDTO
+                {
+                    IdEntidadAcademica = idEntidad,
+                    IdProgramaEducativo = idPrograma,
+                    Nombre = busqueda
+                };
+                var planes = await _planEstudiosService.ObtenerPorFiltroAsync(filtros, cantidad, pagina);
+                if (planes.items.Count == 0)
+                {
+                    paginaActual = 1;
+                    planes = await _planEstudiosService.ObtenerPorFiltroAsync(filtros, cantidad, paginaActual);
+                }
+
+                return new TableModel
+                {
+                    Headers = new List<string>
+                    {
+                        "Programa Educativo", "Modalidad", "Plan", "Área",  "Acciones"
+                    },
+                    Rows = planes.items.Select(plan => new TableRowModel
+                    {
+                        Cells = new List<TableCellModel>
+                        {
+                            new() { Value = plan.NombreProgramaEducativo },
+                            new() { Value = plan.Modalidad },
+                            new() { Value = plan.Nombre },
+                            new() { Value = plan.Area },
+                            new()
+                            {
+                                Actions = new List<TableActionModel>
+                                {
+                                    new()
+                                    {
+                                        Accion = "ver",
+                                        Url = Url.Action("VerPlanEstudios", "PlanesEstudios", new { idPlanEstudios = plan.IdPlanEstudios})
+                                    },
+                                    new()
+                                    {
+                                        Accion = "editar",
+                                        Url = Url.Action("EditarPlan", "PlanesEstudios", new { idPlanEstudios = plan.IdPlanEstudios, recarga = false})
+                                    },
+                                    new()
+                                    {
+                                        Accion = "eliminar",
+                                        OnClick = $"abrirModalEliminarPlan({plan.IdPlanEstudios})"
+                                    }
+                                }
+                            }
+                        }
+                    }).ToList(),
+                    Pagination = new PaginationInfo
+                    {
+                        CurrentPage = paginaActual,
+                        PageSize = cantidad,
+                        TotalItems = planes.cantidad,
+                        OnPageChange = "cambiarPagina"
+                    }
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"{NOMBRE_LOGGER} Error al obtener la lista de Planes de Estudios.");
+
+                return generarTablaError();
+            }
+        }
+
+        [HttpGet]
+        public async Task EliminarPlanEstudiosAsync(int idPlanEstudios)
+        {
+            try
+            {
+                await _planEstudiosService.EliminarAsync(idPlanEstudios);
+                TempData["Success"] = "El elemento ha sido eliminado con éxito.";
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{NOMBRE_LOGGER} Error al eliminar el Plan de Estudios.", NOMBRE_LOGGER);
+                TempData["Error"] = "Error al eliminar el Plan de Estudios.";
+            }
+        }
+
+        // ==========
+        // VER
+        // ==========
+
+        //Vista
         [HttpGet]
         public async Task<IActionResult> VerPlanEstudiosAsync(int idPlanEstudios, int pagina = 1, int cantidad = 10)
         {
@@ -158,7 +257,90 @@ namespace SGPla.Controllers
             }
         }
 
-        //Cargar Plan Paso 1
+        private TableModel LlenarTablaVerPlanEstudios(List<DatosExperienciaEducativaDTO> experiencias, int pagina = 1, int cantidad = 10)
+        {
+            _logger.LogInformation("{NOMBRE_LOGGER} Generando tabla con Experiencias Educativas.", NOMBRE_LOGGER);
+            try
+            {
+                int skip = (pagina - 1) * cantidad;
+                var experienciasTabla = experiencias.Skip(skip).Take(cantidad).ToList();
+
+                return new TableModel
+                {
+                    Headers = new List<string> { "Codigo", "Experiencia Educativa", "Perfil Docente" },
+                    Rows = experienciasTabla.Select(ee => new TableRowModel
+                    {
+                        Cells = new List<TableCellModel>
+                    {
+                        new() { Value = ee.Codigo },
+                        new() { Value = ee.Nombre },
+                        new()
+                        {
+                            Actions = new List<TableActionModel>
+                            {
+                                new()
+                                {
+                                    Accion = "informacion",
+                                    OnClick = $"abrirModalPerfilDocente(\"{ee.PerfilDocente}\")"
+                                }
+                            }
+                        }
+                    }
+                    }).ToList(),
+                    Pagination = new PaginationInfo
+                    {
+                        CurrentPage = paginaActual,
+                        PageSize = cantidad,
+                        TotalItems = experiencias.Count(),
+                        OnPageChange = "cambiarPagina"
+                    }
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{NOMBRE_LOGGER} Error al generar la tabla de Experiencias Educativas.", NOMBRE_LOGGER);
+
+                return generarTablaError();
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> DescargarArchivoAsync(int idArchivo)
+        {
+            try
+            {
+                var archivoDto = await _archivoService.DescargarAsync(idArchivo);
+                if (archivoDto != null)
+                {
+                    var rutaCompleta = Path.Combine("Archivos/planes-estudios", archivoDto.Ruta);
+                    _logger.LogInformation("Ruta: {rutaCompleta}", rutaCompleta);
+
+                    if (System.IO.File.Exists(rutaCompleta))
+                    {
+                        var stream = new FileStream(rutaCompleta, FileMode.Open, FileAccess.Read);
+                        return File(stream, archivoDto.Tipo, archivoDto.Nombre);
+                    }
+                    else
+                    {
+                        return NotFound();
+                    }
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            catch
+            {
+                return BadRequest();
+            }
+        }
+
+        // ==========
+        // PASO 1
+        // ==========
+
+        //Vista
         [HttpGet]
         public async Task<IActionResult> CargarPlanPaso1(string? region, string? plan, string? sistema, int? idAreaAcademica, int? idEntidadAcademica, int? idProgramaEducativo)
         {
@@ -179,19 +361,16 @@ namespace SGPla.Controllers
                 var nombre = plan;
                 var sistemasCombo = generarCatalogoModalidades();
 
-                //Llenar Areas
                 if (!region.IsNullOrEmpty())
                     areasCombo = await generarCatalogoAreasAsync(idAreaAcademica);
                 else
                     idAreaAcademica = null;
 
-                //Llenar Entidades
                 if (idAreaAcademica.HasValue)
                     entidadesCombo = await generarCatalogoEntidadesAsync(idAreaAcademica.Value, region, idEntidadAcademica);
                 else
                     idEntidadAcademica = null;
 
-                //Llenar Programas Educativos
                 if (idEntidadAcademica.HasValue)
                     programasCombo = await generarCatalogoProgramasAsync(idAreaAcademica.Value, region, idEntidadAcademica.Value, idProgramaEducativo);
                 else
@@ -227,7 +406,41 @@ namespace SGPla.Controllers
 
         }
 
-        //Cargar Plan Paso 2
+        [HttpPost]
+        public async Task<IActionResult> ValidarPaso1Async(CargarPlanPaso1ViewModel modelo)
+        {
+            if (!ModelState.IsValid)
+            {
+                _logger.LogError("{NOMBRE_LOGGER} Modelo no válido en Paso 2 de Cargar Plan de Estudios.", NOMBRE_LOGGER);
+                if (modelo.Archivo == null)
+                    TempData["Error"] = "El archivo es obligatorio.";
+
+                modelo = await recargarCombosAsync(modelo);
+
+                return View(nameof(CargarPlanPaso1), modelo);
+            }
+            else
+            {
+                var modeloPaso2 = new CargarPlanPaso2ViewModel
+                {
+                    Region = modelo.Region ?? "",
+                    IdAreaAcademica = modelo.IdAreaAcademica ?? 0,
+                    IdEntidadAcademica = modelo.IdEntidadAcademica ?? 0,
+                    IdProgramaEducativo = modelo.IdProgramaEducativo ?? 0,
+                    Plan = modelo.Plan,
+                    Sistema = modelo.Sistema,
+                    Archivo = modelo.Archivo,
+                    Recarga = false
+                };
+                return await CargarPlanPaso2(modeloPaso2);
+            }
+        }
+
+        // ==========
+        // PASO 2
+        // ==========
+
+        //Vista
         [HttpPost]
         public async Task<IActionResult> CargarPlanPaso2(CargarPlanPaso2ViewModel modelo)
         {
@@ -270,87 +483,99 @@ namespace SGPla.Controllers
             }
         }
 
-        [HttpGet]
-        public async Task<IActionResult> EditarPlanAsync(int idPlanEstudios, bool recarga)
+        private async Task<(CargarPlanPaso2ViewModel? modelo, bool error)> inicializarPaso2Async(CargarPlanPaso2ViewModel modelo)
         {
-            var vista = new EditarPlanViewModel();
-            var error = false;
-            if (recarga)
+            try
             {
-                var resultado = await recargarEdicionPlanAsync(idPlanEstudios);
-                vista = resultado.modelo;
-                error = resultado.error;
-            }
-            else
-            {
-                var resultado = await inicializarEdicionPlanAsync(idPlanEstudios);
-                vista = resultado.modelo;
-                error = resultado.error;
-            }
+                var archivo = modelo.Archivo;
+                await guardarArchivoTemporalmente(archivo);
 
-            if (error)
-            {
-                return RedirectToAction("Index");
-            }
-
-            return View("EditarPlan", vista);
-        }
-
-        /*
-         * Llamadas Http
-         */
-
-        [HttpGet]
-        public async Task<JsonResult> ObtenerAreasAsync(int? idAreaAcademica)
-        {
-            var areas = await generarCatalogoAreasAsync(idAreaAcademica);
-
-            return Json(areas);
-        }
-
-        [HttpGet]
-        public async Task<JsonResult> ObtenerEntidadesAsync(int idAreaAcademica, string region, int? idEntidadAcademica)
-        {
-            var entidades = await generarCatalogoEntidadesAsync(idAreaAcademica, region, idEntidadAcademica);
-
-            return Json(entidades);
-        }
-
-        [HttpGet]
-        public async Task<JsonResult> ObtenerProgramasAsync(int idAreaAcademica, string region, int idEntidadAcademica, int? idProgramaEducativo)
-        {
-            var entidades = await generarCatalogoProgramasAsync(idAreaAcademica, region, idEntidadAcademica, idProgramaEducativo);
-
-            return Json(entidades);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> ValidarPaso1Async(CargarPlanPaso1ViewModel modelo)
-        {
-            if (!ModelState.IsValid)
-            {
-                _logger.LogError("{NOMBRE_LOGGER} Modelo no válido en Paso 2 de Cargar Plan de Estudios.", NOMBRE_LOGGER);
-                if (modelo.Archivo == null)
-                    TempData["Error"] = "El archivo es obligatorio.";
-
-                modelo = await recargarCombosAsync(modelo);
-
-                return View(nameof(CargarPlanPaso1), modelo);
-            }
-            else
-            {
-                var modeloPaso2 = new CargarPlanPaso2ViewModel
+                var ruta = HttpContext.Session.GetString("Ruta");
+                if (!string.IsNullOrEmpty(ruta))
                 {
-                    Region = modelo.Region ?? "",
-                    IdAreaAcademica = modelo.IdAreaAcademica ?? 0,
-                    IdEntidadAcademica = modelo.IdEntidadAcademica ?? 0,
-                    IdProgramaEducativo = modelo.IdProgramaEducativo ?? 0,
-                    Plan = modelo.Plan,
-                    Sistema = modelo.Sistema,
-                    Archivo = modelo.Archivo,
-                    Recarga = false
-                };
-                return await CargarPlanPaso2(modeloPaso2);
+                    var archivoDto = new ArchivoPlanEstudiosDTO
+                    {
+                        Ruta = ruta,
+                        NombreArchivo = archivo.FileName
+                    };
+                    var listaEe = await ProcesarArchivoAsync(archivoDto);
+
+                    HttpContext.Session.SetString("Experiencias", JsonSerializer.Serialize(listaEe));
+
+                    var area = await _areaAcademicaService.ObtenerPorIdAsync(modelo.IdAreaAcademica);
+                    var programa = await _programaEducativoService.ObtenerPorIdAsync(modelo.IdProgramaEducativo);
+
+                    modelo.NombreArea = area.Nombre;
+                    modelo.NombrePrograma = programa?.Nombre ?? "";
+                    modelo.Table = LlenarTablaGestionExperiencias(listaEe, false);
+                    modelo.Table.TableId = "tablaExperiencias";
+                    modelo.Table.Pagination = new PaginationInfo
+                    {
+                        PageSize = 10,
+                        TotalItems = listaEe.Count(),
+                        PaginationMode = "client"
+                    };
+
+                    return (modelo, false);
+                }
+                else
+                {
+                    _logger.LogError("{NOMBRE_LOGGER} [CargarPlanPaso2] La ruta del archivo es nula.", NOMBRE_LOGGER);
+                    TempData["Error"] = "Error: La ruta del archivo es nula.";
+
+                    return (null, true);
+                }
+            }
+            catch (ValidacionExcepction vx)
+            {
+                _logger.LogError(vx, "{NOMBRE_LOGGER} [CargarPlanPaso2] Error de validación.", NOMBRE_LOGGER);
+                TempData["Error"] = "No se ha podido cargar el Plan de Estudios";
+                if (vx.Codigo.Contains("404"))
+                    TempData["Error"] = vx.Message;
+
+                return (null, true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{NOMBRE_LOGGER} [CargarPlanPaso2] Error inesperado.", NOMBRE_LOGGER);
+                TempData["Error"] = "Ha ocurrido un error, inténtalo de nuevo más tarde.";
+
+                return (null, true);
+            }
+        }
+
+        private async Task<(CargarPlanPaso2ViewModel? modelo, bool error)> recargarPaso2Async(CargarPlanPaso2ViewModel modelo)
+        {
+            try
+            {
+                var experienciasJson = HttpContext.Session.GetString("Experiencias");
+                if (!string.IsNullOrEmpty(experienciasJson))
+                {
+                    var experiencias = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(experienciasJson);
+
+                    modelo.Table = LlenarTablaGestionExperiencias(experiencias, false);
+                    modelo.Table.TableId = "tablaExperiencias";
+                    modelo.Table.Pagination = new PaginationInfo
+                    {
+                        PageSize = 10,
+                        TotalItems = experiencias.Count(),
+                        PaginationMode = "client"
+                    };
+                    return (modelo, false);
+
+                }
+                else
+                {
+                    _logger.LogError("{NOMBRE_LOGGER} [CargarPlanPaso2] Error al obtener las Experiencias Educativas de la sesión.", NOMBRE_LOGGER);
+                    TempData["Error"] = "Error al obtener las Experiencias Educativas de la sesión.";
+                    return (null, true);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{NOMBRE_LOGGER} [CargarPlanPaso2] Error inesperado.", NOMBRE_LOGGER);
+                TempData["Error"] = "Ha ocurrido un error, inténtalo de nuevo más tarde.";
+                return (null, true);
             }
         }
 
@@ -364,7 +589,7 @@ namespace SGPla.Controllers
                 HttpContext.Session.Remove("Ruta");
             }
             //string? region, string? plan, string? modalidad, int? idAreaAcademica, int? idEntidadAcademica, int? idProgramaEducativo
-            var url = Url.Action(nameof(CargarPlanPaso1), new 
+            var url = Url.Action(nameof(CargarPlanPaso1), new
             {
                 region = modelo.Region,
                 plan = modelo.Plan,
@@ -472,38 +697,7 @@ namespace SGPla.Controllers
             }
         }
 
-        [HttpGet]
-        public async Task<IActionResult> DescargarArchivoAsync(int idArchivo)
-        {
-            try
-            {
-                var archivoDto = await _archivoService.DescargarAsync(idArchivo);
-                if (archivoDto != null)
-                {
-                    var rutaCompleta = Path.Combine("Archivos/planes-estudios", archivoDto.Ruta);
-                    _logger.LogInformation("Ruta: {rutaCompleta}", rutaCompleta);
-
-                    if (System.IO.File.Exists(rutaCompleta))
-                    {
-                        var stream = new FileStream(rutaCompleta, FileMode.Open, FileAccess.Read);
-                        return File( stream, archivoDto.Tipo, archivoDto.Nombre);
-                    }
-                    else
-                    {
-                        return NotFound();
-                    }
-                }
-                else
-                {
-                    return NotFound();
-                }
-            }
-            catch
-            {
-                return BadRequest();
-            }
-        }
-
+        //Gestionar Experiencias
         [HttpGet]
         public JsonResult AgregarExperienciaEducativaCreacion(string codigo, string nombre, string perfilDocente)
         {
@@ -534,54 +728,6 @@ namespace SGPla.Controllers
         }
 
         [HttpGet]
-        public JsonResult AgregarExperienciaEducativaEdicion(string codigo, string nombre, string perfilDocente)
-        {
-            var eeNuevasJson = HttpContext.Session.GetString("EeNuevas");
-            if (!string.IsNullOrEmpty(eeNuevasJson))
-            {
-                var eeNuevas = JsonSerializer.Deserialize<List<AgregarExperienciaEducativaDTO>>(eeNuevasJson);
-                var listaEeJson = HttpContext.Session.GetString("Experiencias");
-                if (!string.IsNullOrEmpty(listaEeJson))
-                {
-                    var listaEe = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(listaEeJson);
-                    var experiencia = new DatosExperienciaEducativaDTO
-                    {
-                        Codigo = codigo,
-                        Nombre = nombre,
-                        PerfilDocente = perfilDocente
-                    };
-
-                    eeNuevas.Add(new AgregarExperienciaEducativaDTO
-                    {
-                        Codigo = codigo,
-                        Nombre = nombre,
-                        PerfilDocente = perfilDocente
-                    });
-                    listaEe.Add(experiencia);
-
-                    eeNuevasJson = JsonSerializer.Serialize(eeNuevas);
-                    HttpContext.Session.SetString("EeNuevas", eeNuevasJson);
-                    listaEeJson = JsonSerializer.Serialize(listaEe);
-                    HttpContext.Session.SetString("Experiencias", listaEeJson);
-
-                    return Json(experiencia);
-                }
-                else
-                {
-                    _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias Educativas.", NOMBRE_LOGGER);
-                    TempData["Error"] = "Error al obtener la lista de Experiencias Educativas.";
-                    return Json(null);
-                }
-            }
-            else
-            {
-                _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias Educativas nuevas.", NOMBRE_LOGGER);
-                TempData["Error"] = "Error al obtener la lista de Experiencias Educativas nuevas.";
-                return Json(null);
-            }
-        }
-
-        [HttpGet]
         public JsonResult EditarExperienciaEducativaCreacion(string codigo, string nombre, string perfilDocente, string codigoOriginal)
         {
             var listaEeJson = HttpContext.Session.GetString("Experiencias");
@@ -589,7 +735,7 @@ namespace SGPla.Controllers
             {
                 var listaEe = JsonSerializer.Deserialize<List<AgregarExperienciaEducativaDTO>>(listaEeJson);
                 var experiencia = listaEe.FirstOrDefault(ee => ee.Codigo == codigoOriginal);
-                
+
                 if (experiencia != null)
                 {
                     experiencia.Codigo = codigo;
@@ -612,56 +758,6 @@ namespace SGPla.Controllers
                 _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias Educativas.", NOMBRE_LOGGER);
                 TempData["Error"] = "Error al obtener la lista de Experiencias Educativas.";
                 return null;
-            }
-        }
-
-        [HttpGet]
-        public JsonResult EditarExperienciaEducativaEdicion(string codigo, string nombre, string perfilDocente, int idExperienciaEducativa)
-        {
-            var eeEditadasJson = HttpContext.Session.GetString("EeEditadas");
-            if (!string.IsNullOrEmpty(eeEditadasJson))
-            {
-                var listaEeJson = HttpContext.Session.GetString("Experiencias");
-                if (!string.IsNullOrEmpty(listaEeJson))
-                {
-                    var listaEe = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(listaEeJson);
-                    var eeEditadas = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(eeEditadasJson);
-                    var experiencia = listaEe.FirstOrDefault(ee => ee.IdExperienciaEducativa == idExperienciaEducativa);
-
-                    if (experiencia != null)
-                    {
-                        experiencia.Codigo = codigo;
-                        experiencia.Nombre = nombre;
-                        experiencia.PerfilDocente = perfilDocente;
-                        
-                        eeEditadas.Add(experiencia);
-                        eeEditadasJson = JsonSerializer.Serialize(eeEditadas);
-                        HttpContext.Session.SetString("EeEditadas", eeEditadasJson);
-
-                        listaEeJson = JsonSerializer.Serialize(listaEe);
-                        HttpContext.Session.SetString("Experiencias", listaEeJson);
-
-                        return Json(listaEe);
-                    }
-                    else
-                    {
-                        _logger.LogError("{NOMBRE_LOGGER} Error al obtener la Experiencia Educativa.", NOMBRE_LOGGER);
-                        TempData["Error"] = "Error al obtener la Experiencia Educativa.";
-                        return Json(null);
-                    }
-                }
-                else
-                {
-                    _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias Educativas.", NOMBRE_LOGGER);
-                    TempData["Error"] = "Error al obtener la lista de Experiencias Educativas.";
-                    return Json(null);
-                }
-            }
-            else
-            {
-                _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias Educativas.", NOMBRE_LOGGER);
-                TempData["Error"] = "Error al obtener la lista de Experiencias Educativas.";
-                return Json(null);
             }
         }
 
@@ -696,358 +792,38 @@ namespace SGPla.Controllers
             }
         }
 
+        // ==========
+        // EDITAR
+        // ==========
+
+        //Vista
         [HttpGet]
-        public JsonResult EliminarExperienciaEducativaEdicion(int idExperienciaEducativa)
+        public async Task<IActionResult> EditarPlanAsync(int idPlanEstudios, bool recarga)
         {
-            var eeEliminadasJson = HttpContext.Session.GetString("EeEliminadas");
-            if (!string.IsNullOrEmpty(eeEliminadasJson))
+            var vista = new EditarPlanViewModel();
+            var error = false;
+            if (recarga)
             {
-                var listaEeJson = HttpContext.Session.GetString("Experiencias");
-                if (!string.IsNullOrEmpty(listaEeJson))
-                {
-                    var listaEe = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(listaEeJson);
-                    var eeEliminadas = JsonSerializer.Deserialize<List<int>>(eeEliminadasJson);
-
-                    var experiencia = listaEe.FirstOrDefault(ee => ee.IdExperienciaEducativa == idExperienciaEducativa);
-                    if (experiencia != null)
-                    {
-                        listaEe.Remove(experiencia);
-                        eeEliminadas.Add(idExperienciaEducativa);
-
-                        eeEliminadasJson = JsonSerializer.Serialize(eeEliminadas);
-                        HttpContext.Session.SetString("EeEliminadas", eeEliminadasJson);
-
-                        listaEeJson = JsonSerializer.Serialize(listaEe);
-                        HttpContext.Session.SetString("Experiencias", listaEeJson);
-
-                        return Json(listaEe);
-                    }
-                    else
-                    {
-                        _logger.LogError("{NOMBRE_LOGGER} Error al obtener la Experiencia Educativa.", NOMBRE_LOGGER);
-                        TempData["Error"] = "Error al obtener la Experiencia Educativa.";
-                        return Json(null);
-                    }
-                }
-                else
-                {
-                    _logger.LogError("{NOMBRE_LOGGER} Error al obtener la Experiencia Educativa.", NOMBRE_LOGGER);
-                    TempData["Error"] = "Error al obtener la Experiencia Educativa.";
-                    return Json(null);
-                }
+                var resultado = await recargarEdicionPlanAsync(idPlanEstudios);
+                vista = resultado.modelo;
+                error = resultado.error;
             }
             else
             {
-                _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias Educativas.", NOMBRE_LOGGER);
-                TempData["Error"] = "Error al obtener la lista de Experiencias Educativas.";
-                return Json(null);
+                var resultado = await inicializarEdicionPlanAsync(idPlanEstudios);
+                vista = resultado.modelo;
+                error = resultado.error;
             }
+
+            if (error)
+            {
+                return RedirectToAction("Index");
+            }
+
+            return View("EditarPlan", vista);
         }
 
-        [HttpGet]
-        public async Task EliminarPlanEstudiosAsync(int idPlanEstudios)
-        {
-            try
-            {
-                await _planEstudiosService.EliminarAsync(idPlanEstudios);
-                TempData["Success"] = "El elemento ha sido eliminado con éxito.";
-
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "{NOMBRE_LOGGER} Error al eliminar el Plan de Estudios.", NOMBRE_LOGGER);
-                TempData["Error"] = "Error al eliminar el Plan de Estudios.";
-            }
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> CancelarAccionAsync()
-        {
-            var rutaArchivo = HttpContext.Session.GetString("Ruta");
-            if (!string.IsNullOrEmpty(rutaArchivo))
-                System.IO.File.Delete(rutaArchivo);
-
-            var url = Url.Action(nameof(Index));
-
-            return Json(new { Url = url });
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> GuardarPlanEstudiosEditadoAsync(EditarPlanViewModel modelo)
-        {
-            try
-            {
-                var eeNuevas = HttpContext.Session.GetString("EeNuevas");
-                if (string.IsNullOrEmpty(eeNuevas))
-                {
-                    _logger.LogError("{NOMBRE_LOGGER} La lista de Experiencias nuevas es nula.", NOMBRE_LOGGER);
-                    TempData["Error"] = "No se pudo editar el Plan de Estudios, inténtelo nuevamente.";
-                    return RedirectToAction(nameof(Index));
-                }
-                var eeEditadas = HttpContext.Session.GetString("EeEditadas");
-                if (string.IsNullOrEmpty(eeEditadas))
-                {
-                    _logger.LogError("{NOMBRE_LOGGER} La lista de Experiencias editadas es nula.", NOMBRE_LOGGER);
-                    TempData["Error"] = "No se pudo editar el Plan de Estudios, inténtelo nuevamente.";
-                    return RedirectToAction(nameof(Index));
-                }
-                var eeEliminadas = HttpContext.Session.GetString("EeEliminadas");
-                if (string.IsNullOrEmpty(eeEliminadas))
-                {
-                    _logger.LogError("{NOMBRE_LOGGER} La lista de Experiencias eliminadas es nula.", NOMBRE_LOGGER);
-                    TempData["Error"] = "No se pudo editar el Plan de Estudios, inténtelo nuevamente.";
-                    return RedirectToAction(nameof(Index));
-                }
-                var listaEeJson = HttpContext.Session.GetString("Experiencias");
-                if (!string.IsNullOrEmpty(listaEeJson))
-                {
-                    var listaEe = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(listaEeJson);
-                    if (listaEe.Count <= 0)
-                    {
-                        _logger.LogError("{NOMBRE_LOGGER} [GuardarPlanEditado].", NOMBRE_LOGGER);
-                        TempData["Error"] = "La lista de Experiencias Educativas no puede estar vacía.";
-                        return await EditarPlanAsync(modelo.IdPlanEstudios, true);
-                    }
-                }
-
-                var plan = new EditarPlanEstudiosDTO
-                {
-                    IdPlanEstudios = modelo.IdPlanEstudios,
-                    NuevaLista = modelo.NuevoArchivo,
-                    ExperienciasNuevas = JsonSerializer.Deserialize<List<AgregarExperienciaEducativaDTO>>(eeNuevas),
-                    ExperienciasEditadas = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(eeEditadas),
-                    IdsExperienciasEliminadas = JsonSerializer.Deserialize<List<int>>(eeEliminadas)
-                };
-
-                var rutaArchivo = HttpContext.Session.GetString("Ruta");
-                if (modelo.NuevoArchivo)
-                {
-                    if (string.IsNullOrEmpty(rutaArchivo))
-                    {
-                        _logger.LogError("{NOMBRE_LOGGER} La ruta del archivo es nula.", NOMBRE_LOGGER);
-                        TempData["Error"] = "No se pudo editar el Plan de Estudios, inténtelo nuevamente.";
-                        return RedirectToAction(nameof(Index));
-                    }
-                    var nombreArchivo = HttpContext.Session.GetString("NombreArchivo");
-                    if (string.IsNullOrEmpty(nombreArchivo))
-                    {
-                        _logger.LogError("{NOMBRE_LOGGER} El nombre del archivo es nulo.", NOMBRE_LOGGER);
-                        TempData["Error"] = "No se pudo editar el Plan de Estudios, inténtelo nuevamente.";
-                        return RedirectToAction(nameof(Index));
-                    }
-
-                    plan.Archivo = new ArchivoPlanEstudiosDTO
-                    {
-                        Ruta = rutaArchivo,
-                        NombreArchivo = nombreArchivo
-                    };
-
-                    await _planEstudiosService.EditarAsync(plan);
-                    System.IO.File.Delete(rutaArchivo);
-                    TempData["Success"] = "Plan de estudios guardado con éxito.";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                await _planEstudiosService.EditarAsync(plan);
-                TempData["Success"] = "Plan de estudios guardado con éxito.";
-                return RedirectToAction(nameof(Index));
-
-            }
-            catch (ValidacionExcepction vx)
-            {
-                _logger.LogError(vx, "{NOMBRE_LOGGER} [GuardarPlanEditado].", NOMBRE_LOGGER);
-                TempData["Error"] = $"Error: {vx.Message}";
-                if (vx.Codigo.Contains("422"))
-                    TempData["Error"] = "No se pudo editar el Plan de Estudios, inténtelo nuevamente.";
-                return await EditarPlanAsync(modelo.IdPlanEstudios, true);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "{NOMBRE_LOGGER} [GuardarPlanEditado] Error inesperado.", NOMBRE_LOGGER);
-                TempData["Error"] = $"No se pudo editar el Plan de Estudios, inténtelo más tarde.";
-                return RedirectToAction(nameof(Index));
-            }
-        }
-
-        [HttpPost]
-        public async Task<JsonResult> CargarNuevoArchivo(IFormFile archivo)
-        {
-            await guardarArchivoTemporalmente(archivo);
-
-            var ruta = HttpContext.Session.GetString("Ruta");
-            if (ruta != null)
-            {
-                var nombreArchivo = HttpContext.Session.GetString("NombreArchivo");
-                if (nombreArchivo != null)
-                {
-                    var archivoDTO = new ArchivoPlanEstudiosDTO
-                    {
-                        Ruta = ruta,
-                        NombreArchivo = nombreArchivo
-                    };
-                    var listaEeNueva = await ProcesarArchivoAsync(archivoDTO);
-                    
-                    var eeNuevas = new List<AgregarExperienciaEducativaDTO>();
-                    foreach (var ee in listaEeNueva)
-                    {
-                        eeNuevas.Add(new AgregarExperienciaEducativaDTO
-                        {
-                            Codigo = ee.Codigo,
-                            Nombre = ee.Nombre,
-                            PerfilDocente = ee.PerfilDocente
-                        });
-                    }
-                    HttpContext.Session.SetString("EeNuevas", JsonSerializer.Serialize(eeNuevas));
-
-                    var listaEeJson = HttpContext.Session.GetString("Experiencias");
-                    if (!string.IsNullOrEmpty(listaEeJson))
-                    {
-                        var listaEeVieja = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(listaEeJson);
-                        var eeEliminadasJson = HttpContext.Session.GetString("EeEliminadas");
-                        if (!string.IsNullOrEmpty(eeEliminadasJson))
-                        {
-                            var eeEliminadas = JsonSerializer.Deserialize<List<int>>(eeEliminadasJson);
-                            foreach (var ee in listaEeVieja)
-                            {
-                                if (!eeEliminadas.Contains(ee.IdExperienciaEducativa))
-                                    eeEliminadas.Add(ee.IdExperienciaEducativa);
-                            }
-                            HttpContext.Session.SetString("EeEliminadas", JsonSerializer.Serialize(eeEliminadas));
-                            HttpContext.Session.SetString("EeEditadas", JsonSerializer.Serialize(new List<DatosExperienciaEducativaDTO>()));
-                            HttpContext.Session.SetString("Experiencias", JsonSerializer.Serialize(listaEeNueva));
-
-                            return Json(listaEeNueva);
-                        }
-                        else
-                        {
-                            _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias eliminadas.", NOMBRE_LOGGER);
-                            TempData["Error"] = "Error al obtener la lista de Experiencias eliminadas.";
-                            return Json(null);
-                        }
-                    }
-                    else
-                    {
-                        _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias Educativas.", NOMBRE_LOGGER);
-                        TempData["Error"] = "Error al obtener la lista de Experiencias Educativas.";
-                        return Json(null);
-                    }
-                }
-                else
-                {
-                    _logger.LogError("{NOMBRE_LOGGER} El nombre del archivo es nulo.", NOMBRE_LOGGER);
-                    TempData["Error"] = "El nombre del archivo es nulo.";
-                    return Json(null);
-                }
-            }
-            else
-            {
-                _logger.LogError("{NOMBRE_LOGGER} La ruta es nula.", NOMBRE_LOGGER);
-                TempData["Error"] = "La ruta es nula.";
-                return Json(null);
-            }
-        }
-
-        /*
-         * Utils
-         */
-
-        private async Task<(CargarPlanPaso2ViewModel? modelo, bool error)> inicializarPaso2Async(CargarPlanPaso2ViewModel modelo)
-        {
-            try
-            {
-                var archivo = modelo.Archivo;
-                await guardarArchivoTemporalmente(archivo);
-
-                var ruta = HttpContext.Session.GetString("Ruta");
-                if (!string.IsNullOrEmpty(ruta))
-                {
-                    var archivoDto = new ArchivoPlanEstudiosDTO
-                    {
-                        Ruta = ruta,
-                        NombreArchivo = archivo.FileName
-                    };
-                    var listaEe = await ProcesarArchivoAsync(archivoDto);
-
-                    HttpContext.Session.SetString("Experiencias", JsonSerializer.Serialize(listaEe));
-
-                    var area = await _areaAcademicaService.ObtenerPorIdAsync(modelo.IdAreaAcademica);
-                    var programa = await _programaEducativoService.ObtenerPorIdAsync(modelo.IdProgramaEducativo);
-
-                    modelo.NombreArea = area.Nombre;
-                    modelo.NombrePrograma = programa?.Nombre ?? "";
-                    modelo.Table = LlenarTablaGestionExperiencias(listaEe, false);
-                    modelo.Table.TableId = "tablaExperiencias";
-                    modelo.Table.Pagination = new PaginationInfo
-                    {
-                        PageSize = 10,
-                        TotalItems = listaEe.Count(),
-                        PaginationMode = "client"
-                    };
-
-                    return (modelo, false);
-                }
-                else
-                {
-                    _logger.LogError("{NOMBRE_LOGGER} [CargarPlanPaso2] La ruta del archivo es nula.", NOMBRE_LOGGER);
-                    TempData["Error"] = "Error: La ruta del archivo es nula.";
-
-                    return (null, true);
-                }
-            }
-            catch (ValidacionExcepction vx)
-            {
-                _logger.LogError(vx, "{NOMBRE_LOGGER} [CargarPlanPaso2] Error de validación.", NOMBRE_LOGGER);
-                TempData["Error"] = "No se ha podido cargar el Plan de Estudios";
-                if (vx.Codigo.Contains("404"))
-                    TempData["Error"] = vx.Message;
-
-                return (null, true);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "{NOMBRE_LOGGER} [CargarPlanPaso2] Error inesperado.", NOMBRE_LOGGER);
-                TempData["Error"] = "Ha ocurrido un error, inténtalo de nuevo más tarde.";
-
-                return (null, true);
-            }
-        }
-
-        private async Task<(CargarPlanPaso2ViewModel? modelo, bool error)> recargarPaso2Async(CargarPlanPaso2ViewModel modelo)
-        {
-            try
-            {
-                var experienciasJson = HttpContext.Session.GetString("Experiencias");
-                if (!string.IsNullOrEmpty(experienciasJson))
-                {
-                    var experiencias = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(experienciasJson);
-
-                    modelo.Table = LlenarTablaGestionExperiencias(experiencias, false);
-                    modelo.Table.TableId = "tablaExperiencias";
-                    modelo.Table.Pagination = new PaginationInfo
-                    {
-                        PageSize = 10,
-                        TotalItems = experiencias.Count(),
-                        PaginationMode = "client"
-                    };
-                    return (modelo, false);
-
-                }
-                else
-                {
-                    _logger.LogError("{NOMBRE_LOGGER} [CargarPlanPaso2] Error al obtener las Experiencias Educativas de la sesión.", NOMBRE_LOGGER);
-                    TempData["Error"] = "Error al obtener las Experiencias Educativas de la sesión.";
-                    return (null, true);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "{NOMBRE_LOGGER} [CargarPlanPaso2] Error inesperado.", NOMBRE_LOGGER);
-                TempData["Error"] = "Ha ocurrido un error, inténtalo de nuevo más tarde.";
-                return (null, true);
-            }
-        }
-
-        private async Task<(EditarPlanViewModel? modelo, bool error)> inicializarEdicionPlanAsync (int idPlanEstudios)
+        private async Task<(EditarPlanViewModel? modelo, bool error)> inicializarEdicionPlanAsync(int idPlanEstudios)
         {
             try
             {
@@ -1151,133 +927,353 @@ namespace SGPla.Controllers
 
         }
 
-        private async Task<TableModel> LlenarTablaIndexAsync(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int? idProgramaEducativo, int pagina = 1, int cantidad = 10)
+        [HttpPost]
+        public async Task<JsonResult> CargarNuevoArchivo(IFormFile archivo)
         {
-            _logger.LogInformation("{NOMBRE_LOGGER} Obteniendo tabla de Planes de Estudios con filtros:\n" +
-                " - Búsqueda: {busqueda}\n - Región: {region}\n - idAreaAcademica: {idAreaAcademica}\n - idEntidadAcademica: {idEntidadAcademica}\n" +
-                " - idProgramaEducativo: {idProgramaEducativo}",
-                NOMBRE_LOGGER, busqueda, region, idAreaAcademica, idEntidadAcademica, idProgramaEducativo);
-            try
+            await guardarArchivoTemporalmente(archivo);
+
+            var ruta = HttpContext.Session.GetString("Ruta");
+            if (ruta != null)
             {
-                int idEntidad = 0;
-                int idPrograma = 0;
-                if (idEntidadAcademica.HasValue)
-                    idEntidad = idEntidadAcademica.Value;
-                if (idProgramaEducativo.HasValue)
-                    idPrograma = idProgramaEducativo.Value;
-
-                FiltroPlanEstudiosDTO filtros = new FiltroPlanEstudiosDTO
+                var nombreArchivo = HttpContext.Session.GetString("NombreArchivo");
+                if (nombreArchivo != null)
                 {
-                    IdEntidadAcademica = idEntidad,
-                    IdProgramaEducativo = idPrograma,
-                    Nombre = busqueda
-                };
-                var planes = await _planEstudiosService.ObtenerPorFiltroAsync(filtros, cantidad, pagina);
-                if (planes.items.Count == 0)
-                {
-                    paginaActual = 1;
-                    planes = await _planEstudiosService.ObtenerPorFiltroAsync(filtros, cantidad, paginaActual);
-                }
-
-                return new TableModel
-                {
-                    Headers = new List<string>
+                    var archivoDTO = new ArchivoPlanEstudiosDTO
                     {
-                        "Programa Educativo", "Modalidad", "Plan", "Área",  "Acciones"
-                    },
-                    Rows = planes.items.Select(plan => new TableRowModel
+                        Ruta = ruta,
+                        NombreArchivo = nombreArchivo
+                    };
+                    var listaEeNueva = await ProcesarArchivoAsync(archivoDTO);
+
+                    var eeNuevas = new List<AgregarExperienciaEducativaDTO>();
+                    foreach (var ee in listaEeNueva)
                     {
-                        Cells = new List<TableCellModel>
+                        eeNuevas.Add(new AgregarExperienciaEducativaDTO
                         {
-                            new() { Value = plan.NombreProgramaEducativo },
-                            new() { Value = plan.Modalidad },
-                            new() { Value = plan.Nombre },
-                            new() { Value = plan.Area },
-                            new()
-                            {
-                                Actions = new List<TableActionModel>
-                                {
-                                    new()
-                                    {
-                                        Accion = "ver",
-                                        Url = Url.Action("VerPlanEstudios", "PlanesEstudios", new { idPlanEstudios = plan.IdPlanEstudios})
-                                    },
-                                    new()
-                                    {
-                                        Accion = "editar",
-                                        Url = Url.Action("EditarPlan", "PlanesEstudios", new { idPlanEstudios = plan.IdPlanEstudios, recarga = false})
-                                    },
-                                    new()
-                                    {
-                                        Accion = "eliminar",
-                                        OnClick = $"abrirModalEliminarPlan({plan.IdPlanEstudios})"
-                                    }
-                                }
-                            }
-                        }
-                    }).ToList(),
-                    Pagination = new PaginationInfo
-                    {
-                        CurrentPage = paginaActual,
-                        PageSize = cantidad,
-                        TotalItems = planes.cantidad,
-                        OnPageChange = "cambiarPagina"
+                            Codigo = ee.Codigo,
+                            Nombre = ee.Nombre,
+                            PerfilDocente = ee.PerfilDocente
+                        });
                     }
-                };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"{NOMBRE_LOGGER} Error al obtener la lista de Planes de Estudios.");
+                    HttpContext.Session.SetString("EeNuevas", JsonSerializer.Serialize(eeNuevas));
 
-                return generarTablaError();
+                    var listaEeJson = HttpContext.Session.GetString("Experiencias");
+                    if (!string.IsNullOrEmpty(listaEeJson))
+                    {
+                        var listaEeVieja = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(listaEeJson);
+                        var eeEliminadasJson = HttpContext.Session.GetString("EeEliminadas");
+                        if (!string.IsNullOrEmpty(eeEliminadasJson))
+                        {
+                            var eeEliminadas = JsonSerializer.Deserialize<List<int>>(eeEliminadasJson);
+                            foreach (var ee in listaEeVieja)
+                            {
+                                if (!eeEliminadas.Contains(ee.IdExperienciaEducativa))
+                                    eeEliminadas.Add(ee.IdExperienciaEducativa);
+                            }
+                            HttpContext.Session.SetString("EeEliminadas", JsonSerializer.Serialize(eeEliminadas));
+                            HttpContext.Session.SetString("EeEditadas", JsonSerializer.Serialize(new List<DatosExperienciaEducativaDTO>()));
+                            HttpContext.Session.SetString("Experiencias", JsonSerializer.Serialize(listaEeNueva));
+
+                            return Json(listaEeNueva);
+                        }
+                        else
+                        {
+                            _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias eliminadas.", NOMBRE_LOGGER);
+                            TempData["Error"] = "Error al obtener la lista de Experiencias eliminadas.";
+                            return Json(null);
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias Educativas.", NOMBRE_LOGGER);
+                        TempData["Error"] = "Error al obtener la lista de Experiencias Educativas.";
+                        return Json(null);
+                    }
+                }
+                else
+                {
+                    _logger.LogError("{NOMBRE_LOGGER} El nombre del archivo es nulo.", NOMBRE_LOGGER);
+                    TempData["Error"] = "El nombre del archivo es nulo.";
+                    return Json(null);
+                }
+            }
+            else
+            {
+                _logger.LogError("{NOMBRE_LOGGER} La ruta es nula.", NOMBRE_LOGGER);
+                TempData["Error"] = "La ruta es nula.";
+                return Json(null);
             }
         }
 
-        private TableModel LlenarTablaVerPlanEstudios(List<DatosExperienciaEducativaDTO> experiencias, int pagina = 1, int cantidad = 10)
+        [HttpPost]
+        public async Task<IActionResult> GuardarPlanEstudiosEditadoAsync(EditarPlanViewModel modelo)
         {
-            _logger.LogInformation("{NOMBRE_LOGGER} Generando tabla con Experiencias Educativas.", NOMBRE_LOGGER);
             try
             {
-                int skip = (pagina - 1) * cantidad;
-                var experienciasTabla = experiencias.Skip(skip).Take(cantidad).ToList();
-
-                return new TableModel
+                var eeNuevas = HttpContext.Session.GetString("EeNuevas");
+                if (string.IsNullOrEmpty(eeNuevas))
                 {
-                    Headers = new List<string> { "Codigo", "Experiencia Educativa", "Perfil Docente" },
-                    Rows = experienciasTabla.Select(ee => new TableRowModel
+                    _logger.LogError("{NOMBRE_LOGGER} La lista de Experiencias nuevas es nula.", NOMBRE_LOGGER);
+                    TempData["Error"] = "No se pudo editar el Plan de Estudios, inténtelo nuevamente.";
+                    return RedirectToAction(nameof(Index));
+                }
+                var eeEditadas = HttpContext.Session.GetString("EeEditadas");
+                if (string.IsNullOrEmpty(eeEditadas))
+                {
+                    _logger.LogError("{NOMBRE_LOGGER} La lista de Experiencias editadas es nula.", NOMBRE_LOGGER);
+                    TempData["Error"] = "No se pudo editar el Plan de Estudios, inténtelo nuevamente.";
+                    return RedirectToAction(nameof(Index));
+                }
+                var eeEliminadas = HttpContext.Session.GetString("EeEliminadas");
+                if (string.IsNullOrEmpty(eeEliminadas))
+                {
+                    _logger.LogError("{NOMBRE_LOGGER} La lista de Experiencias eliminadas es nula.", NOMBRE_LOGGER);
+                    TempData["Error"] = "No se pudo editar el Plan de Estudios, inténtelo nuevamente.";
+                    return RedirectToAction(nameof(Index));
+                }
+                var listaEeJson = HttpContext.Session.GetString("Experiencias");
+                if (!string.IsNullOrEmpty(listaEeJson))
+                {
+                    var listaEe = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(listaEeJson);
+                    if (listaEe.Count <= 0)
                     {
-                        Cells = new List<TableCellModel>
-                    {
-                        new() { Value = ee.Codigo },
-                        new() { Value = ee.Nombre },
-                        new()
-                        {
-                            Actions = new List<TableActionModel>
-                            {
-                                new()
-                                {
-                                    Accion = "informacion",
-                                    OnClick = $"abrirModalPerfilDocente(\"{ee.PerfilDocente}\")"
-                                }
-                            }
-                        }
+                        _logger.LogError("{NOMBRE_LOGGER} [GuardarPlanEditado].", NOMBRE_LOGGER);
+                        TempData["Error"] = "La lista de Experiencias Educativas no puede estar vacía.";
+                        return await EditarPlanAsync(modelo.IdPlanEstudios, true);
                     }
-                    }).ToList(),
-                    Pagination = new PaginationInfo
-                    {
-                        CurrentPage = paginaActual,
-                        PageSize = cantidad,
-                        TotalItems = experiencias.Count(),
-                        OnPageChange = "cambiarPagina"
-                    }
-                };
-            }
-            catch(Exception ex)
-            {
-                _logger.LogError(ex, "{NOMBRE_LOGGER} Error al generar la tabla de Experiencias Educativas.", NOMBRE_LOGGER);
+                }
 
-                return generarTablaError();
+                var plan = new EditarPlanEstudiosDTO
+                {
+                    IdPlanEstudios = modelo.IdPlanEstudios,
+                    NuevaLista = modelo.NuevoArchivo,
+                    ExperienciasNuevas = JsonSerializer.Deserialize<List<AgregarExperienciaEducativaDTO>>(eeNuevas),
+                    ExperienciasEditadas = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(eeEditadas),
+                    IdsExperienciasEliminadas = JsonSerializer.Deserialize<List<int>>(eeEliminadas)
+                };
+
+                var rutaArchivo = HttpContext.Session.GetString("Ruta");
+                if (modelo.NuevoArchivo)
+                {
+                    if (string.IsNullOrEmpty(rutaArchivo))
+                    {
+                        _logger.LogError("{NOMBRE_LOGGER} La ruta del archivo es nula.", NOMBRE_LOGGER);
+                        TempData["Error"] = "No se pudo editar el Plan de Estudios, inténtelo nuevamente.";
+                        return RedirectToAction(nameof(Index));
+                    }
+                    var nombreArchivo = HttpContext.Session.GetString("NombreArchivo");
+                    if (string.IsNullOrEmpty(nombreArchivo))
+                    {
+                        _logger.LogError("{NOMBRE_LOGGER} El nombre del archivo es nulo.", NOMBRE_LOGGER);
+                        TempData["Error"] = "No se pudo editar el Plan de Estudios, inténtelo nuevamente.";
+                        return RedirectToAction(nameof(Index));
+                    }
+
+                    plan.Archivo = new ArchivoPlanEstudiosDTO
+                    {
+                        Ruta = rutaArchivo,
+                        NombreArchivo = nombreArchivo
+                    };
+
+                    await _planEstudiosService.EditarAsync(plan);
+                    System.IO.File.Delete(rutaArchivo);
+                    TempData["Success"] = "Plan de estudios guardado con éxito.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                await _planEstudiosService.EditarAsync(plan);
+                TempData["Success"] = "Plan de estudios guardado con éxito.";
+                return RedirectToAction(nameof(Index));
+
             }
+            catch (ValidacionExcepction vx)
+            {
+                _logger.LogError(vx, "{NOMBRE_LOGGER} [GuardarPlanEditado].", NOMBRE_LOGGER);
+                TempData["Error"] = $"Error: {vx.Message}";
+                if (vx.Codigo.Contains("422"))
+                    TempData["Error"] = "No se pudo editar el Plan de Estudios, inténtelo nuevamente.";
+                return await EditarPlanAsync(modelo.IdPlanEstudios, true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{NOMBRE_LOGGER} [GuardarPlanEditado] Error inesperado.", NOMBRE_LOGGER);
+                TempData["Error"] = $"No se pudo editar el Plan de Estudios, inténtelo más tarde.";
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        //Gestion experiencias
+        [HttpGet]
+        public JsonResult AgregarExperienciaEducativaEdicion(string codigo, string nombre, string perfilDocente)
+        {
+            var eeNuevasJson = HttpContext.Session.GetString("EeNuevas");
+            if (!string.IsNullOrEmpty(eeNuevasJson))
+            {
+                var eeNuevas = JsonSerializer.Deserialize<List<AgregarExperienciaEducativaDTO>>(eeNuevasJson);
+                var listaEeJson = HttpContext.Session.GetString("Experiencias");
+                if (!string.IsNullOrEmpty(listaEeJson))
+                {
+                    var listaEe = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(listaEeJson);
+                    var experiencia = new DatosExperienciaEducativaDTO
+                    {
+                        Codigo = codigo,
+                        Nombre = nombre,
+                        PerfilDocente = perfilDocente
+                    };
+
+                    eeNuevas.Add(new AgregarExperienciaEducativaDTO
+                    {
+                        Codigo = codigo,
+                        Nombre = nombre,
+                        PerfilDocente = perfilDocente
+                    });
+                    listaEe.Add(experiencia);
+
+                    eeNuevasJson = JsonSerializer.Serialize(eeNuevas);
+                    HttpContext.Session.SetString("EeNuevas", eeNuevasJson);
+                    listaEeJson = JsonSerializer.Serialize(listaEe);
+                    HttpContext.Session.SetString("Experiencias", listaEeJson);
+
+                    return Json(experiencia);
+                }
+                else
+                {
+                    _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias Educativas.", NOMBRE_LOGGER);
+                    TempData["Error"] = "Error al obtener la lista de Experiencias Educativas.";
+                    return Json(null);
+                }
+            }
+            else
+            {
+                _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias Educativas nuevas.", NOMBRE_LOGGER);
+                TempData["Error"] = "Error al obtener la lista de Experiencias Educativas nuevas.";
+                return Json(null);
+            }
+        }
+
+        [HttpGet]
+        public JsonResult EditarExperienciaEducativaEdicion(string codigo, string nombre, string perfilDocente, int idExperienciaEducativa)
+        {
+            var eeEditadasJson = HttpContext.Session.GetString("EeEditadas");
+            if (!string.IsNullOrEmpty(eeEditadasJson))
+            {
+                var listaEeJson = HttpContext.Session.GetString("Experiencias");
+                if (!string.IsNullOrEmpty(listaEeJson))
+                {
+                    var listaEe = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(listaEeJson);
+                    var eeEditadas = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(eeEditadasJson);
+                    var experiencia = listaEe.FirstOrDefault(ee => ee.IdExperienciaEducativa == idExperienciaEducativa);
+
+                    if (experiencia != null)
+                    {
+                        experiencia.Codigo = codigo;
+                        experiencia.Nombre = nombre;
+                        experiencia.PerfilDocente = perfilDocente;
+
+                        eeEditadas.Add(experiencia);
+                        eeEditadasJson = JsonSerializer.Serialize(eeEditadas);
+                        HttpContext.Session.SetString("EeEditadas", eeEditadasJson);
+
+                        listaEeJson = JsonSerializer.Serialize(listaEe);
+                        HttpContext.Session.SetString("Experiencias", listaEeJson);
+
+                        return Json(listaEe);
+                    }
+                    else
+                    {
+                        _logger.LogError("{NOMBRE_LOGGER} Error al obtener la Experiencia Educativa.", NOMBRE_LOGGER);
+                        TempData["Error"] = "Error al obtener la Experiencia Educativa.";
+                        return Json(null);
+                    }
+                }
+                else
+                {
+                    _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias Educativas.", NOMBRE_LOGGER);
+                    TempData["Error"] = "Error al obtener la lista de Experiencias Educativas.";
+                    return Json(null);
+                }
+            }
+            else
+            {
+                _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias Educativas.", NOMBRE_LOGGER);
+                TempData["Error"] = "Error al obtener la lista de Experiencias Educativas.";
+                return Json(null);
+            }
+        }
+
+        [HttpGet]
+        public JsonResult EliminarExperienciaEducativaEdicion(int idExperienciaEducativa)
+        {
+            var eeEliminadasJson = HttpContext.Session.GetString("EeEliminadas");
+            if (!string.IsNullOrEmpty(eeEliminadasJson))
+            {
+                var listaEeJson = HttpContext.Session.GetString("Experiencias");
+                if (!string.IsNullOrEmpty(listaEeJson))
+                {
+                    var listaEe = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(listaEeJson);
+                    var eeEliminadas = JsonSerializer.Deserialize<List<int>>(eeEliminadasJson);
+
+                    var experiencia = listaEe.FirstOrDefault(ee => ee.IdExperienciaEducativa == idExperienciaEducativa);
+                    if (experiencia != null)
+                    {
+                        listaEe.Remove(experiencia);
+                        eeEliminadas.Add(idExperienciaEducativa);
+
+                        eeEliminadasJson = JsonSerializer.Serialize(eeEliminadas);
+                        HttpContext.Session.SetString("EeEliminadas", eeEliminadasJson);
+
+                        listaEeJson = JsonSerializer.Serialize(listaEe);
+                        HttpContext.Session.SetString("Experiencias", listaEeJson);
+
+                        return Json(listaEe);
+                    }
+                    else
+                    {
+                        _logger.LogError("{NOMBRE_LOGGER} Error al obtener la Experiencia Educativa.", NOMBRE_LOGGER);
+                        TempData["Error"] = "Error al obtener la Experiencia Educativa.";
+                        return Json(null);
+                    }
+                }
+                else
+                {
+                    _logger.LogError("{NOMBRE_LOGGER} Error al obtener la Experiencia Educativa.", NOMBRE_LOGGER);
+                    TempData["Error"] = "Error al obtener la Experiencia Educativa.";
+                    return Json(null);
+                }
+            }
+            else
+            {
+                _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias Educativas.", NOMBRE_LOGGER);
+                TempData["Error"] = "Error al obtener la lista de Experiencias Educativas.";
+                return Json(null);
+            }
+        }
+
+        /// ==========
+        // Utils
+        // ==========
+        [HttpGet]
+        public async Task<JsonResult> ObtenerAreasAsync(int? idAreaAcademica)
+        {
+            var areas = await generarCatalogoAreasAsync(idAreaAcademica);
+
+            return Json(areas);
+        }
+
+        [HttpGet]
+        public async Task<JsonResult> ObtenerEntidadesAsync(int idAreaAcademica, string region, int? idEntidadAcademica)
+        {
+            var entidades = await generarCatalogoEntidadesAsync(idAreaAcademica, region, idEntidadAcademica);
+
+            return Json(entidades);
+        }
+
+        [HttpGet]
+        public async Task<JsonResult> ObtenerProgramasAsync(int idAreaAcademica, string region, int idEntidadAcademica, int? idProgramaEducativo)
+        {
+            var entidades = await generarCatalogoProgramasAsync(idAreaAcademica, region, idEntidadAcademica, idProgramaEducativo);
+
+            return Json(entidades);
         }
 
         private List<OptionModel> generarCatalogoRegiones()
@@ -1289,6 +1285,18 @@ namespace SGPla.Controllers
                     Text = r
                 })
                 .ToList();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> CancelarAccionAsync()
+        {
+            var rutaArchivo = HttpContext.Session.GetString("Ruta");
+            if (!string.IsNullOrEmpty(rutaArchivo))
+                System.IO.File.Delete(rutaArchivo);
+
+            var url = Url.Action(nameof(Index));
+
+            return Json(new { Url = url });
         }
 
         private async Task<List<OptionModel>> generarCatalogoAreasAsync(int? idAreaAcademica)
