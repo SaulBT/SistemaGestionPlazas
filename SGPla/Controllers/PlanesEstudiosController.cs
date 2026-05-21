@@ -11,6 +11,7 @@ using SGPla.Services.Implementations;
 using SGPla.Services.Interfaces;
 using System.Numerics;
 using System.Runtime.ConstrainedExecution;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 
 namespace SGPla.Controllers
@@ -717,13 +718,13 @@ namespace SGPla.Controllers
                 listaEeJson = JsonSerializer.Serialize(listaEe);
                 HttpContext.Session.SetString("Experiencias", listaEeJson);
 
-                return Json(experiencia);
+                return Json(new { experiencia, error = false });
             }
             else
             {
                 _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias Educativas.", NOMBRE_LOGGER);
-                TempData["Error"] = "Error al obtener la lista de Experiencias Educativas.";
-                return null;
+                TempData["Error"] = "Ha ocurrido un error, inténtelo nuevamente.";
+                return Json(new {error = true });
             }
         }
 
@@ -744,20 +745,20 @@ namespace SGPla.Controllers
                     listaEeJson = JsonSerializer.Serialize(listaEe);
                     HttpContext.Session.SetString("Experiencias", listaEeJson);
 
-                    return Json(listaEe);
+                    return Json(new { listaEe, error = false });
                 }
                 else
                 {
                     _logger.LogError("{NOMBRE_LOGGER} Error al obtener la Experiencia Educativa.", NOMBRE_LOGGER);
-                    TempData["Error"] = "Error al obtener la Experiencia Educativa.";
-                    return null;
+                    TempData["Error"] = "Ha ocurrido un error, inténtelo nuevamente.";
+                    return Json(new { error = true });
                 }
             }
             else
             {
                 _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias Educativas.", NOMBRE_LOGGER);
-                TempData["Error"] = "Error al obtener la lista de Experiencias Educativas.";
-                return null;
+                TempData["Error"] = "Ha ocurrido un error, inténtelo nuevamente.";
+                return Json(new { error = true });
             }
         }
 
@@ -775,20 +776,20 @@ namespace SGPla.Controllers
                     listaEeJson = JsonSerializer.Serialize(listaEe);
                     HttpContext.Session.SetString("Experiencias", listaEeJson);
 
-                    return Json(listaEe);
+                    return Json(new { listaEe, error = false});
                 }
                 else
                 {
                     _logger.LogError("{NOMBRE_LOGGER} Error al obtener la Experiencia Educativa.", NOMBRE_LOGGER);
-                    TempData["Error"] = "Error al obtener la Experiencia Educativa.";
-                    return Json(null);
+                    TempData["Error"] = "Ha ocurrido un error, inténtelo nuevamente.";
+                    return Json(new { error = true });
                 }
             }
             else
             {
                 _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias Educativas.", NOMBRE_LOGGER);
-                TempData["Error"] = "Error al obtener la lista de Experiencias Educativas.";
-                return Json(null);
+                TempData["Error"] = "Ha ocurrido un error, inténtelo nuevamente.";
+                return Json(new { error = true });
             }
         }
 
@@ -1134,25 +1135,25 @@ namespace SGPla.Controllers
                     listaEeJson = JsonSerializer.Serialize(listaEe);
                     HttpContext.Session.SetString("Experiencias", listaEeJson);
 
-                    return Json(experiencia);
+                    return Json(new { experiencia, error = false });
                 }
                 else
                 {
                     _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias Educativas.", NOMBRE_LOGGER);
-                    TempData["Error"] = "Error al obtener la lista de Experiencias Educativas.";
-                    return Json(null);
+                    TempData["Error"] = "Ha ocurrido un error, inténtelo nuevamente.";
+                    return Json(new { error = true });
                 }
             }
             else
             {
                 _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias Educativas nuevas.", NOMBRE_LOGGER);
-                TempData["Error"] = "Error al obtener la lista de Experiencias Educativas nuevas.";
-                return Json(null);
+                TempData["Error"] = "Ha ocurrido un error, inténtelo nuevamente.";
+                return Json(new { error = true });
             }
         }
 
         [HttpGet]
-        public JsonResult EditarExperienciaEducativaEdicion(string codigo, string nombre, string perfilDocente, int idExperienciaEducativa)
+        public JsonResult EditarExperienciaEducativaEdicion(string codigo, string nombre, string perfilDocente, string codigoOriginal)
         {
             var eeEditadasJson = HttpContext.Session.GetString("EeEditadas");
             if (!string.IsNullOrEmpty(eeEditadasJson))
@@ -1162,7 +1163,7 @@ namespace SGPla.Controllers
                 {
                     var listaEe = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(listaEeJson);
                     var eeEditadas = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(eeEditadasJson);
-                    var experiencia = listaEe.FirstOrDefault(ee => ee.IdExperienciaEducativa == idExperienciaEducativa);
+                    var experiencia = listaEe.FirstOrDefault(ee => ee.Codigo == codigoOriginal);
 
                     if (experiencia != null)
                     {
@@ -1170,14 +1171,41 @@ namespace SGPla.Controllers
                         experiencia.Nombre = nombre;
                         experiencia.PerfilDocente = perfilDocente;
 
-                        eeEditadas.Add(experiencia);
-                        eeEditadasJson = JsonSerializer.Serialize(eeEditadas);
-                        HttpContext.Session.SetString("EeEditadas", eeEditadasJson);
+                        if (experiencia.IdExperienciaEducativa > 0)
+                        {
+                            var experienciaEditada = eeEditadas.FirstOrDefault(ee => ee.Codigo == codigoOriginal);
+                            if (experienciaEditada != null)
+                                experienciaEditada = experiencia;
+                            else
+                            {
+                                eeEditadas.Add(experiencia);
+                                eeEditadasJson = JsonSerializer.Serialize(eeEditadas);
+                                HttpContext.Session.SetString("EeEditadas", eeEditadasJson);
+                            }
+                        }
+                        else
+                        {
+                            var eeNuevasJson = HttpContext.Session.GetString("EeNuevas");
+                            if (!string.IsNullOrEmpty(eeNuevasJson))
+                            {
+                                var eeNuevas = JsonSerializer.Deserialize<List<AgregarExperienciaEducativaDTO>>(eeNuevasJson);
+                                var experienciaNueva = eeNuevas.FirstOrDefault(ee => ee.Codigo == codigoOriginal);
+                                if (experienciaNueva != null)
+                                {
+                                    experienciaNueva.Codigo = experiencia.Codigo;
+                                    experienciaNueva.Nombre = experiencia.Nombre;
+                                    experienciaNueva.PerfilDocente = experiencia.PerfilDocente;
+
+                                    eeNuevasJson = JsonSerializer.Serialize(eeNuevas);
+                                    HttpContext.Session.SetString("EeNuevas", eeNuevasJson);
+                                }
+                            }
+                        }
 
                         listaEeJson = JsonSerializer.Serialize(listaEe);
                         HttpContext.Session.SetString("Experiencias", listaEeJson);
 
-                        return Json(listaEe);
+                        return Json(new { listaEe, error = false });
                     }
                     else
                     {
@@ -1202,7 +1230,7 @@ namespace SGPla.Controllers
         }
 
         [HttpGet]
-        public JsonResult EliminarExperienciaEducativaEdicion(int idExperienciaEducativa)
+        public JsonResult EliminarExperienciaEducativaEdicion(string codigo)
         {
             var eeEliminadasJson = HttpContext.Session.GetString("EeEliminadas");
             if (!string.IsNullOrEmpty(eeEliminadasJson))
@@ -1213,14 +1241,33 @@ namespace SGPla.Controllers
                     var listaEe = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(listaEeJson);
                     var eeEliminadas = JsonSerializer.Deserialize<List<int>>(eeEliminadasJson);
 
-                    var experiencia = listaEe.FirstOrDefault(ee => ee.IdExperienciaEducativa == idExperienciaEducativa);
+                    var experiencia = listaEe.FirstOrDefault(ee => ee.Codigo == codigo);
                     if (experiencia != null)
                     {
-                        listaEe.Remove(experiencia);
-                        eeEliminadas.Add(idExperienciaEducativa);
+                        if (experiencia.IdExperienciaEducativa > 0)
+                        {
+                            listaEe.Remove(experiencia);
+                            eeEliminadas.Add(experiencia.IdExperienciaEducativa);
 
-                        eeEliminadasJson = JsonSerializer.Serialize(eeEliminadas);
-                        HttpContext.Session.SetString("EeEliminadas", eeEliminadasJson);
+                            eeEliminadasJson = JsonSerializer.Serialize(eeEliminadas);
+                            HttpContext.Session.SetString("EeEliminadas", eeEliminadasJson);
+                        }
+                        else
+                        {
+                            var eeNuevasJson = HttpContext.Session.GetString("EeNuevas");
+                            if (!string.IsNullOrEmpty(eeNuevasJson))
+                            {
+                                var eeNuevas = JsonSerializer.Deserialize<List<AgregarExperienciaEducativaDTO>>(eeNuevasJson);
+                                var experienciaNueva = eeNuevas.FirstOrDefault(ee => ee.Codigo == codigo);
+                                if (experienciaNueva != null)
+                                {
+                                    eeNuevas.Remove(experienciaNueva);
+
+                                    eeNuevasJson = JsonSerializer.Serialize(eeNuevas);
+                                    HttpContext.Session.SetString("EeNuevas", eeNuevasJson);
+                                }
+                            }
+                        }
 
                         listaEeJson = JsonSerializer.Serialize(listaEe);
                         HttpContext.Session.SetString("Experiencias", listaEeJson);
