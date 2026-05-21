@@ -328,7 +328,8 @@ namespace SGPla.Services.Implementations
                     Codigo = experienciaEducativa.Codigo,
                     Nombre = experienciaEducativa.Nombre,
                     PerfilDocente = experienciaEducativa.PerfilDocente
-                }).ToList()
+                }).ToList(),
+                IdArchivo = planEstudios.IdArchivoPlan
             };
         }
     }

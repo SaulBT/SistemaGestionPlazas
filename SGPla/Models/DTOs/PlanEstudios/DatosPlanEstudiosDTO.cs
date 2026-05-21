@@ -8,5 +8,6 @@
         public string Nombre { get; set; } = string.Empty;
         public string NombreAreaAcademica { get; set; } = string.Empty;
         public List<DatosExperienciaEducativaDTO> ExperienciasEducativas { get; set; } = [];
+        public int IdArchivo { get; set; }
     }
 }
