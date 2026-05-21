@@ -229,12 +229,24 @@ namespace SGPla.Controllers
         {
             _logger.LogInformation("{NOMBRE_LOGGER} Paso 2 de Cargar Plan de Estudios.", NOMBRE_LOGGER);
 
-            if (!ModelState.IsValid)
-            {
-                _logger.LogError("{NOMBRE_LOGGER} Modelo no válido en Paso 2 de Cargar Plan de Estudios.", NOMBRE_LOGGER);
-                if (modelo.Archivo == null)
-                    TempData["Error"] = "El archivo es obligatorio.";
+            var vista = new CargarPlanPaso2ViewModel();
+            var error = false;
 
+            if (modelo.Recarga)
+            {
+                var resultado = await recargarPaso2Async(modelo);
+                error = resultado.error;
+                vista = resultado.modelo;
+            }
+            else
+            {
+                var resultado = await inicializarPaso2Async(modelo);
+                error = resultado.error;
+                vista = resultado.modelo;
+            }
+
+            if (error)
+            {
                 var modeloAnterior = new CargarPlanPaso1ViewModel
                 {
                     Region = modelo.Region,
@@ -246,108 +258,11 @@ namespace SGPla.Controllers
                 };
                 modeloAnterior = await recargarCombosAsync(modeloAnterior);
 
-                vista.Table.TableId = "tablaExperiencias";
-                vista.Table.Pagination = new PaginationInfo
-                {
-                    PageSize = 10,
-                    TotalItems = listaEe.Count(),
-                    PaginationMode = "client"
-                };
-
-                return View(vista);
+                return View("CargarPlanPaso1", modeloAnterior);
             }
-
-            try
+            else
             {
-                var archivo = modelo.Archivo;
-                await guardarArchivoTemporalmente(archivo);
-
-                var ruta = HttpContext.Session.GetString("Ruta");
-                if (!string.IsNullOrEmpty(ruta))
-                {
-                    var archivoDto = new ArchivoPlanEstudiosDTO
-                    {
-                        Ruta = ruta,
-                        NombreArchivo = archivo.FileName
-                    };
-                    var listaEe = await ProcesarArchivoAsync(archivoDto);
-
-                    HttpContext.Session.SetString("Experiencias", JsonSerializer.Serialize(listaEe));
-
-                    var area = await _areaAcademicaService.ObtenerPorIdAsync(modelo.IdAreaAcademica);
-                    var programa = await _programaEducativoService.ObtenerPorIdAsync(modelo.IdProgramaEducativo);
-
-                    var vista = new CargarPlanPaso2ViewModel
-                    {
-                        Region = modelo.Region ?? "",
-                        IdAreaAcademica = modelo.IdAreaAcademica,
-                        NombreArea = area.Nombre,
-                        IdEntidadAcademica = modelo.IdEntidadAcademica,
-                        NombrePrograma = programa?.Nombre ?? "",
-                        IdProgramaEducativo = modelo.IdProgramaEducativo,
-                        Plan = modelo.Plan,
-                        Sistema = modelo.Sistema,
-                        Table = LlenarTablaGestionExperiencias(listaEe, false)
-                    };
-
-                    return View(vista);
-                }
-                else
-                {
-                    _logger.LogError("{NOMBRE_LOGGER} [CargarPlanPaso2] La ruta del archivo es nula.", NOMBRE_LOGGER);
-                    TempData["Error"] = "Error: La ruta del archivo es nula.";
-
-                    var modeloAnterior = new CargarPlanPaso1ViewModel
-                    {
-                        Region = modelo.Region,
-                        IdAreaAcademica = modelo.IdAreaAcademica,
-                        IdEntidadAcademica = modelo.IdEntidadAcademica,
-                        IdProgramaEducativo = modelo.IdProgramaEducativo,
-                        Plan = modelo.Plan,
-                        Sistema = modelo.Sistema
-                    };
-                    modeloAnterior = await recargarCombosAsync(modeloAnterior);
-
-                    return View(nameof(CargarPlanPaso1), modeloAnterior);
-                }
-            }
-            catch (ValidacionExcepction vx)
-            {
-                _logger.LogError(vx, "{NOMBRE_LOGGER} [CargarPlanPaso2] Error de validación.", NOMBRE_LOGGER);
-                TempData["Error"] = "No se ha podido cargar el Plan de Estudios";
-                if (vx.Codigo.Contains("404"))
-                    TempData["Error"] = vx.Message;
-
-                var modeloAnterior = new CargarPlanPaso1ViewModel
-                {
-                    Region = modelo.Region,
-                    IdAreaAcademica = modelo.IdAreaAcademica,
-                    IdEntidadAcademica = modelo.IdEntidadAcademica,
-                    IdProgramaEducativo = modelo.IdProgramaEducativo,
-                    Plan = modelo.Plan,
-                    Sistema = modelo.Sistema
-                };
-                modeloAnterior = await recargarCombosAsync(modeloAnterior);
-
-                return View(nameof(CargarPlanPaso1), modeloAnterior);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "{NOMBRE_LOGGER} [CargarPlanPaso2] Error inesperado.", NOMBRE_LOGGER);
-                TempData["Error"] = "Ha ocurrido un error, inténtalo de nuevo más tarde.";
-
-                var modeloAnterior = new CargarPlanPaso1ViewModel
-                {
-                    Region = modelo.Region,
-                    IdAreaAcademica = modelo.IdAreaAcademica,
-                    IdEntidadAcademica = modelo.IdEntidadAcademica,
-                    IdProgramaEducativo = modelo.IdProgramaEducativo,
-                    Plan = modelo.Plan,
-                    Sistema = modelo.Sistema
-                };
-                modeloAnterior = await recargarCombosAsync(modeloAnterior);
-
-                return View(nameof(CargarPlanPaso1), modeloAnterior);
+                return View("CargarPlanPaso2", vista);
             }
         }
 
@@ -414,6 +329,36 @@ namespace SGPla.Controllers
         }
 
         [HttpPost]
+        public async Task<IActionResult> ValidarPaso1Async(CargarPlanPaso1ViewModel modelo)
+        {
+            if (!ModelState.IsValid)
+            {
+                _logger.LogError("{NOMBRE_LOGGER} Modelo no válido en Paso 2 de Cargar Plan de Estudios.", NOMBRE_LOGGER);
+                if (modelo.Archivo == null)
+                    TempData["Error"] = "El archivo es obligatorio.";
+
+                modelo = await recargarCombosAsync(modelo);
+
+                return View(nameof(CargarPlanPaso1), modelo);
+            }
+            else
+            {
+                var modeloPaso2 = new CargarPlanPaso2ViewModel
+                {
+                    Region = modelo.Region ?? "",
+                    IdAreaAcademica = modelo.IdAreaAcademica ?? 0,
+                    IdEntidadAcademica = modelo.IdEntidadAcademica ?? 0,
+                    IdProgramaEducativo = modelo.IdProgramaEducativo ?? 0,
+                    Plan = modelo.Plan,
+                    Sistema = modelo.Sistema,
+                    Archivo = modelo.Archivo,
+                    Recarga = false
+                };
+                return await CargarPlanPaso2(modeloPaso2);
+            }
+        }
+
+        [HttpPost]
         public async Task<IActionResult> RegresarPaso1Async([FromBody] CargarPlanPaso1ViewModel modelo)
         {
             var rutaArchivo = HttpContext.Session.GetString("Ruta");
@@ -439,12 +384,30 @@ namespace SGPla.Controllers
         [HttpPost]
         public async Task<IActionResult> GuardarPlanEstudiosAsync(GuardarNuevoPlanViewModel modelo)
         {
+            var modeloAnterior = new CargarPlanPaso2ViewModel
+            {
+                Region = modelo.Region,
+                IdProgramaEducativo = modelo.IdProgramaEducativo,
+                NombrePrograma = modelo.NombrePrograma,
+                NombreArea = modelo.NombreArea,
+                Plan = modelo.Plan,
+                Sistema = modelo.Sistema,
+                Recarga = true
+            };
+
             try
             {
-                var jsonEe = HttpContext.Session.GetString("Experiencias");
-                if (!string.IsNullOrEmpty(jsonEe))
+                var experienciasJson = HttpContext.Session.GetString("Experiencias");
+                if (!string.IsNullOrEmpty(experienciasJson))
                 {
-                    var experiencias = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(jsonEe);
+                    var experiencias = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(experienciasJson);
+                    if (experiencias?.Count == 0)
+                    {
+                        _logger.LogError("{NOMBRE_LOGGER} La lista de Experiencias Educativas está vacía.", NOMBRE_LOGGER);
+                        TempData["Error"] = "La lista de Experiencias Educativas no puede estar vacía.";
+                        return await CargarPlanPaso2(modeloAnterior);
+                    }
+
                     var rutaArchivo = HttpContext.Session.GetString("Ruta");
                     if (!string.IsNullOrEmpty(rutaArchivo))
                     {
@@ -459,7 +422,7 @@ namespace SGPla.Controllers
 
                             await _planEstudiosService.AgregarAsync(new CrearPlanEstudiosDTO
                             {
-                                IdProgramaEducativo = (int)modelo.Programa,
+                                IdProgramaEducativo = (int)modelo.IdProgramaEducativo,
                                 Nombre = modelo.Plan,
                                 Sistema = modelo.Sistema,
                                 Archivo = archivoDTO,
@@ -479,28 +442,36 @@ namespace SGPla.Controllers
                         else
                         {
                             _logger.LogError("{NOMBRE_LOGGER} El nombre del archivo es nulo.", NOMBRE_LOGGER);
-                            TempData["Error"] = "El nombre del archivo es nulo.";
-                            return RedirectToAction(nameof(CargarPlanPaso1), new CargarPlanPaso1ViewModel());
+                            TempData["Error"] = "No se pudo guardar el Plan de Estudios, inténtelo de nuevo más tarde.";
+                            return RedirectToAction(nameof(Index));
                         }
                     }
                     else
                     {
                         _logger.LogError("{NOMBRE_LOGGER} La ruta del archivo es nula.", NOMBRE_LOGGER);
-                        TempData["Error"] = "La ruta del archivo es nula.";
-                        return RedirectToAction(nameof(CargarPlanPaso1), new CargarPlanPaso1ViewModel());
+                        TempData["Error"] = "No se pudo guardar el Plan de Estudios, inténtelo de nuevo más tarde.";
+                        return RedirectToAction(nameof(Index));
                     }
                 }
                 else
                 {
                     _logger.LogError("{NOMBRE_LOGGER} La lista de Experiencias está vacía.", NOMBRE_LOGGER);
-                    TempData["Error"] = "La lista de Experiencias está vacía.";
-                    return RedirectToAction(nameof(CargarPlanPaso1), new CargarPlanPaso1ViewModel());
+                    TempData["Error"] = "No se pudo guardar el Plan de Estudios, inténtelo de nuevo más tarde.";
+                    return RedirectToAction(nameof(Index));
                 }
+            }
+            catch (ValidacionExcepction vx)
+            {
+                _logger.LogError(vx, "{NOMBRE_LOGGER} Error al guardar el plan de estudios.", NOMBRE_LOGGER);
+                TempData["Error"] = $"Error: {vx.Message}";
+                if (vx.Codigo.Contains("422"))
+                    TempData["Error"] = "No se pudo guardar el Plan de Estudios.";
+                return await CargarPlanPaso2(modeloAnterior);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al guardar el Plan de Estudios.");
-                TempData["Error"] = "Error al guardar el Plan de Estudios.";
+                _logger.LogError(ex, "{NOMBRE_LOGGER} Error inesperado.", NOMBRE_LOGGER);
+                TempData["Error"] = "No se pudo guardar el Plan de Estudios, inténtelo de nuevo más tarde.";
                 return RedirectToAction(nameof(CargarPlanPaso1), new CargarPlanPaso1ViewModel());
             }
         }
@@ -906,6 +877,102 @@ namespace SGPla.Controllers
          * Utils
          */
 
+        private async Task<(CargarPlanPaso2ViewModel? modelo, bool error)> inicializarPaso2Async(CargarPlanPaso2ViewModel modelo)
+        {
+            try
+            {
+                var archivo = modelo.Archivo;
+                await guardarArchivoTemporalmente(archivo);
+
+                var ruta = HttpContext.Session.GetString("Ruta");
+                if (!string.IsNullOrEmpty(ruta))
+                {
+                    var archivoDto = new ArchivoPlanEstudiosDTO
+                    {
+                        Ruta = ruta,
+                        NombreArchivo = archivo.FileName
+                    };
+                    var listaEe = await ProcesarArchivoAsync(archivoDto);
+
+                    HttpContext.Session.SetString("Experiencias", JsonSerializer.Serialize(listaEe));
+
+                    var area = await _areaAcademicaService.ObtenerPorIdAsync(modelo.IdAreaAcademica);
+                    var programa = await _programaEducativoService.ObtenerPorIdAsync(modelo.IdProgramaEducativo);
+
+                    modelo.NombreArea = area.Nombre;
+                    modelo.NombrePrograma = programa?.Nombre ?? "";
+                    modelo.Table = LlenarTablaGestionExperiencias(listaEe, false);
+                    modelo.Table.TableId = "tablaExperiencias";
+                    modelo.Table.Pagination = new PaginationInfo
+                    {
+                        PageSize = 10,
+                        TotalItems = listaEe.Count(),
+                        PaginationMode = "client"
+                    };
+
+                    return (modelo, false);
+                }
+                else
+                {
+                    _logger.LogError("{NOMBRE_LOGGER} [CargarPlanPaso2] La ruta del archivo es nula.", NOMBRE_LOGGER);
+                    TempData["Error"] = "Error: La ruta del archivo es nula.";
+
+                    return (null, true);
+                }
+            }
+            catch (ValidacionExcepction vx)
+            {
+                _logger.LogError(vx, "{NOMBRE_LOGGER} [CargarPlanPaso2] Error de validación.", NOMBRE_LOGGER);
+                TempData["Error"] = "No se ha podido cargar el Plan de Estudios";
+                if (vx.Codigo.Contains("404"))
+                    TempData["Error"] = vx.Message;
+
+                return (null, true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{NOMBRE_LOGGER} [CargarPlanPaso2] Error inesperado.", NOMBRE_LOGGER);
+                TempData["Error"] = "Ha ocurrido un error, inténtalo de nuevo más tarde.";
+
+                return (null, true);
+            }
+        }
+
+        private async Task<(CargarPlanPaso2ViewModel? modelo, bool error)> recargarPaso2Async(CargarPlanPaso2ViewModel modelo)
+        {
+            try
+            {
+                var experienciasJson = HttpContext.Session.GetString("Experiencias");
+                if (!string.IsNullOrEmpty(experienciasJson))
+                {
+                    var experiencias = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(experienciasJson);
+
+                    modelo.Table = LlenarTablaGestionExperiencias(experiencias, false);
+                    modelo.Table.TableId = "tablaExperiencias";
+                    modelo.Table.Pagination = new PaginationInfo
+                    {
+                        PageSize = 10,
+                        TotalItems = experiencias.Count(),
+                        PaginationMode = "client"
+                    };
+                    return (modelo, false);
+
+                }
+                else
+                {
+                    _logger.LogError("{NOMBRE_LOGGER} [CargarPlanPaso2] Error al obtener las Experiencias Educativas de la sesión.", NOMBRE_LOGGER);
+                    TempData["Error"] = "Error al obtener las Experiencias Educativas de la sesión.";
+                    return (null, true);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{NOMBRE_LOGGER} [CargarPlanPaso2] Error inesperado.", NOMBRE_LOGGER);
+                TempData["Error"] = "Ha ocurrido un error, inténtalo de nuevo más tarde.";
+                return (null, true);
+            }
+        }
+
         private async Task<TableModel> LlenarTablaIndexAsync(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int? idProgramaEducativo, int pagina = 1, int cantidad = 10)
         {
             _logger.LogInformation("{NOMBRE_LOGGER} Obteniendo tabla de Planes de Estudios con filtros:\n" +
@@ -1127,6 +1194,19 @@ namespace SGPla.Controllers
         private TableModel LlenarTablaGestionExperiencias(List<DatosExperienciaEducativaDTO> experiencias, bool edicion)
         {
             var tabla = new TableModel();
+
+            if (experiencias.Count == 0)
+            {
+                tabla.Headers = new List<string> { "Codigo", "Experiencia Educativa", "Perfil Docente", "Acciones" };
+                tabla.Rows = new TableRowModel[]
+                    {
+                        new TableRowModel
+                        {
+                            Cells = []
+                        }
+                    }.ToList();
+                return tabla;
+            }
             
             if (edicion)
             {

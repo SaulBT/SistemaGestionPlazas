@@ -4,7 +4,7 @@
     ViewData["Title"] = "Cargar Plan de Estudios";
 }
 
-<form id="form" method="post" action="@Url.Action("CargarPlanPaso2", "PlanesEstudios")" enctype="multipart/form-data">
+<form id="form" method="post" action="@Url.Action("ValidarPaso1", "PlanesEstudios")" enctype="multipart/form-data">
     <div class="d-flex flex-column gap-3">
         @await Component.InvokeAsync("SelectField", new SelectFieldModel
         {
