@@ -6,6 +6,7 @@
 
 <form id="filtrosForm" method="get" action="@Url.Action("VerPlanEstudios", "PlanesEstudios")">
     <input type="hidden" name="IdPlanEstudios" value="@Model.IdPlanEstudios" />
+    <input type="hidden" id="idArchivo" value="@Model.IdArchivo"/>
     <!-- BLOQUE SUPERIOR -->
     <div class="d-flex gap-2">
 
@@ -54,7 +55,8 @@
     <div class="d-flex justify-content-end my-3">
         @await Component.InvokeAsync("Boton", new
         {
-            accion = "descargar"
+            accion = "descargar",
+            OnClick = "descargarArchivo()"
         })
     </div>
 
@@ -93,5 +95,38 @@
     function abrirModalPerfilDocente(perfilDocente){
         document.getElementById("modalPerfilDocente-mensaje").innerText = perfilDocente;
         abrirModal("modalPerfilDocente");
+    }
+
+    async function descargarArchivo(){
+        const idArchivo = document.getElementById("idArchivo").value;
+        var response = await fetch(`@Url.Action("DescargarArchivo","PlanesEstudios")?idArchivo=${idArchivo}`);
+        
+        if (response.ok){
+            const blob = await response.blob();
+
+            const disposition = response.headers.get("Content-Disposition");
+
+            let nombreArchivo = "archivo";
+
+            if (disposition && disposition.includes("filename="))
+            {
+                nombreArchivo = disposition.split(";")[1].split("=")[1].replaceAll('"', '');
+            }
+
+            const url = window.URL.createObjectURL(blob);
+
+            const a = document.createElement("a");
+
+            a.href = url;
+            a.download = nombreArchivo;
+
+            document.body.appendChild(a);
+
+            a.click();
+
+            a.remove();
+
+            window.URL.revokeObjectURL(url);
+        }
     }
 </script>

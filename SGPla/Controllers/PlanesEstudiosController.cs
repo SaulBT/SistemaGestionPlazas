@@ -21,6 +21,7 @@ namespace SGPla.Controllers
         private readonly IAreaAcademicaService _areaAcademicaService;
         private readonly IEntidadAcademicaService _entidadAcademicaService;
         private readonly IProgramaEducativoService _programaEducativoService;
+        private readonly IArchivoService _archivoService;
         private readonly ILogger<PlanesEstudiosController> _logger;
         private readonly IWebHostEnvironment _environment;
         private const string NOMBRE_LOGGER = "FRONT-PLANES:";
@@ -31,6 +32,7 @@ namespace SGPla.Controllers
             IAreaAcademicaService areaAcademicaService,
             IEntidadAcademicaService entidadAcademicaService,
             IProgramaEducativoService programaEducativoService,
+            IArchivoService archivoService,
             ILogger<PlanesEstudiosController> logger,
             IWebHostEnvironment environment)
         {
@@ -38,6 +40,7 @@ namespace SGPla.Controllers
             _areaAcademicaService = areaAcademicaService;
             _entidadAcademicaService = entidadAcademicaService;
             _programaEducativoService = programaEducativoService;
+            _archivoService = archivoService;
             _logger = logger;
             _environment = environment;
         }
@@ -132,6 +135,7 @@ namespace SGPla.Controllers
                 modelo.Modalidad = plan.Modalidad;
                 modelo.Nombre = plan.Nombre;
                 modelo.NombreAreaAcademica = plan.NombreAreaAcademica;
+                modelo.IdArchivo = plan.IdArchivo;
                 modelo.Table = LlenarTablaVerPlanEstudios(plan.ExperienciasEducativas, paginaActual, cantidad);
                 modelo.PaginaActual = paginaActual;
                 modelo.CantidadPorPaginas = cantidad;
@@ -465,6 +469,38 @@ namespace SGPla.Controllers
                 _logger.LogError(ex, "{NOMBRE_LOGGER} Error inesperado.", NOMBRE_LOGGER);
                 TempData["Error"] = "No se pudo guardar el Plan de Estudios, inténtelo de nuevo más tarde.";
                 return RedirectToAction(nameof(CargarPlanPaso1), new CargarPlanPaso1ViewModel());
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> DescargarArchivoAsync(int idArchivo)
+        {
+            try
+            {
+                var archivoDto = await _archivoService.DescargarAsync(idArchivo);
+                if (archivoDto != null)
+                {
+                    var rutaCompleta = Path.Combine("Archivos/planes-estudios", archivoDto.Ruta);
+                    _logger.LogInformation("Ruta: {rutaCompleta}", rutaCompleta);
+
+                    if (System.IO.File.Exists(rutaCompleta))
+                    {
+                        var stream = new FileStream(rutaCompleta, FileMode.Open, FileAccess.Read);
+                        return File( stream, archivoDto.Tipo, archivoDto.Nombre);
+                    }
+                    else
+                    {
+                        return NotFound();
+                    }
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            catch
+            {
+                return BadRequest();
             }
         }
 
