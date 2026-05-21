@@ -1,5 +1,6 @@
 ﻿public class TableModel
 {
+    public string TableId { get; set; } = "tabla";
     public List<string> Headers { get; set; } = new();
     public List<TableRowModel> Rows { get; set; } = new();
 
@@ -16,7 +17,7 @@ public class TableCellModel
 {
     public string Value { get; set; } = string.Empty;
 
-    // Para acciones
+    
     public List<TableActionModel>? Actions { get; set; }
 }
 
@@ -29,7 +30,7 @@ public class TableActionModel
     public string? OnClick { get; set; } = "";
 }
 
-// Nueva clase para la paginación
+
 public class PaginationInfo
 {
     public int CurrentPage { get; set; } = 1;
@@ -41,4 +42,6 @@ public class PaginationInfo
     public bool HasNextPage => CurrentPage < TotalPages;
 
     public string? OnPageChange { get; set; } // Nombre de la función JavaScript
+
+    public string PaginationMode { get; set; } = "server";
 }
