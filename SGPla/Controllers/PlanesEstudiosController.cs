@@ -58,7 +58,7 @@ namespace SGPla.Controllers
 
             var modelo = new IndexViewModel
             {
-                Table = generarTablaError(),
+                Table = generarTablaConMensaje(["Programa Educativo", "Modalidad", "Plan", "Área", "Acciones"], "Ha ocurrido un error, inténtelo de nuevo más tarde."),
                 Regiones = new List<OptionModel>(),
                 Areas = new List<OptionModel>(),
                 Entidades = new List<OptionModel>(),
@@ -74,7 +74,7 @@ namespace SGPla.Controllers
 
             try
             {
-                
+
 
                 if (!region.IsNullOrEmpty())
                     areasCombo = await generarCatalogoAreasAsync(idAreaAcademica);
@@ -142,6 +142,8 @@ namespace SGPla.Controllers
                     paginaActual = 1;
                     planes = await _planEstudiosService.ObtenerPorFiltroAsync(filtros, cantidad, paginaActual);
                 }
+                if (planes.items.Count == 0)
+                    return generarTablaConMensaje(["Programa Educativo", "Modalidad", "Plan", "Área", "Acciones"], "No hay Planes de Estudios para mostrar.");
 
                 return new TableModel
                 {
@@ -193,7 +195,7 @@ namespace SGPla.Controllers
             {
                 _logger.LogError(ex, $"{NOMBRE_LOGGER} Error al obtener la lista de Planes de Estudios.");
 
-                return generarTablaError();
+                return generarTablaConMensaje(["Programa Educativo", "Modalidad", "Plan", "Área", "Acciones"], "Ha ocurrido un error, inténtelo de nuevo más tarde.");
             }
         }
 
@@ -225,7 +227,7 @@ namespace SGPla.Controllers
 
             paginaActual = pagina;
             var modelo = new VerPlanEstudiosViewModel();
-            modelo.Table = generarTablaError();
+            modelo.Table = generarTablaConMensaje(["Codigo", "Experiencia Educativa", "Perfil Docente"], "Ha ocurrido un error, inténtelo de nuevo más tarde.");
 
             try
             {
@@ -265,6 +267,8 @@ namespace SGPla.Controllers
             {
                 int skip = (pagina - 1) * cantidad;
                 var experienciasTabla = experiencias.Skip(skip).Take(cantidad).ToList();
+                if (experiencias.Count == 0)
+                    return generarTablaConMensaje(["Codigo", "Experiencia Educativa", "Perfil Docente"], "No hay Experiencias Educativas para mostrar.");
 
                 return new TableModel
                 {
@@ -301,7 +305,7 @@ namespace SGPla.Controllers
             {
                 _logger.LogError(ex, "{NOMBRE_LOGGER} Error al generar la tabla de Experiencias Educativas.", NOMBRE_LOGGER);
 
-                return generarTablaError();
+                return generarTablaConMensaje(["Codigo", "Experiencia Educativa", "Perfil Docente"], "Ha ocurrido un error, inténtelo de nuevo más tarde.");
             }
         }
 
@@ -1031,7 +1035,7 @@ namespace SGPla.Controllers
                     return Json(new { error = true });
                 }
 
-                return Json( new { experiencias = listaEeNueva, error = false });
+                return Json(new { experiencias = listaEeNueva, error = false });
             }
             catch (Exception ex)
             {
@@ -1039,7 +1043,7 @@ namespace SGPla.Controllers
                 TempData["Error"] = "Ha ocurrido un error, inténtelo de nuevo más tarde.";
                 return Json(new { error = true });
             }
-            
+
         }
 
         [HttpPost]
@@ -1582,22 +1586,26 @@ namespace SGPla.Controllers
             HttpContext.Session.SetString("NombreArchivo", archivo.FileName);
         }
 
-        private TableModel generarTablaError()
+        private TableModel generarTablaConMensaje(List<string> headers, string mensaje)
         {
+            List<TableCellModel> cells = new();
+            cells.Add(new TableCellModel
+            {
+                Value = mensaje
+            });
+            for (int i = 0; i < headers.Count - 1; i++)
+            {
+                cells.Add(new TableCellModel());
+            }
+
             return new TableModel
             {
-                Headers = new List<string>
-                    {
-                        ""
-                    },
+                Headers = headers,
                 Rows = new TableRowModel[]
                     {
                         new TableRowModel
                         {
-                            Cells = new List<TableCellModel>
-                            {
-                                new() { Value = "Ha ocurrido un error, inténtalo de nuevo más tarde." }
-                            }
+                            Cells = cells
                         }
                     }.ToList(),
             };
