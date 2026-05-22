@@ -14,7 +14,7 @@
         <tbody>
             @foreach (var row in Model.Rows)
             {
-                <tr>
+                <tr id="@row.RowId">
                     @foreach (var cell in row.Cells)
                     {
                         <td>

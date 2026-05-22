@@ -10,6 +10,7 @@
 
 public class TableRowModel
 {
+    public string RowId { get; set; } = string.Empty;
     public List<TableCellModel> Cells { get; set; } = new();
 }
 
