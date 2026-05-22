@@ -12,7 +12,8 @@
     Label = "Código:",
     Valor = Model?.Codigo,
     Flexible = true,
-    MaximoCaracteres = 10
+    MaximoCaracteres = 10,
+    Error = "E"
 })
 
 @await Component.InvokeAsync("InputField", new InputFieldModel
@@ -22,7 +23,8 @@
     Label = "Nombre:",
     Valor = Model?.Nombre,
     Flexible = true,
-    MaximoCaracteres = 150
+    MaximoCaracteres = 150,
+    Error = "E"
 })
 
 @await Component.InvokeAsync("InputField", new InputFieldModel
@@ -32,5 +34,6 @@
     Label = "Perfil Docente:",
     Valor = Model?.PerfilDocente,
     Flexible = true,
-    MaximoCaracteres = 500
+    MaximoCaracteres = 500,
+    Error = "E"
 })

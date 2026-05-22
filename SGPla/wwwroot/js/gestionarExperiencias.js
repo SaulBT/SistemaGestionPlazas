@@ -30,6 +30,7 @@ function abrirModalAgregarExperiencia() {
 }
 
 function abrirModalEditarExperiencia(codigo, nombre, perfilDocente) {
+    limpiarErroresEditar();
     codigoOriginal = codigo;
     
     codigoEditar.value = codigo;
@@ -70,6 +71,7 @@ async function agregarExperiencia() {
 }
 
 async function editarExperiencia(edicion) {
+    limpiarErroresEditar();
     var ruta = "";
     if (verificarCamposEditar(codigoEditar.value)) {
         const response = await fetch(`${UrlEditarExperiencia}?codigo=${encodeURIComponent(codigoEditar.value)}&nombre=${encodeURIComponent(nombreEditar.value)}&perfilDocente=${encodeURIComponent(perfilDocenteEditar.value)}&codigoOriginal=${encodeURIComponent(codigoOriginal)}`);
@@ -208,25 +210,29 @@ function verificarCamposEditar(codigo) {
     if (!codigoEditar.value) {
         bandera = false;
         errorCodigoEditar.textContent = "El código es obligatorio.";
+        errorCodigoEditar.style.display = "block";
     }
-    if (!nombreAgregar.value) {
+    if (!nombreEditar.value) {
         bandera = false;
         errorNombreEditar.textContent = "El nombre es obligatorio.";
+        errorNombreEditar.style.display = "block";
     }
-    if (!perfilDocenteAgregar.value) {
+    if (!perfilDocenteEditar.value) {
         bandera = false;
         errorPerfilDocenteEditar.textContent = "El perfil docente es obligatorio.";
+        errorPerfilDocenteEditar
     }
-    if (document.getElementById(codigo) != null) {
+    const elemento = document.getElementById(codigo)
+    if (elemento != null && elemento.id != codigoOriginal) {
         bandera = false;
         errorCodigoEditar.textContent = "Ya hay una Experiencia con ese código en el Plan.";
+        errorCodigoEditar.style.display = "block";
     }
     if (!verificarFormatoCodigo(codigo)) {
         bandera = false;
         errorCodigoEditar.textContent = "El formato del código es incorrecto. Debe ser 4 letras mayúsculas seguidas de un espacio y 5 dígitos (Ejemplo: ABCD 12345).";
         errorCodigoEditar.style.display = "block";
     }
-
     return bandera;
 }
 
