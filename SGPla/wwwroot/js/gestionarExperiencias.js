@@ -12,7 +12,16 @@ var codigoOriginal = "";
 var codigoEliminar = "";
 var idExperienciaEducativa = 0;
 
+const errorCodigoAgregar = document.getElementById("CodigoAgregar-Error");
+const errorNombreAgregar = document.getElementById("NombreAgregar-Error");
+const errorPerfilDocenteAgregar = document.getElementById("PerfilDocenteAgregar-Error");
+
+const errorCodigoEditar = document.getElementById("CodigoEditar-Error");
+const errorNombreEditar = document.getElementById("NombreEditar-Error");
+const errorPerfilDocenteEditar = document.getElementById("PerfilDocenteEditar-Error");
+
 function abrirModalAgregarExperiencia() {
+    limpiarErroresAgregar();
     abrirModal("modalAgregarExperiencia");
 
     codigoAgregar.value = "";
@@ -37,6 +46,7 @@ function abrirModalEliminarExperiencia(codigo) {
 }
 
 async function agregarExperiencia() {
+    limpiarErroresAgregar();
     if (verificarCamposAgregar(codigoAgregar.value)) {
         const response = await fetch(`${UrlAgregarExperiencia}?codigo=${encodeURIComponent(codigoAgregar.value)}&nombre=${encodeURIComponent(nombreAgregar.value)}&perfilDocente=${encodeURIComponent(perfilDocenteAgregar.value)}`);
         const data = await response.json();
@@ -152,29 +162,93 @@ function generarFila(codigo, nombre, perfilDocente) {
 function verificarCamposAgregar(codigo) {
     var bandera = true;
 
-    if (!codigoAgregar.value)
+    if (!codigoAgregar.value) {
         bandera = false;
-    if (!nombreAgregar.value)
+        errorCodigoAgregar.textContent = "El código es obligatorio.";
+        errorCodigoAgregar.style.display = "block";
+    }
+    if (!nombreAgregar.value) {
         bandera = false;
-    if (!perfilDocenteAgregar.value)
+        errorNombreAgregar.textContent = "El nombre es obligatorio.";
+        errorNombreAgregar.style.display = "block";
+    }
+    if (!perfilDocenteAgregar.value) {
         bandera = false;
-    if (document.getElementById(codigo) != null)
+        errorPerfilDocenteAgregar.textContent = "El perfil docente es obligatorio.";
+        errorPerfilDocenteAgregar.style.display = "block";
+    }
+    if (document.getElementById(codigo) != null) {
         bandera = false;
+        errorCodigoAgregar.textContent = "Ya hay una Experiencia con ese código en el Plan.";
+        errorCodigoAgregar.style.display = "block";
+    }
+    if (codigoAgregar.value && !verificarFormatoCodigo(codigo)) {
+        bandera = false;
+        errorCodigoAgregar.textContent = "El formato del código es incorrecto. Debe ser 4 letras mayúsculas seguidas de un espacio y 5 dígitos (Ejemplo: ABCD 12345).";
+        errorCodigoAgregar.style.display = "block";
+    }
 
     return bandera;
+}
+
+function limpiarErroresAgregar() {
+    errorCodigoAgregar.textContent = "";
+    errorCodigoAgregar.style.display = "none";
+
+    errorNombreAgregar.textContent = "";
+    errorNombreAgregar.style.display = "none";
+
+    errorPerfilDocenteAgregar.textContent = "";
+    errorPerfilDocenteAgregar.style.display = "none";
 }
 
 function verificarCamposEditar(codigo) {
     var bandera = true;
 
-    if (!codigoEditar.value)
+    if (!codigoEditar.value) {
         bandera = false;
-    if (!nombreEditar.value)
+        errorCodigoEditar.textContent = "El código es obligatorio.";
+    }
+    if (!nombreAgregar.value) {
         bandera = false;
-    if (!perfilDocenteEditar.value)
+        errorNombreEditar.textContent = "El nombre es obligatorio.";
+    }
+    if (!perfilDocenteAgregar.value) {
         bandera = false;
-    if (document.getElementById(codigo) != null)
+        errorPerfilDocenteEditar.textContent = "El perfil docente es obligatorio.";
+    }
+    if (document.getElementById(codigo) != null) {
         bandera = false;
+        errorCodigoEditar.textContent = "Ya hay una Experiencia con ese código en el Plan.";
+    }
+    if (!verificarFormatoCodigo(codigo)) {
+        bandera = false;
+        errorCodigoEditar.textContent = "El formato del código es incorrecto. Debe ser 4 letras mayúsculas seguidas de un espacio y 5 dígitos (Ejemplo: ABCD 12345).";
+        errorCodigoEditar.style.display = "block";
+    }
 
     return bandera;
+}
+
+function limpiarErroresEditar() {
+
+    errorCodigoEditar.textContent = "";
+    errorCodigoEditar.style.display = "none";
+
+    errorNombreEditar.textContent = "";
+    errorNombreEditar.style.display = "none";
+
+    errorPerfilDocenteEditar.textContent = "";
+    errorPerfilDocenteEditar.style.display = "none";
+}
+
+function verificarFormatoCodigo(codigo) {
+    const regex = /^[A-Z]{4} \d{5}$/;
+
+    if (regex.test(codigo)) {
+        return true;
+    }
+    else {
+        return false;
+    }
 }
