@@ -20,6 +20,7 @@
 				Valor = Model.Nombre,
 				Flexible = true,
 				Error = ViewData.ModelState["Nombre"]?.Errors.FirstOrDefault()?.ErrorMessage,
+				MaximoCaracteres = 100
 			})
 		</div>
 
@@ -34,6 +35,7 @@
 					Valor = Model.Campus,
 					Flexible = true,
 					Error = ViewData.ModelState["Campus"]?.Errors.FirstOrDefault()?.ErrorMessage,
+					MaximoCaracteres = 100
 				})
 			</div>
 
