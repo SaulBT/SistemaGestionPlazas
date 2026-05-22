@@ -20,12 +20,8 @@ function abrirModalAgregarExperiencia() {
     perfilDocenteAgregar.value = "";
 }
 
-function abrirModalEditarExperiencia(edicion, codigo, nombre, perfilDocente, idExperiencia) {
-    if (edicion) {
-        idExperienciaEducativa = idExperiencia;
-    } else {
-        codigoOriginal = codigo;
-    }
+function abrirModalEditarExperiencia(codigo, nombre, perfilDocente) {
+    codigoOriginal = codigo;
     
     codigoEditar.value = codigo;
     nombreEditar.value = nombre;
@@ -34,77 +30,92 @@ function abrirModalEditarExperiencia(edicion, codigo, nombre, perfilDocente, idE
     abrirModal("modalEditarExperiencia");
 }
 
-function abrirModalEliminarExperiencia(edicion, identificador) {
-    if (edicion) {
-        idExperienciaEducativa = identificador;
-    } else {
-        codigoEliminar = identificador;
-    }
+function abrirModalEliminarExperiencia(codigo) {
+    codigoEliminar = codigo;
 
     abrirModal("modalEliminarExperiencia");
 }
 
-async function agregarExperiencia(edicion) {
-    if (verificarCamposAgregar()) {
+async function agregarExperiencia() {
+    if (verificarCamposAgregar(codigoAgregar.value)) {
         const response = await fetch(`${UrlAgregarExperiencia}?codigo=${encodeURIComponent(codigoAgregar.value)}&nombre=${encodeURIComponent(nombreAgregar.value)}&perfilDocente=${encodeURIComponent(perfilDocenteAgregar.value)}`);
-        const experiencia = await response.json();
+        const data = await response.json();
 
-        const fila = generarFila(edicion, experiencia.codigo, experiencia.nombre, experiencia.perfilDocente, 0);
-        tbody.appendChild(fila);
-        refrescarTablaCliente("tablaExperiencias");
+        if (!data.error) {
+            const experiencia = data.experiencia;
 
-        cerrarModal("modalAgregarExperiencia")
+            const fila = generarFila(experiencia.codigo, experiencia.nombre, experiencia.perfilDocente, 0);
+            tbody.appendChild(fila);
+            refrescarTablaCliente("tablaExperiencias");
+
+            cerrarModal("modalAgregarExperiencia")
+        } else {
+            if (edicion) {
+                await cancelarAccion();
+            } else {
+                await regresarPaso1();
+            }
+        }
     }
 }
 
 async function editarExperiencia(edicion) {
     var ruta = "";
-    if (verificarCamposEditar()) {
-        if (edicion) {
-            ruta = `${UrlEditarExperiencia}?codigo=${encodeURIComponent(codigoEditar.value)}&nombre=${encodeURIComponent(nombreEditar.value)}&perfilDocente=${encodeURIComponent(perfilDocenteEditar.value)}&idExperienciaEducativa=${encodeURIComponent(idExperienciaEducativa)}`
+    if (verificarCamposEditar(codigoEditar.value)) {
+        const response = await fetch(`${UrlEditarExperiencia}?codigo=${encodeURIComponent(codigoEditar.value)}&nombre=${encodeURIComponent(nombreEditar.value)}&perfilDocente=${encodeURIComponent(perfilDocenteEditar.value)}&codigoOriginal=${encodeURIComponent(codigoOriginal)}`);
+        const data = await response.json();
+
+        if (!data.error) {
+            const experiencias = data.experiencias;
+
+            tbody.innerHTML = "";
+            experiencias.forEach(ee => {
+                const fila = generarFila(ee.codigo, ee.nombre, ee.perfilDocente);
+                tbody.appendChild(fila);
+            });
+            refrescarTablaCliente("tablaExperiencias");
+
+            cerrarModal("modalEditarExperiencia")
         } else {
-            ruta = `${UrlEditarExperiencia}?codigo=${encodeURIComponent(codigoEditar.value)}&nombre=${encodeURIComponent(nombreEditar.value)}&perfilDocente=${encodeURIComponent(perfilDocenteEditar.value)}&codigoOriginal=${encodeURIComponent(codigoOriginal)}`
+            if (edicion) {
+                await cancelarAccion();
+            } else {
+                await regresarPaso1();
+            }
         }
-        const response = await fetch(ruta);
-        const experiencias = await response.json();
-
-        tbody.innerHTML = "";
-        experiencias.forEach(ee => {
-            const fila = generarFila(edicion, ee.codigo, ee.nombre, ee.perfilDocente, ee.idExperienciaEducativa);
-            tbody.appendChild(fila);
-        });
-        refrescarTablaCliente("tablaExperiencias");
-
-        cerrarModal("modalEditarExperiencia")
     }
 }
 
 async function eliminarExperiencia(edicion) {
-    var ruta = "";
-    if (edicion) {
-        ruta = `${UrlEliminarExperiencia}?idExperienciaEducativa=${encodeURIComponent(idExperienciaEducativa)}`
+    const response = await fetch(`${UrlEliminarExperiencia}?codigo=${encodeURIComponent(codigoEliminar)}`);
+    const data = await response.json();
+
+    if (!data.error) {
+        const experiencias = data.experiencias;
+
+        tbody.innerHTML = "";
+        experiencias.forEach(ee => {
+            const fila = generarFila(ee.codigo, ee.nombre, ee.perfilDocente);
+            tbody.appendChild(fila);
+        });
+        refrescarTablaCliente("tablaExperiencias");
+
+        cerrarModal("modalEliminarExperiencia")
     } else {
-        ruta = `${UrlEliminarExperiencia}?codigo=${encodeURIComponent(codigoEliminar)}`
+        if (edicion) {
+            await cancelarAccion();
+        } else {
+            await regresarPaso1();
+        }
     }
-    const response = await fetch(ruta);
-    const experiencias = await response.json();
 
-    tbody.innerHTML = "";
-    experiencias.forEach(ee => {
-        const fila = generarFila(edicion, ee.codigo, ee.nombre, ee.perfilDocente, ee.idExperienciaEducativa);
-        tbody.appendChild(fila);
-    });
-    refrescarTablaCliente("tablaExperiencias");
-
-    cerrarModal("modalEliminarExperiencia")
+    
 }
 
-function generarFila(edicion, codigo, nombre, perfilDocente, idExperiencia) {
+function generarFila(codigo, nombre, perfilDocente) {
     const fila = document.createElement("tr");
-    var contenido = "";
-
-    if (edicion) {
-        contenido = `
+    fila.id = codigo;
+    fila.innerHTML = `
             <td>${codigo}</td>
             <td>${nombre}</td>
             <td>
@@ -122,59 +133,24 @@ function generarFila(edicion, codigo, nombre, perfilDocente, idExperiencia) {
                     <button
                         type="button"
                         class="boton-primario boton-icono"
-                        onclick="abrirModalEditarExperiencia(true, '${codigo}', '${nombre}', '${perfilDocente}', ${idExperiencia})">
+                        onclick="abrirModalEditarExperiencia('${codigo}', '${nombre}', '${perfilDocente}')">
 
                         <i class="bi bi-pencil-fill"></i>
                     </button>
                     <button
                         type="button"
                         class="boton-primario boton-icono"
-                        onclick="abrirModalEliminarExperiencia(true, ${idExperiencia})">
+                        onclick="abrirModalEliminarExperiencia('${codigo}')">
                         <i class="bi bi-trash-fill"></i>
                     </button>
                 </div>
             </td>
         `;
-    } else {
-        contenido = `
-            <td>${codigo}</td>
-            <td>${nombre}</td>
-            <td>
-                <div class="table-actions">
-                    <button
-                        type="button"
-                        class="boton-primario boton-icono"
-                        onclick="abrirModalPerfilDocente('${perfilDocente}')">
-                        <i class="bi bi-info-circle-fill"></i>
-                    </button>
-                </div>
-            </td>
-            <td>
-                <div class="table-actions">
-                    <button
-                        type="button"
-                        class="boton-primario boton-icono"
-                        onclick="abrirModalEditarExperiencia(false, '${codigo}', '${nombre}', '${perfilDocente}', 0)">
-
-                        <i class="bi bi-pencil-fill"></i>
-                    </button>
-                    <button
-                        type="button"
-                        class="boton-primario boton-icono"
-                        onclick="abrirModalEliminarExperiencia(false, '${codigo}')">
-                        <i class="bi bi-trash-fill"></i>
-                    </button>
-                </div>
-            </td>
-        `;
-    }
-
-    fila.innerHTML = contenido
     return fila;
 }
 
-function verificarCamposAgregar() {
-    const bandera = true;
+function verificarCamposAgregar(codigo) {
+    var bandera = true;
 
     if (!codigoAgregar.value)
         bandera = false;
@@ -182,18 +158,22 @@ function verificarCamposAgregar() {
         bandera = false;
     if (!perfilDocenteAgregar.value)
         bandera = false;
+    if (document.getElementById(codigo) != null)
+        bandera = false;
 
     return bandera;
 }
 
-function verificarCamposEditar() {
-    const bandera = true;
+function verificarCamposEditar(codigo) {
+    var bandera = true;
 
     if (!codigoEditar.value)
         bandera = false;
     if (!nombreEditar.value)
         bandera = false;
     if (!perfilDocenteEditar.value)
+        bandera = false;
+    if (document.getElementById(codigo) != null)
         bandera = false;
 
     return bandera;

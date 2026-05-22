@@ -86,7 +86,7 @@
                 @await Component.InvokeAsync("Boton", new
                 {
                     Accion = "Cancelar",
-                    OnClick = "cancelarEdicion()"
+                OnClick = "cancelarAccion()"
                 })
             <!-- BOTÓN GUARDAR -->
             @await Component.InvokeAsync("Boton", new
@@ -185,21 +185,27 @@
         formData.append("archivo", archivoInput.files[0]);
 
         const response = await fetch(UrlCargarArchivo, { method: "POST", body: formData });
-        const experiencias = await response.json();
+        const data = await response.json();
 
-        tbody.innerHTML = "";
-        experiencias.forEach(ee => {
-            const fila = generarFila(true, ee.codigo, ee.nombre, ee.perfilDocente, ee.idExperienciaEducativa);
-            tbody.appendChild(fila);
-        });
+        if (!data.error) {
+            const experiencias = data.experiencias;
 
-        nuevoArchivo.value = true;
-        refrescarTablaCliente("tablaExperiencias");
-        cerrarModal("modalArchivo")
+            console.log(experiencias);
+            tbody.innerHTML = "";
+            experiencias.forEach(ee => {
+                const fila = generarFila(ee.codigo, ee.nombre, ee.perfilDocente);
+                tbody.appendChild(fila);
+            });
 
+            nuevoArchivo.value = true;
+            refrescarTablaCliente("tablaExperiencias");
+            cerrarModal("modalArchivo")
+        } else {
+            await cancelarAccion();
+        }
     }
 
-    async function cancelarEdicion() {
+    async function cancelarAccion() {
         const response = await fetch('@Url.Action("CancelarAccion", "PlanesEstudios")');
         const data = await response.json();
         window.location.href = data.url;

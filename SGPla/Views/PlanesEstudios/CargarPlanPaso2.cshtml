@@ -102,7 +102,7 @@
             @await Component.InvokeAsync("Boton", new
             {
                 Accion = "Cancelar",
-                OnClick = "cancelar()"
+                OnClick = "cancelarAccion()"
             })
             @await Component.InvokeAsync("Boton", new
             {
@@ -201,7 +201,7 @@
         window.location.href = data.url;
     }
 
-    async function cancelar(){
+    async function cancelarAccion(){
         const response = await fetch('@Url.Action("CancelarAccion","PlanesEstudios")');
         const data = await response.json();
         window.location.href = data.url;
