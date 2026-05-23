@@ -28,7 +28,7 @@ namespace SGPla.Controllers
         {
             paginaActual = pagina;
             // combos
-            var regionesCombo = Constantes.Regiones
+            var regionesCombo = Constantes.REGIONES
                 .Select(r => new OptionModel
                 {
                     Value = r,
@@ -160,7 +160,7 @@ namespace SGPla.Controllers
 
         private async Task<CrearEntidadAcademicaViewModel> ObtenerModelo(string? region, int? idAreaAcademica)
         {
-            var regionesCombo = Constantes.Regiones
+            var regionesCombo = Constantes.REGIONES
                 .Select(r => new OptionModel
                 {
                     Value = r,
@@ -190,7 +190,7 @@ namespace SGPla.Controllers
 
         private async Task CargarCombos(CrearEntidadAcademicaViewModel model)
         {
-            model.Regiones = Constantes.Regiones
+            model.Regiones = Constantes.REGIONES
                 .Select(r => new OptionModel
                 {
                     Value = r,

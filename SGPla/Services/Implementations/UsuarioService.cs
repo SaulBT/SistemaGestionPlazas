@@ -30,8 +30,8 @@ namespace SGPla.Services.Implementations
 
             return dto.Rol switch
             {
-                Constantes.CoordinadorEa => await CrearCoordinadorEaAsync(dto),
-                Constantes.CoordinadorDgaa => await CrearCoordinadorDgaaAsync(dto),
+                Constantes.COORDINADOR_EA => await CrearCoordinadorEaAsync(dto),
+                Constantes.COORDINADOR_DGAA => await CrearCoordinadorDgaaAsync(dto),
                 _ => throw new ArgumentException("El rol especificado no es válido.")
             };
         }
@@ -55,12 +55,12 @@ namespace SGPla.Services.Implementations
             if (filtro == null)
                 throw new ArgumentNullException(nameof(filtro));
 
-            if (filtro.Rol == Constantes.CoordinadorEa)
+            if (filtro.Rol == Constantes.COORDINADOR_EA)
             {
                 return await ObtenerCoordinadoresEaPorFiltroAsync(filtro);
             }
 
-            if (filtro.Rol == Constantes.CoordinadorDgaa)
+            if (filtro.Rol == Constantes.COORDINADOR_DGAA)
             {
                 return await ObtenerCoordinadoresDgaaPorFiltroAsync(filtro);
             }
@@ -72,7 +72,7 @@ namespace SGPla.Services.Implementations
         {
             await _usuarioValidator.ValidarReferenciaAsync(dto);
 
-            if (dto.Rol == Constantes.CoordinadorEa)
+            if (dto.Rol == Constantes.COORDINADOR_EA)
             {
                 var coordinadorEa = await _coordinadorEaRepository.ObtenerPorIdAsync(dto.IdUsuario);
 
@@ -82,7 +82,7 @@ namespace SGPla.Services.Implementations
                 return MapearCoordinadorEaADetallesDTO(coordinadorEa);
             }
 
-            if (dto.Rol == Constantes.CoordinadorDgaa)
+            if (dto.Rol == Constantes.COORDINADOR_DGAA)
             {
                 var coordinadorDgaa = await _coordinadorDgaaRepository.ObtenerPorIdAsync(dto.IdUsuario);
 
@@ -103,13 +103,13 @@ namespace SGPla.Services.Implementations
             if (dto == null)
                 throw new ArgumentNullException(nameof(dto));
 
-            if (dto.Rol == Constantes.CoordinadorEa)
+            if (dto.Rol == Constantes.COORDINADOR_EA)
             {
                 await EditarCoordinadorEaAsync(dto);
                 return;
             }
 
-            if (dto.Rol == Constantes.CoordinadorDgaa)
+            if (dto.Rol == Constantes.COORDINADOR_DGAA)
             {
                 await EditarCoordinadorDgaaAsync(dto);
                 return;
@@ -125,13 +125,13 @@ namespace SGPla.Services.Implementations
             if (dto == null)
                 throw new ArgumentNullException(nameof(dto));
 
-            if (dto.Rol == Constantes.CoordinadorEa)
+            if (dto.Rol == Constantes.COORDINADOR_EA)
             {
                 await EliminarCoordinadorEaAsync(dto.IdUsuario);
                 return;
             }
 
-            if (dto.Rol == Constantes.CoordinadorDgaa)
+            if (dto.Rol == Constantes.COORDINADOR_DGAA)
             {
                 await EliminarCoordinadorDgaaAsync(dto.IdUsuario);
                 return;
@@ -327,7 +327,7 @@ namespace SGPla.Services.Implementations
                 Nombre = coordinadorEa.Nombre,
                 Correo = coordinadorEa.Correo,
                 Cargo = coordinadorEa.Cargo,
-                Rol = Constantes.CoordinadorEa,
+                Rol = Constantes.COORDINADOR_EA,
                 NombreEntidadAcademica = coordinadorEa.IdEntidadAcademicaNavigation?.Nombre,
                 NombreAreaAcademica = coordinadorEa.IdEntidadAcademicaNavigation?.IdAreaAcademicaNavigation?.Nombre,
                 Region = coordinadorEa.IdEntidadAcademicaNavigation?.Region
@@ -342,7 +342,7 @@ namespace SGPla.Services.Implementations
                 Nombre = coordinadorDgaa.Nombre,
                 Correo = coordinadorDgaa.Correo,
                 Cargo = coordinadorDgaa.Cargo,
-                Rol = Constantes.CoordinadorDgaa,
+                Rol = Constantes.COORDINADOR_DGAA,
                 NombreEntidadAcademica = null,
                 NombreAreaAcademica = coordinadorDgaa.IdAreaAcademicaNavigation?.Nombre,
                 Region = null
@@ -357,7 +357,7 @@ namespace SGPla.Services.Implementations
                 Nombre = coordinadorEa.Nombre,
                 Correo = coordinadorEa.Correo,
                 Cargo = coordinadorEa.Cargo,
-                Rol = Constantes.CoordinadorEa,
+                Rol = Constantes.COORDINADOR_EA,
                 IdAreaAcademica = coordinadorEa.IdEntidadAcademicaNavigation?.IdAreaAcademica,
                 NombreAreaAcademica = coordinadorEa.IdEntidadAcademicaNavigation?.IdAreaAcademicaNavigation?.Nombre,
                 IdEntidadAcademica = coordinadorEa.IdEntidadAcademica,
@@ -374,7 +374,7 @@ namespace SGPla.Services.Implementations
                 Nombre = coordinadorDgaa.Nombre,
                 Correo = coordinadorDgaa.Correo,
                 Cargo = coordinadorDgaa.Cargo,
-                Rol = Constantes.CoordinadorDgaa,
+                Rol = Constantes.COORDINADOR_DGAA,
                 IdAreaAcademica = coordinadorDgaa.IdAreaAcademica,
                 NombreAreaAcademica = coordinadorDgaa.IdAreaAcademicaNavigation?.Nombre,
                 IdEntidadAcademica = null,

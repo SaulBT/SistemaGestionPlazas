@@ -91,7 +91,7 @@ namespace SGPla.Validations.Implementations
 
         public async Task ValidarIdAsync(int id)
         {
-            validarEstadoId(id, Constantes.IdEntidadAcademica);
+            validarEstadoId(id, Constantes.ID_ENTIDAD_ACADEMICA);
 
             bool existe = await _entidadAcademicaRepository.ExistePorIdAsync(id);
             if (!existe)
@@ -101,7 +101,7 @@ namespace SGPla.Validations.Implementations
         //IdAreaAcademica
         private async Task validarIdAreaAcademica(int id)
         {
-            validarEstadoId(id, Constantes.IdAreaAcademica);
+            validarEstadoId(id, Constantes.ID_AREA_ACADEMICA);
 
             bool existe = await _areaAcademicaRepository.ExistePorIdAsync(id);
             if (!existe)
@@ -135,23 +135,23 @@ namespace SGPla.Validations.Implementations
             bool error = false;
             switch (region)
             {
-                case Constantes.RegionXalapa:
+                case Constantes.REGION_XALAPA:
                     if (!clave.StartsWith("1"))
                         error = true;
                     break;
-                case Constantes.RegionVeracruz:
+                case Constantes.REGION_VERACRUZ:
                     if (!clave.StartsWith("2"))
                         error = true;
                     break;
-                case Constantes.RegionOrizabaCordoba:
+                case Constantes.REGION_ORIZABA:
                     if (!clave.StartsWith("3"))
                         error = true;
                     break;
-                case Constantes.RegionPozaRicaTuxpan:
+                case Constantes.REGION_POZARICA_TUXPAN:
                     if (!clave.StartsWith("4"))
                         error = true;
                     break;
-                case Constantes.RegionCotazacoalcosMinatitlan:
+                case Constantes.REGION_COATZACOALCOS_MINATITLAN:
                     if (!clave.StartsWith("5"))
                         error = true;
                     break;
