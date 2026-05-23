@@ -25,8 +25,37 @@ namespace SGPla.Controllers
         private readonly IArchivoService _archivoService;
         private readonly ILogger<PlanesEstudiosController> _logger;
         private readonly IWebHostEnvironment _environment;
-        private const string NOMBRE_LOGGER = "FRONT-PLANES:";
         private int paginaActual = 1;
+
+        private const string NOMBRE_LOGGER = "FRONT-PLANES-";
+
+        private const string LOG_ERROR_CATALOGOS = "Error al cargar los catálogos.";
+        private const string LOG_ERROR_LISTA_EXPERIENCIAS = "No se pudo obtener la lista de Experiencias Educativas.";
+        private const string LOG_ERROR_LISTA_EXPERIENCIAS_NUEVAS = "No se pudo obtener la lista de Experiencias Educativas Nuevas.";
+        private const string LOG_ERROR_LISTA_EXPERIENCIAS_EDITADAS = "No se pudo obtener la lista de Experiencias Educativas Editadas.";
+        private const string LOG_ERROR_LISTA_EXPERIENCIAS_ELIMINADAS = "No se pudo obtener la lista de Experiencias Educativas Eliminadas.";
+        private const string LOG_ERROR_RUTA = "No se pudo obtener la ruta del archivo.";
+        private const string LOG_ERROR_EXPERIENCIA = "No se pudo obtener la Experiencia Educativa.";
+        private const string LOG_ERROR_CARGAR_PLAN = "No se pudo cargar el Plan de Estudios.";
+
+        private const string TOAST_EXPERIENCIAS_VACIAS = "La lista de Experiencias Educativas no puede estar vacía.";
+
+        private const string SESSION_EXPERIENCIAS = "Experiencias";
+        private const string SESSION_RUTA = "Ruta";
+        private const string SESSION_NOMBRE_ARCHIVO = "NombreArchivo";
+        private const string SESSION_EXPERIENCIAS_NUEVAS = "ExperienciasNuevas";
+        private const string SESSION_EXPERIENCIAS_EDITADAS = "ExperienciasEditadas";
+        private const string SESSION_EXPERIENCIAS_ELIMINADAS = "ExperienciasEliminadas";
+
+        private static List<string> HEADERS_TABLA_INDEX = ["Programa Educativo", "Modalidad", "Plan", "Área", "Acciones"];
+        private static List<string> HEADERS_TABLA_VER = ["Codigo", "Experiencia Educativa", "Perfil Docente"];
+        private static List<string> HEADERS_TABLA_EXPERIENCIAS = ["Codigo", "Experiencia Educativa", "Perfil Docente", "Acciones"];
+
+        private static string INDEX = "Index:";
+        private static string VER = "VerPlanEstudios";
+        private static string PASO1 = "CargarPlanPaso1";
+        private static string PASO2 = "CargarPlanPaso2";
+        private static string EDITAR = "EditarPlan";
 
         public PlanesEstudiosController(
             IPlanEstudiosService planEstudiosService,
@@ -58,7 +87,7 @@ namespace SGPla.Controllers
 
             var modelo = new IndexViewModel
             {
-                Table = generarTablaConMensaje(["Programa Educativo", "Modalidad", "Plan", "Área", "Acciones"], "Ha ocurrido un error, inténtelo de nuevo más tarde."),
+                Table = generarTablaConMensaje(HEADERS_TABLA_INDEX, "Ha ocurrido un error, inténtelo de nuevo más tarde."),
                 Regiones = new List<OptionModel>(),
                 Areas = new List<OptionModel>(),
                 Entidades = new List<OptionModel>(),
@@ -74,7 +103,7 @@ namespace SGPla.Controllers
 
             try
             {
-
+                throw new Exception("Error de prueba para verificar el manejo de excepciones y el logging en el Index de Planes de Estudios.");
 
                 if (!region.IsNullOrEmpty())
                     areasCombo = await generarCatalogoAreasAsync(idAreaAcademica);
@@ -103,14 +132,14 @@ namespace SGPla.Controllers
             }
             catch (ValidacionExcepction vx)
             {
-                _logger.LogError(vx, "{NOMBRE_LOGGER} Error al cargar los catálogos.", NOMBRE_LOGGER);
-                TempData["Error"] = "Ha ocurrido un error al cargar los catálogos.";
+                _logger.LogError(vx, Constantes.LOGS_ESTRUCTURA, NOMBRE_LOGGER, INDEX, LOG_ERROR_CATALOGOS);
+                TempData["Error"] = Constantes.TOAST_ERROR_GENERAL;
                 return View(modelo);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{NOMBRE_LOGGER} [Index] Error inesperado.", NOMBRE_LOGGER);
-                TempData["Error"] = "Ha ocurrido un error, inténtalo de nuevo más tarde.";
+                _logger.LogError(ex, Constantes.LOGS_ESTRUCTURA, NOMBRE_LOGGER, INDEX, Constantes.LOG_ERROR_INESPERADO);
+                TempData["Error"] = Constantes.TOAST_ERROR_GENERAL;
                 return View(modelo);
             }
         }
@@ -1411,7 +1440,7 @@ namespace SGPla.Controllers
 
         private List<OptionModel> generarCatalogoRegiones()
         {
-            return Constantes.Regiones
+            return Constantes.REGIONES
                 .Select(r => new OptionModel
                 {
                     Value = r,
@@ -1488,7 +1517,7 @@ namespace SGPla.Controllers
 
         private List<OptionModel> generarCatalogoModalidades()
         {
-            return Constantes.Modalidades
+            return Constantes.MODALIDADES
                 .Select(r => new OptionModel
                 {
                     Value = r,

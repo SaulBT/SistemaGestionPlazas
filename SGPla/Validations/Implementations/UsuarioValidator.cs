@@ -116,8 +116,8 @@ namespace SGPla.Validations.Implementations
             if (string.IsNullOrWhiteSpace(rol))
                 throw new ArgumentException("El rol es obligatorio.");
 
-            if (rol != Constantes.CoordinadorEa &&
-                rol != Constantes.CoordinadorDgaa)
+            if (rol != Constantes.COORDINADOR_EA &&
+                rol != Constantes.COORDINADOR_DGAA)
             {
                 throw new ArgumentException("El rol no es válido.");
             }
@@ -125,7 +125,7 @@ namespace SGPla.Validations.Implementations
 
         private async Task ValidarExistenciaUsuarioAsync(int idUsuario, string rol, string mensaje)
         {
-            if (rol == Constantes.CoordinadorEa)
+            if (rol == Constantes.COORDINADOR_EA)
             {
                 var coordinadorEa = await _coordinadorEaRepository.ObtenerPorIdAsync(idUsuario);
                 if (coordinadorEa == null)
@@ -133,7 +133,7 @@ namespace SGPla.Validations.Implementations
                 return;
             }
 
-            if (rol == Constantes.CoordinadorDgaa)
+            if (rol == Constantes.COORDINADOR_DGAA)
             {
                 var coordinadorDgaa = await _coordinadorDgaaRepository.ObtenerPorIdAsync(idUsuario);
                 if (coordinadorDgaa == null)
@@ -143,13 +143,13 @@ namespace SGPla.Validations.Implementations
 
         private async Task ValidarRelacionRolYDependenciaCreacionAsync(CrearUsuarioDTO crearUsuarioDTO)
         {
-            if (crearUsuarioDTO.Rol == Constantes.CoordinadorEa)
+            if (crearUsuarioDTO.Rol == Constantes.COORDINADOR_EA)
             {
                 await ValidarCoordinadorEaCreacionAsync(crearUsuarioDTO);
                 return;
             }
 
-            if (crearUsuarioDTO.Rol == Constantes.CoordinadorDgaa)
+            if (crearUsuarioDTO.Rol == Constantes.COORDINADOR_DGAA)
             {
                 await ValidarCoordinadorDgaaCreacionAsync(crearUsuarioDTO);
             }
@@ -157,13 +157,13 @@ namespace SGPla.Validations.Implementations
 
         private async Task ValidarRelacionRolYDependenciaEdicionAsync(EditarUsuarioDTO editarUsuarioDTO)
         {
-            if (editarUsuarioDTO.Rol == Constantes.CoordinadorEa)
+            if (editarUsuarioDTO.Rol == Constantes.COORDINADOR_EA)
             {
                 await ValidarCoordinadorEaEdicionAsync(editarUsuarioDTO);
                 return;
             }
 
-            if (editarUsuarioDTO.Rol == Constantes.CoordinadorDgaa)
+            if (editarUsuarioDTO.Rol == Constantes.COORDINADOR_DGAA)
             {
                 await ValidarCoordinadorDgaaEdicionAsync(editarUsuarioDTO);
             }

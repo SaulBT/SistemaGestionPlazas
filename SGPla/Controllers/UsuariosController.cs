@@ -42,7 +42,7 @@ namespace SGPla.Controllers
         {
             paginaActual = pagina;
             // combos
-            var regionesCombo = Constantes.Regiones
+            var regionesCombo = Constantes.REGIONES
                 .Select(r => new OptionModel
                 {
                     Value = r,
@@ -231,7 +231,7 @@ namespace SGPla.Controllers
 
         private async Task<CrearUsuarioViewModel> ObtenerModelo(string? region, int? idAreaAcademica, int? idEntidadAcademica, string? rol)
         {
-            var rolesCombo = Constantes.Roles
+            var rolesCombo = Constantes.ROLES
                 .Select(r => new OptionModel
                 {
                     Value = r,
@@ -240,7 +240,7 @@ namespace SGPla.Controllers
                 })
                 .ToList();
 
-            var regionesCombo = Constantes.Regiones
+            var regionesCombo = Constantes.REGIONES
                 .Select(r => new OptionModel
                 {
                     Value = r,
@@ -347,7 +347,7 @@ namespace SGPla.Controllers
                 IdEntidadAcademica = model.IdEntidadAcademica
             };
 
-            if (model.Rol.ToLower() == Constantes.CoordinadorEa.ToLower())
+            if (model.Rol.ToLower() == Constantes.COORDINADOR_EA.ToLower())
                 dto.IdAreaAcademica = null;
 
 
@@ -377,7 +377,7 @@ namespace SGPla.Controllers
         private async Task CargarCombos(CrearUsuarioViewModel model)
         {
 
-            model.Roles = Constantes.Roles
+            model.Roles = Constantes.ROLES
                 .Select(r => new OptionModel
                 {
                     Value = r,
@@ -386,7 +386,7 @@ namespace SGPla.Controllers
                 }).ToList();
 
 
-            model.Regiones = Constantes.Regiones
+            model.Regiones = Constantes.REGIONES
                 .Select(r => new OptionModel
                 {
                     Value = r,
@@ -486,7 +486,7 @@ namespace SGPla.Controllers
                 IdEntidadAcademica = model.IdEntidadAcademica
             };
 
-            if (model.Rol.ToLower() == Constantes.CoordinadorEa.ToLower())
+            if (model.Rol.ToLower() == Constantes.COORDINADOR_EA.ToLower())
                 dto.IdAreaAcademica = null;
 
             try

@@ -30,7 +30,7 @@ namespace SGPla.Controllers
         public async Task<IActionResult> Index(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int pagina = 1, int cantidad = 10)
         {
             paginaActual = pagina;
-            var regionesCombo = Constantes.Regiones
+            var regionesCombo = Constantes.REGIONES
                 .Select(r => new OptionModel { Value = r, Text = r, Selected = r == region })
                 .ToList();
 
@@ -202,7 +202,7 @@ namespace SGPla.Controllers
 
         private async Task<CrearProgramaEducativoViewModel> ObtenerModelo(string? region, int? idAreaAcademica, int? idEntidadAcademica)
         {
-            var regionesCombo = Constantes.Regiones
+            var regionesCombo = Constantes.REGIONES
                 .Select(r => new OptionModel { Value = r, Text = r, Selected = r == region })
                 .ToList();
 
@@ -246,7 +246,7 @@ namespace SGPla.Controllers
 
         private async Task CargarCombos(CrearProgramaEducativoViewModel model)
         {
-            model.Regiones = Constantes.Regiones
+            model.Regiones = Constantes.REGIONES
                 .Select(r => new OptionModel { Value = r, Text = r, Selected = r == model.Region })
                 .ToList();
 

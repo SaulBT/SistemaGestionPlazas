@@ -162,7 +162,7 @@ namespace SGPla.Validations.Implementations
                 throw new ValidacionExcepction("La Modalidad es obligatoria.", "400");
             if (modalidad.Trim().Length > 100)
                 throw new ValidacionExcepction("La Modalidad no puede exceder 100 caracteres.", "400");
-            if (!Constantes.Modalidades.Contains(modalidad.Trim()))
+            if (!Constantes.MODALIDADES.Contains(modalidad.Trim()))
                 throw new ValidacionExcepction("La Modalidad es inválida.", "400");
         }
 
