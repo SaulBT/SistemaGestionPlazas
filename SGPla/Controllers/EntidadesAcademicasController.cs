@@ -1,10 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SGPla.Commons;
+using SGPla.Commons.Factories;
 using SGPla.Models.Components;
 using SGPla.Models.DTOs.EntidadAcademica;
 using SGPla.Models.DTOs.Usuarios;
 using SGPla.Models.ViewModels.EntidadesAcademicas;
 using SGPla.Services.Interfaces;
+using System.Numerics;
 
 namespace SGPla.Controllers
 {
@@ -14,6 +16,8 @@ namespace SGPla.Controllers
         private readonly IAreaAcademicaService _areaAcademicaService;
         private readonly ILogger<EntidadesAcademicasController> _logger;
         private int paginaActual = 1;
+
+        private static List<string> HEADERS_TABLA_INDEX = ["Nombre", "Domicilio", "Telefono", "Área Académica", "Región", "Acciones"];
 
         public EntidadesAcademicasController(IEntidadAcademicaService entidadAcademicaService, ILogger<EntidadesAcademicasController> logger, IAreaAcademicaService areaAcademicaService)
         {
@@ -81,14 +85,13 @@ namespace SGPla.Controllers
                     filtros.Pagina = paginaActual;
                     entidades = await _entidadAcademicaService.BuscarPorFiltroPaginadoAsync(filtros);
                 }
+                if (entidades.Items.Count == 0)
+                    return TablaFactory.GenerarTablaConMensaje(HEADERS_TABLA_INDEX, string.Format(Constantes.TABLA_VACIA, Constantes.ENTIDADES_ACADEMICAS));
+
 
                 return new TableModel
                 {
-                    Headers = new List<string>
-                    {
-                        "Nombre", "Domicilio", "Telefono",
-                        "Área Académica", "Región", "Acciones"
-                    },
+                    Headers = HEADERS_TABLA_INDEX,
                     Rows = entidades.Items.Select(e => new TableRowModel
                     {
                         Cells = new List<TableCellModel>

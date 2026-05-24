@@ -1,9 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using SGPla.Commons;
+using SGPla.Commons.Factories;
 using SGPla.Models.DTOs.AreaAcademica;
 using SGPla.Models.DTOs.Articulo;
 using SGPla.Services.Implementations;
 using SGPla.Services.Interfaces;
+using System.Numerics;
 
 namespace SGPla.Controllers
 {
@@ -12,6 +15,8 @@ namespace SGPla.Controllers
         private readonly IAreaAcademicaService _areaAcademicaService;
         private readonly ILogger<DireccionesAreaAcademicaController> _logger;
         private int paginaActual = 1;
+
+        private static List<string> HEADERS_TABLA_INDEX = [ "Nombre de la Dirección", "Domicillio", "Teléfono", "Acciones" ];
 
         public DireccionesAreaAcademicaController(IAreaAcademicaService areaAcademicaService, ILogger<DireccionesAreaAcademicaController> logger)
         {
@@ -43,10 +48,13 @@ namespace SGPla.Controllers
                     paginaActual = 1;
                     areas = await _areaAcademicaService.BuscarPorFiltroPaginadoAsync(busqueda, paginaActual, cantidad);
                 }
+                if (areas.Items.Count == 0)
+                    return TablaFactory.GenerarTablaConMensaje(HEADERS_TABLA_INDEX, string.Format(Constantes.TABLA_VACIA, Constantes.AREAS_ACADEMICAS));
+
 
                 return new TableModel
                 {
-                    Headers = new List<string> { "Nombre de la Dirección", "Domicillio", "Teléfono", "Acciones" },
+                    Headers = HEADERS_TABLA_INDEX,
                     Rows = areas.Items.Select(a => new TableRowModel
                     {
                         Cells = new List<TableCellModel>

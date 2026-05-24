@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using SGPla.Commons;
+using SGPla.Commons.Factories;
 using SGPla.Models;
 using SGPla.Models.Components;
 using SGPla.Models.DTOs.EntidadAcademica;
@@ -28,12 +29,12 @@ namespace SGPla.Controllers
         private int paginaActual = 1;
 
         private const string NOMBRE_LOGGER = "FRONT-PLANES-";
-        private static string INDEX = "Index:";
-        private static string VER = "VerPlanEstudios:";
-        private static string PASO1 = "CargarPlanPaso1:";
-        private static string PASO2 = "CargarPlanPaso2:";
-        private static string EDITAR = "EditarPlan:";
-        private static string EXPERIENCIA_NUEVA = "Experiencia Educativa agregada";
+        private const string INDEX = "Index:";
+        private const string VER = "VerPlanEstudios:";
+        private const string PASO1 = "CargarPlanPaso1:";
+        private const string PASO2 = "CargarPlanPaso2:";
+        private const string EDITAR = "EditarPlan:";
+        private const string EXPERIENCIA_NUEVA = "Experiencia Educativa agregada";
 
         private const string LOG_ERROR_CATALOGOS = "Error al cargar los catálogos.";
         private const string LOG_ERROR_LISTA_EXPERIENCIAS = "No se pudo obtener la lista de Experiencias Educativas.";
@@ -85,7 +86,7 @@ namespace SGPla.Controllers
 
             var modelo = new IndexViewModel
             {
-                Table = generarTablaConMensaje(HEADERS_TABLA_INDEX, string.Format(Constantes.ERROR_TABLA, Constantes.PLANES_ESTUDIOS)),
+                Table = TablaFactory.GenerarTablaConMensaje(HEADERS_TABLA_INDEX, string.Format(Constantes.ERROR_TABLA, Constantes.PLANES_ESTUDIOS)),
                 Regiones = new List<OptionModel>(),
                 Areas = new List<OptionModel>(),
                 Entidades = new List<OptionModel>(),
@@ -166,7 +167,7 @@ namespace SGPla.Controllers
                     planes = await _planEstudiosService.ObtenerPorFiltroAsync(filtros, cantidad, paginaActual);
                 }
                 if (planes.items.Count == 0)
-                    return generarTablaConMensaje(HEADERS_TABLA_INDEX, string.Format(Constantes.TABLA_VACIA, Constantes.PLANES_ESTUDIOS));
+                    return TablaFactory.GenerarTablaConMensaje(HEADERS_TABLA_INDEX, string.Format(Constantes.TABLA_VACIA, Constantes.PLANES_ESTUDIOS));
 
                 return new TableModel
                 {
@@ -215,7 +216,7 @@ namespace SGPla.Controllers
             {
                 this.LanzarError(_logger, ex, NOMBRE_LOGGER, INDEX, "No se pudo cargar la lista de Planes de Estudios");
 
-                return generarTablaConMensaje(HEADERS_TABLA_INDEX, string.Format(Constantes.ERROR_TABLA, Constantes.PLANES_ESTUDIOS));
+                return TablaFactory.GenerarTablaConMensaje(HEADERS_TABLA_INDEX, string.Format(Constantes.ERROR_TABLA, Constantes.PLANES_ESTUDIOS));
             }
         }
 
@@ -248,7 +249,7 @@ namespace SGPla.Controllers
 
             paginaActual = pagina;
             var modelo = new VerPlanEstudiosViewModel();
-            modelo.Table = generarTablaConMensaje(HEADERS_TABLA_VER, string.Format(Constantes.ERROR_TABLA, Constantes.EXPERIENCIAS_EDUCATIVAS));
+            modelo.Table = TablaFactory.GenerarTablaConMensaje(HEADERS_TABLA_VER, string.Format(Constantes.ERROR_TABLA, Constantes.EXPERIENCIAS_EDUCATIVAS));
 
             try
             {
@@ -287,7 +288,7 @@ namespace SGPla.Controllers
                 int skip = (pagina - 1) * cantidad;
                 var experienciasTabla = experiencias.Skip(skip).Take(cantidad).ToList();
                 if (experiencias.Count == 0)
-                    return generarTablaConMensaje(HEADERS_TABLA_VER, string.Format(Constantes.TABLA_VACIA, Constantes.EXPERIENCIAS_EDUCATIVAS));
+                    return TablaFactory.GenerarTablaConMensaje(HEADERS_TABLA_VER, string.Format(Constantes.TABLA_VACIA, Constantes.EXPERIENCIAS_EDUCATIVAS));
 
                 return new TableModel
                 {
@@ -324,7 +325,7 @@ namespace SGPla.Controllers
             {
                 this.LanzarError(_logger, ex, NOMBRE_LOGGER, VER, Constantes.LOG_ERROR_INESPERADO);
 
-                return generarTablaConMensaje(HEADERS_TABLA_VER, string.Format(Constantes.ERROR_TABLA, Constantes.EXPERIENCIAS_EDUCATIVAS));
+                return TablaFactory.GenerarTablaConMensaje(HEADERS_TABLA_VER, string.Format(Constantes.ERROR_TABLA, Constantes.EXPERIENCIAS_EDUCATIVAS));
             }
         }
 
@@ -1517,7 +1518,7 @@ namespace SGPla.Controllers
 
             if (experiencias.Count == 0)
             {
-                return generarTablaConMensaje(HEADERS_TABLA_EXPERIENCIAS, string.Format(Constantes.TABLA_VACIA, Constantes.EXPERIENCIAS_EDUCATIVAS));
+                return TablaFactory.GenerarTablaConMensaje(HEADERS_TABLA_EXPERIENCIAS, string.Format(Constantes.TABLA_VACIA, Constantes.EXPERIENCIAS_EDUCATIVAS));
             }
             else
             {
@@ -1577,31 +1578,6 @@ namespace SGPla.Controllers
 
             HttpContext.Session.SetString(SESSION_RUTA, rutaArchivo);
             HttpContext.Session.SetString(SESSION_NOMBRE_ARCHIVO, archivo.FileName);
-        }
-
-        private TableModel generarTablaConMensaje(List<string> headers, string mensaje)
-        {
-            List<TableCellModel> cells = new();
-            cells.Add(new TableCellModel
-            {
-                Value = mensaje
-            });
-            for (int i = 0; i < headers.Count - 1; i++)
-            {
-                cells.Add(new TableCellModel());
-            }
-
-            return new TableModel
-            {
-                Headers = headers,
-                Rows = new TableRowModel[]
-                    {
-                        new TableRowModel
-                        {
-                            Cells = cells
-                        }
-                    }.ToList(),
-            };
         }
 
         private async Task<CargarPlanPaso1ViewModel> recargarCombosAsync(CargarPlanPaso1ViewModel modelo)

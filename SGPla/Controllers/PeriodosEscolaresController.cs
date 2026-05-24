@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using SGPla.Commons;
+using SGPla.Commons.Factories;
 using SGPla.Models.DTOs.Articulo;
 using SGPla.Models.DTOs.PeriodoEscolar;
 using SGPla.Models.DTOs.ProgramaEducativo;
@@ -14,6 +16,8 @@ namespace SGPla.Controllers
         private readonly IPeriodoEscolarService _periodoEscolarService;
         private readonly ILogger<PeriodosEscolaresController> _logger;
         private int paginaActual = 1;
+
+        private static List<string> HEADERS_TABLA_INDEX = ["Código", "Año", "Periodo", "Acciones"];
 
         public PeriodosEscolaresController(IPeriodoEscolarService periodoEscolarService, ILogger<PeriodosEscolaresController> logger)
         {
@@ -57,18 +61,7 @@ namespace SGPla.Controllers
 
                 if (resultado.Items == null || !resultado.Items.Any())
                 {
-                    return new TableModel
-                    {
-                        Headers = new List<string> { "Código", "Año", "Periodo", "Acciones" },
-                        Rows = new List<TableRowModel>(),
-                        Pagination = new PaginationInfo
-                        {
-                            CurrentPage = paginaActual,
-                            PageSize = cantidad,
-                            TotalItems = 0,
-                            OnPageChange = "cambiarPaginaPeriodos"
-                        }
-                    };
+                    return TablaFactory.GenerarTablaConMensaje(HEADERS_TABLA_INDEX, string.Format(Constantes.TABLA_VACIA, Constantes.PERIODOS_ESCOLARES));
                 }
 
                 return new TableModel

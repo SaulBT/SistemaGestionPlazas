@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using SGPla.Commons;
+using SGPla.Commons.Factories;
 using SGPla.Models;
 using SGPla.Models.Components;
 using SGPla.Models.DTOs.Usuarios;
@@ -8,6 +9,7 @@ using SGPla.Models.ViewModels;
 using SGPla.Models.ViewModels.Usuarios;
 using SGPla.Repositories.Interfaces;
 using SGPla.Services.Interfaces;
+using System.Numerics;
 
 namespace SGPla.Controllers
 {
@@ -20,6 +22,8 @@ namespace SGPla.Controllers
         private readonly IAreaAcademicaService _areaAcademicaService; //TODO: Reemplazar los métodos que usan el repository
         private readonly IEntidadAcademicaService _entidadAcademicaService; //TODO: Reemplazar los métodos que usan el repository
         private int paginaActual = 1;
+
+        private static List<string> HEADERS_TABLA_INDEX = ["Nombre", "Correo", "Cargo", "Rol", "Entidad/Área", "Región", "Acciones"];
 
         public UsuariosController(
             IUsuarioService usuarioService,
@@ -124,12 +128,13 @@ namespace SGPla.Controllers
                     filtros.Pagina = paginaActual;
                     usuarios = await _usuarioService.BuscarPorFiltroPaginadoAsync(filtros);
                 }
+                if (usuarios.Items.Count == 0)
+                    return TablaFactory.GenerarTablaConMensaje(HEADERS_TABLA_INDEX, string.Format(Constantes.TABLA_VACIA, Constantes.USUARIOS));
+
+
                 return new TableModel
                 {
-                    Headers = new List<string>
-                        {
-                            "Nombre", "Correo", "Cargo", "Rol", "Entidad/Área", "Región", "Acciones"
-                        },
+                    Headers = HEADERS_TABLA_INDEX,
                     Rows = usuarios.Items.Select(usuario => new TableRowModel
                     {
                         Cells = new List<TableCellModel>

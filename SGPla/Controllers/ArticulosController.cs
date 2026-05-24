@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using SGPla.Commons;
+using SGPla.Commons.Factories;
 using SGPla.Models.DTOs.Articulo;
 using SGPla.Models.ViewModels.Articulos;
 using SGPla.Services.Interfaces;
+using System.Numerics;
 
 namespace SGPla.Controllers
 {
@@ -10,6 +13,8 @@ namespace SGPla.Controllers
     {
         private readonly IArticuloService _articuloService;
         private readonly ILogger<ArticulosController> _logger;
+
+        private static List<string> HEADERS_TABLA_INDEX = ["Artículo", "Descripción", "Acciones"];
 
         public ArticulosController(IArticuloService articuloService, ILogger<ArticulosController> logger)
         {
@@ -39,9 +44,13 @@ namespace SGPla.Controllers
                     articulos = await _articuloService.BuscarPorTerminoAsync(busqueda);
                 }
 
+                if (articulos.Count() == 0)
+                    return TablaFactory.GenerarTablaConMensaje(HEADERS_TABLA_INDEX, string.Format(Constantes.TABLA_VACIA, Constantes.ARTICULOS));
+
+
                 return new TableModel
                 {
-                    Headers = new List<string> { "Artículo", "Descripción", "Acciones" },
+                    Headers = HEADERS_TABLA_INDEX,
                     Rows = articulos.Select(a => new TableRowModel
                     {
                         Cells = new List<TableCellModel>

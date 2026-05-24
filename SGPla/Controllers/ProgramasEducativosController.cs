@@ -1,11 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SGPla.Commons;
+using SGPla.Commons.Factories;
 using SGPla.Models;
 using SGPla.Models.Components;
 using SGPla.Models.DTOs.ProgramaEducativo;
 using SGPla.Models.ViewModels.ProgramasEducativos;
 using SGPla.Repositories.Interfaces;
 using SGPla.Services.Interfaces;
+using System.Numerics;
 
 namespace SGPla.Controllers
 {
@@ -15,6 +17,8 @@ namespace SGPla.Controllers
         private readonly IEntidadAcademicaRepository _entidadAcademicaRepository;
         private readonly ILogger<ProgramasEducativosController> _logger;
         private int paginaActual = 1;
+
+        private static List<string> HEADERS_TABLA_INDEX = ["Nombre", "Región", "Área Académica", "Entidad Académica", "Acciones"];
 
         public ProgramasEducativosController(
             IProgramaEducativoService programaEducativoService,
@@ -100,12 +104,15 @@ namespace SGPla.Controllers
                     filtros.Pagina = paginaActual;
                     resultado = await _programaEducativoService.BuscarPorFiltroPaginadoAsync(filtros);
                 }
+                if (resultado.Items.Count == 0)
+                    return TablaFactory.GenerarTablaConMensaje(HEADERS_TABLA_INDEX, string.Format(Constantes.TABLA_VACIA, Constantes.PROGRAMAS_EDUCATIVOS));
+
 
                 if (resultado.Items == null || !resultado.Items.Any())
                 {
                     return new TableModel
                     {
-                        Headers = new List<string> { "Nombre", "Región", "Área Académica", "Entidad Académica", "Acciones" },
+                        Headers = HEADERS_TABLA_INDEX,
                         Rows = new List<TableRowModel>(),
                         Pagination = new PaginationInfo
                         {
