@@ -25,30 +25,37 @@
         public static List<string> MODALIDADES = new List<string> { MODALIDAD_ESCOLARIZADA, MODALIDAD_ABIERTA, MODALIDAD_VIRTUAL, MODALIDAD_MIXTA, MODALIDAD_SEMIESCOLARIZADA, MODALIDAD_DISTANCIA };
 
         // Mensajes tabla
-        public static string ERROR_TABLA = "Error al generar la tabla {tabla}.";
-        public static string TABLA_VACIA = "No hay {elemento} para mostrar.";
+        public static string ERROR_TABLA = "Error al generar la tabla de {0}.";
+        public static string TABLA_VACIA = "No hay {0} para mostrar.";
 
         //Logs
         public static string LOGS_ESTRUCTURA = "{Ubicacion}{Metodo} {Log}";
         public static string LOG_ERROR_INESPERADO = "Error inesperado.";
         public static string LOG_ERROR_VALIDACION = "Error de validación.";
+        public static string LOG_ERROR_NULO = "El {0} es nulo";
+        public static string LOG_ERROR_NULA = "La {0} es nula";
 
         //Toasts
         public static string TOAST_ERROR_GENERAL = "Ha ocurrido un error, inténtelo de nuevo más tarde.";
-        public static string TOAST_ERROR_OBLIGATORIO = "El {elemento} es obligatorio.";
-        public static string TOAST_ERROR_OBLIGATORIA = "La {elemento} es obligatoria.";
-        public static string TOAST_ERROR_ELIMINACION_EL = "No se pudo eliminar el {elemento}, inténtelo nuevamente.";
-        public static string TOAST_ERROR_ELIMINACION_LA = "No se pudo eliminar la {elemento}, inténtelo nuevamente.";
-        public static string TOAST_ERROR_GUARDAR_EL = "No se pudo guardar el {elemento}, inténtelo nuevamente.";
-        public static string TOAST_ERROR_GUARDAR_LA = "No se pudo guardar la {elemento}, inténtelo nuevamente.";
+        public static string TOAST_ERROR_OBLIGATORIO = "El {0} es obligatorio.";
+        public static string TOAST_ERROR_OBLIGATORIA = "La {0} es obligatoria.";
+        public static string TOAST_ERROR_ELIMINACION_EL = "No se pudo eliminar el {0}, inténtelo nuevamente.";
+        public static string TOAST_ERROR_ELIMINACION_LA = "No se pudo eliminar la {0}, inténtelo nuevamente.";
+        public static string TOAST_ERROR_GUARDAR_EL = "No se pudo guardar el {0}, inténtelo nuevamente.";
+        public static string TOAST_ERROR_GUARDAR_LA = "No se pudo guardar la {0}, inténtelo nuevamente.";
 
-        public static string TOAST_ELIMINACION_EL = "El {elemento} ha sido eliminado con éxito.";
-        public static string TOAST_ELIMINACION_LA = "La {elemento} ha sido eliminada con éxito.";
-        public static string TOAST_GUARDADO_EL = "El {elemento} ha sido guardado con éxito.";
-        public static string TOAST_GUARDADO_LA = "La {elemento} ha sido guardada con éxito.";
+        public static string TOAST_ELIMINACION_EL = "El {0} ha sido eliminado con éxito.";
+        public static string TOAST_ELIMINACION_LA = "La {0} ha sido eliminada con éxito.";
+        public static string TOAST_GUARDADO_EL = "El {0} ha sido guardado con éxito.";
+        public static string TOAST_GUARDADO_LA = "La {0} ha sido guardada con éxito.";
 
         //Elementos
         public static string PLAN_ESTUDIOS = "Plan de Estudios";
+        public static string PLANES_ESTUDIOS = "Planes de Estudios";
         public static string EXPERIENCIA_EDUCATIVA = "Experiencia Educativa";
+        public static string EXPERIENCIAS_EDUCATIVAS = "Experiencia Educativa";
+        public static string ARCHIVO = "Archivo";
+        public static string RUTA_ARCHIVO = "Ruta del Archivo";
+        public static string NOMBRE_ARCHIVO = "Nombre del Archivo";
     }
 }
