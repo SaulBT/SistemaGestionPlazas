@@ -28,15 +28,19 @@ namespace SGPla.Controllers
         private int paginaActual = 1;
 
         private const string NOMBRE_LOGGER = "FRONT-PLANES-";
+        private static string INDEX = "Index:";
+        private static string VER = "VerPlanEstudios:";
+        private static string PASO1 = "CargarPlanPaso1:";
+        private static string PASO2 = "CargarPlanPaso2:";
+        private static string EDITAR = "EditarPlan:";
+        private static string EXPERIENCIA_NUEVA = "Experiencia Educativa agregada";
 
         private const string LOG_ERROR_CATALOGOS = "Error al cargar los catálogos.";
         private const string LOG_ERROR_LISTA_EXPERIENCIAS = "No se pudo obtener la lista de Experiencias Educativas.";
         private const string LOG_ERROR_LISTA_EXPERIENCIAS_NUEVAS = "No se pudo obtener la lista de Experiencias Educativas Nuevas.";
         private const string LOG_ERROR_LISTA_EXPERIENCIAS_EDITADAS = "No se pudo obtener la lista de Experiencias Educativas Editadas.";
         private const string LOG_ERROR_LISTA_EXPERIENCIAS_ELIMINADAS = "No se pudo obtener la lista de Experiencias Educativas Eliminadas.";
-        private const string LOG_ERROR_RUTA = "No se pudo obtener la ruta del archivo.";
-        private const string LOG_ERROR_EXPERIENCIA = "No se pudo obtener la Experiencia Educativa.";
-        private const string LOG_ERROR_CARGAR_PLAN = "No se pudo cargar el Plan de Estudios.";
+        private const string LOG_ERROR_PROCESAR_ARCHIVO = "No se pudo procesar el archivo.";
 
         private const string TOAST_EXPERIENCIAS_VACIAS = "La lista de Experiencias Educativas no puede estar vacía.";
 
@@ -50,12 +54,6 @@ namespace SGPla.Controllers
         private static List<string> HEADERS_TABLA_INDEX = ["Programa Educativo", "Modalidad", "Plan", "Área", "Acciones"];
         private static List<string> HEADERS_TABLA_VER = ["Codigo", "Experiencia Educativa", "Perfil Docente"];
         private static List<string> HEADERS_TABLA_EXPERIENCIAS = ["Codigo", "Experiencia Educativa", "Perfil Docente", "Acciones"];
-
-        private static string INDEX = "Index:";
-        private static string VER = "VerPlanEstudios";
-        private static string PASO1 = "CargarPlanPaso1";
-        private static string PASO2 = "CargarPlanPaso2";
-        private static string EDITAR = "EditarPlan";
 
         public PlanesEstudiosController(
             IPlanEstudiosService planEstudiosService,
@@ -87,7 +85,7 @@ namespace SGPla.Controllers
 
             var modelo = new IndexViewModel
             {
-                Table = generarTablaConMensaje(HEADERS_TABLA_INDEX, "Ha ocurrido un error, inténtelo de nuevo más tarde."),
+                Table = generarTablaConMensaje(HEADERS_TABLA_INDEX, string.Format(Constantes.ERROR_TABLA, Constantes.PLANES_ESTUDIOS)),
                 Regiones = new List<OptionModel>(),
                 Areas = new List<OptionModel>(),
                 Entidades = new List<OptionModel>(),
@@ -103,8 +101,6 @@ namespace SGPla.Controllers
 
             try
             {
-                throw new Exception("Error de prueba para verificar el manejo de excepciones y el logging en el Index de Planes de Estudios.");
-
                 if (!region.IsNullOrEmpty())
                     areasCombo = await generarCatalogoAreasAsync(idAreaAcademica);
                 else
@@ -132,14 +128,12 @@ namespace SGPla.Controllers
             }
             catch (ValidacionExcepction vx)
             {
-                _logger.LogError(vx, Constantes.LOGS_ESTRUCTURA, NOMBRE_LOGGER, INDEX, LOG_ERROR_CATALOGOS);
-                TempData["Error"] = Constantes.TOAST_ERROR_GENERAL;
+                this.LanzarError(_logger, vx, NOMBRE_LOGGER, INDEX, LOG_ERROR_CATALOGOS);
                 return View(modelo);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, Constantes.LOGS_ESTRUCTURA, NOMBRE_LOGGER, INDEX, Constantes.LOG_ERROR_INESPERADO);
-                TempData["Error"] = Constantes.TOAST_ERROR_GENERAL;
+                this.LanzarError(_logger, ex, NOMBRE_LOGGER, INDEX, Constantes.LOG_ERROR_INESPERADO);
                 return View(modelo);
             }
         }
@@ -172,14 +166,11 @@ namespace SGPla.Controllers
                     planes = await _planEstudiosService.ObtenerPorFiltroAsync(filtros, cantidad, paginaActual);
                 }
                 if (planes.items.Count == 0)
-                    return generarTablaConMensaje(["Programa Educativo", "Modalidad", "Plan", "Área", "Acciones"], "No hay Planes de Estudios para mostrar.");
+                    return generarTablaConMensaje(HEADERS_TABLA_INDEX, string.Format(Constantes.TABLA_VACIA, Constantes.PLANES_ESTUDIOS));
 
                 return new TableModel
                 {
-                    Headers = new List<string>
-                    {
-                        "Programa Educativo", "Modalidad", "Plan", "Área",  "Acciones"
-                    },
+                    Headers = HEADERS_TABLA_INDEX,
                     Rows = planes.items.Select(plan => new TableRowModel
                     {
                         Cells = new List<TableCellModel>
@@ -222,9 +213,9 @@ namespace SGPla.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"{NOMBRE_LOGGER} Error al obtener la lista de Planes de Estudios.");
+                this.LanzarError(_logger, ex, NOMBRE_LOGGER, INDEX, "No se pudo cargar la lista de Planes de Estudios");
 
-                return generarTablaConMensaje(["Programa Educativo", "Modalidad", "Plan", "Área", "Acciones"], "Ha ocurrido un error, inténtelo de nuevo más tarde.");
+                return generarTablaConMensaje(HEADERS_TABLA_INDEX, string.Format(Constantes.ERROR_TABLA, Constantes.PLANES_ESTUDIOS));
             }
         }
 
@@ -241,6 +232,7 @@ namespace SGPla.Controllers
             {
                 _logger.LogError(ex, "{NOMBRE_LOGGER} Error al eliminar el Plan de Estudios.", NOMBRE_LOGGER);
                 TempData["Error"] = "Error al eliminar el Plan de Estudios.";
+                this.LanzarError(_logger, ex, NOMBRE_LOGGER, INDEX, Constantes.LOG_ERROR_INESPERADO, string.Format(Constantes.TOAST_ERROR_ELIMINACION_EL, Constantes.PLAN_ESTUDIOS));
             }
         }
 
@@ -256,7 +248,7 @@ namespace SGPla.Controllers
 
             paginaActual = pagina;
             var modelo = new VerPlanEstudiosViewModel();
-            modelo.Table = generarTablaConMensaje(["Codigo", "Experiencia Educativa", "Perfil Docente"], "Ha ocurrido un error, inténtelo de nuevo más tarde.");
+            modelo.Table = generarTablaConMensaje(HEADERS_TABLA_VER, string.Format(Constantes.ERROR_TABLA, Constantes.EXPERIENCIAS_EDUCATIVAS));
 
             try
             {
@@ -274,17 +266,15 @@ namespace SGPla.Controllers
             }
             catch (ValidacionExcepction vx)
             {
-                _logger.LogError(vx, "{NOMBRE_LOGGER} Error al obtener detalles del Plan de Estudios: {id}", NOMBRE_LOGGER, idPlanEstudios);
-                TempData["Error"] = $"No se ha podido mostrar el Plan de Estudios.";
+                this.LanzarError(_logger, vx, NOMBRE_LOGGER, VER, Constantes.LOG_ERROR_VALIDACION);
                 if (vx.Codigo.Contains("404"))
-                    TempData["Error"] = $"No se ha encontrado al Plan de Estudios.";
+                    TempData["Error"] = vx.Message;
 
                 return View(modelo);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{NOMBRE_LOGGER} [VerPlanEstudios] Error inesperado.", NOMBRE_LOGGER);
-                TempData["Error"] = "Ha ocurrido un error, inténtalo de nuevo más tarde.";
+                this.LanzarError(_logger, ex, NOMBRE_LOGGER, VER, Constantes.LOG_ERROR_INESPERADO);
                 return View(modelo);
             }
         }
@@ -297,11 +287,11 @@ namespace SGPla.Controllers
                 int skip = (pagina - 1) * cantidad;
                 var experienciasTabla = experiencias.Skip(skip).Take(cantidad).ToList();
                 if (experiencias.Count == 0)
-                    return generarTablaConMensaje(["Codigo", "Experiencia Educativa", "Perfil Docente"], "No hay Experiencias Educativas para mostrar.");
+                    return generarTablaConMensaje(HEADERS_TABLA_VER, string.Format(Constantes.TABLA_VACIA, Constantes.EXPERIENCIAS_EDUCATIVAS));
 
                 return new TableModel
                 {
-                    Headers = new List<string> { "Codigo", "Experiencia Educativa", "Perfil Docente" },
+                    Headers = HEADERS_TABLA_VER,
                     Rows = experienciasTabla.Select(ee => new TableRowModel
                     {
                         Cells = new List<TableCellModel>
@@ -332,9 +322,9 @@ namespace SGPla.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{NOMBRE_LOGGER} Error al generar la tabla de Experiencias Educativas.", NOMBRE_LOGGER);
+                this.LanzarError(_logger, ex, NOMBRE_LOGGER, VER, Constantes.LOG_ERROR_INESPERADO);
 
-                return generarTablaConMensaje(["Codigo", "Experiencia Educativa", "Perfil Docente"], "Ha ocurrido un error, inténtelo de nuevo más tarde.");
+                return generarTablaConMensaje(HEADERS_TABLA_VER, string.Format(Constantes.ERROR_TABLA, Constantes.EXPERIENCIAS_EDUCATIVAS));
             }
         }
 
@@ -347,7 +337,6 @@ namespace SGPla.Controllers
                 if (archivoDto != null)
                 {
                     var rutaCompleta = Path.Combine("Archivos/planes-estudios", archivoDto.Ruta);
-                    _logger.LogInformation("Ruta: {rutaCompleta}", rutaCompleta);
 
                     if (System.IO.File.Exists(rutaCompleta))
                     {
@@ -426,15 +415,14 @@ namespace SGPla.Controllers
             }
             catch (ValidacionExcepction vx)
             {
-                _logger.LogError(vx, "{NOMBRE_LOGGER} [CargarPlanPaso1] Error al cargar los catálogos.", NOMBRE_LOGGER);
-                TempData["Error"] = "Ha ocurrido un error al cargar los catálogos.";
+                this.LanzarError(_logger, vx, NOMBRE_LOGGER, PASO1, LOG_ERROR_CATALOGOS);
                 modelo.ListaRegiones.Clear();
                 return View(modelo);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{NOMBRE_LOGGER} [CargarPlanPaso1] Error inesperado.", NOMBRE_LOGGER);
-                TempData["Error"] = "Ha ocurrido un error, inténtalo de nuevo más tarde.";
+                this.LanzarError(_logger, ex, NOMBRE_LOGGER, PASO1, Constantes.LOG_ERROR_INESPERADO);
+
                 return View(modelo);
             }
 
@@ -447,7 +435,7 @@ namespace SGPla.Controllers
             {
                 _logger.LogError("{NOMBRE_LOGGER} Modelo no válido en Paso 2 de Cargar Plan de Estudios.", NOMBRE_LOGGER);
                 if (modelo.Archivo == null)
-                    TempData["Error"] = "El archivo es obligatorio.";
+                    TempData["Error"] = string.Format(Constantes.TOAST_ERROR_OBLIGATORIO, Constantes.ARCHIVO);
 
                 modelo = await recargarCombosAsync(modelo);
 
@@ -524,7 +512,7 @@ namespace SGPla.Controllers
                 var archivo = modelo.Archivo;
                 await guardarArchivoTemporalmente(archivo);
 
-                var ruta = HttpContext.Session.GetString("Ruta");
+                var ruta = HttpContext.Session.GetString(SESSION_RUTA);
                 if (!string.IsNullOrEmpty(ruta))
                 {
                     var archivoDto = new ArchivoPlanEstudiosDTO
@@ -534,7 +522,7 @@ namespace SGPla.Controllers
                     };
                     var listaEe = await ProcesarArchivoAsync(archivoDto);
 
-                    HttpContext.Session.SetString("Experiencias", JsonSerializer.Serialize(listaEe));
+                    HttpContext.Session.SetString(SESSION_EXPERIENCIAS, JsonSerializer.Serialize(listaEe));
 
                     var area = await _areaAcademicaService.ObtenerPorIdAsync(modelo.IdAreaAcademica);
                     var programa = await _programaEducativoService.ObtenerPorIdAsync(modelo.IdProgramaEducativo);
@@ -554,16 +542,13 @@ namespace SGPla.Controllers
                 }
                 else
                 {
-                    _logger.LogError("{NOMBRE_LOGGER} [CargarPlanPaso2] La ruta del archivo es nula.", NOMBRE_LOGGER);
-                    TempData["Error"] = "Error: La ruta del archivo es nula.";
-
+                    this.LanzarError(_logger, null, NOMBRE_LOGGER, PASO2, string.Format(Constantes.LOG_ERROR_NULA, Constantes.RUTA_ARCHIVO));
                     return (null, true);
                 }
             }
             catch (ValidacionExcepction vx)
             {
-                _logger.LogError(vx, "{NOMBRE_LOGGER} [CargarPlanPaso2] Error de validación.", NOMBRE_LOGGER);
-                TempData["Error"] = "No se ha podido cargar el Plan de Estudios";
+                this.LanzarError(_logger, vx, NOMBRE_LOGGER, PASO2, Constantes.LOG_ERROR_VALIDACION, string.Format(Constantes.TOAST_ERROR_GUARDAR_EL, Constantes.PLAN_ESTUDIOS));
                 if (vx.Codigo.Contains("404"))
                     TempData["Error"] = vx.Message;
 
@@ -571,8 +556,7 @@ namespace SGPla.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{NOMBRE_LOGGER} [CargarPlanPaso2] Error inesperado.", NOMBRE_LOGGER);
-                TempData["Error"] = "Ha ocurrido un error, inténtalo de nuevo más tarde.";
+                this.LanzarError(_logger, ex, NOMBRE_LOGGER, PASO2, Constantes.LOG_ERROR_INESPERADO);
 
                 return (null, true);
             }
@@ -582,7 +566,7 @@ namespace SGPla.Controllers
         {
             try
             {
-                var experienciasJson = HttpContext.Session.GetString("Experiencias");
+                var experienciasJson = HttpContext.Session.GetString(SESSION_EXPERIENCIAS);
                 if (!string.IsNullOrEmpty(experienciasJson))
                 {
                     var experiencias = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(experienciasJson);
@@ -600,15 +584,14 @@ namespace SGPla.Controllers
                 }
                 else
                 {
-                    _logger.LogError("{NOMBRE_LOGGER} [CargarPlanPaso2] Error al obtener las Experiencias Educativas de la sesión.", NOMBRE_LOGGER);
-                    TempData["Error"] = "Error al obtener las Experiencias Educativas de la sesión.";
+                    this.LanzarError(_logger, null, NOMBRE_LOGGER, PASO2, LOG_ERROR_LISTA_EXPERIENCIAS, string.Format(Constantes.TOAST_ERROR_GUARDAR_EL, Constantes.PLAN_ESTUDIOS));
                     return (null, true);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{NOMBRE_LOGGER} [CargarPlanPaso2] Error inesperado.", NOMBRE_LOGGER);
-                TempData["Error"] = "Ha ocurrido un error, inténtalo de nuevo más tarde.";
+                this.LanzarError(_logger, ex, NOMBRE_LOGGER, PASO2, Constantes.LOG_ERROR_INESPERADO);
+
                 return (null, true);
             }
         }
@@ -616,13 +599,13 @@ namespace SGPla.Controllers
         [HttpPost]
         public async Task<IActionResult> RegresarPaso1Async([FromBody] CargarPlanPaso1ViewModel modelo)
         {
-            var rutaArchivo = HttpContext.Session.GetString("Ruta");
+            var rutaArchivo = HttpContext.Session.GetString(SESSION_RUTA);
             if (!string.IsNullOrEmpty(rutaArchivo))
             {
                 System.IO.File.Delete(rutaArchivo);
-                HttpContext.Session.Remove("Ruta");
+                HttpContext.Session.Remove(SESSION_RUTA);
             }
-            //string? region, string? plan, string? modalidad, int? idAreaAcademica, int? idEntidadAcademica, int? idProgramaEducativo
+
             var url = Url.Action(nameof(CargarPlanPaso1), new
             {
                 region = modelo.Region,
@@ -652,21 +635,21 @@ namespace SGPla.Controllers
 
             try
             {
-                var experienciasJson = HttpContext.Session.GetString("Experiencias");
+                var experienciasJson = HttpContext.Session.GetString(SESSION_EXPERIENCIAS);
                 if (!string.IsNullOrEmpty(experienciasJson))
                 {
                     var experiencias = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(experienciasJson);
                     if (experiencias?.Count == 0)
                     {
-                        _logger.LogError("{NOMBRE_LOGGER} La lista de Experiencias Educativas está vacía.", NOMBRE_LOGGER);
-                        TempData["Error"] = "La lista de Experiencias Educativas no puede estar vacía.";
+                        this.LanzarError(_logger, null, NOMBRE_LOGGER, PASO2, Constantes.LOG_ERROR_VALIDACION, TOAST_EXPERIENCIAS_VACIAS);
+
                         return await CargarPlanPaso2(modeloAnterior);
                     }
 
-                    var rutaArchivo = HttpContext.Session.GetString("Ruta");
+                    var rutaArchivo = HttpContext.Session.GetString(SESSION_RUTA);
                     if (!string.IsNullOrEmpty(rutaArchivo))
                     {
-                        var nombreArchivo = HttpContext.Session.GetString("NombreArchivo");
+                        var nombreArchivo = HttpContext.Session.GetString(SESSION_NOMBRE_ARCHIVO);
                         if (!string.IsNullOrEmpty(nombreArchivo))
                         {
                             var archivoDTO = new ArchivoPlanEstudiosDTO
@@ -691,42 +674,41 @@ namespace SGPla.Controllers
 
                             System.IO.File.Delete(rutaArchivo);
                             HttpContext.Session.Clear();
-                            TempData["Success"] = "Plan de estudios guardado con éxito.";
+                            TempData["Success"] = string.Format(Constantes.TOAST_GUARDADO_EL, Constantes.PLAN_ESTUDIOS);
                             return RedirectToAction(nameof(Index));
                         }
                         else
                         {
-                            _logger.LogError("{NOMBRE_LOGGER} El nombre del archivo es nulo.", NOMBRE_LOGGER);
-                            TempData["Error"] = "No se pudo guardar el Plan de Estudios, inténtelo de nuevo más tarde.";
+                            this.LanzarError(_logger, null, NOMBRE_LOGGER, PASO2, string.Format(Constantes.LOG_ERROR_NULO, Constantes.NOMBRE_ARCHIVO), string.Format(Constantes.TOAST_ERROR_GUARDAR_EL, Constantes.PLAN_ESTUDIOS));
                             return RedirectToAction(nameof(Index));
                         }
                     }
                     else
                     {
-                        _logger.LogError("{NOMBRE_LOGGER} La ruta del archivo es nula.", NOMBRE_LOGGER);
-                        TempData["Error"] = "No se pudo guardar el Plan de Estudios, inténtelo de nuevo más tarde.";
+                        this.LanzarError(_logger, null, NOMBRE_LOGGER, PASO2, string.Format(Constantes.LOG_ERROR_NULA, Constantes.RUTA_ARCHIVO), string.Format(Constantes.TOAST_ERROR_GUARDAR_EL, Constantes.PLAN_ESTUDIOS));
+
                         return RedirectToAction(nameof(Index));
                     }
                 }
                 else
                 {
-                    _logger.LogError("{NOMBRE_LOGGER} La lista de Experiencias está vacía.", NOMBRE_LOGGER);
-                    TempData["Error"] = "No se pudo guardar el Plan de Estudios, inténtelo de nuevo más tarde.";
+                    this.LanzarError(_logger, null, NOMBRE_LOGGER, PASO2, LOG_ERROR_LISTA_EXPERIENCIAS, string.Format(Constantes.TOAST_ERROR_GUARDAR_EL, Constantes.PLAN_ESTUDIOS));
+
                     return RedirectToAction(nameof(Index));
                 }
             }
             catch (ValidacionExcepction vx)
             {
-                _logger.LogError(vx, "{NOMBRE_LOGGER} Error al guardar el plan de estudios.", NOMBRE_LOGGER);
-                TempData["Error"] = $"Error: {vx.Message}";
+                this.LanzarError(_logger, vx, NOMBRE_LOGGER, PASO2, Constantes.LOG_ERROR_VALIDACION, vx.Message);
                 if (vx.Codigo.Contains("422"))
-                    TempData["Error"] = "No se pudo guardar el Plan de Estudios.";
+                    TempData["Error"] = string.Format(Constantes.TOAST_ERROR_GUARDAR_EL, Constantes.PLAN_ESTUDIOS);
+
                 return await CargarPlanPaso2(modeloAnterior);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{NOMBRE_LOGGER} Error inesperado.", NOMBRE_LOGGER);
-                TempData["Error"] = "No se pudo guardar el Plan de Estudios, inténtelo de nuevo más tarde.";
+                this.LanzarError(_logger, ex, NOMBRE_LOGGER, PASO2, Constantes.LOG_ERROR_INESPERADO, string.Format(Constantes.TOAST_ERROR_GUARDAR_EL, Constantes.PLAN_ESTUDIOS));
+
                 return RedirectToAction(nameof(CargarPlanPaso1), new CargarPlanPaso1ViewModel());
             }
         }
@@ -738,7 +720,7 @@ namespace SGPla.Controllers
             bool error = false;
             DatosExperienciaEducativaDTO experiencia = new();
 
-            var listaEeJson = HttpContext.Session.GetString("Experiencias");
+            var listaEeJson = HttpContext.Session.GetString(SESSION_EXPERIENCIAS);
             if (!string.IsNullOrEmpty(listaEeJson))
             {
                 var listaEe = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(listaEeJson);
@@ -752,15 +734,14 @@ namespace SGPla.Controllers
                 listaEe.Add(experiencia);
 
                 listaEeJson = JsonSerializer.Serialize(listaEe);
-                HttpContext.Session.SetString("Experiencias", listaEeJson);
+                HttpContext.Session.SetString(SESSION_EXPERIENCIAS, listaEeJson);
             }
             else
                 error = true;
 
             if (error)
             {
-                _logger.LogError("{NOMBRE_LOGGER} Error al agregar la Experiencia Educativa.", NOMBRE_LOGGER);
-                TempData["Error"] = "Ha ocurrido un error, inténtelo nuevamente.";
+                this.LanzarError(_logger, null, NOMBRE_LOGGER, PASO2, LOG_ERROR_LISTA_EXPERIENCIAS);
                 return Json(new { error = true });
             }
 
@@ -773,7 +754,7 @@ namespace SGPla.Controllers
             bool error = false;
             List<AgregarExperienciaEducativaDTO> listaEe = [];
 
-            var listaEeJson = HttpContext.Session.GetString("Experiencias");
+            var listaEeJson = HttpContext.Session.GetString(SESSION_EXPERIENCIAS);
             if (!string.IsNullOrEmpty(listaEeJson))
             {
                 listaEe = JsonSerializer.Deserialize<List<AgregarExperienciaEducativaDTO>>(listaEeJson);
@@ -785,30 +766,29 @@ namespace SGPla.Controllers
                     experiencia.Nombre = nombre;
                     experiencia.PerfilDocente = perfilDocente;
                     listaEeJson = JsonSerializer.Serialize(listaEe);
-                    HttpContext.Session.SetString("Experiencias", listaEeJson);
+                    HttpContext.Session.SetString(SESSION_EXPERIENCIAS, listaEeJson);
                 }
                 else
                 {
-                    _logger.LogError("{NOMBRE_LOGGER} Error al obtener la Experiencia Educativa.", NOMBRE_LOGGER);
+                    this.LanzarError(_logger, null, NOMBRE_LOGGER, PASO2, string.Format(Constantes.LOG_ERROR_NULA, Constantes.EXPERIENCIA_EDUCATIVA));
+                    
                     error = true;
                 }
             }
             else
             {
-                _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias Educativas.", NOMBRE_LOGGER);
+                this.LanzarError(_logger, null, NOMBRE_LOGGER, PASO2, LOG_ERROR_LISTA_EXPERIENCIAS);
+
                 error = true;
             }
 
             if (error)
             {
-                TempData["Error"] = "Ha ocurrido un error, inténtelo nuevamente.";
                 return Json(new { error = true });
             }
 
             return Json(new { experiencias = listaEe, error = false });
         }
-
-
 
         [HttpGet]
         public JsonResult EliminarExperienciaEducativaCreacion(string codigo)
@@ -816,7 +796,7 @@ namespace SGPla.Controllers
             List<DatosExperienciaEducativaDTO> listaEe = [];
             bool error = false;
 
-            var listaEeJson = HttpContext.Session.GetString("Experiencias");
+            var listaEeJson = HttpContext.Session.GetString(SESSION_EXPERIENCIAS);
             if (!string.IsNullOrEmpty(listaEeJson))
             {
                 listaEe = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(listaEeJson);
@@ -825,23 +805,22 @@ namespace SGPla.Controllers
                 {
                     listaEe.Remove(experiencia);
                     listaEeJson = JsonSerializer.Serialize(listaEe);
-                    HttpContext.Session.SetString("Experiencias", listaEeJson);
+                    HttpContext.Session.SetString(SESSION_EXPERIENCIAS, listaEeJson);
                 }
                 else
                 {
-                    _logger.LogError("{NOMBRE_LOGGER} Error al obtener la Experiencia Educativa.", NOMBRE_LOGGER);
+                    this.LanzarError(_logger, null, NOMBRE_LOGGER, PASO2, string.Format(Constantes.LOG_ERROR_NULA, Constantes.EXPERIENCIA_EDUCATIVA));
                     error = true;
                 }
             }
             else
             {
-                _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias Educativas.", NOMBRE_LOGGER);
+                this.LanzarError(_logger, null, NOMBRE_LOGGER, PASO2, LOG_ERROR_LISTA_EXPERIENCIAS);
                 error = true;
             }
 
             if (error)
             {
-                TempData["Error"] = "Ha ocurrido un error, inténtelo nuevamente.";
                 return Json(new { error = true });
             }
 
@@ -873,7 +852,7 @@ namespace SGPla.Controllers
 
             if (error)
             {
-                return RedirectToAction("Index");
+                return RedirectToAction(INDEX);
             }
 
             return View("EditarPlan", vista);
@@ -894,13 +873,13 @@ namespace SGPla.Controllers
                 };
 
                 var eeNuevas = new List<AgregarExperienciaEducativaDTO>();
-                HttpContext.Session.SetString("EeNuevas", JsonSerializer.Serialize(eeNuevas));
+                HttpContext.Session.SetString(SESSION_EXPERIENCIAS_NUEVAS, JsonSerializer.Serialize(eeNuevas));
                 var eeEditadas = new List<DatosExperienciaEducativaDTO>();
-                HttpContext.Session.SetString("EeEditadas", JsonSerializer.Serialize(eeEditadas));
+                HttpContext.Session.SetString(SESSION_EXPERIENCIAS_EDITADAS, JsonSerializer.Serialize(eeEditadas));
                 var eeEliminadas = new List<int>();
-                HttpContext.Session.SetString("EeEliminadas", JsonSerializer.Serialize(eeEliminadas));
+                HttpContext.Session.SetString(SESSION_EXPERIENCIAS_ELIMINADAS, JsonSerializer.Serialize(eeEliminadas));
                 var listaEe = planEstudios.ExperienciasEducativas;
-                HttpContext.Session.SetString("Experiencias", JsonSerializer.Serialize(listaEe));
+                HttpContext.Session.SetString(SESSION_EXPERIENCIAS, JsonSerializer.Serialize(listaEe));
 
                 var tabla = LlenarTablaGestionExperiencias(listaEe);
                 tabla.TableId = "tablaExperiencias";
@@ -917,14 +896,15 @@ namespace SGPla.Controllers
             }
             catch (ValidacionExcepction vx)
             {
-                _logger.LogError(vx, "{NOMBRE_LOGGER} [EditarPlan] Error al cargar el Plan de Estudios.", NOMBRE_LOGGER);
-                TempData["Error"] = $"Error: {vx.Message}";
+                this.LanzarError(_logger, vx, NOMBRE_LOGGER, EDITAR, Constantes.LOG_ERROR_VALIDACION);
+                if (vx.Codigo.Contains("404"))
+                    TempData["Error"] = vx.Message;
                 return (null, true);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{NOMBRE_LOGGER} [EditarPlan] Error inesperado.", NOMBRE_LOGGER);
-                TempData["Error"] = "Ha ocurrido un error, inténtalo de nuevo más tarde.";
+                this.LanzarError(_logger, ex, NOMBRE_LOGGER, EDITAR, Constantes.LOG_ERROR_INESPERADO);
+
                 return (null, true);
             }
 
@@ -944,7 +924,7 @@ namespace SGPla.Controllers
                     Sistema = planEstudios.Modalidad,
                 };
 
-                var listaEeJson = HttpContext.Session.GetString("Experiencias");
+                var listaEeJson = HttpContext.Session.GetString(SESSION_EXPERIENCIAS);
                 if (!string.IsNullOrEmpty(listaEeJson))
                 {
                     var listaEe = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(listaEeJson);
@@ -963,21 +943,21 @@ namespace SGPla.Controllers
                 }
                 else
                 {
-                    _logger.LogError("{NOMBRE_LOGGER} [EditarPlan] La lista de Experiencias está vacía.", NOMBRE_LOGGER);
-                    TempData["Error"] = "Error al editar el Plan de Estudios, inténtelo de nuevo más tarde.";
+                    this.LanzarError(_logger, null, NOMBRE_LOGGER, EDITAR, LOG_ERROR_LISTA_EXPERIENCIAS);
+
                     return (null, true);
                 }
             }
             catch (ValidacionExcepction vx)
             {
-                _logger.LogError(vx, "{NOMBRE_LOGGER} [EditarPlan] Error al cargar el Plan de Estudios.", NOMBRE_LOGGER);
-                TempData["Error"] = $"Error: {vx.Message}";
+                this.LanzarError(_logger, vx, NOMBRE_LOGGER, EDITAR, string.Format(Constantes.LOG_ERROR_NULO, Constantes.PLAN_ESTUDIOS));
+
                 return (null, true);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{NOMBRE_LOGGER} [EditarPlan] Error inesperado.", NOMBRE_LOGGER);
-                TempData["Error"] = "Ha ocurrido un error, inténtalo de nuevo más tarde.";
+                this.LanzarError(_logger, ex, NOMBRE_LOGGER, EDITAR, Constantes.LOG_ERROR_INESPERADO);
+
                 return (null, true);
             }
 
@@ -992,10 +972,10 @@ namespace SGPla.Controllers
                 List<DatosExperienciaEducativaDTO> listaEeNueva = [];
                 bool error = false;
 
-                var ruta = HttpContext.Session.GetString("Ruta");
+                var ruta = HttpContext.Session.GetString(SESSION_RUTA);
                 if (!string.IsNullOrEmpty(ruta))
                 {
-                    var nombreArchivo = HttpContext.Session.GetString("NombreArchivo");
+                    var nombreArchivo = HttpContext.Session.GetString(SESSION_NOMBRE_ARCHIVO);
                     if (!string.IsNullOrEmpty(nombreArchivo))
                     {
                         var archivoDTO = new ArchivoPlanEstudiosDTO
@@ -1015,13 +995,13 @@ namespace SGPla.Controllers
                                 PerfilDocente = ee.PerfilDocente
                             });
                         }
-                        HttpContext.Session.SetString("EeNuevas", JsonSerializer.Serialize(eeNuevas));
+                        HttpContext.Session.SetString(SESSION_EXPERIENCIAS_NUEVAS, JsonSerializer.Serialize(eeNuevas));
 
-                        var listaEeJson = HttpContext.Session.GetString("Experiencias");
+                        var listaEeJson = HttpContext.Session.GetString(SESSION_EXPERIENCIAS);
                         if (!string.IsNullOrEmpty(listaEeJson))
                         {
                             var listaEeVieja = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(listaEeJson);
-                            var eeEliminadasJson = HttpContext.Session.GetString("EeEliminadas");
+                            var eeEliminadasJson = HttpContext.Session.GetString(SESSION_EXPERIENCIAS_ELIMINADAS);
                             if (!string.IsNullOrEmpty(eeEliminadasJson))
                             {
                                 var eeEliminadas = JsonSerializer.Deserialize<List<int>>(eeEliminadasJson);
@@ -1030,37 +1010,37 @@ namespace SGPla.Controllers
                                     if (ee.IdExperienciaEducativa > 0 && !eeEliminadas.Contains(ee.IdExperienciaEducativa))
                                         eeEliminadas.Add(ee.IdExperienciaEducativa);
                                 }
-                                HttpContext.Session.SetString("EeEliminadas", JsonSerializer.Serialize(eeEliminadas));
-                                HttpContext.Session.SetString("EeEditadas", JsonSerializer.Serialize(new List<DatosExperienciaEducativaDTO>()));
-                                HttpContext.Session.SetString("Experiencias", JsonSerializer.Serialize(listaEeNueva));
+                                HttpContext.Session.SetString(SESSION_EXPERIENCIAS_ELIMINADAS, JsonSerializer.Serialize(eeEliminadas));
+                                HttpContext.Session.SetString(SESSION_EXPERIENCIAS_EDITADAS, JsonSerializer.Serialize(new List<DatosExperienciaEducativaDTO>()));
+                                HttpContext.Session.SetString(SESSION_EXPERIENCIAS, JsonSerializer.Serialize(listaEeNueva));
                             }
                             else
                             {
-                                _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias eliminadas.", NOMBRE_LOGGER);
+                                this.LanzarError(_logger, null, NOMBRE_LOGGER, EDITAR, LOG_ERROR_LISTA_EXPERIENCIAS_ELIMINADAS);
                                 error = true;
                             }
                         }
                         else
                         {
-                            _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias Educativas.", NOMBRE_LOGGER);
+                            this.LanzarError(_logger, null, NOMBRE_LOGGER, EDITAR, LOG_ERROR_LISTA_EXPERIENCIAS, LOG_ERROR_PROCESAR_ARCHIVO);
+
                             error = true;
                         }
                     }
                     else
                     {
-                        _logger.LogError("{NOMBRE_LOGGER} El nombre del archivo es nulo.", NOMBRE_LOGGER);
+                        this.LanzarError(_logger, null, NOMBRE_LOGGER, EDITAR, string.Format(Constantes.LOG_ERROR_NULO, Constantes.NOMBRE_ARCHIVO));
                         error = true;
                     }
                 }
                 else
                 {
-                    _logger.LogError("{NOMBRE_LOGGER} La ruta es nula.", NOMBRE_LOGGER);
+                    this.LanzarError(_logger, null, NOMBRE_LOGGER, EDITAR, string.Format(Constantes.LOG_ERROR_NULO, Constantes.RUTA_ARCHIVO));
                     error = true;
                 }
 
                 if (error)
                 {
-                    TempData["Error"] = "No se pudo procesar el archivo.";
                     return Json(new { error = true });
                 }
 
@@ -1068,8 +1048,8 @@ namespace SGPla.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{NOMBRE_LOGGER} Error inesperado.", NOMBRE_LOGGER);
-                TempData["Error"] = "Ha ocurrido un error, inténtelo de nuevo más tarde.";
+                this.LanzarError(_logger, ex, NOMBRE_LOGGER, EDITAR, Constantes.LOG_ERROR_INESPERADO);
+
                 return Json(new { error = true });
             }
 
@@ -1080,35 +1060,35 @@ namespace SGPla.Controllers
         {
             try
             {
-                var eeNuevas = HttpContext.Session.GetString("EeNuevas");
+                var eeNuevas = HttpContext.Session.GetString(SESSION_EXPERIENCIAS_NUEVAS);
                 if (string.IsNullOrEmpty(eeNuevas))
                 {
-                    _logger.LogError("{NOMBRE_LOGGER} La lista de Experiencias nuevas es nula.", NOMBRE_LOGGER);
-                    TempData["Error"] = "No se pudo editar el Plan de Estudios, inténtelo nuevamente.";
+                    this.LanzarError(_logger, null, NOMBRE_LOGGER, EDITAR, LOG_ERROR_LISTA_EXPERIENCIAS_NUEVAS, string.Format(Constantes.TOAST_ERROR_GUARDAR_EL, Constantes.PLAN_ESTUDIOS));
+
                     return RedirectToAction(nameof(Index));
                 }
-                var eeEditadas = HttpContext.Session.GetString("EeEditadas");
+                var eeEditadas = HttpContext.Session.GetString(SESSION_EXPERIENCIAS_EDITADAS);
                 if (string.IsNullOrEmpty(eeEditadas))
                 {
-                    _logger.LogError("{NOMBRE_LOGGER} La lista de Experiencias editadas es nula.", NOMBRE_LOGGER);
-                    TempData["Error"] = "No se pudo editar el Plan de Estudios, inténtelo nuevamente.";
+                    this.LanzarError(_logger, null, NOMBRE_LOGGER, EDITAR, LOG_ERROR_LISTA_EXPERIENCIAS_EDITADAS, string.Format(Constantes.TOAST_ERROR_GUARDAR_EL, Constantes.PLAN_ESTUDIOS));
+
                     return RedirectToAction(nameof(Index));
                 }
-                var eeEliminadas = HttpContext.Session.GetString("EeEliminadas");
+                var eeEliminadas = HttpContext.Session.GetString(SESSION_EXPERIENCIAS_ELIMINADAS);
                 if (string.IsNullOrEmpty(eeEliminadas))
                 {
-                    _logger.LogError("{NOMBRE_LOGGER} La lista de Experiencias eliminadas es nula.", NOMBRE_LOGGER);
-                    TempData["Error"] = "No se pudo editar el Plan de Estudios, inténtelo nuevamente.";
+                    this.LanzarError(_logger, null, NOMBRE_LOGGER, EDITAR, LOG_ERROR_LISTA_EXPERIENCIAS_ELIMINADAS, string.Format(Constantes.TOAST_ERROR_GUARDAR_EL, Constantes.PLAN_ESTUDIOS));
+
                     return RedirectToAction(nameof(Index));
                 }
-                var listaEeJson = HttpContext.Session.GetString("Experiencias");
+                var listaEeJson = HttpContext.Session.GetString(SESSION_EXPERIENCIAS);
                 if (!string.IsNullOrEmpty(listaEeJson))
                 {
                     var listaEe = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(listaEeJson);
                     if (listaEe.Count <= 0)
                     {
-                        _logger.LogError("{NOMBRE_LOGGER} [GuardarPlanEditado].", NOMBRE_LOGGER);
-                        TempData["Error"] = "La lista de Experiencias Educativas no puede estar vacía.";
+                        this.LanzarError(_logger, null, NOMBRE_LOGGER, PASO2, Constantes.LOG_ERROR_VALIDACION, TOAST_EXPERIENCIAS_VACIAS);
+
                         return await EditarPlanAsync(modelo.IdPlanEstudios, true);
                     }
                 }
@@ -1122,20 +1102,20 @@ namespace SGPla.Controllers
                     IdsExperienciasEliminadas = JsonSerializer.Deserialize<List<int>>(eeEliminadas)
                 };
 
-                var rutaArchivo = HttpContext.Session.GetString("Ruta");
+                var rutaArchivo = HttpContext.Session.GetString(SESSION_RUTA);
                 if (modelo.NuevoArchivo)
                 {
                     if (string.IsNullOrEmpty(rutaArchivo))
                     {
-                        _logger.LogError("{NOMBRE_LOGGER} La ruta del archivo es nula.", NOMBRE_LOGGER);
-                        TempData["Error"] = "No se pudo editar el Plan de Estudios, inténtelo nuevamente.";
+                        this.LanzarError(_logger, null, NOMBRE_LOGGER, EDITAR, string.Format(Constantes.LOG_ERROR_NULA, Constantes.RUTA_ARCHIVO), string.Format(Constantes.TOAST_ERROR_GUARDAR_EL, Constantes.PLAN_ESTUDIOS));
+
                         return RedirectToAction(nameof(Index));
                     }
-                    var nombreArchivo = HttpContext.Session.GetString("NombreArchivo");
+                    var nombreArchivo = HttpContext.Session.GetString(SESSION_NOMBRE_ARCHIVO);
                     if (string.IsNullOrEmpty(nombreArchivo))
                     {
-                        _logger.LogError("{NOMBRE_LOGGER} El nombre del archivo es nulo.", NOMBRE_LOGGER);
-                        TempData["Error"] = "No se pudo editar el Plan de Estudios, inténtelo nuevamente.";
+                        this.LanzarError(_logger, null, NOMBRE_LOGGER, EDITAR, string.Format(Constantes.LOG_ERROR_NULO, Constantes.NOMBRE_ARCHIVO), string.Format(Constantes.TOAST_ERROR_GUARDAR_EL, Constantes.PLAN_ESTUDIOS));
+
                         return RedirectToAction(nameof(Index));
                     }
 
@@ -1147,27 +1127,26 @@ namespace SGPla.Controllers
 
                     await _planEstudiosService.EditarAsync(plan);
                     System.IO.File.Delete(rutaArchivo);
-                    TempData["Success"] = "Plan de estudios guardado con éxito.";
+                    TempData["Success"] = string.Format(Constantes.TOAST_GUARDADO_EL, Constantes.PLAN_ESTUDIOS);
                     return RedirectToAction(nameof(Index));
                 }
 
                 await _planEstudiosService.EditarAsync(plan);
-                TempData["Success"] = "Plan de estudios guardado con éxito.";
+                TempData["Success"] = string.Format(Constantes.TOAST_GUARDADO_EL, Constantes.PLAN_ESTUDIOS);
                 return RedirectToAction(nameof(Index));
 
             }
             catch (ValidacionExcepction vx)
             {
-                _logger.LogError(vx, "{NOMBRE_LOGGER} [GuardarPlanEditado].", NOMBRE_LOGGER);
-                TempData["Error"] = $"Error: {vx.Message}";
+                this.LanzarError(_logger, vx, NOMBRE_LOGGER, EDITAR, Constantes.LOG_ERROR_VALIDACION, vx.Message);
                 if (vx.Codigo.Contains("422"))
-                    TempData["Error"] = "No se pudo editar el Plan de Estudios, inténtelo nuevamente.";
+                    TempData["Error"] = string.Format(Constantes.TOAST_ERROR_GUARDAR_EL, Constantes.PLAN_ESTUDIOS);
                 return await EditarPlanAsync(modelo.IdPlanEstudios, true);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{NOMBRE_LOGGER} [GuardarPlanEditado] Error inesperado.", NOMBRE_LOGGER);
-                TempData["Error"] = $"No se pudo editar el Plan de Estudios, inténtelo más tarde.";
+                this.LanzarError(_logger, ex, NOMBRE_LOGGER, EDITAR, Constantes.LOG_ERROR_INESPERADO, string.Format(Constantes.TOAST_ERROR_GUARDAR_EL, Constantes.PLAN_ESTUDIOS));
+
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -1179,11 +1158,11 @@ namespace SGPla.Controllers
             DatosExperienciaEducativaDTO experiencia = new();
             bool error = false;
 
-            var eeNuevasJson = HttpContext.Session.GetString("EeNuevas");
+            var eeNuevasJson = HttpContext.Session.GetString(SESSION_EXPERIENCIAS_NUEVAS);
             if (!string.IsNullOrEmpty(eeNuevasJson))
             {
                 var eeNuevas = JsonSerializer.Deserialize<List<AgregarExperienciaEducativaDTO>>(eeNuevasJson);
-                var listaEeJson = HttpContext.Session.GetString("Experiencias");
+                var listaEeJson = HttpContext.Session.GetString(SESSION_EXPERIENCIAS);
                 if (!string.IsNullOrEmpty(listaEeJson))
                 {
                     var listaEe = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(listaEeJson);
@@ -1203,26 +1182,25 @@ namespace SGPla.Controllers
                     listaEe.Add(experiencia);
 
                     eeNuevasJson = JsonSerializer.Serialize(eeNuevas);
-                    HttpContext.Session.SetString("EeNuevas", eeNuevasJson);
+                    HttpContext.Session.SetString(SESSION_EXPERIENCIAS_NUEVAS, eeNuevasJson);
                     listaEeJson = JsonSerializer.Serialize(listaEe);
-                    HttpContext.Session.SetString("Experiencias", listaEeJson);
+                    HttpContext.Session.SetString(SESSION_EXPERIENCIAS, listaEeJson);
                 }
                 else
                 {
-                    _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias Educativas.", NOMBRE_LOGGER);
+                    this.LanzarError(_logger, null, NOMBRE_LOGGER, EDITAR, LOG_ERROR_LISTA_EXPERIENCIAS);
                     error = true;
                 }
             }
             else
             {
-                _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias Educativas nuevas.", NOMBRE_LOGGER);
+                this.LanzarError(_logger, null, NOMBRE_LOGGER, EDITAR, LOG_ERROR_LISTA_EXPERIENCIAS_NUEVAS);
                 error = true;
 
             }
 
             if (error)
             {
-                TempData["Error"] = "Ha ocurrido un error, inténtelo nuevamente.";
                 return Json(new { error = true });
             }
 
@@ -1235,10 +1213,10 @@ namespace SGPla.Controllers
             List<DatosExperienciaEducativaDTO> listaEe = [];
             bool error = false;
 
-            var eeEditadasJson = HttpContext.Session.GetString("EeEditadas");
+            var eeEditadasJson = HttpContext.Session.GetString(SESSION_EXPERIENCIAS_EDITADAS);
             if (!string.IsNullOrEmpty(eeEditadasJson))
             {
-                var listaEeJson = HttpContext.Session.GetString("Experiencias");
+                var listaEeJson = HttpContext.Session.GetString(SESSION_EXPERIENCIAS);
                 if (!string.IsNullOrEmpty(listaEeJson))
                 {
                     listaEe = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(listaEeJson);
@@ -1262,11 +1240,11 @@ namespace SGPla.Controllers
                             }
 
                             eeEditadasJson = JsonSerializer.Serialize(eeEditadas);
-                            HttpContext.Session.SetString("EeEditadas", eeEditadasJson);
+                            HttpContext.Session.SetString(SESSION_EXPERIENCIAS_EDITADAS, eeEditadasJson);
                         }
                         else
                         {
-                            var eeNuevasJson = HttpContext.Session.GetString("EeNuevas");
+                            var eeNuevasJson = HttpContext.Session.GetString(SESSION_EXPERIENCIAS_NUEVAS);
                             if (!string.IsNullOrEmpty(eeNuevasJson))
                             {
                                 var eeNuevas = JsonSerializer.Deserialize<List<AgregarExperienciaEducativaDTO>>(eeNuevasJson);
@@ -1288,41 +1266,38 @@ namespace SGPla.Controllers
                                 }
 
                                 eeNuevasJson = JsonSerializer.Serialize(eeNuevas);
-                                HttpContext.Session.SetString("EeNuevas", eeNuevasJson);
+                                HttpContext.Session.SetString(SESSION_EXPERIENCIAS_NUEVAS, eeNuevasJson);
                             }
                             else
                             {
-                                _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias nuevas.", NOMBRE_LOGGER);
+                                this.LanzarError(_logger, null, NOMBRE_LOGGER, EDITAR, LOG_ERROR_LISTA_EXPERIENCIAS_NUEVAS);
                                 error = true;
                             }
                         }
 
                         listaEeJson = JsonSerializer.Serialize(listaEe);
-                        HttpContext.Session.SetString("Experiencias", listaEeJson);
+                        HttpContext.Session.SetString(SESSION_EXPERIENCIAS, listaEeJson);
                     }
                     else
                     {
-                        _logger.LogError("{NOMBRE_LOGGER} Error al obtener la Experiencia Educativa.", NOMBRE_LOGGER);
+                        this.LanzarError(_logger, null, NOMBRE_LOGGER, EDITAR, string.Format(Constantes.LOG_ERROR_NULO, Constantes.EXPERIENCIA_EDUCATIVA));
                         error = true;
                     }
                 }
                 else
                 {
-                    _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias.", NOMBRE_LOGGER);
+                    this.LanzarError(_logger, null, NOMBRE_LOGGER, EDITAR, LOG_ERROR_LISTA_EXPERIENCIAS);
                     error = true;
                 }
             }
             else
             {
-                _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias Editadas.", NOMBRE_LOGGER);
+                this.LanzarError(_logger, null, NOMBRE_LOGGER, EDITAR, LOG_ERROR_LISTA_EXPERIENCIAS_EDITADAS);
                 error = true;
             }
 
             if (error)
-            {
-                TempData["Error"] = "Ha ocurrido un error, inténtelo nuevamente.";
                 return Json(new { error = true });
-            }
 
             return Json(new { experiencias = listaEe, error = false });
         }
@@ -1333,10 +1308,10 @@ namespace SGPla.Controllers
             List<DatosExperienciaEducativaDTO> listaEe = [];
             bool error = false;
 
-            var eeEliminadasJson = HttpContext.Session.GetString("EeEliminadas");
+            var eeEliminadasJson = HttpContext.Session.GetString(SESSION_EXPERIENCIAS_ELIMINADAS);
             if (!string.IsNullOrEmpty(eeEliminadasJson))
             {
-                var listaEeJson = HttpContext.Session.GetString("Experiencias");
+                var listaEeJson = HttpContext.Session.GetString(SESSION_EXPERIENCIAS);
                 if (!string.IsNullOrEmpty(listaEeJson))
                 {
                     listaEe = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(listaEeJson);
@@ -1351,11 +1326,11 @@ namespace SGPla.Controllers
                             eeEliminadas.Add(experiencia.IdExperienciaEducativa);
 
                             eeEliminadasJson = JsonSerializer.Serialize(eeEliminadas);
-                            HttpContext.Session.SetString("EeEliminadas", eeEliminadasJson);
+                            HttpContext.Session.SetString(SESSION_EXPERIENCIAS_ELIMINADAS, eeEliminadasJson);
                         }
                         else
                         {
-                            var eeNuevasJson = HttpContext.Session.GetString("EeNuevas");
+                            var eeNuevasJson = HttpContext.Session.GetString(SESSION_EXPERIENCIAS_NUEVAS);
                             if (!string.IsNullOrEmpty(eeNuevasJson))
                             {
                                 var eeNuevas = JsonSerializer.Deserialize<List<AgregarExperienciaEducativaDTO>>(eeNuevasJson);
@@ -1366,47 +1341,44 @@ namespace SGPla.Controllers
                                     listaEe.Remove(experiencia);
 
                                     eeNuevasJson = JsonSerializer.Serialize(eeNuevas);
-                                    HttpContext.Session.SetString("EeNuevas", eeNuevasJson);
+                                    HttpContext.Session.SetString(SESSION_EXPERIENCIAS_NUEVAS, eeNuevasJson);
                                 }
                                 else
                                 {
-                                    _logger.LogError("{NOMBRE_LOGGER} Error al obtener la Experiencia Educativa nueva.", NOMBRE_LOGGER);
+                                    this.LanzarError(_logger, null, NOMBRE_LOGGER, EDITAR, string.Format(Constantes.LOG_ERROR_NULA, EXPERIENCIA_NUEVA));
                                     error = true;
                                 }
                             }
                             else
                             {
-                                _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias nuevas.", NOMBRE_LOGGER);
+                                this.LanzarError(_logger, null, NOMBRE_LOGGER, EDITAR, LOG_ERROR_LISTA_EXPERIENCIAS_NUEVAS);
                                 error = true;
                             }
                         }
 
                         listaEeJson = JsonSerializer.Serialize(listaEe);
-                        HttpContext.Session.SetString("Experiencias", listaEeJson);
+                        HttpContext.Session.SetString(SESSION_EXPERIENCIAS, listaEeJson);
                     }
                     else
                     {
-                        _logger.LogError("{NOMBRE_LOGGER} Error al obtener la Experiencia Educativa.", NOMBRE_LOGGER);
+                        this.LanzarError(_logger, null, NOMBRE_LOGGER, EDITAR, string.Format(Constantes.LOG_ERROR_NULA, Constantes.EXPERIENCIA_EDUCATIVA));
                         error = true;
                     }
                 }
                 else
                 {
-                    _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias.", NOMBRE_LOGGER);
+                    this.LanzarError(_logger, null, NOMBRE_LOGGER, EDITAR, LOG_ERROR_LISTA_EXPERIENCIAS);
                     error = true;
                 }
             }
             else
             {
-                _logger.LogError("{NOMBRE_LOGGER} Error al obtener la lista de Experiencias eliminadas.", NOMBRE_LOGGER);
+                this.LanzarError(_logger, null, NOMBRE_LOGGER, EDITAR, LOG_ERROR_LISTA_EXPERIENCIAS_ELIMINADAS);
                 error = true;
             }
 
             if (error)
-            {
-                TempData["Error"] = "Ha ocurrido un error, inténtelo nuevamente.";
                 return Json(new { error = true });
-            }
 
             return Json(new { experiencias = listaEe, error = false });
         }
@@ -1452,7 +1424,7 @@ namespace SGPla.Controllers
         [HttpGet]
         public async Task<IActionResult> CancelarAccionAsync()
         {
-            var rutaArchivo = HttpContext.Session.GetString("Ruta");
+            var rutaArchivo = HttpContext.Session.GetString(SESSION_RUTA);
             if (!string.IsNullOrEmpty(rutaArchivo))
                 System.IO.File.Delete(rutaArchivo);
 
@@ -1545,21 +1517,13 @@ namespace SGPla.Controllers
 
             if (experiencias.Count == 0)
             {
-                tabla.Headers = new List<string> { "Codigo", "Experiencia Educativa", "Perfil Docente", "Acciones" };
-                tabla.Rows = new TableRowModel[]
-                    {
-                        new TableRowModel
-                        {
-                            Cells = []
-                        }
-                    }.ToList();
-                return tabla;
+                return generarTablaConMensaje(HEADERS_TABLA_EXPERIENCIAS, string.Format(Constantes.TABLA_VACIA, Constantes.EXPERIENCIAS_EDUCATIVAS));
             }
             else
             {
                 tabla = tabla = new TableModel
                 {
-                    Headers = new List<string> { "Codigo", "Experiencia Educativa", "Perfil Docente", "Acciones" },
+                    Headers = HEADERS_TABLA_EXPERIENCIAS,
                     Rows = experiencias.Select(ee => new TableRowModel
                     {
                         RowId = ee.Codigo,
@@ -1611,8 +1575,8 @@ namespace SGPla.Controllers
             using var stream = new FileStream(rutaArchivo, FileMode.Create);
             await archivo.CopyToAsync(stream);
 
-            HttpContext.Session.SetString("Ruta", rutaArchivo);
-            HttpContext.Session.SetString("NombreArchivo", archivo.FileName);
+            HttpContext.Session.SetString(SESSION_RUTA, rutaArchivo);
+            HttpContext.Session.SetString(SESSION_NOMBRE_ARCHIVO, archivo.FileName);
         }
 
         private TableModel generarTablaConMensaje(List<string> headers, string mensaje)
