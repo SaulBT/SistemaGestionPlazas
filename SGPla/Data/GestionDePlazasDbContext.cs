@@ -127,34 +127,10 @@ public partial class GestionDePlazasDbContext : DbContext
             entity.HasKey(e => e.IdAreaAcademica);
 
             entity.Property(e => e.IdAreaAcademica).HasColumnName("idAreaAcademica");
-            entity.Property(e => e.CalleNumero)
-                .HasMaxLength(150)
-                .IsUnicode(false)
-                .HasColumnName("calleNumero");
-            entity.Property(e => e.Colonia)
-                .HasMaxLength(100)
-                .IsUnicode(false)
-                .HasColumnName("colonia");
-            entity.Property(e => e.Conmutador)
-                .HasMaxLength(20)
-                .IsUnicode(false)
-                .HasColumnName("conmutador");
-            entity.Property(e => e.Cp)
-                .HasMaxLength(5)
-                .IsUnicode(false)
-                .HasColumnName("cp");
             entity.Property(e => e.Extension)
                 .HasMaxLength(5)
                 .IsUnicode(false)
                 .HasColumnName("extension");
-            entity.Property(e => e.Fax)
-                .HasMaxLength(20)
-                .IsUnicode(false)
-                .HasColumnName("fax");
-            entity.Property(e => e.Municipio)
-                .HasMaxLength(100)
-                .IsUnicode(false)
-                .HasColumnName("municipio");
             entity.Property(e => e.Nombre)
                 .HasMaxLength(100)
                 .IsUnicode(false)
@@ -169,14 +145,12 @@ public partial class GestionDePlazasDbContext : DbContext
         {
             entity.HasKey(e => e.IdArticulo);
 
-            entity.HasIndex(e => e.Numero, "UQ_Articulo_numero").IsUnique();
-
             entity.Property(e => e.IdArticulo).HasColumnName("idArticulo");
             entity.Property(e => e.Descripcion)
                 .IsUnicode(false)
                 .HasColumnName("descripcion");
             entity.Property(e => e.Numero)
-                .HasMaxLength(10)
+                .HasMaxLength(50)
                 .IsUnicode(false)
                 .HasColumnName("numero");
         });
@@ -404,10 +378,6 @@ public partial class GestionDePlazasDbContext : DbContext
                 .HasMaxLength(100)
                 .IsUnicode(false)
                 .HasColumnName("colonia");
-            entity.Property(e => e.Conmutador)
-                .HasMaxLength(20)
-                .IsUnicode(false)
-                .HasColumnName("conmutador");
             entity.Property(e => e.Cp)
                 .HasMaxLength(5)
                 .IsUnicode(false)
@@ -416,10 +386,6 @@ public partial class GestionDePlazasDbContext : DbContext
                 .HasMaxLength(5)
                 .IsUnicode(false)
                 .HasColumnName("extension");
-            entity.Property(e => e.Fax)
-                .HasMaxLength(20)
-                .IsUnicode(false)
-                .HasColumnName("fax");
             entity.Property(e => e.IdAreaAcademica).HasColumnName("idAreaAcademica");
             entity.Property(e => e.Municipio)
                 .HasMaxLength(100)
