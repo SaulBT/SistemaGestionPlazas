@@ -19,5 +19,8 @@ namespace SGPla.Repositories.Interfaces
 
         Task<bool> EstaAsociadoAPlan(int id);
 
+        Task<List<string>> ObtenerNombresProgramasRegistradosAsync(
+        List<string> programas);
+
     }
 }

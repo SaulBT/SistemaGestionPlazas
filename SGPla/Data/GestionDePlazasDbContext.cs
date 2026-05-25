@@ -642,7 +642,6 @@ public partial class GestionDePlazasDbContext : DbContext
                 .HasMaxLength(3)
                 .IsUnicode(false)
                 .HasColumnName("tipoContratacion");
-            entity.Property(e => e.Vacante).HasColumnName("vacante");
 
             entity.HasOne(d => d.IdArchivoAperturaNavigation).WithMany(p => p.Oferta)
                 .HasForeignKey(d => d.IdArchivoApertura)
@@ -650,12 +649,10 @@ public partial class GestionDePlazasDbContext : DbContext
 
             entity.HasOne(d => d.IdArticuloNavigation).WithMany(p => p.Oferta)
                 .HasForeignKey(d => d.IdArticulo)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Oferta_Articulo");
 
             entity.HasOne(d => d.IdDocenteNavigation).WithMany(p => p.Oferta)
                 .HasForeignKey(d => d.IdDocente)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Oferta_Docente");
 
             entity.HasOne(d => d.IdExperienciaEducativaNavigation).WithMany(p => p.Oferta)

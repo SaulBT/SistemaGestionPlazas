@@ -14,15 +14,29 @@
 
     <div style="padding-bottom:var(--padding-end); ">
         <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:center; justify-content:space-between;">
-            @await Component.InvokeAsync("InputField", new InputFieldModel
-            {
-                Id = "nombre",
-                Name = "Nombre",
-                Label = "Nombre:",
-                Valor = Model.Nombre,
-                Flexible = true,
-                Error = ViewData.ModelState["Nombre"]?.Errors.FirstOrDefault()?.ErrorMessage,
-            })
+            <div id="contenedorClave" style="flex:1 1 0; min-width:0;">
+                @await Component.InvokeAsync("InputField", new InputFieldModel
+                {
+                    Id = "clave",
+                    Name = "Clave",
+                    Label = "Clave:",
+                    Valor = Model.Clave,
+                    Flexible = true,
+                    Error = ViewData.ModelState["Clave"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                })
+            </div>
+
+            <div id="contenedorNombre" style="flex:1 1 0; min-width:0;">
+                @await Component.InvokeAsync("InputField", new InputFieldModel
+                {
+                    Id = "nombre",
+                    Name = "Nombre",
+                    Label = "Nombre:",
+                    Valor = Model.Nombre,
+                    Flexible = true,
+                    Error = ViewData.ModelState["Nombre"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                })
+            </div>
         </div>
 
         <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:flex-start; justify-content:space-evenly;">

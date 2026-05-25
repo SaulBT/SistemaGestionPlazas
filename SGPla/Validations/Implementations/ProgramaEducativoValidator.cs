@@ -27,7 +27,7 @@ namespace SGPla.Validations.Implementations
             if (buscarProgramaEducativoDTO.Nombre?.Length > 100)
                 throw new ArgumentException("El nombre no debe ser superior a 100 caracteres.");
 
-           
+
             if (buscarProgramaEducativoDTO.IdAreaAcademica < 0)
                 throw new ArgumentException("El área académica debe ser un número positivo.");
 
@@ -79,13 +79,13 @@ namespace SGPla.Validations.Implementations
             {
 
                 if (existe is not null)
-                    throw new ArgumentException("Ya existe un programa educativo con el mismo nombre en la misma entidad académica.");
+                    throw new ArgumentException("Ya existe un programa educativo la misma clave.");
             }
             else if (programaEducativoDTO is EditarProgramaEducativoDTO editarDTO)
             {
 
                 if (existe is not null && existe.IdProgramaEducativo != editarDTO.IdProgramaEducativo)
-                    throw new ArgumentException("Ya existe un programa educativo con el mismo nombre en la misma entidad académica.");
+                    throw new ArgumentException("Ya existe un programa educativo la misma clave.");
             }
         }
 
@@ -98,8 +98,8 @@ namespace SGPla.Validations.Implementations
             if (programaEducativoDTO.Nombre.Length > 100)
                 throw new ArgumentException("El nombre no debe ser superior a 100 caracteres.");
 
-            if (!Regex.IsMatch(programaEducativoDTO.Nombre, @"^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]+$"))
-                throw new ArgumentException("El nombre del programa educativo solo puede contener letras, números y espacios.");
+            if (programaEducativoDTO.Campus.Length > 100)
+                throw new ArgumentException("El campus no debe ser superior a 100 caracteres.");
 
             if (programaEducativoDTO.IdEntidadAcademica <= 0)
                 throw new ArgumentException("La entidad académica es obligatoria.");
