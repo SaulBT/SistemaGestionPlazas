@@ -1,0 +1,130 @@
+﻿@using SGPla.Models.DTOs.Oferta
+@using SGPla.Models.ViewModels.ProgramacionesAcademicas
+@model CargarProgramacionAcademica2ViewModel
+
+@{
+    Layout = "_LayoutSuperUsuario";
+    ViewData["Title"] = "Prueba Parser Descargas";
+
+    const string Th = "border:1px solid #ccc; padding:6px 10px; white-space:nowrap; text-align:left;";
+    const string Td = "border:1px solid #eee; padding:5px 10px; white-space:nowrap;";
+
+    string Horario(HorarioDia? h) => h is null ? "—" : $"{h.Inicio:hh\\:mm}-{h.Fin:hh\\:mm}";
+}
+
+<!-- Subir archivo -->
+<form method="post" action="@Url.Action("Index", "ProgramacionesAcademicas")" enctype="multipart/form-data">
+    <div style="display:inline-flex; gap:10px; align-items:flex-end; padding-bottom:30px;">
+        <div>
+            <label style="display:block; margin-bottom:4px; font-weight:500;">Archivo .xls de descargas</label>
+            <input type="file" name="archivo" accept=".xls,.xlsx" />
+        </div>
+        <button type="submit">Procesar</button>
+    </div>
+</form>
+
+<!-- Error -->
+@if (Model.Error != null)
+{
+    <div style="color:red; margin-bottom:20px;">
+        ⚠️ @Model.Error
+    </div>
+}
+
+<!-- Resultados -->
+@if (Model.OfertasVacantes != null)
+{
+    <p style="padding-bottom:10px;">
+        <strong>@Model.OfertasVacantes.Count</strong> clases encontradas.
+    </p>
+
+    <div style="overflow-x:auto;">
+        <table style="border-collapse:collapse; width:100%; font-size:13px;">
+            <thead>
+                <tr style="background:#f0f0f0;">
+                    <th style="@Th">Programa</th>
+                    <th style="@Th">NRC</th>
+                    <th style="@Th">Experiencia Educativa</th>
+                    <th style="@Th">Hrs Pago</th>
+                    <th style="@Th">Plaza</th>
+                    <th style="@Th">Lunes</th>
+                    <th style="@Th">Martes</th>
+                    <th style="@Th">Miércoles</th>
+                    <th style="@Th">Jueves</th>
+                    <th style="@Th">Viernes</th>
+                    <th style="@Th">Sábado</th>
+                    <th style="@Th">Articulo</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var ofertas in Model.OfertasVacantes)
+                {
+                    <tr style="border-bottom:1px solid #ddd;">
+                        <td style="@Td">@ofertas.Programa</td>
+                        <td style="@Td">@ofertas.NRC</td>
+                        <td style="@Td">@ofertas.ExperienciaEducativa</td>
+                        <td style="@Td; text-align:center">@ofertas.HorasPago</td>
+                        <td style="@Td">@ofertas.Plaza</td>
+                        <td style="@Td">@Horario(ofertas.Lunes)</td>
+                        <td style="@Td">@Horario(ofertas.Martes)</td>
+                        <td style="@Td">@Horario(ofertas.Miercoles)</td>
+                        <td style="@Td">@Horario(ofertas.Jueves)</td>
+                        <td style="@Td">@Horario(ofertas.Viernes)</td>
+                        <td style="@Td">@Horario(ofertas.Sabado)</td>
+                        <td style="@Td">@ofertas.Articulo</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<!-- Resultados -->
+@if (Model.OfertasAsignadas != null)
+{
+    <p style="padding-bottom:10px;">
+        <strong>@Model.OfertasAsignadas.Count</strong> clases encontradas.
+    </p>
+
+    <div style="overflow-x:auto;">
+        <table style="border-collapse:collapse; width:100%; font-size:13px;">
+            <thead>
+                <tr style="background:#f0f0f0;">
+                    <th style="@Th">Programa</th>
+                    <th style="@Th">NRC</th>
+                    <th style="@Th">Experiencia Educativa</th>
+                    <th style="@Th">Hrs Pago</th>
+                    <th style="@Th">Plaza</th>
+                    <th style="@Th">Lunes</th>
+                    <th style="@Th">Martes</th>
+                    <th style="@Th">Miércoles</th>
+                    <th style="@Th">Jueves</th>
+                    <th style="@Th">Viernes</th>
+                    <th style="@Th">Sábado</th>
+                    <th style="@Th">NP</th>
+                    <th style="@Th">Docente</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var ofertas in Model.OfertasAsignadas)
+                {
+                    <tr style="border-bottom:1px solid #ddd;">
+                        <td style="@Td">@ofertas.Programa</td>
+                        <td style="@Td">@ofertas.NRC</td>
+                        <td style="@Td">@ofertas.ExperienciaEducativa</td>
+                        <td style="@Td; text-align:center">@ofertas.HorasPago</td>
+                        <td style="@Td">@ofertas.Plaza</td>
+                        <td style="@Td">@Horario(ofertas.Lunes)</td>
+                        <td style="@Td">@Horario(ofertas.Martes)</td>
+                        <td style="@Td">@Horario(ofertas.Miercoles)</td>
+                        <td style="@Td">@Horario(ofertas.Jueves)</td>
+                        <td style="@Td">@Horario(ofertas.Viernes)</td>
+                        <td style="@Td">@Horario(ofertas.Sabado)</td>
+                        <td style="@Td">@ofertas.NP</td>
+                        <td style="@Td">@ofertas.NombreDocente</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

@@ -298,7 +298,7 @@ namespace SGPla.Controllers
 
             var dto = new CrearProgramaEducativoDTO
             {
-                Nombre = model.Nombre,
+                Nombre = model.Clave+ "-" + model.Nombre,
                 Campus = model.Campus,
                 IdEntidadAcademica = model.IdEntidadAcademica,
                
@@ -332,7 +332,7 @@ namespace SGPla.Controllers
             var dto = new EditarProgramaEducativoDTO
             {
                 IdProgramaEducativo = model.IdProgramaEducativo,
-                Nombre = model.Nombre,
+                Nombre = model.Clave + "-" + model.Nombre,
                 Campus = model.Campus,
                 IdEntidadAcademica = model.IdEntidadAcademica,
                 
@@ -384,10 +384,22 @@ namespace SGPla.Controllers
         {
             var programaEducativo = await _programaEducativoService.ObtenerPorIdAsync(id);
 
+            string[] identificadores = programaEducativo.Nombre.Split('-', 2);
+
+            string clave = "";
+            string nombre = programaEducativo.Nombre;
+
+            if (identificadores.Length > 1)
+            {
+                clave = identificadores[0];
+                nombre = identificadores[1];
+            }
+
             var model = new CrearProgramaEducativoViewModel
             {
                 IdProgramaEducativo = id,
-                Nombre = programaEducativo.Nombre,
+                Clave = clave,
+                Nombre = nombre,
                 Campus = programaEducativo.Campus,
                 IdEntidadAcademica = programaEducativo.IdEntidadAcademica,
                 IdAreaAcademica = programaEducativo.IdAreaAcademica,
@@ -395,6 +407,7 @@ namespace SGPla.Controllers
             };
 
             await CargarCombos(model);
+
             return View(model);
         }
 

@@ -41,13 +41,17 @@ namespace SGPla.Repositories.Implementations
 
         public async Task<ProgramaEducativo?> ExisteAsync(ProgramaEducativo programaEducativo)
         {
-            return await _context.ProgramaEducativo.FirstOrDefaultAsync(a =>
-                a.Nombre == programaEducativo.Nombre &&
-                a.IdEntidadAcademica == programaEducativo.IdEntidadAcademica &&
-                a.Campus == programaEducativo.Campus
-            );
+            string clave = programaEducativo.Nombre.Split('-', 2)[0].Trim();
 
+            string prefijoClave = $"{clave}-";
+
+            return await _context.ProgramaEducativo
+                .FirstOrDefaultAsync(a =>
+                    a.Nombre != null &&
+                    a.Nombre.StartsWith(prefijoClave) 
+                );
         }
+
         public async Task<List<ProgramaEducativo>> ObtenerPorFiltroAsync(BuscarProgramaEducativoDTO filtro)
         {
             var lista = _context.ProgramaEducativo
@@ -131,6 +135,15 @@ namespace SGPla.Repositories.Implementations
            
 
             return await query.CountAsync();
+        }
+
+        public async Task<List<string>> ObtenerNombresProgramasRegistradosAsync(
+        List<string> programas)
+        {
+            return await _context.ProgramaEducativo
+                .Where(p => programas.Contains(p.Nombre))
+                .Select(p => p.Nombre)
+                .ToListAsync();
         }
     }
 }

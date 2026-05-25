@@ -72,7 +72,7 @@ namespace SGPla.Validations.Implementations
             var periodo = new Periodo
             {
                 IdPeriodo = periodoEscolarDTO is EditarPeriodoEscolarDTO editarPeriodoDTO? editarPeriodoDTO.IdPeriodoEscolar : 0,
-                Codigo = PeriodoMapper.AnioParaCodigo(periodoEscolarDTO.Anio) + periodoCodigo
+                Codigo = periodoEscolarDTO.Anio + periodoCodigo
             };
 
             var existe = await _periodoEscolarRepository.ExisteAsync(periodo);

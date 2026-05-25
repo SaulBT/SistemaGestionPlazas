@@ -3,7 +3,6 @@ using SGPla.Models.DTOs.PeriodoEscolar;
 
 namespace SGPla.Mappers
 {
-
     public class PeriodoEscolarMapper
     {
         public static class PeriodoMapper
@@ -20,9 +19,15 @@ namespace SGPla.Mappers
                 { "01", "Agosto-Enero" }
             };
 
-            public static int AnioParaCodigo(int anio) => anio + 1;
-
-            public static int AnioParaPresentacion(int anioCodigo) => anioCodigo - 1;
+            public static string ConstruirPeriodoMostrar(int anioEjercicio, string periodoCodigo)
+            {
+                return periodoCodigo switch
+                {
+                    "01" => $"Agosto {anioEjercicio - 1} – Enero {anioEjercicio}",
+                    "51" => $"Febrero – Julio {anioEjercicio}",
+                    _ => "Desconocido"
+                };
+            }
         }
 
         public static Periodo ToModel(CrearPeriodoEscolarDTO dto)
@@ -32,10 +37,9 @@ namespace SGPla.Mappers
 
             return new Periodo
             {
-                Codigo = PeriodoMapper.AnioParaCodigo(dto.Anio) + periodoCodigo 
+                Codigo = dto.Anio + periodoCodigo
             };
         }
-
 
         public static Periodo ToModel(EditarPeriodoEscolarDTO dto)
         {
@@ -45,10 +49,10 @@ namespace SGPla.Mappers
             return new Periodo
             {
                 IdPeriodo = dto.IdPeriodoEscolar,
-                Codigo = PeriodoMapper.AnioParaCodigo(dto.Anio) + periodoCodigo 
+
+                Codigo = dto.Anio + periodoCodigo
             };
         }
-
 
         public static DetallesPeriodoEscolarDTO ToDTO(Periodo model)
         {
@@ -63,12 +67,22 @@ namespace SGPla.Mappers
             if (!PeriodoMapper.CodigoANombre.TryGetValue(periodoCodigo, out var periodoNombre))
                 periodoNombre = "Desconocido";
 
+            int anioEjercicio = int.Parse(anio);
+
             return new DetallesPeriodoEscolarDTO
             {
                 Codigo = codigo,
+
                 Periodo = periodoNombre,
-                Anio = PeriodoMapper.AnioParaPresentacion(int.Parse(anio)),
-                IdPeriodoEscolar = model.IdPeriodo
+
+                Anio = anioEjercicio,
+
+                IdPeriodoEscolar = model.IdPeriodo,
+
+                PeriodoMostrar = PeriodoMapper.ConstruirPeriodoMostrar(
+                    anioEjercicio,
+                    periodoCodigo
+                )
             };
         }
     }

@@ -14,7 +14,7 @@ namespace SGPla.Repositories.Interfaces
 
         Task<bool> EliminarArticuloAsync(int id);
 
-        Task<Articulo?> ExisteNumeroAsync(string numero);
+        Task<Articulo?> ExisteAsync(string numero);
 
         Task<IEnumerable<Articulo>> BuscarPorTerminoAsync(string busqueda);
     }

@@ -11,6 +11,11 @@ namespace SGPla.Models.ViewModels.ProgramasEducativos
         [Required(ErrorMessage = "El nombre es obligatorio")]
         public string Nombre { get; set; }
 
+
+        [Required(ErrorMessage = "El código es obligatorio")]
+        [RegularExpression(@"^\d{5}$", ErrorMessage = "Debe contener exactamente 5 dígitos")]
+        public string Clave { get; set; }
+
         //[Required(ErrorMessage = "El campus es obligatorio")]
         //public string Campus { get; set; }
 

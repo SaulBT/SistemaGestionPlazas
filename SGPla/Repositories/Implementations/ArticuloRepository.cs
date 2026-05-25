@@ -22,7 +22,7 @@ namespace SGPla.Repositories.Implementations
             return articulo;
         }
 
-        public async Task<Articulo?> ExisteNumeroAsync(string numero)
+        public async Task<Articulo?> ExisteAsync(string numero)
         {
             return await _context.Articulo.FirstOrDefaultAsync(a => a.Numero == numero);
         }

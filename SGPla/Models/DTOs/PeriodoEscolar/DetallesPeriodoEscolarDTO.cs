@@ -8,5 +8,7 @@
 
         public string Periodo { get; set; } = string.Empty;
         public int Anio { get; set; }
+
+        public string PeriodoMostrar { get; set; }
     }
 }

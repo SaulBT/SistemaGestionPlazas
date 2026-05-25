@@ -77,8 +77,7 @@ namespace SGPla.Repositories.Implementations
                 query = query.Where(p => p.Codigo.EndsWith(periodo));
             }
 
-            query = query.OrderBy(a => a.Codigo);
-
+            query = query.OrderByDescending(a => a.Codigo);
             int pagina = filtro.Pagina <= 0 ? 1 : filtro.Pagina;
             int cantidad = filtro.Cantidad <= 0 ? 10 : filtro.Cantidad;
             int skip = (pagina - 1) * cantidad;

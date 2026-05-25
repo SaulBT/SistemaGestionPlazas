@@ -17,7 +17,7 @@ namespace SGPla.Controllers
         private readonly ILogger<PeriodosEscolaresController> _logger;
         private int paginaActual = 1;
 
-        private static List<string> HEADERS_TABLA_INDEX = ["Código", "Año", "Periodo", "Acciones"];
+        private static List<string> HEADERS_TABLA_INDEX = ["Código", "Año de ejercicio", "Periodo", "Acciones"];
 
         public PeriodosEscolaresController(IPeriodoEscolarService periodoEscolarService, ILogger<PeriodosEscolaresController> logger)
         {
@@ -66,14 +66,14 @@ namespace SGPla.Controllers
 
                 return new TableModel
                 {
-                    Headers = new List<string> { "Código", "Año", "Periodo", "Acciones" },
+                    Headers = new List<string> { "Código", "Año de ejercicio", "Periodo", "Acciones" },
                     Rows = resultado.Items.Select(a => new TableRowModel
                     {
                         Cells = new List<TableCellModel>
                 {
                     new TableCellModel { Value = a.Codigo },
                     new TableCellModel { Value = a.Anio.ToString() },
-                    new TableCellModel { Value = a.Periodo },
+                    new TableCellModel { Value = a.PeriodoMostrar },
                     new TableCellModel
                     {
                         Actions = new List<TableActionModel>

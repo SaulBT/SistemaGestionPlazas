@@ -61,7 +61,12 @@ builder.Services.AddScoped<IPeriodoEscolarValidator, PeriodoEscolarValidator>();
 builder.Services.AddScoped<IArchivoRepository, ArchivoRepository>();
 builder.Services.AddScoped<IArchivoService, ArchivoService>();
 
+builder.Services.AddScoped<IProgramacionAcademicaRepository, ProgramacionAcademicaRepository>();
+builder.Services.AddScoped<IDocenteRepository, DocenteRepository>();
 
+builder.Services.AddScoped<IProgramacionAcademicaValidator, ProgramacionAcademicaValidator>();
+builder.Services.AddScoped<IProgramacionAcademicaService, ProgramacionAcademicaService>();
+//builder.Services.AddScoped<IProgramacionAcademicaRepository, ProgramacionAcademicaRepository>();
 
 var app = builder.Build();
 

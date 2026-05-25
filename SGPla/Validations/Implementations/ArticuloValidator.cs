@@ -20,7 +20,7 @@ namespace SGPla.Validations.Implementations
             ArgumentNullException.ThrowIfNull(crearArticuloDTO);
 
             ValidarCampos(crearArticuloDTO);
-            await ValidarNoRepetidoCreacionAsync(crearArticuloDTO.Numero);
+            await ValidarNoRepetidoCreacionAsync(crearArticuloDTO.Numero, crearArticuloDTO.Descripcion);
         }
 
         public async Task ValidarEdicionAsync(EditarArticuloDTO editarArticuloDTO)
@@ -29,7 +29,7 @@ namespace SGPla.Validations.Implementations
 
             ValidarCampos(editarArticuloDTO);
             await ValidarExistencia(editarArticuloDTO.IdArticulo);
-            await ValidarNoRepetidoEdicionAsync(editarArticuloDTO.Numero, editarArticuloDTO.IdArticulo);
+            await ValidarNoRepetidoEdicionAsync(editarArticuloDTO.Numero, editarArticuloDTO.Descripcion, editarArticuloDTO.IdArticulo);
         }
 
         private async Task<bool> ValidarExistencia(int idArticulo)
@@ -54,24 +54,24 @@ namespace SGPla.Validations.Implementations
                 throw new ArgumentException("La descripción del artículo es obligatoria.");
         }
 
-        private async Task ValidarNoRepetidoCreacionAsync(string numero)
+        private async Task ValidarNoRepetidoCreacionAsync(string numero, string descripcion)
         {
-            var existeNumero = await _articuloRepository.ExisteNumeroAsync(numero);
+            var existeNumero = await _articuloRepository.ExisteAsync(numero);
 
             if (existeNumero is not null)
             {
-                throw new ArgumentException($"El número de articulo '{numero}' ya existe. Por favor, elija un número diferente.");
+                throw new ArgumentException($"Ya existe un artículo con los mismos datos registrado.");
             }
 
         }
 
-        private async Task ValidarNoRepetidoEdicionAsync(string numero, int idArticulo)
+        private async Task ValidarNoRepetidoEdicionAsync(string numero, string descripcion, int idArticulo)
         {
-            var existeNumero = await _articuloRepository.ExisteNumeroAsync(numero);
+            var existeNumero = await _articuloRepository.ExisteAsync(numero);
 
             if (existeNumero is not null && existeNumero.IdArticulo != idArticulo)
             {
-                throw new ArgumentException($"El número de articulo '{numero}' ya existe. Por favor, elija un número diferente.");
+                throw new ArgumentException($"Ya existe un artículo con los mismos datos registrado.");
             }
 
         }
