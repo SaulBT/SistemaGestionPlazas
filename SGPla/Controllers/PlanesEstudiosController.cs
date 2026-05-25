@@ -2,17 +2,12 @@
 using Microsoft.IdentityModel.Tokens;
 using SGPla.Commons;
 using SGPla.Commons.Factories;
-using SGPla.Models;
 using SGPla.Models.Components;
 using SGPla.Models.DTOs.EntidadAcademica;
 using SGPla.Models.DTOs.PlanEstudios;
 using SGPla.Models.DTOs.ProgramaEducativo;
 using SGPla.Models.ViewModels.PlanesEstudios;
-using SGPla.Services.Implementations;
 using SGPla.Services.Interfaces;
-using System.Numerics;
-using System.Runtime.ConstrainedExecution;
-using System.Text.Encodings.Web;
 using System.Text.Json;
 
 namespace SGPla.Controllers
