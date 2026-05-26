@@ -48,8 +48,8 @@ namespace SGPla.Controllers
         private const string SESSION_EXPERIENCIAS_ELIMINADAS = "ExperienciasEliminadas";
 
         private static List<string> HEADERS_TABLA_INDEX = ["Programa Educativo", "Modalidad", "Plan", "Área", "Acciones"];
-        private static List<string> HEADERS_TABLA_VER = ["Codigo", "Experiencia Educativa", "Perfil Docente"];
-        private static List<string> HEADERS_TABLA_EXPERIENCIAS = ["Codigo", "Experiencia Educativa", "Perfil Docente", "Acciones"];
+        private static List<string> HEADERS_TABLA_VER = ["Codigo", "Experiencia Educativa", "Horas", "Créditos", "Perfil Docente"];
+        private static List<string> HEADERS_TABLA_EXPERIENCIAS = ["Codigo", "Experiencia Educativa", "Horas", "Créditos", "Perfil Docente", "Acciones"];
 
         public PlanesEstudiosController(
             IPlanEstudiosService planEstudiosService,
@@ -294,6 +294,8 @@ namespace SGPla.Controllers
                     {
                         new() { Value = ee.Codigo },
                         new() { Value = ee.Nombre },
+                        new() { Value = ee.Horas },
+                        new() { Value = ee.Creditos },
                         new()
                         {
                             Actions = new List<TableActionModel>
@@ -711,7 +713,7 @@ namespace SGPla.Controllers
 
         //Gestionar Experiencias
         [HttpGet]
-        public JsonResult AgregarExperienciaEducativaCreacion(string codigo, string nombre, string perfilDocente)
+        public JsonResult AgregarExperienciaEducativaCreacion(string codigo, string nombre, string perfilDocente, string creditos, string horas)
         {
             bool error = false;
             DatosExperienciaEducativaDTO experiencia = new();
@@ -724,7 +726,9 @@ namespace SGPla.Controllers
                 {
                     Codigo = codigo,
                     Nombre = nombre,
-                    PerfilDocente = perfilDocente
+                    PerfilDocente = perfilDocente,
+                    Creditos = creditos,
+                    Horas = horas
                 };
 
                 listaEe.Add(experiencia);
@@ -745,7 +749,7 @@ namespace SGPla.Controllers
         }
 
         [HttpGet]
-        public JsonResult EditarExperienciaEducativaCreacion(string codigo, string nombre, string perfilDocente, string codigoOriginal)
+        public JsonResult EditarExperienciaEducativaCreacion(string codigo, string nombre, string perfilDocente, string codigoOriginal, string creditos, string horas)
         {
             bool error = false;
             List<AgregarExperienciaEducativaDTO> listaEe = [];
@@ -761,6 +765,8 @@ namespace SGPla.Controllers
                     experiencia.Codigo = codigo;
                     experiencia.Nombre = nombre;
                     experiencia.PerfilDocente = perfilDocente;
+                    experiencia.Horas = horas;
+                    experiencia.Creditos = creditos;
                     listaEeJson = JsonSerializer.Serialize(listaEe);
                     HttpContext.Session.SetString(SESSION_EXPERIENCIAS, listaEeJson);
                 }
@@ -1149,7 +1155,7 @@ namespace SGPla.Controllers
 
         //Gestion experiencias
         [HttpGet]
-        public JsonResult AgregarExperienciaEducativaEdicion(string codigo, string nombre, string perfilDocente)
+        public JsonResult AgregarExperienciaEducativaEdicion(string codigo, string nombre, string perfilDocente, string creditos, string horas)
         {
             DatosExperienciaEducativaDTO experiencia = new();
             bool error = false;
@@ -1166,14 +1172,18 @@ namespace SGPla.Controllers
                     {
                         Codigo = codigo,
                         Nombre = nombre,
-                        PerfilDocente = perfilDocente
+                        PerfilDocente = perfilDocente,
+                        Creditos = creditos,
+                        Horas = horas
                     };
 
                     eeNuevas.Add(new AgregarExperienciaEducativaDTO
                     {
                         Codigo = codigo,
                         Nombre = nombre,
-                        PerfilDocente = perfilDocente
+                        PerfilDocente = perfilDocente,
+                        Creditos = creditos,
+                        Horas = horas
                     });
                     listaEe.Add(experiencia);
 
@@ -1527,6 +1537,8 @@ namespace SGPla.Controllers
                         {
                             new() { Value = ee.Codigo },
                             new() { Value = ee.Nombre },
+                            new() { Value = ee.Horas },
+                            new() { Value = ee.Creditos },
                             new()
                             {
                                 Actions = new List<TableActionModel>
