@@ -15,6 +15,10 @@ public partial class ExperienciaEducativa
 
     public string PerfilDocente { get; set; } = null!;
 
+    public string Creditos { get; set; } = null!;
+
+    public string Horas { get; set; } = null!;
+
     public virtual PlanEstudios IdPlanEstudiosNavigation { get; set; } = null!;
 
     public virtual ICollection<Oferta> Oferta { get; set; } = new List<Oferta>();
