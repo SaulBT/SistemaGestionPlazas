@@ -19,58 +19,6 @@
     </div>
 
     <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:center; justify-content:space-between; background-color:var(--bg-gris)">
-        <div style="width:200%">
-            @await Component.InvokeAsync("InputField", new InputFieldModel
-            {
-                Id = "domicilio",
-                Name = "domicilio",
-                Label = "Domicilio (Calle y Número):",
-                Valor = Model.CalleNumero,
-                Disabled = true,
-                Flexible = true
-            })
-        </div>
-        
-        <div style="width:100%">
-            @await Component.InvokeAsync("InputField", new InputFieldModel
-            {
-                Id = "colonia",
-                Name = "colonia",
-                Label = "Colonia:",
-                Valor = Model.Colonia,
-                Disabled = true,
-                Flexible = true
-            })
-        </div>
-        
-        <div style="width:50%">
-            @await Component.InvokeAsync("InputField", new InputFieldModel
-            {
-                Id = "cp",
-                Name = "cp",
-                Label = "C.P. :",
-                Valor = Model.Cp,
-                Disabled = true,
-                Flexible = true
-            })
-        </div>
-        
-        <div style="width:100%">
-            @await Component.InvokeAsync("InputField", new InputFieldModel
-            {
-                Id = "municipio",
-                Name = "municipio",
-                Label = "Municipio:",
-                Valor = Model.Municipio,
-                Disabled = true,
-                Flexible = true
-            })
-        </div>
-
-        
-    </div>
-
-    <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:center; justify-content:space-between; background-color:var(--bg-gris)">
         <div style="width:100%">
             @await Component.InvokeAsync("InputField", new InputFieldModel
             {
@@ -78,18 +26,6 @@
                 Name = "telefono",
                 Label = "Teléfono:",
                 Valor = Model.Telefono,
-                Disabled = true,
-                Flexible = true
-            })
-        </div>
-
-        <div style="width:100%">
-            @await Component.InvokeAsync("InputField", new InputFieldModel
-            {
-                Id = "conmutador",
-                Name = "conmutador",
-                Label = "Conmutador:",
-                Valor = Model.Conmutador,
                 Disabled = true,
                 Flexible = true
             })
@@ -102,18 +38,6 @@
                 Name = "extension",
                 Label = "Extensión:",
                 Valor = Model.Extension,
-                Disabled = true,
-                Flexible = true
-            })
-        </div>
-
-        <div style="width:100%">
-            @await Component.InvokeAsync("InputField", new InputFieldModel
-            {
-                Id = "fax",
-                Name = "fax",
-                Label = "Fax:",
-                Valor = Model.Fax,
                 Disabled = true,
                 Flexible = true
             })
