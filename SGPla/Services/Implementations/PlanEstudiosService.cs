@@ -90,10 +90,7 @@ namespace SGPla.Services.Implementations
 
             try
             {
-                archivoGuardado = await _archivoService.GuardarAsync(
-                    crearPlanEstudiosDTO.Archivo.Ruta,
-                    crearPlanEstudiosDTO.Archivo.NombreArchivo,
-                    "planes-estudios");
+                archivoGuardado = await _archivoService.GuardarAsync(crearPlanEstudiosDTO.Archivo.Ruta, crearPlanEstudiosDTO.Archivo.NombreArchivo, "planes-estudios");
                 archivoRegistrado = await _archivoRepository.CrearAsync(new Archivo
                 {
                     Nombre = archivoGuardado.NombreOriginal,
@@ -285,7 +282,9 @@ namespace SGPla.Services.Implementations
                 IdPlanEstudios = idPlanEstudios,
                 Codigo = experienciaEducativa.Codigo.Trim(),
                 Nombre = experienciaEducativa.Nombre.Trim(),
-                PerfilDocente = experienciaEducativa.PerfilDocente.Trim()
+                PerfilDocente = experienciaEducativa.PerfilDocente.Trim(),
+                Horas = experienciaEducativa.Horas,
+                Creditos = experienciaEducativa.Creditos
             }).ToList();
         }
 
@@ -297,7 +296,9 @@ namespace SGPla.Services.Implementations
                 IdPlanEstudios = idPlanEstudios,
                 Codigo = experienciaEducativa.Codigo.Trim(),
                 Nombre = experienciaEducativa.Nombre.Trim(),
-                PerfilDocente = experienciaEducativa.PerfilDocente.Trim()
+                PerfilDocente = experienciaEducativa.PerfilDocente.Trim(),
+                Horas = experienciaEducativa.Horas,
+                Creditos = experienciaEducativa.Creditos
             }).ToList();
         }
 
@@ -327,7 +328,9 @@ namespace SGPla.Services.Implementations
                     IdExperienciaEducativa = experienciaEducativa.IdExperienciaEducativa,
                     Codigo = experienciaEducativa.Codigo,
                     Nombre = experienciaEducativa.Nombre,
-                    PerfilDocente = experienciaEducativa.PerfilDocente
+                    PerfilDocente = experienciaEducativa.PerfilDocente,
+                    Horas = experienciaEducativa.Horas,
+                    Creditos = experienciaEducativa.Creditos
                 }).ToList(),
                 IdArchivo = planEstudios.IdArchivoPlan
             };
