@@ -29,6 +29,28 @@
 
 @await Component.InvokeAsync("InputField", new InputFieldModel
 {
+    Id = "HorasAgregar",
+    Name = "Horas",
+    Label = "Horas:",
+    Valor = Model?.Horas,
+    Flexible = true,
+    MaximoCaracteres = 150,
+    Error = "E"
+})
+
+@await Component.InvokeAsync("InputField", new InputFieldModel
+{
+    Id = "CreditosAgregar",
+    Name = "Creditos",
+    Label = "Creditos:",
+    Valor = Model?.Creditos,
+    Flexible = true,
+    MaximoCaracteres = 150,
+    Error = "E"
+})
+
+@await Component.InvokeAsync("InputField", new InputFieldModel
+{
     Id = "PerfilDocenteEditar",
     Name = "PerfilDocente",
     Label = "Perfil Docente:",
