@@ -10,9 +10,7 @@
         public string Cp { get; set; } = string.Empty;
         public string Municipio { get; set; } = string.Empty;
         public string Telefono { get; set; } = string.Empty;
-        public string Conmutador { get; set; } = string.Empty;
         public string Extension { get; set; } = string.Empty;
-        public string Fax { get; set; } = string.Empty;
         public string Region { get; set; } = string.Empty;
     }
 }

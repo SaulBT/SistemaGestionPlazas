@@ -38,12 +38,8 @@ namespace SGPla.Validations.Implementations
                 throw new ArgumentException("El Municipio es obligatorio.");
             if (crearEntidadAcademicaDTO.Telefono.IsNullOrEmpty())
                 throw new ArgumentException("El Teléfono es obligatorio.");
-            if (crearEntidadAcademicaDTO.Conmutador.IsNullOrEmpty())
-                throw new ArgumentException("El Conmutador es obligatorio.");
             if (crearEntidadAcademicaDTO.Extension.IsNullOrEmpty())
                 throw new ArgumentException("La Extensión es obligatoria.");
-            if (crearEntidadAcademicaDTO.Fax.IsNullOrEmpty())
-                throw new ArgumentException("El Fax es obligatorio.");
             if (crearEntidadAcademicaDTO.Region.IsNullOrEmpty())
                 throw new ArgumentException("La Region es obligatoria.");
 
@@ -69,12 +65,8 @@ namespace SGPla.Validations.Implementations
                 throw new ArgumentException("El Municipio es obligatorio.");
             if (datosEntidadAcademicaDTO.Telefono.IsNullOrEmpty())
                 throw new ArgumentException("El Teléfono es obligatorio.");
-            if (datosEntidadAcademicaDTO.Conmutador.IsNullOrEmpty())
-                throw new ArgumentException("El Conmutador es obligatorio.");
             if (datosEntidadAcademicaDTO.Extension.IsNullOrEmpty())
                 throw new ArgumentException("La Extensión es obligatoria.");
-            if (datosEntidadAcademicaDTO.Fax.IsNullOrEmpty())
-                throw new ArgumentException("El Fax es obligatorio.");
             if (datosEntidadAcademicaDTO.Region.IsNullOrEmpty())
                 throw new ArgumentException("La Region es obligatoria.");
 
