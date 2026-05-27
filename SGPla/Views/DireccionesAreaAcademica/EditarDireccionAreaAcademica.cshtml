@@ -27,61 +27,6 @@
         </div>
 
         <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:flex-start; justify-content:space-evenly;">
-            <div style="width:200%">
-                @await Component.InvokeAsync("InputField", new InputFieldModel
-                {
-                    Id = "calleNumero",
-                    Name = "calleNumero",
-                    Label = "Domicilio (Calle y Número):",
-                    Valor = Model.CalleNumero,
-                    Flexible = true,
-                    Error = ViewData.ModelState["calleNumero"]?.Errors.FirstOrDefault()?.ErrorMessage,
-                    MaximoCaracteres = 150
-                })
-            </div>
-            
-            <div style="width:100%">
-                @await Component.InvokeAsync("InputField", new InputFieldModel
-                {
-                    Id = "colonia",
-                    Name = "colonia",
-                    Label = "Colonia:",
-                    Valor = Model.Colonia,
-                    Flexible = true,
-                    Error = ViewData.ModelState["colonia"]?.Errors.FirstOrDefault()?.ErrorMessage,
-                    MaximoCaracteres = 100
-                })
-            </div>
-            
-            <div style="width:50%">
-                @await Component.InvokeAsync("InputField", new InputFieldModel
-                {
-                    Id = "cp",
-                    Name = "cp",
-                    Label = "C.P. :",
-                    Valor = Model.Cp,
-                    Flexible = true,
-                    Error = ViewData.ModelState["cp"]?.Errors.FirstOrDefault()?.ErrorMessage,
-                    MaximoCaracteres = 5
-                })
-            </div>
-            
-            <div style="width:100%">
-                @await Component.InvokeAsync("InputField", new InputFieldModel
-                {
-                    Id = "municipio",
-                    Name = "municipio",
-                    Label = "Municipio:",
-                    Valor = Model.Municipio,
-                    Flexible = true,
-                    Error = ViewData.ModelState["municipio"]?.Errors.FirstOrDefault()?.ErrorMessage,
-                    MaximoCaracteres = 100
-                })
-            </div>
-            
-        </div>
-
-        <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:flex-start; justify-content:space-evenly;">
             <div style="width:100%">
                 @await Component.InvokeAsync("InputField", new InputFieldModel
                 {
@@ -92,19 +37,6 @@
                     Flexible = true,
                     Error = ViewData.ModelState["telefono"]?.Errors.FirstOrDefault()?.ErrorMessage,
                     MaximoCaracteres = 10
-                })
-            </div>
-
-            <div style="width:100%">
-                @await Component.InvokeAsync("InputField", new InputFieldModel
-                {
-                    Id = "conmutador",
-                    Name = "conmutador",
-                    Label = "Conmutador:",
-                    Valor = Model.Conmutador,
-                    Flexible = true,
-                    Error = ViewData.ModelState["conmutador"]?.Errors.FirstOrDefault()?.ErrorMessage,
-                    MaximoCaracteres = 20
                 })
             </div>
         
@@ -118,19 +50,6 @@
                     Flexible = true,
                     Error = ViewData.ModelState["extension"]?.Errors.FirstOrDefault()?.ErrorMessage,
                     MaximoCaracteres = 5
-                })
-            </div>
-
-            <div style="width:100%">
-                @await Component.InvokeAsync("InputField", new InputFieldModel
-                {
-                    Id = "fax",
-                    Name = "fax",
-                    Label = "Fax:",
-                    Valor = Model.Fax,
-                    Flexible = true,
-                    Error = ViewData.ModelState["fax"]?.Errors.FirstOrDefault()?.ErrorMessage,
-                    MaximoCaracteres = 20
                 })
             </div>
         </div>

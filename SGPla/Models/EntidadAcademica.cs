@@ -21,11 +21,7 @@ public partial class EntidadAcademica
 
     public string Telefono { get; set; } = null!;
 
-    public string Conmutador { get; set; } = null!;
-
     public string Extension { get; set; } = null!;
-
-    public string Fax { get; set; } = null!;
 
     public string Region { get; set; } = null!;
 

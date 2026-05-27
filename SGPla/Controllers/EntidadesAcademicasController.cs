@@ -230,9 +230,7 @@ namespace SGPla.Controllers
                 Cp = model.Cp,
                 Municipio = model.Municipio,
                 Telefono = model.Telefono,
-                Conmutador = model.Conmutador,
                 Extension = model.Extension,
-                Fax = model.Fax,
                 IdAreaAcademica = model.IdAreaAcademica,
                 Region = model.Region
             };
@@ -290,9 +288,7 @@ namespace SGPla.Controllers
                 Cp = entidad.Cp,
                 Municipio = entidad.Municipio,
                 Telefono = entidad.Telefono,
-                Conmutador = entidad.Conmutador,
                 Extension = entidad.Extension,
-                Fax = entidad.Fax,
                 IdAreaAcademica = entidad.IdAreaAcademica,
                 Region = entidad.Region
             };
@@ -322,9 +318,7 @@ namespace SGPla.Controllers
                 Cp = model.Cp,
                 Municipio = model.Municipio,
                 Telefono = model.Telefono,
-                Conmutador = model.Conmutador,
                 Extension = model.Extension,
-                Fax = model.Fax,
                 IdAreaAcademica = model.IdAreaAcademica.Value,
                 Region = model.Region
             };

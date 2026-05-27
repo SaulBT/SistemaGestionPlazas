@@ -44,9 +44,7 @@ namespace SGPla.Services.Implementations
                 Cp = dto.Cp,
                 Municipio = dto.Municipio,
                 Telefono = dto.Telefono,
-                Conmutador = dto.Conmutador,
                 Extension = dto.Extension,
-                Fax = dto.Fax,
                 Region = dto.Region
             };
 
@@ -69,9 +67,7 @@ namespace SGPla.Services.Implementations
                 Cp = dto.Cp,
                 Municipio = dto.Municipio,
                 Telefono = dto.Telefono,
-                Conmutador = dto.Conmutador,
                 Extension = dto.Extension,
-                Fax = dto.Fax,
                 Region = dto.Region
             };
 
@@ -143,9 +139,7 @@ namespace SGPla.Services.Implementations
                 Cp = entidad.Cp,
                 Municipio = entidad.Municipio,
                 Telefono = entidad.Telefono,
-                Conmutador = entidad.Conmutador,
                 Extension = entidad.Extension,
-                Fax = entidad.Fax,
                 NombreEntidadAcademica = entidad.IdAreaAcademicaNavigation.Nombre,
                 Region = entidad.Region
             };
@@ -154,7 +148,7 @@ namespace SGPla.Services.Implementations
         private ListaEntidadAcademicaDTO mapearLista(EntidadAcademica entidad)
         {
             string domicilio = $"{entidad.CalleNumero} Col. {entidad.Colonia} C.P. {entidad.Cp} {entidad.Municipio}";
-            string telefono = $"Teléfono: {entidad.Telefono}\nConmutador: {entidad.Conmutador} Ext: {entidad.Extension}\nFax: {entidad.Fax}";
+            string telefono = $"Teléfono: {entidad.Telefono} Ext: {entidad.Extension}";
 
             return new ListaEntidadAcademicaDTO
             {

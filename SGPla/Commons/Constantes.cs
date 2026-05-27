@@ -29,7 +29,7 @@
         public const string TABLA_VACIA = "No hay {0} para mostrar.";
 
         //Logs
-        public const string LOGS_ESTRUCTURA = "{Ubicacion}{Metodo} {Log}";
+        public const string LOGS_ESTRUCTURA = "{0}{1} {2}";
         public const string LOG_ERROR_INESPERADO = "Error inesperado.";
         public const string LOG_ERROR_VALIDACION = "Error de validación.";
         public const string LOG_ERROR_NULO = "El {0} es nulo";

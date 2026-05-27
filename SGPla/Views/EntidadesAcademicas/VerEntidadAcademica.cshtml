@@ -111,20 +111,6 @@
                 Disabled = true
             })
         </div>
-
-        <div style="width:100%">
-            @await Component.InvokeAsync("InputField", new InputFieldModel
-            {
-                Id = "conmutador",
-                Name = "conmutador",
-                Label = "Conmutador:",
-                Valor = Model.Conmutador,
-                Flexible = true,
-                Error = ViewData.ModelState["conmutador"]?.Errors.FirstOrDefault()?.ErrorMessage,
-                MaximoCaracteres = 20,
-                Disabled = true
-            })
-        </div>
         
         <div style="width:100%">
             @await Component.InvokeAsync("InputField", new InputFieldModel
@@ -136,20 +122,6 @@
                 Flexible = true,
                 Error = ViewData.ModelState["extension"]?.Errors.FirstOrDefault()?.ErrorMessage,
                 MaximoCaracteres = 5,
-                Disabled = true
-            })
-        </div>
-
-        <div style="width:100%">
-            @await Component.InvokeAsync("InputField", new InputFieldModel
-            {
-                Id = "fax",
-                Name = "fax",
-                Label = "Fax:",
-                Valor = Model.Fax,
-                Flexible = true,
-                Error = ViewData.ModelState["fax"]?.Errors.FirstOrDefault()?.ErrorMessage,
-                MaximoCaracteres = 20,
                 Disabled = true
             })
         </div>

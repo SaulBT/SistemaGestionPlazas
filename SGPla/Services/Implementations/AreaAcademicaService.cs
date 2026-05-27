@@ -29,14 +29,8 @@ namespace SGPla.Services.Implementations
             var areaAcademica = new AreaAcademica
             {
                 Nombre = dto.Nombre,
-                CalleNumero = dto.CalleNumero,
-                Colonia = dto.Colonia,
-                Cp = dto.Cp,
-                Municipio = dto.Municipio,
                 Telefono = dto.Telefono,
-                Conmutador = dto.Conmutador,
                 Extension = dto.Extension,
-                Fax = dto.Fax
             };
 
             var areaAcademicaCreada = await _areaAcademicaRepository.CrearAsync(areaAcademica);
@@ -79,14 +73,8 @@ namespace SGPla.Services.Implementations
             {
                 IdAreaAcademica = areaAcademica.IdAreaAcademica,
                 Nombre = areaAcademica.Nombre,
-                CalleNumero = areaAcademica.CalleNumero,
-                Colonia = areaAcademica.Colonia,
-                Cp = areaAcademica.Cp,
-                Municipio = areaAcademica.Municipio,
                 Telefono = areaAcademica.Telefono,
-                Conmutador = areaAcademica.Conmutador,
                 Extension = areaAcademica.Extension,
-                Fax = areaAcademica.Fax
             };
         }
 
@@ -98,14 +86,8 @@ namespace SGPla.Services.Implementations
             {
                 IdAreaAcademica = dto.IdAreaAcademica,
                 Nombre = dto.Nombre,
-                CalleNumero = dto.CalleNumero,
-                Colonia = dto.Colonia,
-                Cp = dto.Cp,
-                Municipio = dto.Municipio,
                 Telefono = dto.Telefono,
-                Conmutador = dto.Conmutador,
                 Extension = dto.Extension,
-                Fax = dto.Fax
             };
 
             await _areaAcademicaRepository.ActualizarAsync(areaAcademica);
@@ -120,32 +102,17 @@ namespace SGPla.Services.Implementations
 
         private ListaAreaAcademicaDTO generarListaAreaAcademicaDTO(AreaAcademica areaAcademica)
         {
-            var domicilio = string.Concat(
-                areaAcademica.CalleNumero,
-                " Col. ",
-                areaAcademica.Colonia,
-                " C.P. ",
-                areaAcademica.Cp,
-                " ",
-                areaAcademica.Municipio
-            );
-
             var telefono = string.Concat(
                     "Teléfono: ",
                     areaAcademica.Telefono,
-                    "\nConmutador: ",
-                    areaAcademica.Conmutador,
                     " Ext: ",
-                    areaAcademica.Extension,
-                    "\nFax: ",
-                    areaAcademica.Fax
+                    areaAcademica.Extension
                 );
 
             return new ListaAreaAcademicaDTO
             {
                 IdAreaAcademica = areaAcademica.IdAreaAcademica,
                 Nombre = areaAcademica.Nombre,
-                Domicilio = domicilio,
                 Telefono = telefono
             };
         }
