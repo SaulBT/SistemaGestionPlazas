@@ -3,8 +3,14 @@ using Microsoft.IdentityModel.Tokens;
 
 public class BotonViewComponent : ViewComponent
 {
+
+    public IViewComponentResult Invoke(BotonModel model)
+    {
+        ConfigurarTipoAccion(model);
+        return View(model);
+    }
     
-    public IViewComponentResult Invoke(string texto = "", string tipo = "", string accion = "", bool disabled = false, bool fondo = true, string buttonType = "button", string onClick = "")
+    public IViewComponentResult Invoke(string texto = "", string tipo = "", string accion = "", bool disabled = false, bool fondo = true, string buttonType = "button", string onClick = "", string id ="")
     {
         var model = new BotonModel
         {
@@ -15,7 +21,8 @@ public class BotonViewComponent : ViewComponent
             Icono = "",
             Fondo = fondo,
             ButtonType = buttonType,
-            OnClick = onClick
+            OnClick = onClick,
+            Id = id
         };
         ConfigurarTipoAccion(model);
 
@@ -29,7 +36,7 @@ public class BotonViewComponent : ViewComponent
         {
             string tipo = model.Tipo;
             string texto = model.Texto;
-            switch (model.Accion)
+            switch (model.Accion.ToLower())
             {
                 //Botones con colores específicos según la acción
                 case "cancelar":
@@ -78,6 +85,10 @@ public class BotonViewComponent : ViewComponent
                     model.Texto = "Firmar";
                     model.Icono = "bi bi-feather";
                     break;
+                case "ver":
+                    model.Icono = "bi bi-eye-fill";
+                    model.Tipo = "secundario";
+                    break;
                 //Botones primarios 
                 case "guardar":
                     model.Tipo = "primario";
@@ -117,7 +128,7 @@ public class BotonViewComponent : ViewComponent
             }
         } else
         {
-            switch (model.Accion)
+            switch (model.Accion.ToLower())
             {
                 // Botones sin fondo, únicamente ícono
                 case "editar":

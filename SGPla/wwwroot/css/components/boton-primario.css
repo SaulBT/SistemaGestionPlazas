@@ -4,6 +4,7 @@
     display: inline-flex;
     vertical-align: middle;
     height: 30px;
+    width: fit-content;
     align-items: center;
     gap: 10px;
     padding: 4px 8px;
