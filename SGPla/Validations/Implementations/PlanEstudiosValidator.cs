@@ -41,6 +41,17 @@ namespace SGPla.Validations.Implementations
                 throw new ValidacionExcepction("El formato del archivo no es soportado.", "400");
         }
 
+        public void ValidarColumnas(Dictionary<string, int> columnas)
+        {
+            foreach (var columna in Constantes.COLUMNAS_REQUERIDAS)
+            {
+                if (!columnas.ContainsKey(columna))
+                {
+                    throw new ValidacionExcepction($"No se encontró la columna '{columna}'.", "404");
+                }
+            }
+        }
+
         public void ValidarIndice(int indice)
         {
             if (indice <= 0)
