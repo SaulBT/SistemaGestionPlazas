@@ -181,6 +181,9 @@
 </script>
 
 <!-- Mostrar/Ocultar Filtros -->
-@section Scripts {
-    <script src="~/js/filtros.js"></script>
-}
+<script>
+    window.configFiltros = {
+        storageKey: 'filtrosVisibles_usuarios'
+    };
+</script>
+<script src="js/filtros.js"></script>
