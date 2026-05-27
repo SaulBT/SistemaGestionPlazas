@@ -666,6 +666,8 @@ namespace SGPla.Controllers
                                 {
                                     Codigo = ee.Codigo,
                                     Nombre = ee.Nombre,
+                                    Horas = ee.Horas,
+                                    Creditos = ee.Creditos,
                                     PerfilDocente = ee.PerfilDocente
                                 }).ToList()
                             });
@@ -713,7 +715,7 @@ namespace SGPla.Controllers
 
         //Gestionar Experiencias
         [HttpGet]
-        public JsonResult AgregarExperienciaEducativaCreacion(string codigo, string nombre, string perfilDocente, string creditos, string horas)
+        public JsonResult AgregarExperienciaEducativaCreacion(string codigo, string nombre, string perfilDocente, string horas, string creditos)
         {
             bool error = false;
             DatosExperienciaEducativaDTO experiencia = new();
@@ -749,7 +751,7 @@ namespace SGPla.Controllers
         }
 
         [HttpGet]
-        public JsonResult EditarExperienciaEducativaCreacion(string codigo, string nombre, string perfilDocente, string codigoOriginal, string creditos, string horas)
+        public JsonResult EditarExperienciaEducativaCreacion(string codigo, string nombre, string perfilDocente, string codigoOriginal, string horas, string creditos)
         {
             bool error = false;
             List<AgregarExperienciaEducativaDTO> listaEe = [];
@@ -994,6 +996,8 @@ namespace SGPla.Controllers
                             {
                                 Codigo = ee.Codigo,
                                 Nombre = ee.Nombre,
+                                Horas = ee.Horas,
+                                Creditos = ee.Creditos,
                                 PerfilDocente = ee.PerfilDocente
                             });
                         }
@@ -1155,7 +1159,7 @@ namespace SGPla.Controllers
 
         //Gestion experiencias
         [HttpGet]
-        public JsonResult AgregarExperienciaEducativaEdicion(string codigo, string nombre, string perfilDocente, string creditos, string horas)
+        public JsonResult AgregarExperienciaEducativaEdicion(string codigo, string nombre, string perfilDocente, string horas, string creditos)
         {
             DatosExperienciaEducativaDTO experiencia = new();
             bool error = false;
@@ -1214,7 +1218,7 @@ namespace SGPla.Controllers
         }
 
         [HttpGet]
-        public JsonResult EditarExperienciaEducativaEdicion(string codigo, string nombre, string perfilDocente, string codigoOriginal)
+        public JsonResult EditarExperienciaEducativaEdicion(string codigo, string nombre, string perfilDocente, string horas, string creditos, string codigoOriginal)
         {
             List<DatosExperienciaEducativaDTO> listaEe = [];
             bool error = false;
@@ -1546,7 +1550,7 @@ namespace SGPla.Controllers
                                     new()
                                     {
                                         Accion = "informacion",
-                                        OnClick = $"abrirModalPerfilDocente(\"{ee.PerfilDocente}\")"
+                                        OnClick = $"abrirModalPerfilDocente({ee.PerfilDocente})"
                                     }
                                 }
                             },
@@ -1557,7 +1561,7 @@ namespace SGPla.Controllers
                                     new()
                                     {
                                         Accion = "editar",
-                                        OnClick = $"abrirModalEditarExperiencia('{ee.Codigo}', '{ee.Nombre}', '{ee.PerfilDocente}')"
+                                        OnClick = $"abrirModalEditarExperiencia('{ee.Codigo}', '{ee.Nombre}', '{ee.Horas}', '{ee.Creditos}', '{ee.PerfilDocente}')"
                                     },
                                     new()
                                     {
