@@ -193,7 +193,7 @@
             console.log(experiencias);
             tbody.innerHTML = "";
             experiencias.forEach(ee => {
-                const fila = generarFila(ee.codigo, ee.nombre, ee.perfilDocente);
+                const fila = generarFila(ee.codigo, ee.nombre, ee.perfilDocente, ee.horas, ee.creditos);
                 tbody.appendChild(fila);
             });
 
