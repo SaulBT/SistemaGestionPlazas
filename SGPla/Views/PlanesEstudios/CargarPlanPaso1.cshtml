@@ -69,13 +69,18 @@
         </div>
 
         <!-- BOTÓN -->
-        <div style="display:inline;">
+        <div style="display:inline-flex;gap:10px">
             @await Component.InvokeAsync("Boton", new
             {
                 Accion = "cargar",
                 Texto = "Subir Archivo",
                 OnClick = "abrirModalArchivo()"
             })
+
+            <div id="banderaArchivo" class="text-wrapper" style="display:inline-flex; align-content:center">
+                
+                <i class="bi bi-file-earmark-x-fill" style="font-size:20px;color:var(--negativo-rojo-letra)"></i>
+            </div>
         </div>
     </div>
 
@@ -114,6 +119,12 @@
 
     function abrirModalArchivo() {
         abrirModal("modalArchivo");
+    }
+</script>
+
+<script>
+    window.configBanderaArchivo = {
+        idBandera: 'banderaArchivo'
     }
 </script>
 
