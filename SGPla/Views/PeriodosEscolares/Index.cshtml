@@ -10,25 +10,36 @@
 	<form id="filtrosForm" method="get" action="@Url.Action("Index", "PeriodosEscolares")">
 
 		<!-- Filtros -->
-		<div style="display:inline-flex; gap:10px; padding-bottom:20px;">
-			@await Component.InvokeAsync("SelectField", new SelectFieldModel
+		<div style="display: flex; flex-direction: column; gap: 10px;">
+			@await Component.InvokeAsync("Boton", new BotonModel
 			{
-				Label = "Periodo",
-				Name = "periodo",
-				Options = new List<OptionModel>
+				Accion = "ver",
+				Tipo = "secundario",
+				Texto = "Mostrar Filtros",
+				OnClick = "toggleFilters()",
+				Id = "botonFiltros"
+			})
+			<div id="filtrosContainer" style="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease;">
+				@await Component.InvokeAsync("SelectField", new SelectFieldModel
+				{
+					Label = "Periodo",
+					Name = "periodo",
+					Options = new List<OptionModel>
 				{
 					new OptionModel { Value = "Febrero-Julio", Text = "Febrero-Julio" },
 					new OptionModel { Value = "Agosto-Enero", Text = "Agosto-Enero" }
 				},
-				HtmlAttributes = new Dictionary<string, string>
+					HtmlAttributes = new Dictionary<string, string>
 				{
 					{ "data-autosubmit", "true" }
 				}
-			})
+				})
+			</div>
 		</div>
+		
 
 		<!-- Acciones -->
-		<div style="display:flex; gap:10px; padding-bottom:20px; align-items:center; justify-content:space-between">
+		<div style="display:flex; gap:10px; padding-bottom:20px; padding-top:20px; align-items:center; justify-content:space-between">
 
 			<!-- Buscador -->
 			@await Component.InvokeAsync("Buscador", new BuscadorModel
@@ -211,3 +222,9 @@
 	});
 </script>
 
+<script>
+	window.configFiltros = {
+		storageKey: 'filtrosVisibles_periodosescolares'
+	};
+</script>
+<script src="js/filtros.js"></script>
