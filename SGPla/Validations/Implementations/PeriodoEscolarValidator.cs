@@ -6,6 +6,7 @@ using SGPla.Models.InterfacesDTOs;
 using SGPla.Repositories.Implementations;
 using SGPla.Repositories.Interfaces;
 using SGPla.Validations.Interfaces;
+using System.Text.RegularExpressions;
 using static SGPla.Mappers.PeriodoEscolarMapper;
 
 namespace SGPla.Validations.Implementations
@@ -25,11 +26,11 @@ namespace SGPla.Validations.Implementations
                 buscarPeriodoEscolarDTO.PeriodoCodigo = PeriodoMapper.NombreACodigo.TryGetValue(buscarPeriodoEscolarDTO.Periodo, out var periodoCodigo) ? periodoCodigo : null;
             }
 
-            if (buscarPeriodoEscolarDTO.Anio is not null && buscarPeriodoEscolarDTO.Anio.Value > 0)
+            if (buscarPeriodoEscolarDTO.Anio.HasValue &&
+                   (buscarPeriodoEscolarDTO.Anio < 2000 || buscarPeriodoEscolarDTO.Anio > 2100))
             {
-                buscarPeriodoEscolarDTO.AnioCodigo = buscarPeriodoEscolarDTO.Anio + 1;
+                throw new ArgumentException("Ingrese un año válido.");
             }
-
             return Task.CompletedTask;
         }
 
@@ -71,7 +72,7 @@ namespace SGPla.Validations.Implementations
 
             var periodo = new Periodo
             {
-                IdPeriodo = periodoEscolarDTO is EditarPeriodoEscolarDTO editarPeriodoDTO? editarPeriodoDTO.IdPeriodoEscolar : 0,
+                IdPeriodo = periodoEscolarDTO is EditarPeriodoEscolarDTO editarPeriodoDTO ? editarPeriodoDTO.IdPeriodoEscolar : 0,
                 Codigo = periodoEscolarDTO.Anio + periodoCodigo
             };
 

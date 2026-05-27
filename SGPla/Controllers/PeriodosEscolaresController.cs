@@ -25,28 +25,28 @@ namespace SGPla.Controllers
             _logger = logger;
         }
 
-        public async Task<IActionResult> Index(int? anio, string? periodo, int pagina = 1, int cantidad = 10)
+        public async Task<IActionResult> Index(int? anioFiltro, string? periodoFiltro, int pagina = 1, int cantidad = 10)
         {
             paginaActual = pagina;
             return View(new IndexViewModel
             {
-                Table = await LlenarTabla(anio, periodo, pagina, cantidad),
-                Anio = anio,
-                Periodo = periodo,
+                Table = await LlenarTabla(anioFiltro, periodoFiltro, pagina, cantidad),
+                AnioFiltro = anioFiltro,
+                Periodo = periodoFiltro,
                 PaginaActual = paginaActual,
                 CantidadPorPagina = cantidad
             });
         }
 
 
-        private async Task<TableModel> LlenarTabla(int? anio, string? periodo, int pagina = 1, int cantidad = 10)
+        private async Task<TableModel> LlenarTabla(int? anioFiltro, string? periodoFiltro, int pagina = 1, int cantidad = 10)
         {
             try
             {
                 var filtro = new BuscarPeriodoEscolarDTO
                 {
-                    Anio = anio,
-                    Periodo = periodo,
+                    Anio = anioFiltro,
+                    Periodo = periodoFiltro,
                     Pagina = pagina,
                     Cantidad = cantidad
                 };
@@ -113,43 +113,42 @@ namespace SGPla.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Crear(CrearPeriodoEscolarDTO dto)
+        public async Task<IActionResult> Crear(PeriodoEscolarFormularioViewModel model)
         {
             if (!ModelState.IsValid)
             {
-                ModelState.AddModelError("Anio", "El campo es obligatorio");
+                var indexModel = new IndexViewModel
+                {
+                    Table = await LlenarTabla(null, null),
+                    Formulario = model
+                };
+
+                return View("Index", indexModel);
             }
+
             try
             {
-                var resultado = await _periodoEscolarService.CrearAsync(dto);
-                TempData["Success"] = $"Periodo Escolar creado exitosamente";
+                var dto = new CrearPeriodoEscolarDTO
+                {
+                    Anio = model.Anio,
+                    Periodo = model.Periodo
+                };
+
+                await _periodoEscolarService.CrearAsync(dto);
+
+                TempData["Success"] = "Periodo Escolar creado exitosamente";
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error al crear el periodo escolar");
                 TempData["Error"] = ex.Message;
             }
+
             return RedirectToAction(nameof(Index));
-
         }
 
 
-        [HttpGet]
-        public async Task<IActionResult> Buscar(BuscarPeriodoEscolarDTO filtro)
-        {
-            try
-            {
-                var resultados = await _periodoEscolarService.BuscarPorFiltroAsync(filtro);
-
-
-                return View("Index", resultados);
-            }
-            catch (Exception ex)
-            {
-                TempData["Error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
-            }
-        }
-
+       
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -164,6 +163,7 @@ namespace SGPla.Controllers
             }
             catch (ArgumentException ex)
             {
+                _logger.LogError(ex, "Error al crear el programa educativo");
                 TempData["Error"] = ex.Message;
             }
             return RedirectToAction(nameof(Index));

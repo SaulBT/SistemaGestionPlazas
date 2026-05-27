@@ -300,8 +300,7 @@ namespace SGPla.Controllers
             {
                 Nombre = model.Clave+ "-" + model.Nombre,
                 Campus = model.Campus,
-                IdEntidadAcademica = model.IdEntidadAcademica,
-               
+                IdEntidadAcademica = model.IdEntidadAcademica!.Value,
             };
 
             try
@@ -334,8 +333,7 @@ namespace SGPla.Controllers
                 IdProgramaEducativo = model.IdProgramaEducativo,
                 Nombre = model.Clave + "-" + model.Nombre,
                 Campus = model.Campus,
-                IdEntidadAcademica = model.IdEntidadAcademica,
-                
+                IdEntidadAcademica = model.IdEntidadAcademica!.Value,
             };
 
             try

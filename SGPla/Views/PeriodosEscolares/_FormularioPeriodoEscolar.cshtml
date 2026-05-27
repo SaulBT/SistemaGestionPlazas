@@ -2,28 +2,28 @@
 @model PeriodoEscolarFormularioViewModel
 
 <input type="hidden"
-       id="IdPeriodoEscolar"
-       name="IdPeriodoEscolar"
-       value="@Model?.IdPeriodoEscolar" />
+	   id="IdPeriodoEscolar"
+	   name="IdPeriodoEscolar"
+	   value="@Model?.IdPeriodoEscolar" />
 
 @await Component.InvokeAsync("InputField", new InputFieldModel
 {
-    Id = "Anio",
-    Name = "Anio",
-    Label = "Año de ejercicio",
-    Valor = Model?.Anio.ToString(),
-    Flexible = true,
-    Error = ViewData.ModelState["Anio"]?.Errors.FirstOrDefault()?.ErrorMessage,
-    MaximoCaracteres = 4
+	Id = "Anio",
+	Name = "Anio",
+	Label = "Año de ejercicio:",
+	Valor = Model?.Anio.ToString(),
+	Flexible = true,
+	Error = ViewData.ModelState["Anio"]?.Errors.FirstOrDefault()?.ErrorMessage,
+	MaximoCaracteres = 4
 })
 
 @await Component.InvokeAsync("SelectField", new SelectFieldModel
-				{
-					Label = "Periodo",
-					Name = "Periodo",
-					Options = new List<OptionModel>
+{
+	Label = "Periodo:",
+	Name = "Periodo",
+	Options = new List<OptionModel>
 					{
 						new OptionModel { Value = "Febrero-Julio", Text = "Febrero-Julio" },
 						new OptionModel { Value = "Agosto-Enero", Text = "Agosto-Enero" }
 					}
-				})
+})

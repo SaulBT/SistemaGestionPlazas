@@ -78,7 +78,7 @@ namespace SGPla.Controllers
                     }).ToList(),
                     Pagination = new PaginationInfo
                     {
-                        PaginationMode = "NA"
+                        PaginationMode = "NA" // no se espera que sean tantos articulos para agregar paginacion
                     }
                 };
             }
@@ -142,15 +142,15 @@ namespace SGPla.Controllers
                     {
                         Console.WriteLine();
                     }
-                    //Console.WriteLine(ViewData.ModelState["Numero"]?.Errors)
+
                 }
                 if (dto.Descripcion.IsNullOrEmpty())
                     ModelState.AddModelError("Descripcion", "Llene el campo");
 
-                    var model = new IndexViewModel
+                var model = new IndexViewModel
                 {
                     Table = await LlenarTabla(null),
-                    
+
                     Formulario = new ArticuloFormularioViewModel
                     {
                         Numero = dto.Numero,

@@ -11,7 +11,7 @@ namespace SGPla.Models.DTOs.PeriodoEscolar
 
         public int Cantidad { get; set; } = 10;
 
-        public int? AnioCodigo { get; set; }
+     
         public string? PeriodoCodigo {  get; set; } = string.Empty;
     }
 }

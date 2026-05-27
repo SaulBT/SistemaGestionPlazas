@@ -10,19 +10,20 @@
 {
     Id = "Numero",
     Name = "Numero",
-    Label = "Número",
+    Label = "Título:",
     Valor = Model?.Numero,
     Flexible = true,
     Error = ViewData.ModelState["Numero"]?.Errors.FirstOrDefault()?.ErrorMessage,
-    MaximoCaracteres = 10
+    MaximoCaracteres = 50
 })
 
 @await Component.InvokeAsync("InputField", new InputFieldModel
 {
     Id = "Descripcion",
     Name = "Descripcion",
-    Label = "Descripción",
+    Label = "Descripción:",
     Valor = Model?.Descripcion,
     Flexible = true,
-    Error = ViewData.ModelState["Descripcion"]?.Errors.FirstOrDefault()?.ErrorMessage
+    Error = ViewData.ModelState["Descripcion"]?.Errors.FirstOrDefault()?.ErrorMessage,
+    MaximoCaracteres = 250
 })

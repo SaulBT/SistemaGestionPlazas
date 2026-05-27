@@ -7,7 +7,7 @@ namespace SGPla.Models.ViewModels.PeriodosEscolares
 
         public int? IdPeriodoEscolar { get; set; }
 
-        [Required(ErrorMessage = "El año es obligatorio")]
+        [Range(2000, 2100, ErrorMessage = "Ingrese un año válido")]
         public int Anio { get; set; }
 
         [Required(ErrorMessage = "El periodo es obligatorio")]

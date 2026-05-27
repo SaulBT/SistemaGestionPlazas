@@ -14,7 +14,7 @@
 			@await Component.InvokeAsync("SelectField", new SelectFieldModel
 			{
 				Label = "Periodo",
-				Name = "periodo",
+				Name = "periodoFiltro",
 				Options = new List<OptionModel>
 				{
 					new OptionModel { Value = "Febrero-Julio", Text = "Febrero-Julio" },
@@ -33,11 +33,12 @@
 			<!-- Buscador -->
 			@await Component.InvokeAsync("Buscador", new BuscadorModel
 			{
-				Name = "anio",
+				Name = "anioFiltro",
 				Placeholder = "Buscar por año...",
 				Action = Url.Action("Index", "PeriodosEscolares"),
 				Method = "get",
-				Value = Context.Request.Query["anio"]
+				Value = Context.Request.Query["anioFiltro"],
+				
 			})
 
 			<!-- Botón agregar -->
@@ -107,7 +108,7 @@
 
 
 	</div>
-
+@* 
 	@if (!ViewData.ModelState.IsValid)
 	{
 		<script>
@@ -128,7 +129,7 @@
 				});
 
 		</script>
-	}
+	} *@
 </div>
 
 
@@ -200,7 +201,7 @@
 	document.addEventListener("DOMContentLoaded", function () {
 
 		const form = document.querySelector("form");
-		const periodo = document.querySelector("select[name='periodo']");
+		const periodo = document.querySelector("select[name='periodoFiltro']");
 
 		if (periodo) {
 			periodo.addEventListener("change", function () {

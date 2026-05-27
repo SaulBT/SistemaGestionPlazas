@@ -6,7 +6,7 @@ namespace SGPla.Models.ViewModels.Articulos
     {
         public int? IdArticulo { get; set; }
 
-        [Required(ErrorMessage = "El número es obligatorio")]
+        [Required(ErrorMessage = "El título es obligatorio")]
         public string? Numero { get; set; }
 
         [Required(ErrorMessage = "La descripción es obligatoria")]

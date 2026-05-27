@@ -67,7 +67,7 @@ namespace SGPla.Repositories.Implementations
 
             if (filtro.Anio > 0)
             {
-                string anio = filtro.AnioCodigo.ToString();
+                string anio = filtro.Anio.ToString();
                 query = query.Where(p => p.Codigo.StartsWith(anio));
             }
 
@@ -95,7 +95,7 @@ namespace SGPla.Repositories.Implementations
 
             if (filtro.Anio > 0)
             {
-                string anio = filtro.AnioCodigo.ToString();
+                string anio = filtro.Anio.ToString();
                 query = query.Where(p => p.Codigo.StartsWith(anio));
             }
 
