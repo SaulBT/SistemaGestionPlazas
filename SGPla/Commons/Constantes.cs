@@ -24,6 +24,16 @@
         public const string MODALIDAD_DISTANCIA = "A distancia";
         public static List<string> MODALIDADES = new List<string> { MODALIDAD_ESCOLARIZADA, MODALIDAD_ABIERTA, MODALIDAD_VIRTUAL, MODALIDAD_MIXTA, MODALIDAD_SEMIESCOLARIZADA, MODALIDAD_DISTANCIA };
 
+        public const string MATERIA_EE = "MATERIA_EE";
+        public const string CURSO_EE = "CURSO_EE";
+        public const string DESC_EE = "DESC_EE";
+        public const string PERFIL_DOC = "PERFIL_DOC";
+        public const string HT_EE = "HT_EE";
+        public const string HP_EE = "HP_EE";
+        public const string CREDITOS_EE = "CREDITOS_EE";
+        public static List<string> COLUMNAS_REQUERIDAS = [MATERIA_EE, CURSO_EE, DESC_EE, PERFIL_DOC, HT_EE, HP_EE, CREDITOS_EE];
+
+
         // Mensajes tabla
         public const string ERROR_TABLA = "Error al generar la tabla de {0}.";
         public const string TABLA_VACIA = "No hay {0} para mostrar.";
