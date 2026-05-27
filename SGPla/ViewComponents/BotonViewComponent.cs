@@ -4,14 +4,15 @@ using Microsoft.IdentityModel.Tokens;
 public class BotonViewComponent : ViewComponent
 {
 
-    public IViewComponentResult Invoke(BotonModel model)
-    {
-        ConfigurarTipoAccion(model);
-        return View(model);
-    }
     
-    public IViewComponentResult Invoke(string texto = "", string tipo = "", string accion = "", bool disabled = false, bool fondo = true, string buttonType = "button", string onClick = "", string id ="")
+    public IViewComponentResult Invoke(string texto = "", string tipo = "", string accion = "", bool disabled = false, bool fondo = true, string buttonType = "button", string onClick = "", string id ="", BotonModel botonModel = null)
     {
+        if (botonModel != null)
+        {
+            ConfigurarTipoAccion(botonModel);
+            return View(botonModel);
+        }
+
         var model = new BotonModel
         {
             Texto = texto,
