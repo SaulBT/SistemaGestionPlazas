@@ -303,7 +303,7 @@ namespace SGPla.Controllers
                                 new()
                                 {
                                     Accion = "informacion",
-                                    OnClick = $"abrirModalPerfilDocente(\"{ee.PerfilDocente}\")"
+                                    OnClick = $"abrirModalPerfilDocente({ee.PerfilDocente})"
                                 }
                             }
                         }
