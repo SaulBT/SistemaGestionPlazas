@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Cargar Plan de Estudios";
+    ViewBag.RegresarUrl = Url.Action("Index", "PlanesEstudios");
 }
 
 <form id="form" method="post" action="@Url.Action("ValidarPaso1", "PlanesEstudios")" enctype="multipart/form-data">
