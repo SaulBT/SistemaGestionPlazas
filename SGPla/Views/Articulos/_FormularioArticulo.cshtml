@@ -14,7 +14,7 @@
     Valor = Model?.Numero,
     Flexible = true,
     Error = ViewData.ModelState["Numero"]?.Errors.FirstOrDefault()?.ErrorMessage,
-    MaximoCaracteres = 10
+    MaximoCaracteres = 50
 })
 
 @await Component.InvokeAsync("InputField", new InputFieldModel

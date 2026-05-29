@@ -1,6 +1,7 @@
 ﻿@model BotonModel
 
-<button type="@Model.ButtonType"
+<button id="@Model.Id"
+        type="@Model.ButtonType"
         class="boton-primario @(Model.Fondo ? $"boton-{Model.Tipo}" : "boton-icono")"
         disabled="@(Model.Disabled ? "disabled" : null)"
         onclick="@Model.OnClick"

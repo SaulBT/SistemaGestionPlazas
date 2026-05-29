@@ -1,6 +1,7 @@
 ﻿@model SGPla.Models.ViewModels.PlanesEstudios.CargarPlanPaso2ViewModel
 @{
 	ViewData["Title"] = "Cargar Plan de Estudios";
+    ViewBag.RegresarOnClick = "regresarPaso1()";
 }
 
 <form id="form" action="@Url.Action("GuardarPlanEstudios", "PlanesEstudios")" method="post" action="" enctype="multipart/form-data">

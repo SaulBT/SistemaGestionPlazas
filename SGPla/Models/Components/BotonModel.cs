@@ -5,8 +5,9 @@
     public string Icono { get; set; }
     public string Texto { get; set; }
     public bool Disabled { get; set; }
-    public bool Fondo { get; set; }
+    public bool Fondo { get; set; } = true;
 
     public string ButtonType { get; set; } = "button";
     public string? OnClick { get; set; }
+    public string? Id { get; set; }
 }

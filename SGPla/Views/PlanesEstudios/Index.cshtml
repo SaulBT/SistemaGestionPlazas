@@ -9,48 +9,59 @@
 <form id="form" method="get" action="@Url.Action("Index", "PlanesEstudios")">
 
     <!-- Filtros -->
-    <div style="display:inline-flex; gap:10px; padding-bottom:30px;">
-        @await Component.InvokeAsync("SelectField", new SelectFieldModel
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+        @await Component.InvokeAsync("Boton", new BotonModel
         {
-            Id = "Region",
-            Label = "Región",
-            Options = Model.Regiones,
-            Name = "region"
+            Accion = "ver",
+            Tipo = "secundario",
+            Texto = "Mostrar Filtros",
+            OnClick = "toggleFilters()",
+            Id = "botonFiltros"
         })
-
-        <div id="contenedorArea" style="display:none">
+        <div id="filtrosContainer" style="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease;">
             @await Component.InvokeAsync("SelectField", new SelectFieldModel
             {
-                Id = "Area",
-                Label = "Área Académica",
-                Options = Model.Areas,
-                Name = "idAreaAcademica"
+                Id = "Region",
+                Label = "Región",
+                Options = Model.Regiones,
+                Name = "region"
             })
-        </div>
 
-        <div id="contenedorEntidad" style="display:none">
-            @await Component.InvokeAsync("SelectField", new SelectFieldModel
-            {
-                Id = "Entidad",
-                Label = "Entidad Académica",
-                Options = Model.Entidades,
-                Name = "idEntidadAcademica"
-            })
-        </div>
+            <div id="contenedorArea" style="display:none">
+                @await Component.InvokeAsync("SelectField", new SelectFieldModel
+                {
+                    Id = "Area",
+                    Label = "Área Académica",
+                    Options = Model.Areas,
+                    Name = "idAreaAcademica"
+                })
+            </div>
 
-        <div id="contenedorPrograma" style="display:none">
-            @await Component.InvokeAsync("SelectField", new SelectFieldModel
-            {
-                Id = "Programa",
-                Label = "Programa Educativo",
-                Options = Model.ProgramasEducativos,
-                Name = "idProgramaEducativo"
-            })
+            <div id="contenedorEntidad" style="display:none">
+                @await Component.InvokeAsync("SelectField", new SelectFieldModel
+                {
+                    Id = "Entidad",
+                    Label = "Entidad Académica",
+                    Options = Model.Entidades,
+                    Name = "idEntidadAcademica"
+                })
+            </div>
+
+            <div id="contenedorPrograma" style="display:none">
+                @await Component.InvokeAsync("SelectField", new SelectFieldModel
+                {
+                    Id = "Programa",
+                    Label = "Programa Educativo",
+                    Options = Model.ProgramasEducativos,
+                    Name = "idProgramaEducativo"
+                })
+            </div>
         </div>
     </div>
+    
 
-    <!-- Aacciones -->
-    <div style="display:flex; gap:10px; padding-bottom:30px; align-items:center; justify-content:space-between">
+    <!-- Acciones -->
+    <div style="display:flex; gap:10px; padding-bottom:20px; padding-top:20px; align-items:center; justify-content:space-between">
         <!--Barra de Búsqueda-->
         @await Component.InvokeAsync("Buscador", new BuscadorModel
         {
@@ -121,3 +132,10 @@
 @section Scripts {
     <script src="~/js/cargarCatalogosPlan.js"></script>
 }
+
+<script>
+    window.configFiltros = {
+        storageKey: 'filtrosVisibles_plandeestudios'
+    };
+</script>
+<script src="js/filtros.js"></script>

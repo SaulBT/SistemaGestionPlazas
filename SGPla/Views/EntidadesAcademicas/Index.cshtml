@@ -10,22 +10,35 @@
 <div>
     <form id="filtrosForm" method="get" action="@Url.Action("Index", "EntidadesAcademicas")">
         <!-- Filtros -->
-        <div style="display:inline-flex; gap:10px; padding-bottom:20px;">
-            @await Component.InvokeAsync("SelectField", new SelectFieldModel
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            @await Component.InvokeAsync("Boton", new BotonModel
             {
-                Label = "Región",
-                Options = Model.Regiones,
-                Name = "region"
+                Accion = "ver",
+                Tipo = "secundario",
+                Texto = "Mostrar Filtros",
+                OnClick = "toggleFilters()",
+                Id = "botonFiltros"
             })
-            @await Component.InvokeAsync("SelectField", new SelectFieldModel
-            {
-                Label = "Área Académica",
-                Options = Model.Areas,
-                Name = "idAreaAcademica"
-            })
+
+            <div id="filtrosContainer" style="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease;">
+                @await Component.InvokeAsync("SelectField", new SelectFieldModel
+                {
+                    Label = "Región",
+                    Options = Model.Regiones,
+                    Name = "region"
+                })
+                @await Component.InvokeAsync("SelectField", new SelectFieldModel
+                {
+                    Label = "Área Académica",
+                    Options = Model.Areas,
+                    Name = "idAreaAcademica"
+                })
+            </div>
+
         </div>
+        
         <!-- Acciones -->
-        <div style="display:flex; gap:10px; padding-bottom:20px; align-items:center; justify-content:space-between">
+        <div style="display:flex; gap:10px; padding-bottom:20px; padding-top:20px; align-items:center; justify-content:space-between">
             <!--Barra de Búsqueda-->
             @await Component.InvokeAsync("Buscador", new BuscadorModel
             {
@@ -110,3 +123,10 @@
         document.getElementById("formEliminarEntidadAcademica").submit(); 
     }
 </script>
+
+<script>
+    window.configFiltros = {
+        storageKey: 'filtrosVisibles_entidades'
+    };
+</script>
+<script src="js/filtros.js"></script>
