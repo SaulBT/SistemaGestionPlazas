@@ -25,8 +25,10 @@ namespace SGPla.Controllers
             _logger = logger;
         }
 
-        public async Task<IActionResult> Index(int? anioFiltro, string? periodoFiltro, int pagina = 1, int cantidad = 10)
+        public async Task<IActionResult> Index(string? anioFiltro, string? periodoFiltro, int pagina = 1, int cantidad = 10)
         {
+            
+
             paginaActual = pagina;
             return View(new IndexViewModel
             {
@@ -39,7 +41,7 @@ namespace SGPla.Controllers
         }
 
 
-        private async Task<TableModel> LlenarTabla(int? anioFiltro, string? periodoFiltro, int pagina = 1, int cantidad = 10)
+        private async Task<TableModel> LlenarTabla(string? anioFiltro, string? periodoFiltro, int pagina = 1, int cantidad = 10)
         {
             try
             {
@@ -106,7 +108,7 @@ namespace SGPla.Controllers
                 _logger.LogError(ex, "Error al llenar la tabla de períodos");
                 TempData["Error"] = ex.Message;
 
-                return new TableModel();
+                return TablaFactory.GenerarTablaConMensaje(HEADERS_TABLA_INDEX, ex.Message);
             }
         }
 
@@ -122,7 +124,7 @@ namespace SGPla.Controllers
                     Table = await LlenarTabla(null, null),
                     Formulario = model
                 };
-
+                ViewData["AbrirModalCrear"] = true;
                 return View("Index", indexModel);
             }
 

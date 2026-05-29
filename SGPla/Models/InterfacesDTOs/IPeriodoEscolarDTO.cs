@@ -4,6 +4,6 @@
     {
         public string Periodo { get; set; }
 
-        public int Anio { get; set; }
+        public string Anio { get; set; }
     }
 }

@@ -11,7 +11,7 @@
 	Id = "Anio",
 	Name = "Anio",
 	Label = "Año de ejercicio:",
-	Valor = Model?.Anio.ToString(),
+	Valor = Model?.Anio?.ToString(),
 	Flexible = true,
 	Error = ViewData.ModelState["Anio"]?.Errors.FirstOrDefault()?.ErrorMessage,
 	MaximoCaracteres = 4

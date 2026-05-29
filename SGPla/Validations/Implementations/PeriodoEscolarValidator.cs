@@ -26,10 +26,16 @@ namespace SGPla.Validations.Implementations
                 buscarPeriodoEscolarDTO.PeriodoCodigo = PeriodoMapper.NombreACodigo.TryGetValue(buscarPeriodoEscolarDTO.Periodo, out var periodoCodigo) ? periodoCodigo : null;
             }
 
-            if (buscarPeriodoEscolarDTO.Anio.HasValue &&
-                   (buscarPeriodoEscolarDTO.Anio < 2000 || buscarPeriodoEscolarDTO.Anio > 2100))
+            if (!string.IsNullOrWhiteSpace(buscarPeriodoEscolarDTO.Anio) &&
+                    !Regex.IsMatch(buscarPeriodoEscolarDTO.Anio, @"^\d{4}$"))
             {
                 throw new ArgumentException("Ingrese un año válido.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(buscarPeriodoEscolarDTO.Anio) &&
+                   (int.TryParse(buscarPeriodoEscolarDTO.Anio, out int anio) && (anio < 2000 || anio > 2100)))
+            {
+                throw new ArgumentException("Ingrese un año válido (2000 - 2100).");
             }
             return Task.CompletedTask;
         }
@@ -49,9 +55,16 @@ namespace SGPla.Validations.Implementations
 
         private static void ValidarCampos(IPeriodoEscolarDTO periodoEscolarDTO)
         {
-            if (periodoEscolarDTO.Anio <= 0)
+            if (!string.IsNullOrWhiteSpace(periodoEscolarDTO.Anio) &&
+                    !Regex.IsMatch(periodoEscolarDTO.Anio, @"^\d{4}$"))
             {
-                throw new ArgumentException("El año debe ser un número positivo.");
+                throw new ArgumentException("Ingrese un año válido.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(periodoEscolarDTO.Anio) &&
+                   (int.TryParse(periodoEscolarDTO.Anio, out int anio) && (anio < 2000 || anio > 2100)))
+            {
+                throw new ArgumentException("Ingrese un año válido (2000 - 2100).");
             }
 
             if (string.IsNullOrWhiteSpace(periodoEscolarDTO.Periodo))

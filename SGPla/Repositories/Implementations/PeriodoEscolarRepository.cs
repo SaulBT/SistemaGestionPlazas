@@ -65,10 +65,12 @@ namespace SGPla.Repositories.Implementations
             // Crear una nueva consulta independiente
             var query = _context.Periodo.AsQueryable();
 
-            if (filtro.Anio > 0)
+            int.TryParse(filtro.Anio, out int anio);
+
+            if (anio > 0)
             {
-                string anio = filtro.Anio.ToString();
-                query = query.Where(p => p.Codigo.StartsWith(anio));
+                string anioStr = anio.ToString();
+                query = query.Where(p => p.Codigo.StartsWith(anioStr));
             }
 
             if (!string.IsNullOrWhiteSpace(filtro.Periodo))
@@ -93,10 +95,12 @@ namespace SGPla.Repositories.Implementations
             // Crear una nueva consulta independiente (no usar la misma instancia de query)
             var query = _context.Periodo.AsQueryable();
 
-            if (filtro.Anio > 0)
+            int.TryParse(filtro.Anio, out int anio);
+
+            if (anio > 0)
             {
-                string anio = filtro.Anio.ToString();
-                query = query.Where(p => p.Codigo.StartsWith(anio));
+                string anioStr = anio.ToString();
+                query = query.Where(p => p.Codigo.StartsWith(anioStr));
             }
 
             if (!string.IsNullOrWhiteSpace(filtro.Periodo))

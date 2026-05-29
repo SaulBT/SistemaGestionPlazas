@@ -1,4 +1,9 @@
-﻿var archivo = null;
+﻿window.configBanderaArchivo = window.configBanderaArchivo || {
+    idBandera: 'banderaArchivoDefault'
+};
+
+
+var archivo = null;
 const input = document.getElementById("inputFile");
 const fileContainer = document.getElementById("fileContainer");
 const fileName = document.getElementById("fileName");
@@ -20,15 +25,29 @@ function desplegarArchivo() {
     }
 }
 
+function actualizarBandera(archivoCargado) {
+    const banderaElement = document.getElementById(window.configBanderaArchivo.idBandera);
+    const icono = banderaElement.querySelector('i');
+    if (archivoCargado) {
+        icono.className = 'bi bi-file-earmark-check-fill';
+        icono.style.color = "var(--VerdeSecundario)";
+    } else {
+        icono.className = 'bi bi-file-earmark-x-fill';
+        icono.style.color = "var(--negativo-rojo-letra)";
+    }
+}
+
 function quitarArchivo() {
     if (archivo != null) {
         ocultarArchivo();
+        actualizarBandera(false);
         cambio = true;
     }
 }
 
 function confirmar(nombreModal) {
     cambio = false;
+    actualizarBandera(true);
     cerrarModal(nombreModal)
 }
 
@@ -39,7 +58,7 @@ function cancelar(nombreModal) {
             archivo = null;
             ocultarArchivo();
         } else {
-            arcihvo = input.files[0];
+            archivo = input.files[0];
             mostrarArchivo();
         }
     }

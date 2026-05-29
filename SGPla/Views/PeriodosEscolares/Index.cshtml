@@ -10,34 +10,43 @@
 	<form id="filtrosForm" method="get" action="@Url.Action("Index", "PeriodosEscolares")">
 
 		<!-- Filtros -->
-		<div style="display:inline-flex; gap:10px; padding-bottom:20px;">
-			@await Component.InvokeAsync("SelectField", new SelectFieldModel
+		<div style="display: flex; flex-direction: column; gap: 10px;">
+			@await Component.InvokeAsync("Boton", new BotonModel
 			{
-				Label = "Periodo",
-				Name = "periodoFiltro",
-				Options = new List<OptionModel>
+				Accion = "ver",
+				Tipo = "secundario",
+				Texto = "Mostrar Filtros",
+				OnClick = "toggleFilters()",
+				Id = "botonFiltros"
+			})
+			<div id="filtrosContainer" style="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease;">
+				
+				@await Component.InvokeAsync("SelectField", new SelectFieldModel
+				{
+					Label = "Periodo",
+					Name = "periodoFiltro",
+					Options = new List<OptionModel>
 				{
 					new OptionModel { Value = "Febrero-Julio", Text = "Febrero-Julio" },
 					new OptionModel { Value = "Agosto-Enero", Text = "Agosto-Enero" }
 				},
-				HtmlAttributes = new Dictionary<string, string>
+					HtmlAttributes = new Dictionary<string, string>
 				{
 					{ "data-autosubmit", "true" }
 				}
-			})
+				})
+			</div>
 		</div>
+		
 
 		<!-- Acciones -->
-		<div style="display:flex; gap:10px; padding-bottom:20px; align-items:center; justify-content:space-between">
+		<div style="display:flex; gap:10px; padding-bottom:20px; padding-top:20px; align-items:center; justify-content:space-between">
 
 			<!-- Buscador -->
 			@await Component.InvokeAsync("Buscador", new BuscadorModel
 			{
 				Name = "anioFiltro",
 				Placeholder = "Buscar por año...",
-				Action = Url.Action("Index", "PeriodosEscolares"),
-				Method = "get",
-				Value = Context.Request.Query["anioFiltro"],
 				
 			})
 
@@ -108,28 +117,21 @@
 
 
 	</div>
-@* 
+
+
 	@if (!ViewData.ModelState.IsValid)
-	{
-		<script>
 
-				document.addEventListener("DOMContentLoaded", function () {
-
-					document.getElementById("formPeriodoEscolar").action =
-						"@Url.Action("Crear", "PeriodosEscolares")";
-
-					abrirModal("modalPeriodoEscolar");
-
-					history.replaceState(
-						null,
-						"",
-						"@Url.Action("Index", "PeriodosEscolares")"
-					);
-
-				});
-
-		</script>
-	} *@
+		@if (ViewData["AbrirModalCrear"] != null)
+		{
+			<script>
+					document.addEventListener("DOMContentLoaded", function () {
+						document.getElementById("formPeriodoEscolar").action =
+							"@Url.Action("Crear", "PeriodosEscolares")";
+						abrirModal("modalPeriodoEscolar");
+						history.replaceState(null, "", "@Url.Action("Index", "PeriodosEscolares")");
+					});
+			</script>
+		}
 </div>
 
 
@@ -212,3 +214,9 @@
 	});
 </script>
 
+<script>
+	window.configFiltros = {
+		storageKey: 'filtrosVisibles_periodosescolares'
+	};
+</script>
+<script src="js/filtros.js"></script>

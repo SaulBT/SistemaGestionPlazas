@@ -6,6 +6,6 @@ namespace SGPla.Models.DTOs.PeriodoEscolar
     {
         public string Periodo { get; set; } = string.Empty;
 
-        public int Anio { get; set; }
+        public string Anio { get; set; }
     }
 }

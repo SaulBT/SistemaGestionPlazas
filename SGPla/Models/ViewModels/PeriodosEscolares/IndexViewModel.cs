@@ -9,9 +9,9 @@ namespace SGPla.Models.ViewModels.PeriodosEscolares
 
         public List<OptionModel> Periodos { get; set; }
 
-        [Range(2000, 2100, ErrorMessage = "Ingrese un año válido")]
 
-        public int? AnioFiltro { get; set; }
+
+        public string? AnioFiltro { get; set; }
 
         public string? Periodo { get; set; }
 
