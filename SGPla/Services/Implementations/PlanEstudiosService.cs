@@ -98,7 +98,7 @@ namespace SGPla.Services.Implementations
                         horasTeoricas = "0";
                     var horas = int.Parse(horasPracticas) + int.Parse(horasTeoricas);
 
-                    perfilDocente = System.Text.Json.JsonSerializer.Serialize(perfilDocente);
+                    //perfilDocente = System.Text.Json.JsonSerializer.Serialize(perfilDocente);
 
                     _logger.LogInformation($"Experiencia: {codigo} | {nombre} | {horas} | {creditos} | {perfilDocente}");
                     experienciasEducativas.Add(new DatosExperienciaEducativaDTO
