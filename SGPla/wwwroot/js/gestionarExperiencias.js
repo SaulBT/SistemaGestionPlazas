@@ -4,29 +4,29 @@ const perfilDocenteAgregar = document.getElementById("PerfilDocenteAgregar");
 const horasAgregar = document.getElementById("HorasAgregar");
 const creditosAgregar = document.getElementById("CreditosAgregar");
 
-const codigoEditar = document.getElementById("CodigoEditar");
-const nombreEditar = document.getElementById("NombreEditar");
-const perfilDocenteEditar = document.getElementById("PerfilDocenteEditar");
-const horasEditar = document.getElementById("HorasEditar");
-const creditosEditar = document.getElementById("CreditosEditar");
-
-const tbody = document.querySelector("#tabla tbody");
-
-var codigoOriginal = "";
-var codigoEliminar = "";
-var idExperienciaEducativa = 0;
-
 const errorCodigoAgregar = document.getElementById("CodigoAgregar-Error");
 const errorNombreAgregar = document.getElementById("NombreAgregar-Error");
 const errorPerfilDocenteAgregar = document.getElementById("PerfilDocenteAgregar-Error");
 const errorHorasAgregar = document.getElementById("HorasAgregar-Error");
 const errorCreditosAgregar = document.getElementById("CreditosAgregar-Error");
 
+const codigoEditar = document.getElementById("CodigoEditar");
+const nombreEditar = document.getElementById("NombreEditar");
+const perfilDocenteEditar = document.getElementById("PerfilDocenteEditar");
+const horasEditar = document.getElementById("HorasEditar");
+const creditosEditar = document.getElementById("CreditosEditar");
+
 const errorCodigoEditar = document.getElementById("CodigoEditar-Error");
 const errorNombreEditar = document.getElementById("NombreEditar-Error");
 const errorPerfilDocenteEditar = document.getElementById("PerfilDocenteEditar-Error");
 const errorHorasEditar = document.getElementById("HorasEditar-Error");
 const errorCreditosEditar = document.getElementById("CreditosEditar-Error");
+
+const tbody = document.querySelector("#tabla tbody");
+
+var codigoOriginal = "";
+var codigoEliminar = "";
+var idExperienciaEducativa = 0;
 
 function abrirModalAgregarExperiencia() {
     limpiarErroresAgregar();
@@ -149,7 +149,7 @@ function generarFila(codigo, nombre, perfilDocente, horas, creditos) {
                     <button
                         type="button"
                         class="boton-primario boton-icono"
-                        onclick="abrirModalPerfilDocente('${perfilDocente}')">
+                        onclick="abrirModalPerfilDocente(${perfilDocente})">
                         <i class="bi bi-info-circle-fill"></i>
                     </button>
                 </div>
@@ -173,6 +173,14 @@ function generarFila(codigo, nombre, perfilDocente, horas, creditos) {
             </td>
         `;
     return fila;
+}
+function validarEstadoExperiencias(experiencias) {
+    experiencias.forEach(ee => {
+        if (!ee.perfilDocente) {
+            const fila = document.getElementById(ee.codigo);
+            fila.classList.add("fila-error");
+        }
+    })
 }
 
 function verificarCamposAgregar(codigo) {
