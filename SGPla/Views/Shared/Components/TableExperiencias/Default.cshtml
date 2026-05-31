@@ -14,7 +14,13 @@
         <tbody>
             @foreach (var row in Model.Rows)
             {
-                <tr id="@row.RowId" class="(@row.EsInvalida ? "ee_invalida" : @row.EsNueva ? "ee_nueva" : @row.EsEditada ? "ee_editada" : "")">
+                var claseFila =
+                    row.EsInvalida ? "ee-invalida" :
+                    row.EsNueva ? "ee-nueva" :
+                    row.EsEditada ? "ee-editada" :
+                    "";
+
+                <tr id="@row.RowId" class="@claseFila">
                     @foreach (var cell in row.Cells)
                     {
                         <td>
