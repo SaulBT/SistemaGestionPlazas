@@ -40,6 +40,31 @@
         background-color: #f1f5f9;
     }
 
+    /* filas de experiencias */
+    .custom-table tbody tr.ee-invalida {
+        background-color: #FF5D4D;
+    }
+
+        .custom-table tbody tr.ee-invalida:hover {
+            background-color: #E65547;
+        }
+
+    .custom-table tbody tr.ee-nueva {
+        background-color: #98F1AD;
+    }
+
+        .custom-table tbody tr.ee-nueva:hover {
+            background-color: #6FEB8C;
+        }
+
+    .custom-table tbody tr.ee-editada {
+        background-color: #F6F7C0;
+    }
+
+        .custom-table tbody tr.ee-editada:hover {
+            background-color: #F0F297;
+        }
+
 /* acciones */
 .table-actions {
     display: flex;
