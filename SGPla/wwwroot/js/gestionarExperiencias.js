@@ -23,6 +23,7 @@ const errorHorasEditar = document.getElementById("HorasEditar-Error");
 const errorCreditosEditar = document.getElementById("CreditosEditar-Error");
 
 const tbody = document.querySelector("#tabla tbody");
+const tabla = document.getElementById("contenedorTabla");
 
 var codigoOriginal = "";
 var codigoEliminar = "";
@@ -61,15 +62,13 @@ function abrirModalEliminarExperiencia(codigo) {
 async function agregarExperiencia() {
     limpiarErroresAgregar();
     if (verificarCamposAgregar(codigoAgregar.value)) {
-        const response = await fetch(`${UrlAgregarExperiencia}?codigo=${encodeURIComponent(codigoAgregar.value)}&nombre=${encodeURIComponent(nombreAgregar.value)}&perfilDocente=${encodeURIComponent(perfilDocenteAgregar.value)}&horas=${encodeURIComponent(horasAgregar.value)}&creditos=${encodeURIComponent(creditosAgregar.value)}`);
-        const data = await response.json();
+        const response = await fetch(`${UrlAgregarExperiencia}?codigo=${encodeURIComponent(codigoAgregar.value)}&nombre=${encodeURIComponent(nombreAgregar.value)}&perfilDocente=${encodeURIComponent(perfilDocenteAgregar.value)}&horas=${encodeURIComponent(horasAgregar.value)}&creditos=${encodeURIComponent(creditosAgregar.value)}`, {
+            method: "GET"
+        });
 
-        if (!data.error) {
-            const experiencia = data.experiencia;
-
-            const fila = generarFila(experiencia.codigo, experiencia.nombre, experiencia.perfilDocente, experiencia.horas, experiencia.creditos);
-            tbody.appendChild(fila);
-            refrescarTablaCliente("tablaExperiencias");
+        if (response.ok) {
+            const html = await response.text();
+            tabla.innerHTML = html;
 
             cerrarModal("modalAgregarExperiencia")
         } else {
@@ -86,18 +85,13 @@ async function editarExperiencia(edicion) {
     limpiarErroresEditar();
     var ruta = "";
     if (verificarCamposEditar(codigoEditar.value)) {
-        const response = await fetch(`${UrlEditarExperiencia}?codigo=${encodeURIComponent(codigoEditar.value)}&nombre=${encodeURIComponent(nombreEditar.value)}&perfilDocente=${encodeURIComponent(perfilDocenteEditar.value)}&horas=${encodeURIComponent(horasEditar.value)}&creditos${encodeURIComponent(creditosEditar.value)}&codigoOriginal=${encodeURIComponent(codigoOriginal)}`);
-        const data = await response.json();
+        const response = await fetch(`${UrlEditarExperiencia}?codigo=${encodeURIComponent(codigoEditar.value)}&nombre=${encodeURIComponent(nombreEditar.value)}&perfilDocente=${encodeURIComponent(perfilDocenteEditar.value)}&horas=${encodeURIComponent(horasEditar.value)}&creditos=${encodeURIComponent(creditosEditar.value)}&codigoOriginal=${encodeURIComponent(codigoOriginal)}`, {
+            method: "GET"
+        });
 
-        if (!data.error) {
-            const experiencias = data.experiencias;
-
-            tbody.innerHTML = "";
-            experiencias.forEach(ee => {
-                const fila = generarFila(ee.codigo, ee.nombre, ee.perfilDocente, ee.horas, ee.creditos);
-                tbody.appendChild(fila);
-            });
-            refrescarTablaCliente("tablaExperiencias");
+        if (response.ok) {
+            const html = await response.text();
+            tabla.innerHTML = html;
 
             cerrarModal("modalEditarExperiencia")
         } else {
@@ -111,18 +105,13 @@ async function editarExperiencia(edicion) {
 }
 
 async function eliminarExperiencia(edicion) {
-    const response = await fetch(`${UrlEliminarExperiencia}?codigo=${encodeURIComponent(codigoEliminar)}`);
-    const data = await response.json();
+    const response = await fetch(`${UrlEliminarExperiencia}?codigo=${encodeURIComponent(codigoEliminar)}`, {
+        method: "GET"
+    });
 
-    if (!data.error) {
-        const experiencias = data.experiencias;
-
-        tbody.innerHTML = "";
-        experiencias.forEach(ee => {
-            const fila = generarFila(ee.codigo, ee.nombre, ee.perfilDocente, ee.horas, ee.creditos);
-            tbody.appendChild(fila);
-        });
-        refrescarTablaCliente("tablaExperiencias");
+    if (response.ok) {
+        const html = await response.text();
+        tabla.innerHTML = html;
 
         cerrarModal("modalEliminarExperiencia")
     } else {
