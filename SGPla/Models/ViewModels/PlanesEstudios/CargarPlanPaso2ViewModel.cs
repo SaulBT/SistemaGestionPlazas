@@ -15,7 +15,7 @@ namespace SGPla.Models.ViewModels.PlanesEstudios
         public string Sistema { get; set; } = string.Empty;
         public FormularioExperienciaEducativaViewModel Formulario { get; set; }
         public IFormFile Archivo { get; set; }
-        public TableModel Table { get; set; } = new TableModel();
+        public TableExperienciasModel Table { get; set; } = new TableExperienciasModel();
         public bool Recarga { get; set; } = false;
     }
 }
