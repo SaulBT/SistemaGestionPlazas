@@ -76,8 +76,8 @@
     </div>
 
     <!-- TABLA -->
-    <div id="tabla" class="gap:10px;" style="margin-block-end: 1em">
-        @await Component.InvokeAsync("Table", Model.Table)
+    <div id="contenedorTabla" class="gap:10px;" style="margin-block-end: 1em">
+        @await Component.InvokeAsync("TableExperiencias", Model.Table)
     </div>
 
     <div class="d-flex">
@@ -185,20 +185,11 @@
         formData.append("archivo", archivoInput.files[0]);
 
         const response = await fetch(UrlCargarArchivo, { method: "POST", body: formData });
-        const data = await response.json();
 
-        if (!data.error) {
-            const experiencias = data.experiencias;
+        if (response.ok) {
+            const html = await response.text();
+            document.getElementById("contenedorTabla").innerHTML = html;
 
-            console.log(experiencias);
-            tbody.innerHTML = "";
-            experiencias.forEach(ee => {
-                const fila = generarFila(ee.codigo, ee.nombre, ee.perfilDocente, ee.horas, ee.creditos);
-                tbody.appendChild(fila);
-            });
-
-            nuevoArchivo.value = true;
-            refrescarTablaCliente("tablaExperiencias");
             cerrarModal("modalArchivo")
         } else {
             await cancelarAccion();
