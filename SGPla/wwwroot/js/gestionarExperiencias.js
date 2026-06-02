@@ -148,53 +148,6 @@ async function buscarExperiencia() {
     }
 }
 
-function generarFila(codigo, nombre, perfilDocente, horas, creditos) {
-    const fila = document.createElement("tr");
-    fila.id = codigo;
-    fila.innerHTML = `
-            <td>${codigo}</td>
-            <td>${nombre}</td>
-            <td>${horas}</td>
-            <td>${creditos}</td>
-            <td>
-                <div class="table-actions">
-                    <button
-                        type="button"
-                        class="boton-primario boton-icono"
-                        onclick="abrirModalPerfilDocente(${perfilDocente})">
-                        <i class="bi bi-info-circle-fill"></i>
-                    </button>
-                </div>
-            </td>
-            <td>
-                <div class="table-actions">
-                    <button
-                        type="button"
-                        class="boton-primario boton-icono"
-                        onclick="abrirModalEditarExperiencia('${codigo}', '${nombre}', '${horas}', '${creditos}', '${perfilDocente}')">
-
-                        <i class="bi bi-pencil-fill"></i>
-                    </button>
-                    <button
-                        type="button"
-                        class="boton-primario boton-icono"
-                        onclick="abrirModalEliminarExperiencia('${codigo}')">
-                        <i class="bi bi-trash-fill"></i>
-                    </button>
-                </div>
-            </td>
-        `;
-    return fila;
-}
-function validarEstadoExperiencias(experiencias) {
-    experiencias.forEach(ee => {
-        if (!ee.perfilDocente) {
-            const fila = document.getElementById(ee.codigo);
-            fila.classList.add("fila-error");
-        }
-    })
-}
-
 function verificarCamposAgregar(codigo) {
     var bandera = true;
 
