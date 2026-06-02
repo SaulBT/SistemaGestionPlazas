@@ -5,6 +5,13 @@
     ViewBag.RegresarUrl = Url.Action("Index", "PlanesEstudios");
 }
 
+@await Component.InvokeAsync("Stepper", new StepperModel
+{
+    PasoActual = 1,
+    Paso1Texto = "Subir Archivo",
+    Paso2Texto = "Visualización de Experiencias Educativas"
+})
+
 <form id="form" method="post" action="@Url.Action("ValidarPaso1", "PlanesEstudios")" enctype="multipart/form-data">
     <div class="d-flex flex-column gap-3">
         @await Component.InvokeAsync("SelectField", new SelectFieldModel

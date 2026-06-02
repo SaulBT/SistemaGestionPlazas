@@ -4,6 +4,13 @@
     ViewBag.RegresarOnClick = "regresarPaso1()";
 }
 
+@await Component.InvokeAsync("Stepper", new StepperModel
+{
+    PasoActual = 2,
+    Paso1Texto = "Subir Archivo",
+    Paso2Texto = "Visualización de Experiencias Educativas"
+})
+
 <form id="form" action="@Url.Action("GuardarPlanEstudios", "PlanesEstudios")" method="post" action="" enctype="multipart/form-data">
     <!-- BLOQUE SUPERIOR -->
     <div class="d-flex row gap-3" style="margin-block-end: 1em">

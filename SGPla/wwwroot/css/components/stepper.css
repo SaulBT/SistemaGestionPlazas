@@ -1,0 +1,56 @@
+﻿.stepper-container {
+    display: flex;
+    width: 100%;
+    margin-bottom: 3rem;
+}
+
+.step {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.step-circle-selected {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #22F0A1;
+    color: black;
+    font-weight: bold;
+    position: relative;
+    z-index: 2;
+}
+
+.step-circle-unselected {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #D9D9D9;
+    color: black;
+    font-weight: bold;
+    position: relative;
+    z-index: 2;
+}
+
+.step-title {
+    margin-top: 8px;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.step-line {
+    flex: 1;
+    height: 2px;
+    background-color: black;
+    position: relative;
+    margin-top: 20px;
+    margin-left: -100px;
+    margin-right: -100px;
+}
