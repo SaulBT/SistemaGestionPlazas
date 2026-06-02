@@ -222,6 +222,7 @@
             const html = await response.text();
             document.getElementById("contenedorTabla").innerHTML = html;
             inicializarTablaCliente("tablaExperiencias");
+            nuevoArchivo.value = true;
 
             cerrarModal("modalArchivo")
         } else {
