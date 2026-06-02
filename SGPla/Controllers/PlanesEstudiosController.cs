@@ -534,12 +534,6 @@ namespace SGPla.Controllers
                     modelo.NombrePrograma = programa?.Nombre ?? "";
                     modelo.Table = LlenarTablaGestionExperiencias(listaEe);
                     modelo.Table.TableId = "tablaExperiencias";
-                    modelo.Table.Pagination = new PaginationInfo
-                    {
-                        PageSize = 10,
-                        TotalItems = listaEe.Count(),
-                        PaginationMode = "client"
-                    };
 
                     return (modelo, false);
                 }
@@ -1606,6 +1600,29 @@ namespace SGPla.Controllers
             }
         }
 
+        [HttpGet]
+        public IActionResult BuscarExperiencias(string busqueda = "")
+        {
+            var tabla = new TableExperienciasModel();
+            string listaEeJson = HttpContext.Session.GetString(SESSION_EXPERIENCIAS);
+            if (!string.IsNullOrEmpty(listaEeJson))
+            {
+                var listaEe = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(listaEeJson);
+                busqueda = busqueda.Trim();
+
+                if (!string.IsNullOrEmpty(busqueda))
+                    tabla = LlenarTablaGestionExperiencias(listaEe, busqueda);
+                else
+                    tabla = LlenarTablaGestionExperiencias(listaEe);
+
+                return PartialView("_TablaExperiencias", tabla);
+            }
+            else
+            {
+                return BadRequest();
+            }
+        }
+        
         private TableExperienciasModel LlenarTablaGestionExperiencias(List<DatosExperienciaEducativaDTO> experiencias)
         {
             var tabla = new TableExperienciasModel();
@@ -1624,12 +1641,69 @@ namespace SGPla.Controllers
 
                 tabla = new TableExperienciasModel
                 {
+                    TableId = "tablaExperiencias",
                     Headers = HEADERS_TABLA_EXPERIENCIAS,
-                    Rows = generarListaRowsExperiencias(experienciasInvalidas, experiencasNuevas, experienciasEditadas, experiencias)
+                    Rows = generarListaRowsExperiencias(experienciasInvalidas, experiencasNuevas, experienciasEditadas, experiencias),
+                    Pagination = new PaginationInfo
+                    {
+                        CurrentPage = paginaActual,
+                        PageSize = 10,
+                        TotalItems = experiencias.Count,
+                        OnPageChange = "cambiarPagina",
+                        PaginationMode = "client"
+                    }
                 };
             }
 
             return tabla;
+        }
+
+        private TableExperienciasModel LlenarTablaGestionExperiencias(List<DatosExperienciaEducativaDTO> experiencias, string nombre)
+        {
+            var tabla = new TableExperienciasModel();
+
+            if (experiencias.Count == 0)
+            {
+                return TablaFactory.GenerarTablaExperienciasConMensaje(HEADERS_TABLA_EXPERIENCIAS, string.Format(Constantes.TABLA_VACIA, Constantes.EXPERIENCIAS_EDUCATIVAS));
+            }
+            else
+            {
+                var resultados = separarExperiencias(experiencias);
+                var experienciasInvalidas = filtrarNombre(resultados.experienciasInvalidas, nombre);
+                var experiencasNuevas = filtrarNombre(resultados.experienciasnuevas, nombre);
+                var experienciasEditadas = filtrarNombre(resultados.experienciasEditadas, nombre);
+                experiencias = filtrarNombre(resultados.experiencias, nombre);
+
+                tabla = new TableExperienciasModel
+                {
+                    TableId = "tablaExperiencias",
+                    Headers = HEADERS_TABLA_EXPERIENCIAS,
+                    Rows = generarListaRowsExperiencias(experienciasInvalidas, experiencasNuevas, experienciasEditadas, experiencias),
+                    Pagination = new PaginationInfo
+                    {
+                        CurrentPage = paginaActual,
+                        PageSize = 10,
+                        TotalItems = experiencias.Count,
+                        OnPageChange = "cambiarPagina",
+                        PaginationMode = "client"
+                    }
+                };
+            }
+
+            return tabla;
+        }
+
+        private List<DatosExperienciaEducativaDTO> filtrarNombre(List<DatosExperienciaEducativaDTO> lista, string nombre)
+        {
+            List<DatosExperienciaEducativaDTO> listaFinal = [];
+
+            foreach (var ee in lista)
+            {
+                if ((!string.IsNullOrEmpty(ee.Nombre) && ee.Nombre.Contains(nombre)) || (!string.IsNullOrEmpty(ee.Codigo) && ee.Codigo.Contains(nombre)))
+                    listaFinal.Add(ee);
+            }
+
+            return listaFinal;
         }
 
         private (List<DatosExperienciaEducativaDTO> experienciasInvalidas, List<DatosExperienciaEducativaDTO> experienciasnuevas, List<DatosExperienciaEducativaDTO> experienciasEditadas, List<DatosExperienciaEducativaDTO> experiencias) separarExperiencias(List<DatosExperienciaEducativaDTO> listaEe)
