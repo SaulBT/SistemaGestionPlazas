@@ -221,6 +221,7 @@
         if (response.ok) {
             const html = await response.text();
             document.getElementById("contenedorTabla").innerHTML = html;
+            inicializarTablaCliente("tablaExperiencias");
 
             cerrarModal("modalArchivo")
         } else {
