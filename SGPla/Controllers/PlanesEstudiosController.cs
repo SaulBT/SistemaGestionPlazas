@@ -42,8 +42,7 @@ namespace SGPla.Controllers
         private const string TOAST_EXPERIENCIAS_VACIAS = "La lista de Experiencias Educativas no puede estar vacía.";
 
         private const string SESSION_EXPERIENCIAS = "Experiencias";
-        private const string SESSION_RUTA = "Ruta";
-        private const string SESSION_NOMBRE_ARCHIVO = "NombreArchivo";
+        
         private const string SESSION_EXPERIENCIAS_NUEVAS = "ExperienciasNuevas";
         private const string SESSION_EXPERIENCIAS_EDITADAS = "ExperienciasEditadas";
         private const string SESSION_EXPERIENCIAS_ELIMINADAS = "ExperienciasEliminadas";
@@ -509,9 +508,10 @@ namespace SGPla.Controllers
             try
             {
                 var archivo = modelo.Archivo;
-                await guardarArchivoTemporalmente(archivo);
+                var datos = await _archivoService.GuardarTemporalmenteAsync(archivo);
+                var ruta = datos.ruta;
+                var nombre = datos.nombre;
 
-                var ruta = HttpContext.Session.GetString(SESSION_RUTA);
                 if (!string.IsNullOrEmpty(ruta))
                 {
                     var archivoDto = new ArchivoPlanEstudiosDTO
@@ -519,6 +519,8 @@ namespace SGPla.Controllers
                         Ruta = ruta,
                         NombreArchivo = archivo.FileName
                     };
+                    HttpContext.Session.SetString(Constantes.SESSION_RUTA, ruta);
+                    HttpContext.Session.SetString(Constantes.SESSION_NOMBRE_ARCHIVO, nombre);
                     var listaEe = await ProcesarArchivoAsync(archivoDto);
 
                     HttpContext.Session.SetString(SESSION_EXPERIENCIAS, JsonSerializer.Serialize(listaEe));
@@ -596,11 +598,11 @@ namespace SGPla.Controllers
         [HttpPost]
         public async Task<IActionResult> RegresarPaso1Async([FromBody] CargarPlanPaso1ViewModel modelo)
         {
-            var rutaArchivo = HttpContext.Session.GetString(SESSION_RUTA);
+            var rutaArchivo = HttpContext.Session.GetString(Constantes.SESSION_RUTA);
             if (!string.IsNullOrEmpty(rutaArchivo))
             {
                 System.IO.File.Delete(rutaArchivo);
-                HttpContext.Session.Remove(SESSION_RUTA);
+                HttpContext.Session.Remove(Constantes.SESSION_RUTA);
             }
 
             var url = Url.Action(nameof(CargarPlanPaso1), new
@@ -643,10 +645,10 @@ namespace SGPla.Controllers
                         return await CargarPlanPaso2(modeloAnterior);
                     }
 
-                    var rutaArchivo = HttpContext.Session.GetString(SESSION_RUTA);
+                    var rutaArchivo = HttpContext.Session.GetString(Constantes.SESSION_RUTA);
                     if (!string.IsNullOrEmpty(rutaArchivo))
                     {
-                        var nombreArchivo = HttpContext.Session.GetString(SESSION_NOMBRE_ARCHIVO);
+                        var nombreArchivo = HttpContext.Session.GetString(Constantes.SESSION_NOMBRE_ARCHIVO);
                         if (!string.IsNullOrEmpty(nombreArchivo))
                         {
                             var archivoDTO = new ArchivoPlanEstudiosDTO
@@ -1029,17 +1031,19 @@ namespace SGPla.Controllers
         {
             try
             {
-                await guardarArchivoTemporalmente(archivo);
+                var datos = await _archivoService.GuardarTemporalmenteAsync(archivo);
+                var ruta = datos.ruta;
+                var nombreArchivo = datos.nombre;
                 List<DatosExperienciaEducativaDTO> listaEeNueva = [];
                 bool error = false;
                 var tabla = new TableExperienciasModel();
 
-                var ruta = HttpContext.Session.GetString(SESSION_RUTA);
                 if (!string.IsNullOrEmpty(ruta))
                 {
-                    var nombreArchivo = HttpContext.Session.GetString(SESSION_NOMBRE_ARCHIVO);
+                    HttpContext.Session.SetString(Constantes.SESSION_RUTA, ruta);
                     if (!string.IsNullOrEmpty(nombreArchivo))
                     {
+                        HttpContext.Session.SetString(Constantes.SESSION_NOMBRE_ARCHIVO, nombreArchivo);
                         var archivoDTO = new ArchivoPlanEstudiosDTO
                         {
                             Ruta = ruta,
@@ -1169,7 +1173,7 @@ namespace SGPla.Controllers
                     IdsExperienciasEliminadas = JsonSerializer.Deserialize<List<int>>(eeEliminadas)
                 };
 
-                var rutaArchivo = HttpContext.Session.GetString(SESSION_RUTA);
+                var rutaArchivo = HttpContext.Session.GetString(Constantes.SESSION_RUTA);
                 if (modelo.NuevoArchivo)
                 {
                     if (string.IsNullOrEmpty(rutaArchivo))
@@ -1178,7 +1182,7 @@ namespace SGPla.Controllers
 
                         return RedirectToAction(nameof(Index));
                     }
-                    var nombreArchivo = HttpContext.Session.GetString(SESSION_NOMBRE_ARCHIVO);
+                    var nombreArchivo = HttpContext.Session.GetString(Constantes.SESSION_NOMBRE_ARCHIVO);
                     if (string.IsNullOrEmpty(nombreArchivo))
                     {
                         this.LanzarError(_logger, null, NOMBRE_LOGGER, EDITAR, string.Format(Constantes.LOG_ERROR_NULO, Constantes.NOMBRE_ARCHIVO), string.Format(Constantes.TOAST_ERROR_GUARDAR_EL, Constantes.PLAN_ESTUDIOS));
@@ -1513,7 +1517,7 @@ namespace SGPla.Controllers
         [HttpGet]
         public async Task<IActionResult> CancelarAccionAsync()
         {
-            var rutaArchivo = HttpContext.Session.GetString(SESSION_RUTA);
+            var rutaArchivo = HttpContext.Session.GetString(Constantes.SESSION_RUTA);
             if (!string.IsNullOrEmpty(rutaArchivo))
                 System.IO.File.Delete(rutaArchivo);
 
@@ -1969,19 +1973,6 @@ namespace SGPla.Controllers
             }
 
             return rows;
-        }
-
-        private async Task guardarArchivoTemporalmente(IFormFile archivo)
-        {
-            var carpetaTemp = Path.Combine(_environment.ContentRootPath, "TempUploads");
-            Directory.CreateDirectory(carpetaTemp);
-            var extension = Path.GetExtension(archivo.FileName);
-            var rutaArchivo = Path.Combine(carpetaTemp, $"{Guid.NewGuid()}{extension}");
-            using var stream = new FileStream(rutaArchivo, FileMode.Create);
-            await archivo.CopyToAsync(stream);
-
-            HttpContext.Session.SetString(SESSION_RUTA, rutaArchivo);
-            HttpContext.Session.SetString(SESSION_NOMBRE_ARCHIVO, archivo.FileName);
         }
 
         private async Task<CargarPlanPaso1ViewModel> recargarCombosAsync(CargarPlanPaso1ViewModel modelo)
