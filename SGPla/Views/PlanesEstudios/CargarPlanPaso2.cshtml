@@ -6,7 +6,8 @@
 
 <form id="form" action="@Url.Action("GuardarPlanEstudios", "PlanesEstudios")" method="post" action="" enctype="multipart/form-data">
     <!-- BLOQUE SUPERIOR -->
-    <div class="d-flex row gap-2" style="margin-block-end: 1em">
+    <div class="d-flex row gap-3" style="margin-block-end: 1em">
+        <label class="fw-bold">Información del plan:</label>
         <!-- PRIMERA LÍNEA-->
         <div class="d-flex gap-2">
             @await Component.InvokeAsync("InputField", new InputFieldModel
@@ -72,15 +73,36 @@
                 <input type="hidden" name="Sistema" value="@Model.Sistema" />
             </div>
         </div>
-        <!-- BOTÓN AGREGAR EXPERIENCIA EDUCATIVA -->
-        <div class="d-flex col-12 justify-content-end">
-            @await Component.InvokeAsync("Boton", new
+        <label class="fw-bold">Tabla de Experiencias Educativas:</label>
+        <div class="d-flex col-12 justify-content-between">
+            <!--Barra de Búsqueda-->
+            @await Component.InvokeAsync("Buscador", new BuscadorModel
             {
-                accion = "Agregar",
-                tipo = "secundario",
-                texto = "Agregar Experiencia Educativa",
-                OnClick = "abrirModalAgregarExperiencia()"
+                Name = "tfBusqueda",
+                Placeholder = "Buscar Experiencia",
+                Value = Context.Request.Query["busqueda"],
+                IdButton = "btnBusqueda",
+                ButtonAction = "buscarExperiencia()",
+                ButtonType = "button"
             })
+            <div class="d-flex justify-content-end gap-2">
+                <!-- BOTÓN SIMBOLOGÍA -->
+                @await Component.InvokeAsync("Boton", new
+                {
+                    accion = "pregunta",
+                    tipo = "secundario",
+                    texto = "Simbología",
+                    OnClick = "abrirModal('modalSimbología')"
+                })
+                <!-- BOTÓN AGREGAR EXPERIENCIA EDUCATIVA -->
+                @await Component.InvokeAsync("Boton", new
+                {
+                    accion = "Agregar",
+                    tipo = "secundario",
+                    texto = "Agregar Experiencia Educativa",
+                    OnClick = "abrirModalAgregarExperiencia()"
+                })
+            </div>
         </div>
     </div>
 
@@ -164,6 +186,17 @@
             Mensaje = "Esta acción es irreversible ¿Está seguro de eliminar la Experiencia Educativa del Plan de Estudios?",
             OnConfirm = "eliminarExperiencia(false)",
             OnCancel = "cerrarModal('modalEliminarExperiencia')"
+        })
+
+        <!-- Modal Simbología -->
+        @await Component.InvokeAsync("ModalFormulario", new ModalFormularioModel
+        {
+            Id = "modalSimbología",
+            Titulo = "Simbología",
+            PartialView = "_ModalSimbologia",
+            OnConfirm = "cerrarModal('modalSimbología')",
+            Tipo = "Informacion",
+            Accion = "confirmar"
         })
     </div>
 </form>

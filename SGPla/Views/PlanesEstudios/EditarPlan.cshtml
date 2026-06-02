@@ -8,6 +8,7 @@
     <input name="NuevoArchivo" id="nuevoArchivo" value="false" type="hidden"/>
     <!-- BLOQUE SUPERIOR -->
     <div class="d-flex row gap-4" style="margin-block-end: 1em">
+        <label class="fw-bold">Información del plan:</label>
         <!-- PRIMERA LÍNEA-->
         <div class="d-flex gap-2">
 
@@ -54,24 +55,44 @@
                 Flexible = true
             })
         </div>
-        
-        <div class="d-flex col-12 justify-content-end gap-2">
-            <!-- BOTÓN RECARGAR LISTA -->
-            @await Component.InvokeAsync("Boton", new
+        <label class="fw-bold">Tabla de Experiencias Educativas:</label>
+        <div class="d-flex col-12 justify-content-between">
+            <!--Barra de Búsqueda-->
+            @await Component.InvokeAsync("Buscador", new BuscadorModel
             {
-                accion = "Cargar",
-                tipo = "secundario",
-                texto = "Volver a cargar archivo",
-                OnClick = "abrirModalArchivo()"
+                Name = "tfBusqueda",
+                Placeholder = "Buscar Experiencia",
+                Value = Context.Request.Query["busqueda"],
+                IdButton = "btnBusqueda",
+                ButtonAction = "buscarExperiencia()",
+                ButtonType = "button"
             })
-            <!-- BOTÓN AGREGAR EXPERIENCIA EDUCATIVA -->
-            @await Component.InvokeAsync("Boton", new
-            {
-                accion = "Agregar",
-                tipo = "secundario",
-                texto = "Agregar Experiencia Educativa",
-                OnClick = "abrirModalAgregarExperiencia()"
-            })
+            <div class="d-flex justify-content-end gap-2">
+                <!-- BOTÓN SIMBOLOGÍA -->
+                @await Component.InvokeAsync("Boton", new
+                {
+                    accion = "pregunta",
+                    tipo = "secundario",
+                    texto = "Simbología",
+                    OnClick = "abrirModal('modalSimbología')"
+                })
+                <!-- BOTÓN RECARGAR LISTA -->
+                @await Component.InvokeAsync("Boton", new
+                {
+                    accion = "Cargar",
+                    tipo = "secundario",
+                    texto = "Volver a cargar archivo",
+                    OnClick = "abrirModalArchivo()"
+                })
+                <!-- BOTÓN AGREGAR EXPERIENCIA EDUCATIVA -->
+                @await Component.InvokeAsync("Boton", new
+                {
+                    accion = "Agregar",
+                    tipo = "secundario",
+                    texto = "Agregar Experiencia Educativa",
+                    OnClick = "abrirModalAgregarExperiencia()"
+                })
+            </div>
         </div>
     </div>
 
@@ -158,6 +179,17 @@
             OnCancel = "cerrarModal('modalArchivo')",
             FormatosAceptados = ".xlsx, .xls",
             TamanioMaximo = 20
+        })
+
+        <!-- Modal Simbología -->
+        @await Component.InvokeAsync("ModalFormulario", new ModalFormularioModel
+        {
+            Id = "modalSimbología",
+            Titulo = "Simbología",
+            PartialView = "_ModalSimbologia",
+            OnConfirm = "cerrarModal('modalSimbología')",
+            Tipo = "Informacion",
+            Accion = "confirmar"
         })
     </div>
 </form>
