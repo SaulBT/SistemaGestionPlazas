@@ -29,6 +29,17 @@ var codigoOriginal = "";
 var codigoEliminar = "";
 var idExperienciaEducativa = 0;
 
+const busqueda = document.getElementsByName("tfBusqueda")[0];
+busqueda.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+        e.preventDefault();
+
+        buscarExperiencia();
+    }
+});
+const botonBusqueda = document.getElementById("btnBusqueda");
+botonBusqueda.type = "button";
+
 function abrirModalAgregarExperiencia() {
     limpiarErroresAgregar();
     abrirModal("modalAgregarExperiencia");
@@ -69,6 +80,7 @@ async function agregarExperiencia() {
         if (response.ok) {
             const html = await response.text();
             tabla.innerHTML = html;
+            inicializarTablaCliente("tablaExperiencias");
 
             cerrarModal("modalAgregarExperiencia")
         } else {
@@ -92,6 +104,7 @@ async function editarExperiencia(edicion) {
         if (response.ok) {
             const html = await response.text();
             tabla.innerHTML = html;
+            inicializarTablaCliente("tablaExperiencias");
 
             cerrarModal("modalEditarExperiencia")
         } else {
@@ -112,6 +125,7 @@ async function eliminarExperiencia(edicion) {
     if (response.ok) {
         const html = await response.text();
         tabla.innerHTML = html;
+        inicializarTablaCliente("tablaExperiencias");
 
         cerrarModal("modalEliminarExperiencia")
     } else {
@@ -123,6 +137,15 @@ async function eliminarExperiencia(edicion) {
     }
 
     
+}
+
+async function buscarExperiencia() {
+    const response = await fetch(`/PlanesEstudios/BuscarExperiencias?busqueda=${encodeURIComponent(busqueda.value)}`);
+    if (response.ok) {
+        const html = await response.text();
+        tabla.innerHTML = html;
+        inicializarTablaCliente("tablaExperiencias");
+    }
 }
 
 function generarFila(codigo, nombre, perfilDocente, horas, creditos) {
