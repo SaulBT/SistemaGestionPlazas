@@ -55,7 +55,7 @@ public class UsuarioValidatorTests
             Nombre = "María López",
             Correo = "maria.com",
             Cargo = "Coordinadora",
-            Rol = Constantes.CoordinadorEa,
+            Rol = Constantes.COORDINADOR_EA,
             IdEntidadAcademica = 20
         };
 
@@ -74,7 +74,7 @@ public class UsuarioValidatorTests
             Nombre = "Enrique Gonzáles",
             Correo = "enrique@uv.mx",
             Cargo = "Coordinador de Economía",
-            Rol = Constantes.CoordinadorEa,
+            Rol = Constantes.COORDINADOR_EA,
             IdEntidadAcademica = 3
         };
 
@@ -120,7 +120,7 @@ public class UsuarioValidatorTests
             Nombre = "María López",
             Correo = "maria@uv.com",
             Cargo = "Coordinadora",
-            Rol = Constantes.CoordinadorDgaa,
+            Rol = Constantes.COORDINADOR_DGAA,
             IdEntidadAcademica =31
         };
 
@@ -139,7 +139,7 @@ public class UsuarioValidatorTests
             Nombre = "Entique Guzmán",
             Correo = "enrique@uv.com",
             Cargo = "Coordinador",
-            Rol = Constantes.CoordinadorEa,
+            Rol = Constantes.COORDINADOR_EA,
             IdAreaAcademica = 7
         };
 
@@ -158,7 +158,7 @@ public class UsuarioValidatorTests
             Nombre = "Saúl Barragán",
             Correo = "saul@uv.mx",
             Cargo = "Coordinador",
-            Rol = Constantes.CoordinadorEa,
+            Rol = Constantes.COORDINADOR_EA,
             IdEntidadAcademica = 12
         };
 
@@ -189,7 +189,7 @@ public class UsuarioValidatorTests
             Nombre = "Evelyn López",
             Correo = "evelyn@uv.mx",
             Cargo = "Coordinadora",
-            Rol = Constantes.CoordinadorDgaa,
+            Rol = Constantes.COORDINADOR_DGAA,
             IdAreaAcademica = 66
         };
 
@@ -250,7 +250,7 @@ public class UsuarioValidatorTests
         var dto = new ReferenciaUsuarioDTO
         {
             IdUsuario = 6767,
-            Rol = Constantes.CoordinadorDgaa
+            Rol = Constantes.COORDINADOR_DGAA
         };
 
         _coordinadorDgaaRepositoryMock
@@ -308,7 +308,7 @@ public class UsuarioValidatorTests
         var dto = new EditarUsuarioDTO
         {
             IdUsuario = 453,
-            Rol = Constantes.CoordinadorDgaa,
+            Rol = Constantes.COORDINADOR_DGAA,
             Nombre = "Luisa Londóñes",
             Cargo = "Administradora Jefe",
             IdEntidadAcademica = 2
@@ -331,7 +331,7 @@ public class UsuarioValidatorTests
         var dto = new EditarUsuarioDTO
         {
             IdUsuario = 534,
-            Rol = Constantes.CoordinadorEa,
+            Rol = Constantes.COORDINADOR_EA,
             Nombre = "Miguel Ángel Bocanegra",
             Cargo = "Coordinador",
             IdAreaAcademica = 200
@@ -354,7 +354,7 @@ public class UsuarioValidatorTests
         var dto = new EditarUsuarioDTO
         {
             IdUsuario = 534,
-            Rol = Constantes.CoordinadorEa,
+            Rol = Constantes.COORDINADOR_EA,
             Nombre = "Miguel Ángel Bocanegra",
             Cargo = "Coordinador",
             IdEntidadAcademica = 76
@@ -381,7 +381,7 @@ public class UsuarioValidatorTests
         var dto = new EditarUsuarioDTO
         {
             IdUsuario = 453,
-            Rol = Constantes.CoordinadorDgaa,
+            Rol = Constantes.COORDINADOR_DGAA,
             Nombre = "Luisa Londóñes",
             Cargo = "Administradora Jefe",
             IdAreaAcademica = 10
@@ -408,7 +408,7 @@ public class UsuarioValidatorTests
         var dto = new EditarUsuarioDTO
         {
             IdUsuario = 912,
-            Rol = Constantes.CoordinadorDgaa,
+            Rol = Constantes.COORDINADOR_DGAA,
             Nombre = "Luisa Londóñes",
             Cargo = "Administradora Jefe",
             IdAreaAcademica = 10
@@ -463,7 +463,7 @@ public class UsuarioValidatorTests
         var dto = new ReferenciaUsuarioDTO
         {
             IdUsuario = 6767,
-            Rol = Constantes.CoordinadorDgaa
+            Rol = Constantes.COORDINADOR_DGAA
         };
 
         _coordinadorDgaaRepositoryMock
