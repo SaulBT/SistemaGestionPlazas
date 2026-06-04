@@ -32,14 +32,12 @@ public class EntidadAcademicaValidatorTests
             Cp = null!,
             Municipio = null!,
             Telefono = null!,
-            Conmutador = null!,
             Extension = null!,
-            Fax = null!,
             Region = null!
         };
 
         _areaAcademicaRepositoryMock
-            .Setup(repository => repository.ExistePorIdAsync(dto.IdAreaAcademica))
+            .Setup(repository => repository.ExistePorIdAsync((int)dto.IdAreaAcademica))
             .ReturnsAsync(true);
 
         var ex = await Record.ExceptionAsync(() => _entidadAcademicaValidator.ValidarCreacionAsync(dto));
@@ -71,7 +69,7 @@ public class EntidadAcademicaValidatorTests
         dto.IdAreaAcademica = 10;
 
         _areaAcademicaRepositoryMock
-            .Setup(repository => repository.ExistePorIdAsync(dto.IdAreaAcademica))
+            .Setup(repository => repository.ExistePorIdAsync((int)dto.IdAreaAcademica))
             .ReturnsAsync(false);
 
         var ex = await Record.ExceptionAsync(() => _entidadAcademicaValidator.ValidarCreacionAsync(dto));
@@ -89,7 +87,7 @@ public class EntidadAcademicaValidatorTests
         dto.Clave = "673";
 
         _areaAcademicaRepositoryMock
-            .Setup(repository => repository.ExistePorIdAsync(dto.IdAreaAcademica))
+            .Setup(repository => repository.ExistePorIdAsync((int)dto.IdAreaAcademica))
             .ReturnsAsync(true);
 
         var ex = await Record.ExceptionAsync(() => _entidadAcademicaValidator.ValidarCreacionAsync(dto));
@@ -107,7 +105,7 @@ public class EntidadAcademicaValidatorTests
         dto.Clave = "51932";
 
         _areaAcademicaRepositoryMock
-            .Setup(repository => repository.ExistePorIdAsync(dto.IdAreaAcademica))
+            .Setup(repository => repository.ExistePorIdAsync((int)dto.IdAreaAcademica))
             .ReturnsAsync(true);
 
         _entidadAcademicaRepositoryMock
@@ -147,9 +145,7 @@ public class EntidadAcademicaValidatorTests
             Cp = null!,
             Municipio = null!,
             Telefono = null!,
-            Conmutador = null!,
             Extension = null!,
-            Fax = null!,
             Region = null!
         };
 
@@ -311,9 +307,7 @@ public class EntidadAcademicaValidatorTests
             Cp = "91020",
             Municipio = "Xalapa",
             Telefono = "(228) 815-03-74",
-            Conmutador = "(228) 842-17-00",
             Extension = "14155",
-            Fax = "(228) 814-99-90",
             Region = "1-Xalapa"
         };
     }
@@ -331,9 +325,7 @@ public class EntidadAcademicaValidatorTests
             Cp = "91021",
             Municipio = "Xalapa",
             Telefono = "(228) 815-74-74",
-            Conmutador = "(228) 019-17-00",
             Extension = "12345",
-            Fax = "(228) 814-99-43",
             Region = "1-Xalapa"
         };
     }
