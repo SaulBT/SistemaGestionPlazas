@@ -636,7 +636,7 @@ public class PlanEstudiosServiceTests
 
     private static string CrearArchivoExcelPlanEstudios()
     {
-        var path = Path.GetTempFileName();
+        var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.xlsx");
         using var workbook = new XLWorkbook();
         var worksheet = workbook.Worksheets.Add("Plan");
 
