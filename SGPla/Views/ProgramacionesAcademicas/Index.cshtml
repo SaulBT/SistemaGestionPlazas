@@ -126,5 +126,24 @@
                 }
             </tbody>
         </table>
+
+        <form method="post" action="@Url.Action("Guardar", "ProgramacionesAcademicas")">
+            @Html.AntiForgeryToken()
+
+            <!-- Botones -->
+            <div style="display:flex; justify-content:flex-end; gap:var(--button-gap)">
+                <a href="@Url.Action("Index", "ProgramacionesAcademicas")" style="display: inline-block; text-decoration: none;">
+                    @await Component.InvokeAsync("Boton", new
+                    {
+                        Accion = "Cancelar"
+                    })
+                </a>
+                @await Component.InvokeAsync("Boton", new
+                {
+                    Accion = "Guardar",
+                    ButtonType = "submit"
+                })
+            </div>
+        </form>
     </div>
 }

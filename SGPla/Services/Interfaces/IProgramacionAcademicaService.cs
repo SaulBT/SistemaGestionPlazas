@@ -180,5 +180,7 @@ public static class DescargasParser
 public interface IProgramacionAcademicaService
 {
     Task<List<OfertaDTO>> ProcesarArchivoAsync(IFormFile archivo);
+
+    Task<bool> GuardarOfertasAsync(List<OfertaDTO> ofertas);
 }
 

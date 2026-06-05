@@ -2,6 +2,7 @@
 using SGPla.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using SGPla.Models.DTOs.Oferta;
+using SGPla.Models;
 
 
 namespace SGPla.Repositories.Implementations
@@ -15,9 +16,30 @@ namespace SGPla.Repositories.Implementations
             _context = context;
         }
 
+        public async Task<bool> GuardarOfertas(List<Oferta> ofertas)
+        {
+            await using var transaction = await _context.Database.BeginTransactionAsync();
 
-        public async Task<List<string>> ObtenerRelacionesValidasAsync(
-     List<OfertaDTO> ofertas)
+            try
+            {
+               
+                await _context.Oferta.AddRangeAsync(ofertas);
+
+                await _context.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+
+                return true;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+
+                return false;
+            }
+        }
+
+        public async Task<List<string>> ObtenerRelacionesValidasAsync(List<OfertaDTO> ofertas)
         {
             var relaciones = ofertas
                 .Where(x =>
@@ -40,4 +62,4 @@ namespace SGPla.Repositories.Implementations
             return relacionesValidas;
         }
     }
-    }
+}
