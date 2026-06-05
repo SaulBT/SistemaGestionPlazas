@@ -21,18 +21,30 @@
 
         <!-- Footer -->
         <div class="modal-footer">
-
-            @await Component.InvokeAsync("Boton", new
+            @if (Model.Tipo.Contains("Formulario"))
             {
-                Accion = "Cancelar",
-                OnClick = Model.OnCancel
-            })
+                @await Component.InvokeAsync("Boton", new
+                {
+                    Accion = "Cancelar",
+                    OnClick = Model.OnCancel
+                })
 
-            @await Component.InvokeAsync("Boton", new
+                @await Component.InvokeAsync("Boton", new
+                {
+                    Accion = Model.Accion,
+                    OnClick = Model.OnConfirm
+                })
+            }
+            else if (Model.Tipo.Contains("Informacion"))
             {
-                Accion = Model.Accion,
-                OnClick = Model.OnConfirm
-            })
+                @await Component.InvokeAsync("Boton", new
+                {
+                    Accion = Model.Accion,
+                    OnClick = Model.OnConfirm
+                })
+            }
+
+            
 
         </div>
 

@@ -50,9 +50,7 @@ public class EntidadAcademicaServiceTests
         Assert.Equal(dto.Cp, entidadCreada.Cp);
         Assert.Equal(dto.Municipio, entidadCreada.Municipio);
         Assert.Equal(dto.Telefono, entidadCreada.Telefono);
-        Assert.Equal(dto.Conmutador, entidadCreada.Conmutador);
         Assert.Equal(dto.Extension, entidadCreada.Extension);
-        Assert.Equal(dto.Fax, entidadCreada.Fax);
         Assert.Equal(dto.Region, entidadCreada.Region);
 
         _entidadAcademicaValidatorMock.Verify(validator => validator.ValidarCreacionAsync(dto), Times.Once);
@@ -75,9 +73,7 @@ public class EntidadAcademicaServiceTests
                 Cp = "91020",
                 Municipio = "Xalapa",
                 Telefono = "(228) 815-03-74",
-                Conmutador = "(228) 842-17-00",
                 Extension = "14155",
-                Fax = "(228) 814-99-90",
                 Region = "1-Xalapa",
                 IdAreaAcademicaNavigation = new AreaAcademica
                 {
@@ -94,9 +90,7 @@ public class EntidadAcademicaServiceTests
                 Cp = "94294",
                 Municipio = "Veracruz",
                 Telefono = "(229) 775-20-00",
-                Conmutador = "(229) 742-17-00",
                 Extension = "25123",
-                Fax = "(229) 714-99-90",
                 Region = "2-Veracruz",
                 IdAreaAcademicaNavigation = new AreaAcademica
                 {
@@ -124,10 +118,8 @@ public class EntidadAcademicaServiceTests
                 Assert.Contains("91020", primerDto.Domicilio);
                 Assert.Contains("Xalapa", primerDto.Domicilio);
                 Assert.Contains("(228) 815-03-74", NormalizarTexto(primerDto.Telefono));
-                Assert.Contains("(228) 842-17-00", NormalizarTexto(primerDto.Telefono));
                 Assert.Contains("14155", NormalizarTexto(primerDto.Telefono));
-                Assert.Contains("(228) 814-99-90", NormalizarTexto(primerDto.Telefono));
-                Assert.Equal("Económico-Administrativa", primerDto.NombreEntidadAcademica);
+                Assert.Equal("Económico-Administrativa", primerDto.NombreAreaAcademica);
                 Assert.Equal("1-Xalapa", primerDto.Region);
             },
             segundoDto =>
@@ -140,10 +132,8 @@ public class EntidadAcademicaServiceTests
                 Assert.Contains("94294", segundoDto.Domicilio);
                 Assert.Contains("Veracruz", segundoDto.Domicilio);
                 Assert.Contains("(229) 775-20-00", NormalizarTexto(segundoDto.Telefono));
-                Assert.Contains("(229) 742-17-00", NormalizarTexto(segundoDto.Telefono));
                 Assert.Contains("25123", NormalizarTexto(segundoDto.Telefono));
-                Assert.Contains("(229) 714-99-90", NormalizarTexto(segundoDto.Telefono));
-                Assert.Equal("Técnica", segundoDto.NombreEntidadAcademica);
+                Assert.Equal("Técnica", segundoDto.NombreAreaAcademica);
                 Assert.Equal("2-Veracruz", segundoDto.Region);
             });
 
@@ -174,9 +164,7 @@ public class EntidadAcademicaServiceTests
                 Cp = "91020",
                 Municipio = "Xalapa",
                 Telefono = "(228) 815-03-74",
-                Conmutador = "(228) 842-17-00",
                 Extension = "14155",
-                Fax = "(228) 814-99-90",
                 Region = "1-Xalapa",
                 IdAreaAcademicaNavigation = new AreaAcademica
                 {
@@ -186,7 +174,7 @@ public class EntidadAcademicaServiceTests
         };
 
         _entidadAcademicaRepositoryMock
-            .Setup(repository => repository.ObtenerPorFiltroAsync(filtro.Region, filtro.IdAreaAcademica, filtro.Nombre))
+            .Setup(repository => repository.ObtenerPorFiltroAsync(filtro.Region, filtro.IdAreaAcademica, filtro.Nombre, 1, filtro.Cantidad))
             .ReturnsAsync(entidadesAcademicas);
 
         var resultado = await _entidadAcademicaService.ObtenerPorFiltroAsync(filtro, 1);
@@ -200,14 +188,12 @@ public class EntidadAcademicaServiceTests
         Assert.Contains("91020", dto.Domicilio);
         Assert.Contains("Xalapa", dto.Domicilio);
         Assert.Contains("(228) 815-03-74", NormalizarTexto(dto.Telefono));
-        Assert.Contains("(228) 842-17-00", NormalizarTexto(dto.Telefono));
         Assert.Contains("14155", NormalizarTexto(dto.Telefono));
-        Assert.Contains("(228) 814-99-90", NormalizarTexto(dto.Telefono));
-        Assert.Equal("Económico-Administrativa", dto.NombreEntidadAcademica);
+        Assert.Equal("Económico-Administrativa", dto.NombreAreaAcademica);
         Assert.Equal("1-Xalapa", dto.Region);
 
         _entidadAcademicaValidatorMock.Verify(validator => validator.ValidarIndice(1), Times.Once);
-        _entidadAcademicaRepositoryMock.Verify(repository => repository.ObtenerPorFiltroAsync(filtro.Region, filtro.IdAreaAcademica, filtro.Nombre), Times.Once);
+        _entidadAcademicaRepositoryMock.Verify(repository => repository.ObtenerPorFiltroAsync(filtro.Region, filtro.IdAreaAcademica, filtro.Nombre, 1, filtro.Cantidad), Times.Once);
     }
 
     //CP-56
@@ -224,9 +210,7 @@ public class EntidadAcademicaServiceTests
             Cp = "91020",
             Municipio = "Xalapa",
             Telefono = "(228) 815-03-74",
-            Conmutador = "(228) 842-17-00",
             Extension = "14155",
-            Fax = "(228) 814-99-90",
             Region = "1-Xalapa",
             IdAreaAcademicaNavigation = new AreaAcademica
             {
@@ -253,9 +237,7 @@ public class EntidadAcademicaServiceTests
         Assert.Equal("91020", dto.Cp);
         Assert.Equal("Xalapa", dto.Municipio);
         Assert.Equal("(228) 815-03-74", dto.Telefono);
-        Assert.Equal("(228) 842-17-00", dto.Conmutador);
         Assert.Equal("14155", dto.Extension);
-        Assert.Equal("(228) 814-99-90", dto.Fax);
         Assert.Equal("1-Xalapa", dto.Region);
         Assert.Equal("Económico-Administrativa", dto.NombreEntidadAcademica);
 
@@ -290,9 +272,7 @@ public class EntidadAcademicaServiceTests
         Assert.Equal(dto.Cp, entidadActualizada.Cp);
         Assert.Equal(dto.Municipio, entidadActualizada.Municipio);
         Assert.Equal(dto.Telefono, entidadActualizada.Telefono);
-        Assert.Equal(dto.Conmutador, entidadActualizada.Conmutador);
         Assert.Equal(dto.Extension, entidadActualizada.Extension);
-        Assert.Equal(dto.Fax, entidadActualizada.Fax);
         Assert.Equal(dto.Region, entidadActualizada.Region);
 
         _entidadAcademicaValidatorMock.Verify(validator => validator.ValidarEdicionAsync(dto), Times.Once);
@@ -340,9 +320,7 @@ public class EntidadAcademicaServiceTests
             Cp = "91020",
             Municipio = "Xalapa",
             Telefono = "(228) 815-03-74",
-            Conmutador = "(228) 842-17-00",
             Extension = "14155",
-            Fax = "(228) 814-99-90",
             Region = "1-Xalapa"
         };
     }
@@ -360,9 +338,7 @@ public class EntidadAcademicaServiceTests
             Cp = "91021",
             Municipio = "Xalapa",
             Telefono = "(228) 815-74-74",
-            Conmutador = "(228) 019-17-00",
             Extension = "12345",
-            Fax = "(228) 814-99-43",
             Region = "1-Xalapa"
         };
     }

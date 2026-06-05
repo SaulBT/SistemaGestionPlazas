@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.IdentityModel.Tokens;
 using SGPla.Commons;
 using SGPla.Commons.Factories;
@@ -41,15 +42,14 @@ namespace SGPla.Controllers
         private const string TOAST_EXPERIENCIAS_VACIAS = "La lista de Experiencias Educativas no puede estar vacía.";
 
         private const string SESSION_EXPERIENCIAS = "Experiencias";
-        private const string SESSION_RUTA = "Ruta";
-        private const string SESSION_NOMBRE_ARCHIVO = "NombreArchivo";
+        
         private const string SESSION_EXPERIENCIAS_NUEVAS = "ExperienciasNuevas";
         private const string SESSION_EXPERIENCIAS_EDITADAS = "ExperienciasEditadas";
         private const string SESSION_EXPERIENCIAS_ELIMINADAS = "ExperienciasEliminadas";
 
         private static List<string> HEADERS_TABLA_INDEX = ["Programa Educativo", "Modalidad", "Plan", "Área", "Acciones"];
-        private static List<string> HEADERS_TABLA_VER = ["Codigo", "Experiencia Educativa", "Perfil Docente"];
-        private static List<string> HEADERS_TABLA_EXPERIENCIAS = ["Codigo", "Experiencia Educativa", "Perfil Docente", "Acciones"];
+        private static List<string> HEADERS_TABLA_VER = ["Codigo", "Experiencia Educativa", "Horas", "Créditos", "Perfil Docente"];
+        private static List<string> HEADERS_TABLA_EXPERIENCIAS = ["Codigo", "Experiencia Educativa", "Horas", "Créditos", "Perfil Docente", "Acciones"];
 
         public PlanesEstudiosController(
             IPlanEstudiosService planEstudiosService,
@@ -294,6 +294,8 @@ namespace SGPla.Controllers
                     {
                         new() { Value = ee.Codigo },
                         new() { Value = ee.Nombre },
+                        new() { Value = ee.Horas },
+                        new() { Value = ee.Creditos },
                         new()
                         {
                             Actions = new List<TableActionModel>
@@ -301,7 +303,7 @@ namespace SGPla.Controllers
                                 new()
                                 {
                                     Accion = "informacion",
-                                    OnClick = $"abrirModalPerfilDocente(\"{ee.PerfilDocente}\")"
+                                    OnClick = $"abrirModalPerfilDocente({ee.PerfilDocente})"
                                 }
                             }
                         }
@@ -506,9 +508,10 @@ namespace SGPla.Controllers
             try
             {
                 var archivo = modelo.Archivo;
-                await guardarArchivoTemporalmente(archivo);
+                var datos = await _archivoService.GuardarTemporalmenteAsync(archivo);
+                var ruta = datos.ruta;
+                var nombre = datos.nombre;
 
-                var ruta = HttpContext.Session.GetString(SESSION_RUTA);
                 if (!string.IsNullOrEmpty(ruta))
                 {
                     var archivoDto = new ArchivoPlanEstudiosDTO
@@ -516,9 +519,15 @@ namespace SGPla.Controllers
                         Ruta = ruta,
                         NombreArchivo = archivo.FileName
                     };
+                    HttpContext.Session.SetString(Constantes.SESSION_RUTA, ruta);
+                    HttpContext.Session.SetString(Constantes.SESSION_NOMBRE_ARCHIVO, nombre);
                     var listaEe = await ProcesarArchivoAsync(archivoDto);
 
                     HttpContext.Session.SetString(SESSION_EXPERIENCIAS, JsonSerializer.Serialize(listaEe));
+                    var eeNuevas = new List<AgregarExperienciaEducativaDTO>();
+                    HttpContext.Session.SetString(SESSION_EXPERIENCIAS_NUEVAS, JsonSerializer.Serialize(eeNuevas));
+                    var eeEditadas = new List<DatosExperienciaEducativaDTO>();
+                    HttpContext.Session.SetString(SESSION_EXPERIENCIAS_EDITADAS, JsonSerializer.Serialize(eeEditadas));
 
                     var area = await _areaAcademicaService.ObtenerPorIdAsync(modelo.IdAreaAcademica);
                     var programa = await _programaEducativoService.ObtenerPorIdAsync(modelo.IdProgramaEducativo);
@@ -527,12 +536,6 @@ namespace SGPla.Controllers
                     modelo.NombrePrograma = programa?.Nombre ?? "";
                     modelo.Table = LlenarTablaGestionExperiencias(listaEe);
                     modelo.Table.TableId = "tablaExperiencias";
-                    modelo.Table.Pagination = new PaginationInfo
-                    {
-                        PageSize = 10,
-                        TotalItems = listaEe.Count(),
-                        PaginationMode = "client"
-                    };
 
                     return (modelo, false);
                 }
@@ -595,11 +598,11 @@ namespace SGPla.Controllers
         [HttpPost]
         public async Task<IActionResult> RegresarPaso1Async([FromBody] CargarPlanPaso1ViewModel modelo)
         {
-            var rutaArchivo = HttpContext.Session.GetString(SESSION_RUTA);
+            var rutaArchivo = HttpContext.Session.GetString(Constantes.SESSION_RUTA);
             if (!string.IsNullOrEmpty(rutaArchivo))
             {
                 System.IO.File.Delete(rutaArchivo);
-                HttpContext.Session.Remove(SESSION_RUTA);
+                HttpContext.Session.Remove(Constantes.SESSION_RUTA);
             }
 
             var url = Url.Action(nameof(CargarPlanPaso1), new
@@ -642,10 +645,10 @@ namespace SGPla.Controllers
                         return await CargarPlanPaso2(modeloAnterior);
                     }
 
-                    var rutaArchivo = HttpContext.Session.GetString(SESSION_RUTA);
+                    var rutaArchivo = HttpContext.Session.GetString(Constantes.SESSION_RUTA);
                     if (!string.IsNullOrEmpty(rutaArchivo))
                     {
-                        var nombreArchivo = HttpContext.Session.GetString(SESSION_NOMBRE_ARCHIVO);
+                        var nombreArchivo = HttpContext.Session.GetString(Constantes.SESSION_NOMBRE_ARCHIVO);
                         if (!string.IsNullOrEmpty(nombreArchivo))
                         {
                             var archivoDTO = new ArchivoPlanEstudiosDTO
@@ -664,6 +667,8 @@ namespace SGPla.Controllers
                                 {
                                     Codigo = ee.Codigo,
                                     Nombre = ee.Nombre,
+                                    Horas = ee.Horas,
+                                    Creditos = ee.Creditos,
                                     PerfilDocente = ee.PerfilDocente
                                 }).ToList()
                             });
@@ -711,10 +716,11 @@ namespace SGPla.Controllers
 
         //Gestionar Experiencias
         [HttpGet]
-        public JsonResult AgregarExperienciaEducativaCreacion(string codigo, string nombre, string perfilDocente)
+        public IActionResult AgregarExperienciaEducativaCreacion(string codigo, string nombre, string perfilDocente, string horas, string creditos)
         {
             bool error = false;
             DatosExperienciaEducativaDTO experiencia = new();
+            var tabla = new TableExperienciasModel();
 
             var listaEeJson = HttpContext.Session.GetString(SESSION_EXPERIENCIAS);
             if (!string.IsNullOrEmpty(listaEeJson))
@@ -724,36 +730,64 @@ namespace SGPla.Controllers
                 {
                     Codigo = codigo,
                     Nombre = nombre,
-                    PerfilDocente = perfilDocente
+                    PerfilDocente = perfilDocente,
+                    Creditos = creditos,
+                    Horas = horas
                 };
 
                 listaEe.Add(experiencia);
 
                 listaEeJson = JsonSerializer.Serialize(listaEe);
                 HttpContext.Session.SetString(SESSION_EXPERIENCIAS, listaEeJson);
+
+                var listaEeNuevasJson = HttpContext.Session.GetString(SESSION_EXPERIENCIAS_NUEVAS);
+                if (!string.IsNullOrEmpty (listaEeNuevasJson))
+                {
+                    var listaEeNuevas = JsonSerializer.Deserialize<List<AgregarExperienciaEducativaDTO>>(listaEeNuevasJson);
+                    listaEeNuevas.Add(new AgregarExperienciaEducativaDTO
+                    {
+                        Codigo = codigo,
+                        Nombre = nombre,
+                        PerfilDocente = perfilDocente,
+                        Creditos = creditos,
+                        Horas = horas
+                    });
+                    listaEeNuevasJson = JsonSerializer.Serialize(listaEeNuevas);
+                    HttpContext.Session.SetString(SESSION_EXPERIENCIAS_NUEVAS, listaEeNuevasJson);
+
+                    tabla = LlenarTablaGestionExperiencias(listaEe);
+                }
+                else
+                {
+                    error = true;
+                    this.LanzarError(_logger, null, NOMBRE_LOGGER, PASO2, LOG_ERROR_LISTA_EXPERIENCIAS_NUEVAS);
+                }
             }
             else
+            {
                 error = true;
+                this.LanzarError(_logger, null, NOMBRE_LOGGER, PASO2, LOG_ERROR_LISTA_EXPERIENCIAS);
+            }
 
             if (error)
             {
-                this.LanzarError(_logger, null, NOMBRE_LOGGER, PASO2, LOG_ERROR_LISTA_EXPERIENCIAS);
-                return Json(new { error = true });
+                return BadRequest();
             }
 
-            return Json(new { experiencia, error = false });
+            return PartialView("_TablaExperiencias", tabla);
         }
 
         [HttpGet]
-        public JsonResult EditarExperienciaEducativaCreacion(string codigo, string nombre, string perfilDocente, string codigoOriginal)
+        public IActionResult EditarExperienciaEducativaCreacion(string codigo, string nombre, string perfilDocente, string codigoOriginal, string horas, string creditos)
         {
             bool error = false;
-            List<AgregarExperienciaEducativaDTO> listaEe = [];
+            List<DatosExperienciaEducativaDTO> listaEe = [];
+            var tabla = new TableExperienciasModel();
 
             var listaEeJson = HttpContext.Session.GetString(SESSION_EXPERIENCIAS);
             if (!string.IsNullOrEmpty(listaEeJson))
             {
-                listaEe = JsonSerializer.Deserialize<List<AgregarExperienciaEducativaDTO>>(listaEeJson);
+                listaEe = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(listaEeJson);
                 var experiencia = listaEe.FirstOrDefault(ee => ee.Codigo == codigoOriginal);
 
                 if (experiencia != null)
@@ -761,8 +795,37 @@ namespace SGPla.Controllers
                     experiencia.Codigo = codigo;
                     experiencia.Nombre = nombre;
                     experiencia.PerfilDocente = perfilDocente;
+                    experiencia.Horas = horas;
+                    experiencia.Creditos = creditos;
                     listaEeJson = JsonSerializer.Serialize(listaEe);
                     HttpContext.Session.SetString(SESSION_EXPERIENCIAS, listaEeJson);
+
+                    var listaEeEditadasJson = HttpContext.Session.GetString(SESSION_EXPERIENCIAS_EDITADAS);
+                    if (!string.IsNullOrEmpty(listaEeEditadasJson))
+                    {
+                        var listaEeEditadas = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(listaEeEditadasJson);
+                        var experienciaEditada = listaEeEditadas.FirstOrDefault(ee => ee.Codigo == codigoOriginal);
+                        if (experienciaEditada != null)
+                        {
+                            experienciaEditada.Codigo = codigo;
+                            experienciaEditada.Nombre = nombre;
+                            experienciaEditada.PerfilDocente = perfilDocente;
+                            experienciaEditada.Horas = horas;
+                            experienciaEditada.Creditos = creditos;
+                        } else
+                            listaEeEditadas.Add(experiencia);
+                        
+                        listaEeEditadasJson = JsonSerializer.Serialize(listaEeEditadas);
+                        HttpContext.Session.SetString(SESSION_EXPERIENCIAS_EDITADAS, listaEeEditadasJson);
+
+                        tabla = LlenarTablaGestionExperiencias(listaEe);
+                    }
+                    else
+                    {
+                        this.LanzarError(_logger, null, NOMBRE_LOGGER, PASO2, LOG_ERROR_LISTA_EXPERIENCIAS_EDITADAS);
+
+                        error = true;
+                    }
                 }
                 else
                 {
@@ -780,17 +843,18 @@ namespace SGPla.Controllers
 
             if (error)
             {
-                return Json(new { error = true });
+                return BadRequest();
             }
 
-            return Json(new { experiencias = listaEe, error = false });
+            return PartialView("_TablaExperiencias", tabla);
         }
 
         [HttpGet]
-        public JsonResult EliminarExperienciaEducativaCreacion(string codigo)
+        public IActionResult EliminarExperienciaEducativaCreacion(string codigo)
         {
             List<DatosExperienciaEducativaDTO> listaEe = [];
             bool error = false;
+            var tabla = new TableExperienciasModel();
 
             var listaEeJson = HttpContext.Session.GetString(SESSION_EXPERIENCIAS);
             if (!string.IsNullOrEmpty(listaEeJson))
@@ -802,6 +866,9 @@ namespace SGPla.Controllers
                     listaEe.Remove(experiencia);
                     listaEeJson = JsonSerializer.Serialize(listaEe);
                     HttpContext.Session.SetString(SESSION_EXPERIENCIAS, listaEeJson);
+
+                    tabla = LlenarTablaGestionExperiencias(listaEe);
+
                 }
                 else
                 {
@@ -817,10 +884,10 @@ namespace SGPla.Controllers
 
             if (error)
             {
-                return Json(new { error = true });
+                return BadRequest();
             }
 
-            return Json(new { experiencias = listaEe, error = false });
+            return PartialView("_TablaExperiencias", tabla);
         }
 
         // ==========
@@ -960,20 +1027,23 @@ namespace SGPla.Controllers
         }
 
         [HttpPost]
-        public async Task<JsonResult> CargarNuevoArchivo(IFormFile archivo)
+        public async Task<IActionResult> CargarNuevoArchivo(IFormFile archivo)
         {
             try
             {
-                await guardarArchivoTemporalmente(archivo);
+                var datos = await _archivoService.GuardarTemporalmenteAsync(archivo);
+                var ruta = datos.ruta;
+                var nombreArchivo = datos.nombre;
                 List<DatosExperienciaEducativaDTO> listaEeNueva = [];
                 bool error = false;
+                var tabla = new TableExperienciasModel();
 
-                var ruta = HttpContext.Session.GetString(SESSION_RUTA);
                 if (!string.IsNullOrEmpty(ruta))
                 {
-                    var nombreArchivo = HttpContext.Session.GetString(SESSION_NOMBRE_ARCHIVO);
+                    HttpContext.Session.SetString(Constantes.SESSION_RUTA, ruta);
                     if (!string.IsNullOrEmpty(nombreArchivo))
                     {
+                        HttpContext.Session.SetString(Constantes.SESSION_NOMBRE_ARCHIVO, nombreArchivo);
                         var archivoDTO = new ArchivoPlanEstudiosDTO
                         {
                             Ruta = ruta,
@@ -988,6 +1058,8 @@ namespace SGPla.Controllers
                             {
                                 Codigo = ee.Codigo,
                                 Nombre = ee.Nombre,
+                                Horas = ee.Horas,
+                                Creditos = ee.Creditos,
                                 PerfilDocente = ee.PerfilDocente
                             });
                         }
@@ -1009,6 +1081,8 @@ namespace SGPla.Controllers
                                 HttpContext.Session.SetString(SESSION_EXPERIENCIAS_ELIMINADAS, JsonSerializer.Serialize(eeEliminadas));
                                 HttpContext.Session.SetString(SESSION_EXPERIENCIAS_EDITADAS, JsonSerializer.Serialize(new List<DatosExperienciaEducativaDTO>()));
                                 HttpContext.Session.SetString(SESSION_EXPERIENCIAS, JsonSerializer.Serialize(listaEeNueva));
+
+                                tabla = LlenarTablaGestionExperiencias(listaEeNueva);
                             }
                             else
                             {
@@ -1037,16 +1111,17 @@ namespace SGPla.Controllers
 
                 if (error)
                 {
-                    return Json(new { error = true });
+                    return BadRequest();
                 }
 
-                return Json(new { experiencias = listaEeNueva, error = false });
+                return PartialView("_TablaExperiencias", tabla);
+
             }
             catch (Exception ex)
             {
                 this.LanzarError(_logger, ex, NOMBRE_LOGGER, EDITAR, Constantes.LOG_ERROR_INESPERADO);
 
-                return Json(new { error = true });
+                return BadRequest();
             }
 
         }
@@ -1098,7 +1173,7 @@ namespace SGPla.Controllers
                     IdsExperienciasEliminadas = JsonSerializer.Deserialize<List<int>>(eeEliminadas)
                 };
 
-                var rutaArchivo = HttpContext.Session.GetString(SESSION_RUTA);
+                var rutaArchivo = HttpContext.Session.GetString(Constantes.SESSION_RUTA);
                 if (modelo.NuevoArchivo)
                 {
                     if (string.IsNullOrEmpty(rutaArchivo))
@@ -1107,7 +1182,7 @@ namespace SGPla.Controllers
 
                         return RedirectToAction(nameof(Index));
                     }
-                    var nombreArchivo = HttpContext.Session.GetString(SESSION_NOMBRE_ARCHIVO);
+                    var nombreArchivo = HttpContext.Session.GetString(Constantes.SESSION_NOMBRE_ARCHIVO);
                     if (string.IsNullOrEmpty(nombreArchivo))
                     {
                         this.LanzarError(_logger, null, NOMBRE_LOGGER, EDITAR, string.Format(Constantes.LOG_ERROR_NULO, Constantes.NOMBRE_ARCHIVO), string.Format(Constantes.TOAST_ERROR_GUARDAR_EL, Constantes.PLAN_ESTUDIOS));
@@ -1149,10 +1224,11 @@ namespace SGPla.Controllers
 
         //Gestion experiencias
         [HttpGet]
-        public JsonResult AgregarExperienciaEducativaEdicion(string codigo, string nombre, string perfilDocente)
+        public IActionResult AgregarExperienciaEducativaEdicion(string codigo, string nombre, string perfilDocente, string horas, string creditos)
         {
             DatosExperienciaEducativaDTO experiencia = new();
             bool error = false;
+            var tabla = new TableExperienciasModel();
 
             var eeNuevasJson = HttpContext.Session.GetString(SESSION_EXPERIENCIAS_NUEVAS);
             if (!string.IsNullOrEmpty(eeNuevasJson))
@@ -1166,14 +1242,18 @@ namespace SGPla.Controllers
                     {
                         Codigo = codigo,
                         Nombre = nombre,
-                        PerfilDocente = perfilDocente
+                        PerfilDocente = perfilDocente,
+                        Creditos = creditos,
+                        Horas = horas
                     };
 
                     eeNuevas.Add(new AgregarExperienciaEducativaDTO
                     {
                         Codigo = codigo,
                         Nombre = nombre,
-                        PerfilDocente = perfilDocente
+                        PerfilDocente = perfilDocente,
+                        Creditos = creditos,
+                        Horas = horas
                     });
                     listaEe.Add(experiencia);
 
@@ -1181,6 +1261,8 @@ namespace SGPla.Controllers
                     HttpContext.Session.SetString(SESSION_EXPERIENCIAS_NUEVAS, eeNuevasJson);
                     listaEeJson = JsonSerializer.Serialize(listaEe);
                     HttpContext.Session.SetString(SESSION_EXPERIENCIAS, listaEeJson);
+
+                    tabla = LlenarTablaGestionExperiencias(listaEe);
                 }
                 else
                 {
@@ -1197,17 +1279,18 @@ namespace SGPla.Controllers
 
             if (error)
             {
-                return Json(new { error = true });
+                return BadRequest();
             }
 
-            return Json(new { experiencia, error = false });
+            return PartialView("_TablaExperiencias", tabla);
         }
 
         [HttpGet]
-        public JsonResult EditarExperienciaEducativaEdicion(string codigo, string nombre, string perfilDocente, string codigoOriginal)
+        public IActionResult EditarExperienciaEducativaEdicion(string codigo, string nombre, string perfilDocente, string horas, string creditos, string codigoOriginal)
         {
             List<DatosExperienciaEducativaDTO> listaEe = [];
             bool error = false;
+            var tabla = new TableExperienciasModel();
 
             var eeEditadasJson = HttpContext.Session.GetString(SESSION_EXPERIENCIAS_EDITADAS);
             if (!string.IsNullOrEmpty(eeEditadasJson))
@@ -1237,6 +1320,10 @@ namespace SGPla.Controllers
 
                             eeEditadasJson = JsonSerializer.Serialize(eeEditadas);
                             HttpContext.Session.SetString(SESSION_EXPERIENCIAS_EDITADAS, eeEditadasJson);
+                            listaEeJson = JsonSerializer.Serialize(listaEe);
+                            HttpContext.Session.SetString(SESSION_EXPERIENCIAS, listaEeJson);
+
+                            tabla = LlenarTablaGestionExperiencias(listaEe);
                         }
                         else
                         {
@@ -1263,6 +1350,10 @@ namespace SGPla.Controllers
 
                                 eeNuevasJson = JsonSerializer.Serialize(eeNuevas);
                                 HttpContext.Session.SetString(SESSION_EXPERIENCIAS_NUEVAS, eeNuevasJson);
+                                listaEeJson = JsonSerializer.Serialize(listaEe);
+                                HttpContext.Session.SetString(SESSION_EXPERIENCIAS, listaEeJson);
+
+                                tabla = LlenarTablaGestionExperiencias(listaEe);
                             }
                             else
                             {
@@ -1270,9 +1361,6 @@ namespace SGPla.Controllers
                                 error = true;
                             }
                         }
-
-                        listaEeJson = JsonSerializer.Serialize(listaEe);
-                        HttpContext.Session.SetString(SESSION_EXPERIENCIAS, listaEeJson);
                     }
                     else
                     {
@@ -1293,16 +1381,19 @@ namespace SGPla.Controllers
             }
 
             if (error)
-                return Json(new { error = true });
+            {
+                return BadRequest();
+            }
 
-            return Json(new { experiencias = listaEe, error = false });
+            return PartialView("_TablaExperiencias", tabla);
         }
 
         [HttpGet]
-        public JsonResult EliminarExperienciaEducativaEdicion(string codigo)
+        public IActionResult EliminarExperienciaEducativaEdicion(string codigo)
         {
             List<DatosExperienciaEducativaDTO> listaEe = [];
             bool error = false;
+            var tabla = new TableExperienciasModel();
 
             var eeEliminadasJson = HttpContext.Session.GetString(SESSION_EXPERIENCIAS_ELIMINADAS);
             if (!string.IsNullOrEmpty(eeEliminadasJson))
@@ -1323,6 +1414,8 @@ namespace SGPla.Controllers
 
                             eeEliminadasJson = JsonSerializer.Serialize(eeEliminadas);
                             HttpContext.Session.SetString(SESSION_EXPERIENCIAS_ELIMINADAS, eeEliminadasJson);
+
+                            tabla = LlenarTablaGestionExperiencias(listaEe);
                         }
                         else
                         {
@@ -1338,6 +1431,8 @@ namespace SGPla.Controllers
 
                                     eeNuevasJson = JsonSerializer.Serialize(eeNuevas);
                                     HttpContext.Session.SetString(SESSION_EXPERIENCIAS_NUEVAS, eeNuevasJson);
+
+                                    tabla = LlenarTablaGestionExperiencias(listaEe);
                                 }
                                 else
                                 {
@@ -1374,9 +1469,11 @@ namespace SGPla.Controllers
             }
 
             if (error)
-                return Json(new { error = true });
+            {
+                return BadRequest();
+            }
 
-            return Json(new { experiencias = listaEe, error = false });
+            return PartialView("_TablaExperiencias", tabla);
         }
 
         /// ==========
@@ -1420,7 +1517,7 @@ namespace SGPla.Controllers
         [HttpGet]
         public async Task<IActionResult> CancelarAccionAsync()
         {
-            var rutaArchivo = HttpContext.Session.GetString(SESSION_RUTA);
+            var rutaArchivo = HttpContext.Session.GetString(Constantes.SESSION_RUTA);
             if (!string.IsNullOrEmpty(rutaArchivo))
                 System.IO.File.Delete(rutaArchivo);
 
@@ -1507,72 +1604,375 @@ namespace SGPla.Controllers
             }
         }
 
-        private TableModel LlenarTablaGestionExperiencias(List<DatosExperienciaEducativaDTO> experiencias)
+        [HttpGet]
+        public IActionResult BuscarExperiencias(string busqueda = "")
         {
-            var tabla = new TableModel();
-
-            if (experiencias.Count == 0)
+            var tabla = new TableExperienciasModel();
+            string listaEeJson = HttpContext.Session.GetString(SESSION_EXPERIENCIAS);
+            if (!string.IsNullOrEmpty(listaEeJson))
             {
-                return TablaFactory.GenerarTablaConMensaje(HEADERS_TABLA_EXPERIENCIAS, string.Format(Constantes.TABLA_VACIA, Constantes.EXPERIENCIAS_EDUCATIVAS));
+                var listaEe = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(listaEeJson);
+                busqueda = busqueda.Trim();
+
+                if (!string.IsNullOrEmpty(busqueda))
+                    tabla = LlenarTablaGestionExperiencias(listaEe, busqueda);
+                else
+                    tabla = LlenarTablaGestionExperiencias(listaEe);
+
+                return PartialView("_TablaExperiencias", tabla);
             }
             else
             {
-                tabla = tabla = new TableModel
+                return BadRequest();
+            }
+        }
+        
+        private TableExperienciasModel LlenarTablaGestionExperiencias(List<DatosExperienciaEducativaDTO> experiencias)
+        {
+            var tabla = new TableExperienciasModel();
+
+            if (experiencias.Count == 0)
+            {
+                return TablaFactory.GenerarTablaExperienciasConMensaje(HEADERS_TABLA_EXPERIENCIAS, string.Format(Constantes.TABLA_VACIA, Constantes.EXPERIENCIAS_EDUCATIVAS));
+            }
+            else
+            {
+                var resultados = separarExperiencias(experiencias);
+                var experienciasInvalidas = resultados.experienciasInvalidas;
+                var experiencasNuevas = resultados.experienciasnuevas;
+                var experienciasEditadas = resultados.experienciasEditadas;
+                experiencias = resultados.experiencias;
+
+                tabla = new TableExperienciasModel
                 {
+                    TableId = "tablaExperiencias",
                     Headers = HEADERS_TABLA_EXPERIENCIAS,
-                    Rows = experiencias.Select(ee => new TableRowModel
+                    Rows = generarListaRowsExperiencias(experienciasInvalidas, experiencasNuevas, experienciasEditadas, experiencias),
+                    Pagination = new PaginationInfo
                     {
-                        RowId = ee.Codigo,
-                        Cells = new List<TableCellModel>
-                        {
-                            new() { Value = ee.Codigo },
-                            new() { Value = ee.Nombre },
-                            new()
-                            {
-                                Actions = new List<TableActionModel>
-                                {
-                                    new()
-                                    {
-                                        Accion = "informacion",
-                                        OnClick = $"abrirModalPerfilDocente(\"{ee.PerfilDocente}\")"
-                                    }
-                                }
-                            },
-                            new TableCellModel()
-                            {
-                                Actions = new List<TableActionModel>
-                                {
-                                    new()
-                                    {
-                                        Accion = "editar",
-                                        OnClick = $"abrirModalEditarExperiencia('{ee.Codigo}', '{ee.Nombre}', '{ee.PerfilDocente}')"
-                                    },
-                                    new()
-                                    {
-                                        Accion = "eliminar",
-                                        OnClick = $"abrirModalEliminarExperiencia('{ee.Codigo}')"
-                                    }
-                                }
-                            }
-                        }
-                    }).ToList()
+                        CurrentPage = paginaActual,
+                        PageSize = 10,
+                        TotalItems = experiencias.Count,
+                        OnPageChange = "cambiarPagina",
+                        PaginationMode = "client"
+                    }
                 };
             }
 
             return tabla;
         }
 
-        private async Task guardarArchivoTemporalmente(IFormFile archivo)
+        private TableExperienciasModel LlenarTablaGestionExperiencias(List<DatosExperienciaEducativaDTO> experiencias, string nombre)
         {
-            var carpetaTemp = Path.Combine(_environment.ContentRootPath, "TempUploads");
-            Directory.CreateDirectory(carpetaTemp);
-            var extension = Path.GetExtension(archivo.FileName);
-            var rutaArchivo = Path.Combine(carpetaTemp, $"{Guid.NewGuid()}{extension}");
-            using var stream = new FileStream(rutaArchivo, FileMode.Create);
-            await archivo.CopyToAsync(stream);
+            var tabla = new TableExperienciasModel();
 
-            HttpContext.Session.SetString(SESSION_RUTA, rutaArchivo);
-            HttpContext.Session.SetString(SESSION_NOMBRE_ARCHIVO, archivo.FileName);
+            if (experiencias.Count == 0)
+            {
+                return TablaFactory.GenerarTablaExperienciasConMensaje(HEADERS_TABLA_EXPERIENCIAS, string.Format(Constantes.TABLA_VACIA, Constantes.EXPERIENCIAS_EDUCATIVAS));
+            }
+            else
+            {
+                var resultados = separarExperiencias(experiencias);
+                var experienciasInvalidas = filtrarNombre(resultados.experienciasInvalidas, nombre);
+                var experiencasNuevas = filtrarNombre(resultados.experienciasnuevas, nombre);
+                var experienciasEditadas = filtrarNombre(resultados.experienciasEditadas, nombre);
+                experiencias = filtrarNombre(resultados.experiencias, nombre);
+
+                tabla = new TableExperienciasModel
+                {
+                    TableId = "tablaExperiencias",
+                    Headers = HEADERS_TABLA_EXPERIENCIAS,
+                    Rows = generarListaRowsExperiencias(experienciasInvalidas, experiencasNuevas, experienciasEditadas, experiencias),
+                    Pagination = new PaginationInfo
+                    {
+                        CurrentPage = paginaActual,
+                        PageSize = 10,
+                        TotalItems = experiencias.Count,
+                        OnPageChange = "cambiarPagina",
+                        PaginationMode = "client"
+                    }
+                };
+            }
+
+            return tabla;
+        }
+
+        private List<DatosExperienciaEducativaDTO> filtrarNombre(List<DatosExperienciaEducativaDTO> lista, string nombre)
+        {
+            List<DatosExperienciaEducativaDTO> listaFinal = [];
+
+            foreach (var ee in lista)
+            {
+                if ((!string.IsNullOrEmpty(ee.Nombre) && ee.Nombre.Contains(nombre)) || (!string.IsNullOrEmpty(ee.Codigo) && ee.Codigo.Contains(nombre)))
+                    listaFinal.Add(ee);
+            }
+
+            return listaFinal;
+        }
+
+        private (List<DatosExperienciaEducativaDTO> experienciasInvalidas, List<DatosExperienciaEducativaDTO> experienciasnuevas, List<DatosExperienciaEducativaDTO> experienciasEditadas, List<DatosExperienciaEducativaDTO> experiencias) separarExperiencias(List<DatosExperienciaEducativaDTO> listaEe)
+        {
+            var experienciasInvalidas = new List<DatosExperienciaEducativaDTO>();
+            var experiencasNuevas = new List<DatosExperienciaEducativaDTO>();
+            var experienciasEditadas = new List<DatosExperienciaEducativaDTO>();
+
+            var listaHelper = new List<DatosExperienciaEducativaDTO>();
+
+            foreach (var ee in listaEe)
+            {
+               if (string.IsNullOrEmpty(ee.PerfilDocente))
+                {
+                    experienciasInvalidas.Add(ee);
+                    listaHelper.Add(ee);
+                }
+            }
+
+            foreach (var ee in listaHelper)
+            {
+                listaEe.Remove(ee);
+            }
+            listaHelper = new List<DatosExperienciaEducativaDTO>();
+
+            string listaEeAgregadasJson = HttpContext.Session.GetString(SESSION_EXPERIENCIAS_NUEVAS);
+            if (!string.IsNullOrEmpty(listaEeAgregadasJson))
+            {
+                var listaEeAgregadas = JsonSerializer.Deserialize<List<AgregarExperienciaEducativaDTO>>(listaEeAgregadasJson);
+                foreach (var eeNueva in listaEeAgregadas)
+                {
+                    foreach (var ee in listaEe)
+                    {
+                        if (ee.Codigo == eeNueva.Codigo)
+                        {
+                            experiencasNuevas.Add(new DatosExperienciaEducativaDTO
+                            {
+                                Codigo = eeNueva.Codigo,
+                                Nombre = eeNueva.Nombre,
+                                Horas = eeNueva.Horas,
+                                Creditos = eeNueva.Creditos,
+                                PerfilDocente = eeNueva.PerfilDocente
+                            });
+                            listaHelper.Add(ee);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            foreach (var ee in listaHelper)
+            {
+                listaEe.Remove(ee);
+            }
+            listaHelper = new List<DatosExperienciaEducativaDTO>();
+
+            string listaEeEditadasJson = HttpContext.Session.GetString(SESSION_EXPERIENCIAS_EDITADAS);
+            if (!string.IsNullOrEmpty(listaEeEditadasJson))
+            {
+                var listaEeEditadas = JsonSerializer.Deserialize<List<DatosExperienciaEducativaDTO>>(listaEeEditadasJson);
+                foreach (var eeEditada in listaEeEditadas)
+                {
+                    foreach (var ee in listaEe)
+                    {
+                        if (ee.Codigo == eeEditada.Codigo)
+                        {
+                            experienciasEditadas.Add(ee);
+                            listaHelper.Add(ee);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            foreach (var ee in listaHelper)
+            {
+                listaEe.Remove(ee);
+            }
+
+            return (experienciasInvalidas, experiencasNuevas, experienciasEditadas,listaEe);
+        }
+
+        private List<TableExperienciasRowModel> generarListaRowsExperiencias(List<DatosExperienciaEducativaDTO> eeInvalidas, List<DatosExperienciaEducativaDTO> eeNuevas, List<DatosExperienciaEducativaDTO> eeEditadas, List<DatosExperienciaEducativaDTO> experiencias)
+        {
+            List<TableExperienciasRowModel> rows = new();
+
+            if (eeInvalidas.Count > 0)
+            {
+                foreach (var ee in eeInvalidas)
+                {
+                    rows.Add(new TableExperienciasRowModel
+                    {
+                        RowId = ee.Codigo,
+                        EsInvalida = true,
+                        Cells = new List<TableCellModel>
+                            {
+                                new() { Value = ee.Codigo },
+                                new() { Value = ee.Nombre },
+                                new() { Value = ee.Horas },
+                                new() { Value = ee.Creditos },
+                                new()
+                                {
+                                    Actions = new List<TableActionModel>
+                                    {
+                                        new()
+                                        {
+                                            Accion = "informacion",
+                                            OnClick = $"abrirModalPerfilDocente('{ee.PerfilDocente}')"
+                                        }
+                                    }
+                                },
+                                new TableCellModel()
+                                {
+                                    Actions = new List<TableActionModel>
+                                    {
+                                        new()
+                                        {
+                                            Accion = "editar",
+                                            OnClick = $"abrirModalEditarExperiencia('{ee.Codigo}', '{ee.Nombre}', '{ee.Horas}', '{ee.Creditos}', '{ee.PerfilDocente}')"
+                                        },
+                                        new()
+                                        {
+                                            Accion = "eliminar",
+                                            OnClick = $"abrirModalEliminarExperiencia('{ee.Codigo}')"
+                                        }
+                                    }
+                                }
+                            }
+                    });
+                }
+            }
+            if (eeNuevas.Count > 0)
+            {
+                foreach (var ee in eeNuevas)
+                {
+                    rows.Add(new TableExperienciasRowModel
+                    {
+                        RowId = ee.Codigo,
+                        EsNueva = true,
+                        Cells = new List<TableCellModel>
+                            {
+                                new() { Value = ee.Codigo },
+                                new() { Value = ee.Nombre },
+                                new() { Value = ee.Horas },
+                                new() { Value = ee.Creditos },
+                                new()
+                                {
+                                    Actions = new List<TableActionModel>
+                                    {
+                                        new()
+                                        {
+                                            Accion = "informacion",
+                                            OnClick = $"abrirModalPerfilDocente('{ee.PerfilDocente}')"
+                                        }
+                                    }
+                                },
+                                new TableCellModel()
+                                {
+                                    Actions = new List<TableActionModel>
+                                    {
+                                        new()
+                                        {
+                                            Accion = "editar",
+                                            OnClick = $"abrirModalEditarExperiencia('{ee.Codigo}', '{ee.Nombre}', '{ee.Horas}', '{ee.Creditos}', '{ee.PerfilDocente}')"
+                                        },
+                                        new()
+                                        {
+                                            Accion = "eliminar",
+                                            OnClick = $"abrirModalEliminarExperiencia('{ee.Codigo}')"
+                                        }
+                                    }
+                                }
+                            }
+                    });
+                }
+            }
+            if (eeEditadas .Count > 0)
+            {
+                foreach (var ee in eeEditadas)
+                {
+                    rows.Add(new TableExperienciasRowModel
+                    {
+                        RowId = ee.Codigo,
+                        EsEditada = true,
+                        Cells = new List<TableCellModel>
+                            {
+                                new() { Value = ee.Codigo },
+                                new() { Value = ee.Nombre },
+                                new() { Value = ee.Horas },
+                                new() { Value = ee.Creditos },
+                                new()
+                                {
+                                    Actions = new List<TableActionModel>
+                                    {
+                                        new()
+                                        {
+                                            Accion = "informacion",
+                                            OnClick = $"abrirModalPerfilDocente('{ee.PerfilDocente}')"
+                                        }
+                                    }
+                                },
+                                new TableCellModel()
+                                {
+                                    Actions = new List<TableActionModel>
+                                    {
+                                        new()
+                                        {
+                                            Accion = "editar",
+                                            OnClick = $"abrirModalEditarExperiencia('{ee.Codigo}', '{ee.Nombre}', '{ee.Horas}', '{ee.Creditos}', '{ee.PerfilDocente}')"
+                                        },
+                                        new()
+                                        {
+                                            Accion = "eliminar",
+                                            OnClick = $"abrirModalEliminarExperiencia('{ee.Codigo}')"
+                                        }
+                                    }
+                                }
+                            }
+                    });
+                }
+            }
+
+            foreach (var ee in experiencias)
+            {
+                rows.Add(new TableExperienciasRowModel
+                {
+                    RowId = ee.Codigo,
+                    Cells = new List<TableCellModel>
+                            {
+                                new() { Value = ee.Codigo },
+                                new() { Value = ee.Nombre },
+                                new() { Value = ee.Horas },
+                                new() { Value = ee.Creditos },
+                                new()
+                                {
+                                    Actions = new List<TableActionModel>
+                                    {
+                                        new()
+                                        {
+                                            Accion = "informacion",
+                                            OnClick = $"abrirModalPerfilDocente('{ee.PerfilDocente}')"
+                                        }
+                                    }
+                                },
+                                new TableCellModel()
+                                {
+                                    Actions = new List<TableActionModel>
+                                    {
+                                        new()
+                                        {
+                                            Accion = "editar",
+                                            OnClick = $"abrirModalEditarExperiencia('{ee.Codigo}', '{ee.Nombre}', '{ee.Horas}', '{ee.Creditos}', '{ee.PerfilDocente}')"
+                                        },
+                                        new()
+                                        {
+                                            Accion = "eliminar",
+                                            OnClick = $"abrirModalEliminarExperiencia('{ee.Codigo}')"
+                                        }
+                                    }
+                                }
+                            }
+                });
+            }
+
+            return rows;
         }
 
         private async Task<CargarPlanPaso1ViewModel> recargarCombosAsync(CargarPlanPaso1ViewModel modelo)

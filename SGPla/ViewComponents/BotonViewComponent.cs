@@ -59,6 +59,11 @@ public class BotonViewComponent : ViewComponent
                     model.Texto = "Imprimir";
                     model.Icono = "bi bi-printer";
                     break;
+                case "pregunta":
+                    model.Tipo = "terciario";
+                    model.Texto = "";
+                    model.Icono = "bi bi-question-diamond-fill";
+                    break;
                 //Botones secundarios 
                 case "siguiente":
                     model.Tipo = "secundario";

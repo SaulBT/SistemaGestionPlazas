@@ -41,6 +41,17 @@ namespace SGPla.Validations.Implementations
                 throw new ValidacionExcepction("El formato del archivo no es soportado.", "400");
         }
 
+        public void ValidarColumnas(Dictionary<string, int> columnas)
+        {
+            foreach (var columna in Constantes.COLUMNAS_REQUERIDAS)
+            {
+                if (!columnas.ContainsKey(columna))
+                {
+                    throw new ValidacionExcepction($"No se encontró la columna '{columna}'.", "404");
+                }
+            }
+        }
+
         public void ValidarIndice(int indice)
         {
             if (indice <= 0)
@@ -192,6 +203,10 @@ namespace SGPla.Validations.Implementations
                 throw new ValidacionExcepction("El Nombre es obligatorio en todas las Experiencias Educativas nuevas.", "400");
             if (string.IsNullOrWhiteSpace(experienciaEducativaDTO.PerfilDocente))
                 throw new ValidacionExcepction($"La experiencia {experienciaEducativaDTO.Nombre} con código {experienciaEducativaDTO.Codigo} tiene el Perfil Docente vacío.", "400");
+            if (string.IsNullOrEmpty(experienciaEducativaDTO.Horas))
+                throw new ValidacionExcepction("Las Horas son obligatoria en todas las Experiencias Educativas nuevas", "400");
+            if (string.IsNullOrEmpty(experienciaEducativaDTO.Creditos))
+                throw new ValidacionExcepction("Los Créditos son obligatorios en todas las Experiencias Educativas nuevas", "400");
             if (experienciaEducativaDTO.Codigo.Trim().Length > 10)
                 throw new ValidacionExcepction("El Código no puede exceder 10 caracteres en todas las Experiencias Educativas nuevas.", "400");
             if (experienciaEducativaDTO.Nombre.Trim().Length > 150)
@@ -210,6 +225,10 @@ namespace SGPla.Validations.Implementations
                 throw new ValidacionExcepction("El Nombre es obligatorio en todas las Experiencias Educativas a editar.", "400");
             if (string.IsNullOrWhiteSpace(experienciaEducativaDTO.PerfilDocente))
                 throw new ValidacionExcepction($"La experiencia {experienciaEducativaDTO.Nombre} con código {experienciaEducativaDTO.Codigo} tiene el Perfil Docente vacío.", "400");
+            if (string.IsNullOrEmpty(experienciaEducativaDTO.Horas))
+                throw new ValidacionExcepction("Las Horas son obligatoria en todas las Experiencias Educativas nuevas", "400");
+            if (string.IsNullOrEmpty(experienciaEducativaDTO.Creditos))
+                throw new ValidacionExcepction("Los Créditos son obligatorios en todas las Experiencias Educativas nuevas", "400");
             if (experienciaEducativaDTO.Codigo.Trim().Length > 10)
                 throw new ValidacionExcepction("El Código no puede exceder 10 caracteres.", "400");
             if (experienciaEducativaDTO.Nombre.Trim().Length > 150)

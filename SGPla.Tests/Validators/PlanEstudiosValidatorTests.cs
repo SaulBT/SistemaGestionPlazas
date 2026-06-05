@@ -1,4 +1,6 @@
+using Microsoft.Extensions.Logging;
 using Moq;
+using SGPla.Commons;
 using SGPla.Models;
 using SGPla.Models.DTOs.PlanEstudios;
 using SGPla.Repositories.Interfaces;
@@ -18,7 +20,8 @@ public class PlanEstudiosValidatorTests
         _experienciaEducativaRepositoryMock = new Mock<IExperienciaEducativaRepository>();
         _validator = new PlanEstudiosValidator(
             _planEstudiosRepositoryMock.Object,
-            _experienciaEducativaRepositoryMock.Object);
+            _experienciaEducativaRepositoryMock.Object,
+            Mock.Of<ILogger<PlanEstudiosValidator>>());
     }
 
     // CP-83
@@ -27,11 +30,11 @@ public class PlanEstudiosValidatorTests
     {
         var dto = new ArchivoPlanEstudiosDTO
         {
-            Archivo = null!,
+            Ruta = null!,
             NombreArchivo = null!
         };
 
-        var exception = Assert.Throws<ArgumentException>(() => _validator.ValidarArchivo(dto));
+        var exception = Assert.Throws<ValidacionExcepction>(() => _validator.ValidarArchivo(dto));
 
         Assert.Equal("El Archivo es obligatorio.", exception.Message);
     }
@@ -42,11 +45,11 @@ public class PlanEstudiosValidatorTests
     {
         var dto = new ArchivoPlanEstudiosDTO
         {
-            Archivo = new MemoryStream(new byte[] { 1, 2, 3 }),
+            Ruta = "planes-estudios/plan-lisoft.pdf",
             NombreArchivo = "PlanLisoft.pdf"
         };
 
-        var exception = Assert.Throws<ArgumentException>(() => _validator.ValidarArchivo(dto));
+        var exception = Assert.Throws<ValidacionExcepction>(() => _validator.ValidarArchivo(dto));
 
         Assert.Equal("El formato del archivo no es soportado.", exception.Message);
     }
@@ -58,7 +61,7 @@ public class PlanEstudiosValidatorTests
         var dto = CrearPlanEstudiosDtoValido();
         dto.IdProgramaEducativo = -78;
 
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _validator.ValidarCreacionAsync(dto));
+        var exception = await Assert.ThrowsAsync<ValidacionExcepction>(() => _validator.ValidarCreacionAsync(dto));
 
         Assert.Equal("El IdProgramaEducativo es inválido.", exception.Message);
     }
@@ -73,7 +76,7 @@ public class PlanEstudiosValidatorTests
             .Setup(r => r.ExisteProgramaEducativoPorIdAsync(dto.IdProgramaEducativo))
             .ReturnsAsync(false);
 
-        var exception = await Assert.ThrowsAsync<KeyNotFoundException>(() => _validator.ValidarCreacionAsync(dto));
+        var exception = await Assert.ThrowsAsync<ValidacionExcepction>(() => _validator.ValidarCreacionAsync(dto));
 
         Assert.Equal("No existe ese Programa Educativo.", exception.Message);
     }
@@ -89,7 +92,7 @@ public class PlanEstudiosValidatorTests
             .Setup(r => r.ExisteProgramaEducativoPorIdAsync(dto.IdProgramaEducativo))
             .ReturnsAsync(true);
 
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _validator.ValidarCreacionAsync(dto));
+        var exception = await Assert.ThrowsAsync<ValidacionExcepction>(() => _validator.ValidarCreacionAsync(dto));
 
         Assert.Equal("No se puede crear un Plan de Estudios sin Experiencias Educativas.", exception.Message);
     }
@@ -105,7 +108,7 @@ public class PlanEstudiosValidatorTests
             .Setup(r => r.ExisteProgramaEducativoPorIdAsync(dto.IdProgramaEducativo))
             .ReturnsAsync(true);
 
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _validator.ValidarCreacionAsync(dto));
+        var exception = await Assert.ThrowsAsync<ValidacionExcepction>(() => _validator.ValidarCreacionAsync(dto));
 
         Assert.Equal("Hay Experiencias Educativas con código repetido.", exception.Message);
     }
@@ -125,7 +128,7 @@ public class PlanEstudiosValidatorTests
             .Setup(r => r.ExisteCodigoExperienciaEducativaEnSistemaAsync("FBGR 80001"))
             .ReturnsAsync(true);
 
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _validator.ValidarCreacionAsync(dto));
+        var exception = await Assert.ThrowsAsync<ValidacionExcepction>(() => _validator.ValidarCreacionAsync(dto));
 
         Assert.Equal("Ya hay una Experiencia Educativa con el Código FBGR 80001 en el sistema.", exception.Message);
     }
@@ -149,7 +152,7 @@ public class PlanEstudiosValidatorTests
             .Setup(r => r.ExisteProgramaEducativoPorIdAsync(dto.IdProgramaEducativo))
             .ReturnsAsync(true);
 
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _validator.ValidarCreacionAsync(dto));
+        var exception = await Assert.ThrowsAsync<ValidacionExcepction>(() => _validator.ValidarCreacionAsync(dto));
 
         Assert.Equal("El Código es obligatorio en todas las Experiencias Educativas nuevas.", exception.Message);
     }
@@ -165,7 +168,9 @@ public class PlanEstudiosValidatorTests
             {
                 Codigo = "CODE-01",
                 Nombre = "Pruebas de Penetración",
-                PerfilDocente = "Licenciado en Informática o carrera a fin..."
+                PerfilDocente = "Licenciado en Informática o carrera a fin...",
+                Horas = "5",
+                Creditos = "8"
             }
         };
 
@@ -182,7 +187,7 @@ public class PlanEstudiosValidatorTests
     [Fact]
     public async Task ObtenerPlanDeEstudiosConIdInvalida()
     {
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _validator.ValidarIdAsync(-100));
+        var exception = await Assert.ThrowsAsync<ValidacionExcepction>(() => _validator.ValidarIdAsync(-100));
 
         Assert.Equal("La IdPlanEstudios es inválida.", exception.Message);
     }
@@ -195,7 +200,7 @@ public class PlanEstudiosValidatorTests
             .Setup(r => r.ExistePorIdAsync(94))
             .ReturnsAsync(false);
 
-        var exception = await Assert.ThrowsAsync<KeyNotFoundException>(() => _validator.ValidarIdAsync(94));
+        var exception = await Assert.ThrowsAsync<ValidacionExcepction>(() => _validator.ValidarIdAsync(94));
 
         Assert.Equal("No existe ese Plan de Estudios.", exception.Message);
     }
@@ -207,7 +212,7 @@ public class PlanEstudiosValidatorTests
         var dto = EditarPlanEstudiosDtoValido();
         dto.IdPlanEstudios = -10;
 
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _validator.ValidarEdicionAsync(dto));
+        var exception = await Assert.ThrowsAsync<ValidacionExcepction>(() => _validator.ValidarEdicionAsync(dto));
 
         Assert.Equal("La IdPlanEstudios es inválida.", exception.Message);
     }
@@ -228,7 +233,7 @@ public class PlanEstudiosValidatorTests
             .Setup(r => r.ExistePorIdAsync(67))
             .ReturnsAsync(true);
 
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _validator.ValidarEdicionAsync(dto));
+        var exception = await Assert.ThrowsAsync<ValidacionExcepction>(() => _validator.ValidarEdicionAsync(dto));
 
         Assert.Equal("La Id de una Experiencia Educativa para eliminar es inválida.", exception.Message);
     }
@@ -253,7 +258,7 @@ public class PlanEstudiosValidatorTests
             .Setup(r => r.ExisteExperienciaEducativaPorIdAsync(187))
             .ReturnsAsync(false);
 
-        var exception = await Assert.ThrowsAsync<KeyNotFoundException>(() => _validator.ValidarEdicionAsync(dto));
+        var exception = await Assert.ThrowsAsync<ValidacionExcepction>(() => _validator.ValidarEdicionAsync(dto));
 
         Assert.Equal("No existe la Experiencia Educativa con Id 187 para eliminar.", exception.Message);
     }
@@ -273,7 +278,9 @@ public class PlanEstudiosValidatorTests
                     IdExperienciaEducativa = 93,
                     Codigo = "FBGR 80014",
                     Nombre = "Computación Básica I",
-                    PerfilDocente = "Licenciado en Redes o carrera a fin..."
+                    PerfilDocente = "Licenciado en Redes o carrera a fin...",
+                    Horas = "5",
+                    Creditos = "8"
                 }
             },
             IdsExperienciasEliminadas = new List<int>()
@@ -317,7 +324,7 @@ public class PlanEstudiosValidatorTests
                 }
             });
 
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _validator.ValidarEdicionAsync(dto));
+        var exception = await Assert.ThrowsAsync<ValidacionExcepction>(() => _validator.ValidarEdicionAsync(dto));
 
         Assert.Equal("Ya hay una Experiencia Educativa con el Código FBGR 80014 en el Plan de Estudios.", exception.Message);
     }
@@ -337,7 +344,9 @@ public class PlanEstudiosValidatorTests
                     IdExperienciaEducativa = 93,
                     Codigo = "FBGR 80014",
                     Nombre = "Computación Básica I",
-                    PerfilDocente = "Licenciado en Redes o carrera a fin..."
+                    PerfilDocente = "Licenciado en Redes o carrera a fin...",
+                    Horas = "5",
+                    Creditos = "8"
                 }
             },
             IdsExperienciasEliminadas = new List<int>()
@@ -359,7 +368,7 @@ public class PlanEstudiosValidatorTests
             .Setup(r => r.ExisteCodigoExperienciaEducativaEnOtroPlanAsync(67, "FBGR 80014"))
             .ReturnsAsync(true);
 
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _validator.ValidarEdicionAsync(dto));
+        var exception = await Assert.ThrowsAsync<ValidacionExcepction>(() => _validator.ValidarEdicionAsync(dto));
 
         Assert.Equal("Ya hay una Experiencia Educativa con el Código FBGR 80014 en el sistema.", exception.Message);
     }
@@ -389,7 +398,7 @@ public class PlanEstudiosValidatorTests
             .Setup(r => r.ExistePorIdAsync(67))
             .ReturnsAsync(true);
 
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _validator.ValidarEdicionAsync(dto));
+        var exception = await Assert.ThrowsAsync<ValidacionExcepction>(() => _validator.ValidarEdicionAsync(dto));
 
         Assert.Equal("La Id de una Experiencia Educativa a editar es inválida.", exception.Message);
     }
@@ -409,7 +418,9 @@ public class PlanEstudiosValidatorTests
                     IdExperienciaEducativa = 93,
                     Codigo = "FBGR 80002",
                     Nombre = "Computación Básica I",
-                    PerfilDocente = "Licenciado en Redes o carrera a fin..."
+                    PerfilDocente = "Licenciado en Redes o carrera a fin...",
+                    Horas = "5",
+                    Creditos = "8"
                 }
             },
             IdsExperienciasEliminadas = new List<int>()
@@ -423,7 +434,7 @@ public class PlanEstudiosValidatorTests
             .Setup(r => r.ExisteExperienciaEducativaPorIdAsync(93))
             .ReturnsAsync(false);
 
-        var exception = await Assert.ThrowsAsync<KeyNotFoundException>(() => _validator.ValidarEdicionAsync(dto));
+        var exception = await Assert.ThrowsAsync<ValidacionExcepction>(() => _validator.ValidarEdicionAsync(dto));
 
         Assert.Equal("No existe ninguna Experiencia Educativa a editar con Id 93.", exception.Message);
     }
@@ -453,7 +464,7 @@ public class PlanEstudiosValidatorTests
             .Setup(r => r.ExistePorIdAsync(67))
             .ReturnsAsync(true);
 
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _validator.ValidarEdicionAsync(dto));
+        var exception = await Assert.ThrowsAsync<ValidacionExcepction>(() => _validator.ValidarEdicionAsync(dto));
 
         Assert.Equal("El Código es obligatorio en todas las Experiencias Educativas a editar.", exception.Message);
     }
@@ -473,7 +484,9 @@ public class PlanEstudiosValidatorTests
                     IdExperienciaEducativa = 93,
                     Codigo = "192.128",
                     Nombre = "Computación Básica I",
-                    PerfilDocente = "Licenciado en Redes o carrera a fin..."
+                    PerfilDocente = "Licenciado en Redes o carrera a fin...",
+                    Horas = "5",
+                    Creditos = "8"
                 }
             },
             IdsExperienciasEliminadas = new List<int>()
@@ -501,7 +514,9 @@ public class PlanEstudiosValidatorTests
                 {
                     Codigo = "FBGR 80001",
                     Nombre = "Estructuras de Datos",
-                    PerfilDocente = "Licenciado en informática o carrera a fin..."
+                    PerfilDocente = "Licenciado en informática o carrera a fin...",
+                    Horas = "5",
+                    Creditos = "8"
                 }
             },
             ExperienciasEditadas = new List<DatosExperienciaEducativaDTO>(),
@@ -530,7 +545,7 @@ public class PlanEstudiosValidatorTests
                 }
             });
 
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _validator.ValidarEdicionAsync(dto));
+        var exception = await Assert.ThrowsAsync<ValidacionExcepction>(() => _validator.ValidarEdicionAsync(dto));
 
         Assert.Equal("Ya hay una Experiencia Educativa con el Código FBGR 80001 en el Plan de Estudios.", exception.Message);
     }
@@ -548,7 +563,9 @@ public class PlanEstudiosValidatorTests
                 {
                     Codigo = "FBGR 80014",
                     Nombre = "Computación Básica I",
-                    PerfilDocente = "Licenciado en Redes o carrera a fin..."
+                    PerfilDocente = "Licenciado en Redes o carrera a fin...",
+                    Horas = "5",
+                    Creditos = "8"
                 }
             },
             ExperienciasEditadas = new List<DatosExperienciaEducativaDTO>(),
@@ -563,7 +580,7 @@ public class PlanEstudiosValidatorTests
             .Setup(r => r.ExisteCodigoExperienciaEducativaEnOtroPlanAsync(67, "FBGR 80014"))
             .ReturnsAsync(true);
 
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _validator.ValidarEdicionAsync(dto));
+        var exception = await Assert.ThrowsAsync<ValidacionExcepction>(() => _validator.ValidarEdicionAsync(dto));
 
         Assert.Equal("Ya hay una Experiencia Educativa con el Código FBGR 80014 en el sistema.", exception.Message);
     }
@@ -592,7 +609,7 @@ public class PlanEstudiosValidatorTests
             .Setup(r => r.ExistePorIdAsync(67))
             .ReturnsAsync(true);
 
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _validator.ValidarEdicionAsync(dto));
+        var exception = await Assert.ThrowsAsync<ValidacionExcepction>(() => _validator.ValidarEdicionAsync(dto));
 
         Assert.Equal("El Código es obligatorio en todas las Experiencias Educativas nuevas.", exception.Message);
     }
@@ -610,7 +627,9 @@ public class PlanEstudiosValidatorTests
                 {
                     Codigo = "10",
                     Nombre = "Estructuras de Datos",
-                    PerfilDocente = "Licenciado en informática o carrera a fin..."
+                    PerfilDocente = "Licenciado en informática o carrera a fin...",
+                    Horas = "5",
+                    Creditos = "8"
                 }
             },
             ExperienciasEditadas = new List<DatosExperienciaEducativaDTO>(),
@@ -630,7 +649,7 @@ public class PlanEstudiosValidatorTests
     [Fact]
     public async Task EliminarPlanDeEstudiosConIdInvalida()
     {
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _validator.ValidarIdAsync(-1));
+        var exception = await Assert.ThrowsAsync<ValidacionExcepction>(() => _validator.ValidarIdAsync(-1));
 
         Assert.Equal("La IdPlanEstudios es inválida.", exception.Message);
     }
@@ -643,7 +662,7 @@ public class PlanEstudiosValidatorTests
             .Setup(r => r.ExistePorIdAsync(17))
             .ReturnsAsync(false);
 
-        var exception = await Assert.ThrowsAsync<KeyNotFoundException>(() => _validator.ValidarIdAsync(17));
+        var exception = await Assert.ThrowsAsync<ValidacionExcepction>(() => _validator.ValidarIdAsync(17));
 
         Assert.Equal("No existe ese Plan de Estudios.", exception.Message);
     }
@@ -661,19 +680,25 @@ public class PlanEstudiosValidatorTests
                 {
                     Codigo = "FBGR 80012",
                     Nombre = "Pruebas de Penetración",
-                    PerfilDocente = "Licenciado en Informática o carrera a fin..."
+                    PerfilDocente = "Licenciado en Informática o carrera a fin...",
+                    Horas = "5",
+                    Creditos = "8"
                 },
                 new AgregarExperienciaEducativaDTO
                 {
                     Codigo = "FBGR 80007",
                     Nombre = "Programación I",
-                    PerfilDocente = "Licenciado en Informática o carrera a fin..."
+                    PerfilDocente = "Licenciado en Informática o carrera a fin...",
+                    Horas = "5",
+                    Creditos = "6"
                 },
                 new AgregarExperienciaEducativaDTO
                 {
                     Codigo = "FBGR 80020",
                     Nombre = "Tecnologías para la Construcción de Software",
-                    PerfilDocente = "Licenciado en Informática o carrera a fin..."
+                    PerfilDocente = "Licenciado en Informática o carrera a fin...",
+                    Horas = "3",
+                    Creditos = "6"
                 }
             }
         };
@@ -690,7 +715,9 @@ public class PlanEstudiosValidatorTests
                 {
                     Codigo = "FBGR 80067",
                     Nombre = "Estructuras de Datos",
-                    PerfilDocente = "Licenciado en informática o carrera a fin..."
+                    PerfilDocente = "Licenciado en informática o carrera a fin...",
+                    Horas = "5",
+                    Creditos = "8"
                 }
             },
             ExperienciasEditadas = new List<DatosExperienciaEducativaDTO>
@@ -700,7 +727,9 @@ public class PlanEstudiosValidatorTests
                     IdExperienciaEducativa = 93,
                     Codigo = "FBGR 80002",
                     Nombre = "Computación Básica I",
-                    PerfilDocente = "Licenciado en Redes o carrera a fin..."
+                    PerfilDocente = "Licenciado en Redes o carrera a fin...",
+                    Horas = "5",
+                    Creditos = "8"
                 }
             },
             IdsExperienciasEliminadas = new List<int> { 187 }

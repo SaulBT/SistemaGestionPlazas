@@ -8,5 +8,8 @@
         public string Action { get; set; } = "";
         public string Method { get; set; } = "get"; // solo "get" o "post"
         public string ButtonText { get; set; } = "";
+        public string IdButton { get; set; } = string.Empty;
+        public string ButtonAction { get; set; } = string.Empty;
+        public string ButtonType { get; set; } = "submit";
     }
 }

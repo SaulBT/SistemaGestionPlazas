@@ -16,7 +16,10 @@
 
     @await Component.InvokeAsync("Boton", new
     {
-        accion = "buscar"
+        Id = Model.IdButton,
+        accion = "buscar",
+        OnClick = Model.ButtonAction,
+        ButtonType = Model.ButtonType
     })
 
 </div>

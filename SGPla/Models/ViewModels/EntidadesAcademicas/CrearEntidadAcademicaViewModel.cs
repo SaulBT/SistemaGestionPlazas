@@ -21,13 +21,9 @@ namespace SGPla.Models.ViewModels.EntidadesAcademicas
         public string Municipio { get; set; } = string.Empty;
         [Required(ErrorMessage = "Campo obligatorio")]
         public string Telefono { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Campo obligatorio")]
-        public string Conmutador { get; set; } = string.Empty;
+        
         [Required(ErrorMessage = "Campo obligatorio")]
         public string Extension { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Campo obligatorio")]
-        public string Fax { get; set; } = string.Empty;
-
 
         [Required(ErrorMessage = "Campo obligatorio")]
         public int? IdAreaAcademica { get; set; }

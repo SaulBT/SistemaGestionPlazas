@@ -1,4 +1,5 @@
 using Moq;
+using SGPla.Commons;
 using SGPla.Models.DTOs.AreaAcademica;
 using SGPla.Repositories.Interfaces;
 using SGPla.Validations.Implementations;
@@ -21,14 +22,8 @@ public class AreaAcademicaValidatorTests
         var dto = new CrearAreaAcademicaDTO
         {
             Nombre = null,
-            CalleNumero = null,
-            Colonia = null,
-            Cp = null,
-            Municipio = null,
             Telefono = null,
-            Conmutador = null,
-            Extension = null,
-            Fax = null
+            Extension = null
         };
 
         var ex = Record.Exception(() => _areaAcademicaValidator.ValidarCreacion(dto));
@@ -45,7 +40,7 @@ public class AreaAcademicaValidatorTests
         var ex = await Record.ExceptionAsync(() => _areaAcademicaValidator.ValidarIdAsync(-12));
 
         Assert.NotNull(ex);
-        Assert.IsType<ArithmeticException>(ex);
+        Assert.IsType<ValidacionExcepction>(ex);
         Assert.Contains("La Id es inválida", ex.Message);
     }
 
@@ -62,7 +57,7 @@ public class AreaAcademicaValidatorTests
         var ex = await Record.ExceptionAsync(() => _areaAcademicaValidator.ValidarIdAsync(idAreaAcademica));
 
         Assert.NotNull(ex);
-        Assert.IsType<ArgumentException>(ex);
+        Assert.IsType<ValidacionExcepction>(ex);
         Assert.Contains("No existe esa Área Académica.", ex.Message);
     }
 
@@ -74,20 +69,14 @@ public class AreaAcademicaValidatorTests
         {
             IdAreaAcademica = 0,
             Nombre = "Dirección General del Área Académica de Artes",
-            CalleNumero = "Lomas del Estadio S/N Edificio A Piso 5",
-            Colonia = "Zona Universitaria",
-            Cp = "91096",
-            Municipio = "Xalapa",
             Telefono = "(228) 842-17-67",
-            Conmutador = "(228) 842-27-00",
-            Extension = "11706",
-            Fax = "(228) 842-72-57"
+            Extension = "11706"
         };
 
         var ex = await Record.ExceptionAsync(() => _areaAcademicaValidator.ValidarEdicionAsync(dto));
 
         Assert.NotNull(ex);
-        Assert.IsType<ArithmeticException>(ex);
+        Assert.IsType<ValidacionExcepction>(ex);
         Assert.Contains("La Id es inválida", ex.Message);
     }
 
@@ -99,14 +88,8 @@ public class AreaAcademicaValidatorTests
         {
             IdAreaAcademica = 1,
             Nombre = null,
-            CalleNumero = null,
-            Colonia = null,
-            Cp = null,
-            Municipio = null,
             Telefono = null,
-            Conmutador = null,
-            Extension = null,
-            Fax = null
+            Extension = null
         };
 
         _areaAcademicaRepositoryMock
@@ -128,14 +111,8 @@ public class AreaAcademicaValidatorTests
         {
             IdAreaAcademica = 90,
             Nombre = "Dirección General del Área Académica de Artes",
-            CalleNumero = "Lomas del Estadio S/N Edificio A Piso 5",
-            Colonia = "Zona Universitaria",
-            Cp = "91096",
-            Municipio = "Xalapa",
             Telefono = "(228) 842-17-67",
-            Conmutador = "(228) 842-27-00",
-            Extension = "11706",
-            Fax = "(228) 842-72-57"
+            Extension = "11706"
         };
 
         _areaAcademicaRepositoryMock
@@ -145,7 +122,7 @@ public class AreaAcademicaValidatorTests
         var ex = await Record.ExceptionAsync(() => _areaAcademicaValidator.ValidarEdicionAsync(dto));
 
         Assert.NotNull(ex);
-        Assert.IsType<ArgumentException>(ex);
+        Assert.IsType<ValidacionExcepction>(ex);
         Assert.Contains("No existe esa Área Académica.", ex.Message);
     }
 
@@ -156,7 +133,7 @@ public class AreaAcademicaValidatorTests
         var ex = await Record.ExceptionAsync(() => _areaAcademicaValidator.ValidarIdAsync(0));
 
         Assert.NotNull(ex);
-        Assert.IsType<ArithmeticException>(ex);
+        Assert.IsType<ValidacionExcepction>(ex);
         Assert.Contains("La Id es inválida", ex.Message);
     }
 
@@ -173,7 +150,7 @@ public class AreaAcademicaValidatorTests
         var ex = await Record.ExceptionAsync(() => _areaAcademicaValidator.ValidarIdAsync(idAreaAcademica));
 
         Assert.NotNull(ex);
-        Assert.IsType<ArgumentException>(ex);
+        Assert.IsType<ValidacionExcepction>(ex);
         Assert.Contains("No existe esa Área Académica.", ex.Message);
     }
 }

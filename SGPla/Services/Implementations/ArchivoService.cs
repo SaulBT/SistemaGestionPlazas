@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.StaticFiles;
+using SGPla.Commons;
 using SGPla.Models;
 using SGPla.Models.DTOs.Archivo;
 using SGPla.Repositories.Interfaces;
@@ -63,6 +64,18 @@ namespace SGPla.Services.Implementations
                 Tipo = tipo,
                 Tamanio = tamanio
             };
+        }
+
+        public async Task<(string nombre, string ruta)> GuardarTemporalmenteAsync(IFormFile archivo)
+        {
+            var carpetaTemp = Path.Combine(_rutaBase, "temp-uploads");
+            Directory.CreateDirectory(carpetaTemp);
+            var extension = Path.GetExtension(archivo.FileName);
+            var rutaArchivo = Path.Combine(carpetaTemp, $"{Guid.NewGuid()}{extension}");
+            using var stream = new FileStream(rutaArchivo, FileMode.Create);
+            await archivo.CopyToAsync(stream);
+
+            return (archivo.FileName, rutaArchivo);
         }
 
         public async Task<ArchivoDescargadoDTO> DescargarAsync(int idArchivo)

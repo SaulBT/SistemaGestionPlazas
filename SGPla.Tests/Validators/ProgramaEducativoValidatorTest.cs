@@ -1,4 +1,5 @@
 ﻿using Moq;
+using SGPla.Commons;
 using SGPla.Models;
 using SGPla.Models.DTOs.EntidadAcademica;
 using SGPla.Models.DTOs.ProgramaEducativo;
@@ -15,15 +16,18 @@ namespace SGPla.Tests.Validators
 
         private readonly Mock<IProgramaEducativoRepository> _programaEducativoRepositoryMock;
         private readonly Mock<IEntidadAcademicaRepository> _entidadAcademicaRepositoryMock;
+        private readonly Mock<IPlanEstudiosRepository> _planEstudiosRepositoryMock;
         private readonly ProgramaEducativoValidator _programaEducativoValidator;
 
         public ProgramaEducativoValidatorTest()
         {
             _programaEducativoRepositoryMock = new Mock<IProgramaEducativoRepository>();
             _entidadAcademicaRepositoryMock = new Mock<IEntidadAcademicaRepository>();
+            _planEstudiosRepositoryMock = new Mock<IPlanEstudiosRepository>();
             _programaEducativoValidator = new ProgramaEducativoValidator(
                 _programaEducativoRepositoryMock.Object,
-                _entidadAcademicaRepositoryMock.Object
+                _entidadAcademicaRepositoryMock.Object,
+                _planEstudiosRepositoryMock.Object
                 );
         }
 
@@ -219,7 +223,7 @@ namespace SGPla.Tests.Validators
             var ex = await Record.ExceptionAsync(() => _programaEducativoValidator.ValidarEdicionAsync(dto));
 
             Assert.NotNull(ex);
-            Assert.IsType<ArgumentException>(ex);
+            Assert.IsType<ValidacionExcepction>(ex);
             Assert.Contains("El programa educativo no existe.", ex.Message);
         }
 

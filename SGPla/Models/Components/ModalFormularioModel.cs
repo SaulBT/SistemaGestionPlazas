@@ -11,5 +11,6 @@
         public string OnCancel { get; set; }
 
         public string Accion { get; set; } = "Guardar";
+        public string Tipo { get; set; } = "Formulario";
     }
 }

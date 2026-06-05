@@ -1,24 +1,44 @@
 ﻿const codigoAgregar = document.getElementById("CodigoAgregar");
 const nombreAgregar = document.getElementById("NombreAgregar");
 const perfilDocenteAgregar = document.getElementById("PerfilDocenteAgregar");
+const horasAgregar = document.getElementById("HorasAgregar");
+const creditosAgregar = document.getElementById("CreditosAgregar");
+
+const errorCodigoAgregar = document.getElementById("CodigoAgregar-Error");
+const errorNombreAgregar = document.getElementById("NombreAgregar-Error");
+const errorPerfilDocenteAgregar = document.getElementById("PerfilDocenteAgregar-Error");
+const errorHorasAgregar = document.getElementById("HorasAgregar-Error");
+const errorCreditosAgregar = document.getElementById("CreditosAgregar-Error");
 
 const codigoEditar = document.getElementById("CodigoEditar");
 const nombreEditar = document.getElementById("NombreEditar");
 const perfilDocenteEditar = document.getElementById("PerfilDocenteEditar");
+const horasEditar = document.getElementById("HorasEditar");
+const creditosEditar = document.getElementById("CreditosEditar");
+
+const errorCodigoEditar = document.getElementById("CodigoEditar-Error");
+const errorNombreEditar = document.getElementById("NombreEditar-Error");
+const errorPerfilDocenteEditar = document.getElementById("PerfilDocenteEditar-Error");
+const errorHorasEditar = document.getElementById("HorasEditar-Error");
+const errorCreditosEditar = document.getElementById("CreditosEditar-Error");
 
 const tbody = document.querySelector("#tabla tbody");
+const tabla = document.getElementById("contenedorTabla");
 
 var codigoOriginal = "";
 var codigoEliminar = "";
 var idExperienciaEducativa = 0;
 
-const errorCodigoAgregar = document.getElementById("CodigoAgregar-Error");
-const errorNombreAgregar = document.getElementById("NombreAgregar-Error");
-const errorPerfilDocenteAgregar = document.getElementById("PerfilDocenteAgregar-Error");
+const busqueda = document.getElementsByName("tfBusqueda")[0];
+busqueda.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+        e.preventDefault();
 
-const errorCodigoEditar = document.getElementById("CodigoEditar-Error");
-const errorNombreEditar = document.getElementById("NombreEditar-Error");
-const errorPerfilDocenteEditar = document.getElementById("PerfilDocenteEditar-Error");
+        buscarExperiencia();
+    }
+});
+const botonBusqueda = document.getElementById("btnBusqueda");
+botonBusqueda.type = "button";
 
 function abrirModalAgregarExperiencia() {
     limpiarErroresAgregar();
@@ -27,14 +47,18 @@ function abrirModalAgregarExperiencia() {
     codigoAgregar.value = "";
     nombreAgregar.value = "";
     perfilDocenteAgregar.value = "";
+    horasAgregar.value = "";
+    creditosAgregar.value = "";
 }
 
-function abrirModalEditarExperiencia(codigo, nombre, perfilDocente) {
+function abrirModalEditarExperiencia(codigo, nombre, horas, creditos, perfilDocente) {
     limpiarErroresEditar();
     codigoOriginal = codigo;
     
     codigoEditar.value = codigo;
     nombreEditar.value = nombre;
+    horasEditar.value = horas;
+    creditosEditar.value = creditos;
     perfilDocenteEditar.value = perfilDocente;
 
     abrirModal("modalEditarExperiencia");
@@ -49,15 +73,14 @@ function abrirModalEliminarExperiencia(codigo) {
 async function agregarExperiencia() {
     limpiarErroresAgregar();
     if (verificarCamposAgregar(codigoAgregar.value)) {
-        const response = await fetch(`${UrlAgregarExperiencia}?codigo=${encodeURIComponent(codigoAgregar.value)}&nombre=${encodeURIComponent(nombreAgregar.value)}&perfilDocente=${encodeURIComponent(perfilDocenteAgregar.value)}`);
-        const data = await response.json();
+        const response = await fetch(`${UrlAgregarExperiencia}?codigo=${encodeURIComponent(codigoAgregar.value)}&nombre=${encodeURIComponent(nombreAgregar.value)}&perfilDocente=${encodeURIComponent(perfilDocenteAgregar.value)}&horas=${encodeURIComponent(horasAgregar.value)}&creditos=${encodeURIComponent(creditosAgregar.value)}`, {
+            method: "GET"
+        });
 
-        if (!data.error) {
-            const experiencia = data.experiencia;
-
-            const fila = generarFila(experiencia.codigo, experiencia.nombre, experiencia.perfilDocente, 0);
-            tbody.appendChild(fila);
-            refrescarTablaCliente("tablaExperiencias");
+        if (response.ok) {
+            const html = await response.text();
+            tabla.innerHTML = html;
+            inicializarTablaCliente("tablaExperiencias");
 
             cerrarModal("modalAgregarExperiencia")
         } else {
@@ -74,18 +97,14 @@ async function editarExperiencia(edicion) {
     limpiarErroresEditar();
     var ruta = "";
     if (verificarCamposEditar(codigoEditar.value)) {
-        const response = await fetch(`${UrlEditarExperiencia}?codigo=${encodeURIComponent(codigoEditar.value)}&nombre=${encodeURIComponent(nombreEditar.value)}&perfilDocente=${encodeURIComponent(perfilDocenteEditar.value)}&codigoOriginal=${encodeURIComponent(codigoOriginal)}`);
-        const data = await response.json();
+        const response = await fetch(`${UrlEditarExperiencia}?codigo=${encodeURIComponent(codigoEditar.value)}&nombre=${encodeURIComponent(nombreEditar.value)}&perfilDocente=${encodeURIComponent(perfilDocenteEditar.value)}&horas=${encodeURIComponent(horasEditar.value)}&creditos=${encodeURIComponent(creditosEditar.value)}&codigoOriginal=${encodeURIComponent(codigoOriginal)}`, {
+            method: "GET"
+        });
 
-        if (!data.error) {
-            const experiencias = data.experiencias;
-
-            tbody.innerHTML = "";
-            experiencias.forEach(ee => {
-                const fila = generarFila(ee.codigo, ee.nombre, ee.perfilDocente);
-                tbody.appendChild(fila);
-            });
-            refrescarTablaCliente("tablaExperiencias");
+        if (response.ok) {
+            const html = await response.text();
+            tabla.innerHTML = html;
+            inicializarTablaCliente("tablaExperiencias");
 
             cerrarModal("modalEditarExperiencia")
         } else {
@@ -99,18 +118,14 @@ async function editarExperiencia(edicion) {
 }
 
 async function eliminarExperiencia(edicion) {
-    const response = await fetch(`${UrlEliminarExperiencia}?codigo=${encodeURIComponent(codigoEliminar)}`);
-    const data = await response.json();
+    const response = await fetch(`${UrlEliminarExperiencia}?codigo=${encodeURIComponent(codigoEliminar)}`, {
+        method: "GET"
+    });
 
-    if (!data.error) {
-        const experiencias = data.experiencias;
-
-        tbody.innerHTML = "";
-        experiencias.forEach(ee => {
-            const fila = generarFila(ee.codigo, ee.nombre, ee.perfilDocente);
-            tbody.appendChild(fila);
-        });
-        refrescarTablaCliente("tablaExperiencias");
+    if (response.ok) {
+        const html = await response.text();
+        tabla.innerHTML = html;
+        inicializarTablaCliente("tablaExperiencias");
 
         cerrarModal("modalEliminarExperiencia")
     } else {
@@ -124,41 +139,13 @@ async function eliminarExperiencia(edicion) {
     
 }
 
-function generarFila(codigo, nombre, perfilDocente) {
-    const fila = document.createElement("tr");
-    fila.id = codigo;
-    fila.innerHTML = `
-            <td>${codigo}</td>
-            <td>${nombre}</td>
-            <td>
-                <div class="table-actions">
-                    <button
-                        type="button"
-                        class="boton-primario boton-icono"
-                        onclick="abrirModalPerfilDocente('${perfilDocente}')">
-                        <i class="bi bi-info-circle-fill"></i>
-                    </button>
-                </div>
-            </td>
-            <td>
-                <div class="table-actions">
-                    <button
-                        type="button"
-                        class="boton-primario boton-icono"
-                        onclick="abrirModalEditarExperiencia('${codigo}', '${nombre}', '${perfilDocente}')">
-
-                        <i class="bi bi-pencil-fill"></i>
-                    </button>
-                    <button
-                        type="button"
-                        class="boton-primario boton-icono"
-                        onclick="abrirModalEliminarExperiencia('${codigo}')">
-                        <i class="bi bi-trash-fill"></i>
-                    </button>
-                </div>
-            </td>
-        `;
-    return fila;
+async function buscarExperiencia() {
+    const response = await fetch(`/PlanesEstudios/BuscarExperiencias?busqueda=${encodeURIComponent(busqueda.value)}`);
+    if (response.ok) {
+        const html = await response.text();
+        tabla.innerHTML = html;
+        inicializarTablaCliente("tablaExperiencias");
+    }
 }
 
 function verificarCamposAgregar(codigo) {
@@ -174,11 +161,36 @@ function verificarCamposAgregar(codigo) {
         errorNombreAgregar.textContent = "El nombre es obligatorio.";
         errorNombreAgregar.style.display = "block";
     }
+    if (!horasAgregar.value) {
+        bandera = false;
+        errorHorasAgregar.textContent = "Las horas son obligatorias.";
+        errorHorasAgregar.style.display = "block";
+    } else {
+        const horas = verificarNumero(horasAgregar.value);
+        if (horas < 0) {
+            bandera = false;
+            errorHorasAgregar.textContent = "Tiene que ser un número entero positivo.";
+            errorHorasAgregar.style.display = "block";
+        }
+    }
+    if (!creditosAgregar.value) {
+        bandera = false;
+        errorCreditosAgregar.textContent = "Los créditos son obligatorios.";
+        errorCreditosAgregar.style.display = "block";
+    } else {
+        const creditos = verificarNumero(creditosAgregar.value);
+        if (creditos < 0) {
+            bandera = false;
+            errorCreditosAgregar.textContent = "Tiene que ser un número entero positivo.";
+            errorCreditosAgregar.style.display = "block";
+        }
+    }
     if (!perfilDocenteAgregar.value) {
         bandera = false;
         errorPerfilDocenteAgregar.textContent = "El perfil docente es obligatorio.";
         errorPerfilDocenteAgregar.style.display = "block";
     }
+
     if (document.getElementById(codigo) != null) {
         bandera = false;
         errorCodigoAgregar.textContent = "Ya hay una Experiencia con ese código en el Plan.";
@@ -200,6 +212,12 @@ function limpiarErroresAgregar() {
     errorNombreAgregar.textContent = "";
     errorNombreAgregar.style.display = "none";
 
+    errorCreditosAgregar.textContent = "";
+    errorCreditosAgregar.style.display = "none";
+
+    errorHorasAgregar.textContent = "";
+    errorHorasAgregar.style.display = "none";
+
     errorPerfilDocenteAgregar.textContent = "";
     errorPerfilDocenteAgregar.style.display = "none";
 }
@@ -216,6 +234,30 @@ function verificarCamposEditar(codigo) {
         bandera = false;
         errorNombreEditar.textContent = "El nombre es obligatorio.";
         errorNombreEditar.style.display = "block";
+    }
+    if (!horasEditar.value) {
+        bandera = false;
+        errorHorasEditar.textContent = "Las horas son obligatorias.";
+        errorHorasEditar.style.display = "block";
+    } else {
+        const horas = verificarNumero(horasEditar.value);
+        if (horas < 0) {
+            bandera = false;
+            errorHorasEditar.textContent = "Tiene que ser un número entero positivo.";
+            errorHorasEditar.style.display = "block";
+        }
+    }
+    if (!creditosEditar.value) {
+        bandera = false;
+        errorCreditosEditar.textContent = "Los créditos son obligatorios.";
+        errorCreditosEditar.style.display = "block";
+    } else {
+        const creditos = verificarNumero(creditosEditar.value);
+        if (creditos < 0) {
+            bandera = false;
+            errorCreditosEditar.textContent = "Tiene que ser un número entero positivo.";
+            errorCreditosEditar.style.display = "block";
+        }
     }
     if (!perfilDocenteEditar.value) {
         bandera = false;
@@ -244,6 +286,12 @@ function limpiarErroresEditar() {
     errorNombreEditar.textContent = "";
     errorNombreEditar.style.display = "none";
 
+    errorCreditosEditar.textContent = "";
+    errorCreditosEditar.style.display = "none";
+
+    errorHorasEditar.textContent = "";
+    errorHorasEditar.style.display = "none";
+
     errorPerfilDocenteEditar.textContent = "";
     errorPerfilDocenteEditar.style.display = "none";
 }
@@ -256,5 +304,15 @@ function verificarFormatoCodigo(codigo) {
     }
     else {
         return false;
+    }
+}
+
+function verificarNumero(texto) {
+    if (!isNaN(texto) && texto.trim() !== "") {
+        const numero = parseInt(texto, 10);
+        return numero;
+    }
+    else {
+        return -1;
     }
 }

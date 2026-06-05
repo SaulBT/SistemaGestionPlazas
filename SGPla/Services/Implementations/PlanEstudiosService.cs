@@ -1,4 +1,6 @@
 using ExcelDataReader;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using SGPla.Commons;
 using SGPla.Models;
 using SGPla.Models.DTOs.Archivo;
 using SGPla.Models.DTOs.PlanEstudios;
@@ -17,6 +19,8 @@ namespace SGPla.Services.Implementations
         private readonly IArchivoRepository _archivoRepository;
         private readonly IArchivoService _archivoService;
         private readonly ILogger<PlanEstudiosService> _logger;
+
+        private static List<string> EE_IGNORADAS = ["ENSO", "BGRC", "BGRE", "BGRT", "FBGR", "FBGT", "EXAV"];
 
         public PlanEstudiosService(
             IPlanEstudiosRepository planEstudiosRepository,
@@ -46,36 +50,66 @@ namespace SGPla.Services.Implementations
             using var reader = ExcelReaderFactory.CreateReader(stream);
 
             var esPrimeraFila = true;
+            Dictionary<string, int> columnas = [];
 
             while (reader.Read())
             {
                 if (esPrimeraFila)
                 {
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        var encabezado = Convert.ToString(reader.GetValue(i))?.Trim();
+
+                        if (!string.IsNullOrWhiteSpace(encabezado))
+                            columnas[encabezado] = i;
+                    }
                     esPrimeraFila = false;
                     continue;
                 }
 
-                var materia = ObtenerTextoCelda(reader, 5);       // Columna 6: MATERIA_EE
-                var curso = ObtenerTextoCelda(reader, 6);         // Columna 7: CURSO_EE
-                var nombre = ObtenerTextoCelda(reader, 7);        // Columna 8: DESC_EE
-                var perfilDocente = ObtenerTextoCelda(reader, 13); // Columna 14: PERFIL_DOC
+                var materia = obtenerTextoCelda(reader, columnas[Constantes.MATERIA_EE]);
+                var curso = obtenerTextoCelda(reader, columnas[Constantes.CURSO_EE]);
+                var nombre = obtenerTextoCelda(reader, columnas[Constantes.DESC_EE]);
+                var horasTeoricas = obtenerTextoCelda(reader, columnas[Constantes.HT_EE]);
+                var horasPracticas = obtenerTextoCelda(reader, columnas[Constantes.HP_EE]);
+                var creditos = obtenerTextoCelda(reader, columnas[Constantes.CREDITOS_EE]);
+                var perfilDocente = obtenerTextoCelda(reader, columnas[Constantes.PERFIL_DOC]);
+
+                
 
                 if (string.IsNullOrWhiteSpace(materia) &&
                     string.IsNullOrWhiteSpace(curso) &&
                     string.IsNullOrWhiteSpace(nombre) &&
-                    string.IsNullOrWhiteSpace(perfilDocente))
+                    string.IsNullOrWhiteSpace(perfilDocente) &&
+                    string.IsNullOrWhiteSpace(horasTeoricas) &&
+                    string.IsNullOrWhiteSpace(horasPracticas) &&
+                    string.IsNullOrWhiteSpace(creditos))
                 {
                     continue;
                 }
-
-                var codigo = $"{materia} {curso}".Trim();
-
-                experienciasEducativas.Add(new DatosExperienciaEducativaDTO
+                if (!string.IsNullOrWhiteSpace(materia) && !EE_IGNORADAS.Contains(materia))
                 {
-                    Codigo = codigo,
-                    Nombre = nombre,
-                    PerfilDocente = perfilDocente
-                });
+                    _logger.LogInformation("Guardando experiencia...");
+                    
+                    var codigo = $"{materia} {curso}".Trim();
+                    if (string.IsNullOrWhiteSpace(horasPracticas))
+                        horasPracticas = "0";
+                    if (string.IsNullOrWhiteSpace(horasTeoricas))
+                        horasTeoricas = "0";
+                    var horas = int.Parse(horasPracticas) + int.Parse(horasTeoricas);
+
+                    //perfilDocente = System.Text.Json.JsonSerializer.Serialize(perfilDocente);
+
+                    _logger.LogInformation($"Experiencia: {codigo} | {nombre} | {horas} | {creditos} | {perfilDocente}");
+                    experienciasEducativas.Add(new DatosExperienciaEducativaDTO
+                    {
+                        Codigo = codigo,
+                        Nombre = nombre,
+                        PerfilDocente = perfilDocente,
+                        Horas = "" + horas,
+                        Creditos = creditos
+                    });
+                }
             }
 
             return experienciasEducativas;
@@ -90,10 +124,7 @@ namespace SGPla.Services.Implementations
 
             try
             {
-                archivoGuardado = await _archivoService.GuardarAsync(
-                    crearPlanEstudiosDTO.Archivo.Ruta,
-                    crearPlanEstudiosDTO.Archivo.NombreArchivo,
-                    "planes-estudios");
+                archivoGuardado = await _archivoService.GuardarAsync(crearPlanEstudiosDTO.Archivo.Ruta, crearPlanEstudiosDTO.Archivo.NombreArchivo, "planes-estudios");
                 archivoRegistrado = await _archivoRepository.CrearAsync(new Archivo
                 {
                     Nombre = archivoGuardado.NombreOriginal,
@@ -270,7 +301,7 @@ namespace SGPla.Services.Implementations
             await _archivoService.EliminarAsync(archivo.Ruta);
         }
 
-        private static string ObtenerTextoCelda(IExcelDataReader reader, int columnIndex)
+        private static string obtenerTextoCelda(IExcelDataReader reader, int columnIndex)
         {
             if (columnIndex >= reader.FieldCount || reader.IsDBNull(columnIndex))
                 return string.Empty;
@@ -285,7 +316,9 @@ namespace SGPla.Services.Implementations
                 IdPlanEstudios = idPlanEstudios,
                 Codigo = experienciaEducativa.Codigo.Trim(),
                 Nombre = experienciaEducativa.Nombre.Trim(),
-                PerfilDocente = experienciaEducativa.PerfilDocente.Trim()
+                PerfilDocente = experienciaEducativa.PerfilDocente.Trim(),
+                Horas = experienciaEducativa.Horas,
+                Creditos = experienciaEducativa.Creditos
             }).ToList();
         }
 
@@ -297,7 +330,9 @@ namespace SGPla.Services.Implementations
                 IdPlanEstudios = idPlanEstudios,
                 Codigo = experienciaEducativa.Codigo.Trim(),
                 Nombre = experienciaEducativa.Nombre.Trim(),
-                PerfilDocente = experienciaEducativa.PerfilDocente.Trim()
+                PerfilDocente = experienciaEducativa.PerfilDocente.Trim(),
+                Horas = experienciaEducativa.Horas,
+                Creditos = experienciaEducativa.Creditos
             }).ToList();
         }
 
@@ -327,7 +362,9 @@ namespace SGPla.Services.Implementations
                     IdExperienciaEducativa = experienciaEducativa.IdExperienciaEducativa,
                     Codigo = experienciaEducativa.Codigo,
                     Nombre = experienciaEducativa.Nombre,
-                    PerfilDocente = experienciaEducativa.PerfilDocente
+                    PerfilDocente = experienciaEducativa.PerfilDocente,
+                    Horas = experienciaEducativa.Horas,
+                    Creditos = experienciaEducativa.Creditos
                 }).ToList(),
                 IdArchivo = planEstudios.IdArchivoPlan
             };
