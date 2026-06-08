@@ -1,6 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using SGPla.Models;
 using SGPla.Models.DTOs.Oferta;
 using SGPla.Models.ViewModels.ProgramacionesAcademicas;
+using System.Text.Json;
+
+
 
 namespace SGPla.Controllers;
 
@@ -8,6 +12,7 @@ public class ProgramacionesAcademicasController : Controller
 {
     private readonly ILogger<ProgramacionesAcademicasController> _logger;
     private readonly IProgramacionAcademicaService _programacionAcademicaService;
+
     public ProgramacionesAcademicasController(ILogger<ProgramacionesAcademicasController> logger, IProgramacionAcademicaService programacionAcademicaService)
     {
         _logger = logger;
@@ -34,6 +39,11 @@ public class ProgramacionesAcademicasController : Controller
         try
         {
             var ofertas = await _programacionAcademicaService.ProcesarArchivoAsync(archivo);
+            Console.WriteLine($"Ofertas cargadas: {ofertas.Count}");
+            HttpContext.Session.SetString(
+                "Ofertas",
+                JsonSerializer.Serialize(ofertas)
+            );
 
             List<OfertaDTO> ofertasVacantes = new();
             List<OfertaDTO> ofertasAsignadas = new();
@@ -55,5 +65,72 @@ public class ProgramacionesAcademicasController : Controller
         }
 
         return View(vm);
+    }
+
+
+    [HttpPost]
+    public async Task<IActionResult> Guardar()
+    {
+        var json = HttpContext.Session.GetString("Ofertas");
+
+        List<OfertaDTO> ofertas = string.IsNullOrEmpty(json)
+            ? new List<OfertaDTO>()
+            : JsonSerializer.Deserialize<List<OfertaDTO>>(json)!;
+
+        if (ofertas.Count == 0)
+            return BadRequest("No hay ofertas para guardar.");
+        try
+        {
+            //todo:agregar periodo
+            int periodoId = 3; // Reemplaza con el ID del periodo correspondiente
+            if (await _programacionAcademicaService.GuardarOfertasAsync(ofertas, periodoId))
+            return Ok("Ofertas guardadas exitosamente.");
+            else
+            {
+                return Ok("No se pudo hacer el registro");
+            }
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Error al guardar las ofertas: {ex.Message}");
+        }
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> CargarCargas(IFormFile archivoCarga)
+    {
+        var vm = new CargarProgramacionAcademica2ViewModel();
+
+        if (archivoCarga is null || archivoCarga.Length == 0)
+        {
+            vm.Error = "Selecciona un archivo de cargas antes de continuar.";
+            return View("Index", vm);
+        }
+
+        var json = HttpContext.Session.GetString("Ofertas");
+
+        var ofertas = string.IsNullOrEmpty(json)
+            ? new List<OfertaDTO>()
+            : JsonSerializer.Deserialize<List<OfertaDTO>>(json)!;
+
+        vm.OfertasVacantes = ofertas
+            .Where(o => o.NP == null)
+            .ToList();
+
+        vm.OfertasAsignadas = ofertas
+            .Where(o => o.NP != null)
+            .ToList();
+
+        try
+        {
+            vm.CargasAcademicas = await _programacionAcademicaService
+                .ProcesarCargasAsync(archivoCarga, ofertas);
+        }
+        catch (Exception ex)
+        {
+            vm.Error = $"Error al procesar las cargas: {ex.Message}";
+        }
+
+        return View("Index", vm);
     }
 }

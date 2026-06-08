@@ -4,6 +4,320 @@ using System.Text;
 using ExcelDataReader;
 
 
+using System.Text.RegularExpressions;
+
+
+public class CargaConOfertaDTO
+{
+    public string NumeroPersonal { get; set; } = string.Empty;
+    public string NombreDocente { get; set; } = string.Empty;
+    public string Plaza { get; set; } = string.Empty;
+    public string Categoria { get; set; } = string.Empty;
+    public string TipoContratacion { get; set; } = string.Empty;
+    public string Nrc { get; set; } = string.Empty;
+    public string ExperienciaEducativa { get; set; } = string.Empty;
+    public int HorasContacto { get; set; }
+    public int HorasPago { get; set; }
+    public string MotivoRh { get; set; } = string.Empty;
+    public string IndActDocente { get; set; } = string.Empty;
+    public bool Imparte { get; set; }
+
+    public string? Programa { get; set; }
+    public string? NpOferta { get; set; }   // NP de la oferta (puede diferir)
+    public string? DocenteOferta { get; set; }
+    public bool NrcEncontrado { get; set; }
+}
+
+
+namespace SGPla.Models.DTOs.Cargas
+{
+
+    public class CargaItemDTO
+    {
+        public string Nrc { get; set; } = string.Empty;
+
+        public string ExperienciaEducativa { get; set; } = string.Empty;
+
+        public int HorasContacto { get; set; }
+
+        public int HorasPago { get; set; }
+
+        public string ClaveProgramatica { get; set; } = string.Empty;
+
+        public string MotivoRh { get; set; } = string.Empty;
+
+        public string IndActDocente { get; set; } = string.Empty;
+
+        public bool Imparte { get; set; }
+
+        public int HorasExcCarga { get; set; }
+
+        public string? NumPersonalSuplente { get; set; }
+
+        public string? NombreSuplente { get; set; }
+    }
+
+  
+    public class DocenteCargaDTO
+    {
+        public string NumeroPersonal { get; set; } = string.Empty;
+
+        public string Nombre { get; set; } = string.Empty;
+
+        public string Antiguedad { get; set; } = string.Empty;
+
+        public string Plaza { get; set; } = string.Empty;
+
+        public string Categoria { get; set; } = string.Empty;
+
+        public string Puesto { get; set; } = string.Empty;
+
+        public string TipoContratacion { get; set; } = string.Empty;
+
+        public int TotalHoras { get; set; }
+
+        public List<CargaItemDTO> Materias { get; set; } = new();
+    }
+
+
+    public class CargasAcademicasDTO
+    {
+        public string Periodo { get; set; } = string.Empty;
+
+        public List<DocenteCargaDTO> Docentes { get; set; } = new();
+    }
+}
+
+
+
+namespace SGPla.Parsers
+{
+    using SGPla.Models.DTOs.Cargas;
+
+    public static class CargasParser
+    {
+        private static readonly string[] ExpectedHeaders =
+        {
+            "NRC", "Experiencia Educativa", "Horas Contacto", "Horas Pago",
+            "Clave Programática", "Motivo RH", "Ind. Act. Docente",
+            "Imparte", "Horas Exc. Carga", "N.P.", "Nombre del suplente / interino"
+        };
+
+        public static CargasAcademicasDTO Parse(Stream stream)
+        {
+            Span<byte> magic = stackalloc byte[8];
+            stream.Read(magic);
+            stream.Position = 0;
+
+            bool isRealExcel =
+                (magic[0] == 0xD0 && magic[1] == 0xCF) ||   // CFBF (xls binario)
+                (magic[0] == 0x50 && magic[1] == 0x4B);      // ZIP  (xlsx)
+
+            if (isRealExcel)
+                throw new NotSupportedException(
+                    "El archivo es un Excel binario real. " +
+                    "Este parser sólo procesa el HTML exportado por el módulo UV.");
+
+            using var reader = new StreamReader(stream, System.Text.Encoding.UTF8,
+                detectEncodingFromByteOrderMarks: true, leaveOpen: true);
+            var html = reader.ReadToEnd();
+
+            if (html.Contains("<frameset", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidDataException(
+                    "El archivo fue guardado como 'Página web con marcos'. " +
+                    "Descárgalo directamente desde el módulo UV.");
+
+            return ParseHtml(html);
+        }
+
+
+        private static CargasAcademicasDTO ParseHtml(string html)
+        {
+            var doc = new HtmlDocument();
+            doc.LoadHtml(html);
+
+            var result = new CargasAcademicasDTO
+            {
+                Periodo = ExtractPeriodo(doc)
+            };
+
+           
+            var docenteNodes = doc.DocumentNode
+                .SelectNodes("//span[contains(@class,'contenedorNumpersonal')]");
+
+            if (docenteNodes is null)
+                return result;
+
+            foreach (var spanNode in docenteNodes)
+            {
+                var docente = ParseDocente(spanNode);
+                result.Docentes.Add(docente);
+            }
+
+            return result;
+        }
+
+
+        private static string ExtractPeriodo(HtmlDocument doc)
+        {
+            var periodoNode = doc.DocumentNode
+                .SelectSingleNode("//td[contains(translate(text(),'abcdefghijklmnopqrstuvwxyz','ABCDEFGHIJKLMNOPQRSTUVWXYZ'),'PERIODO')]");
+
+            if (periodoNode is null)
+                return string.Empty;
+
+            var texto = periodoNode.InnerText.Trim();
+            var match = Regex.Match(texto, @"PERIODO\s+(.+)", RegexOptions.IgnoreCase);
+            return match.Success ? match.Groups[1].Value.Trim() : texto;
+        }
+
+
+        private static DocenteCargaDTO ParseDocente(HtmlNode spanNumpersonal)
+        {
+            var docente = new DocenteCargaDTO();
+
+
+          
+            var nombreNode = spanNumpersonal
+                .SelectSingleNode(".//span[contains(@class,'nombreAcademico')]");
+            if (nombreNode is not null)
+            {
+                var raw = HtmlEntity.DeEntitize(nombreNode.InnerText).Trim();
+                var dashIdx = raw.IndexOf('-');
+                if (dashIdx > 0)
+                {
+                    docente.NumeroPersonal = raw[..dashIdx].Trim();
+                    docente.Nombre = raw[(dashIdx + 1)..].Trim();
+
+                }
+                else
+                {
+                    docente.Nombre = raw;
+                }
+            }
+
+          
+            var current = spanNumpersonal.NextSibling;
+
+            while (current != null)
+            {
+                if (current.Name == "span")
+                {
+                    var cls = current.GetAttributeValue("class", "");
+
+                    if (cls.Contains("contenedorNumpersonal"))
+                        break;
+
+                    if (cls.Contains("contenedorPlaza"))
+                        docente.Plaza = InnerTextOf(current, ".//span[contains(@class,'textoacademico')]");
+
+                    else if (cls.Contains("contenedorCategoria"))
+                        docente.Categoria = InnerTextOf(current, ".//span[contains(@class,'textoacademico')]");
+
+                    else if (cls.Contains("contenedorPuesto"))
+                        docente.Puesto = InnerTextOf(current, ".//span[contains(@class,'textoacademico')]");
+
+                    else if (cls.Contains("contenedorTipocontratacion"))
+                        docente.TipoContratacion = InnerTextOf(current, ".//span[contains(@class,'textoacademico')]");
+
+                    else if (string.IsNullOrEmpty(docente.Antiguedad))
+                        docente.Antiguedad = InnerTextOf(current, ".//span[contains(@class,'textoacademico')]");
+                }
+
+                if (current.Name == "table")
+                {
+                    ParseTable(current, docente);
+                }
+
+                current = current.NextSibling;
+            }
+    
+
+            return docente;
+        }
+
+        private static void ParseTable(HtmlNode table, DocenteCargaDTO docente)
+        {
+            var rows = table.SelectNodes(".//tr");
+            if (rows is null) return;
+
+            bool inDataSection = false;
+
+            foreach (var row in rows)
+            {
+                var cells = row.SelectNodes("td|th")
+                    ?.Select(n => HtmlEntity.DeEntitize(n.InnerText).Trim())
+                    .ToArray()
+                    ?? Array.Empty<string>();
+
+                if (cells.Length == 0) continue;
+
+                if (IsHeaderRow(cells))
+                {
+                    inDataSection = true;
+                    continue;
+                }
+
+                if (!inDataSection) continue;
+
+                if (cells.Length >= 4 && cells[1] == "Total de horas:")
+                {
+                    if (int.TryParse(cells[2], out var horas))
+                        docente.TotalHoras += horas;
+
+                    break;
+                }
+
+                if (cells.Length >= 8 && IsNrcRow(cells[0]))
+                {
+                    docente.Materias.Add(ParseCargaItem(cells));
+                }
+            }
+        }
+
+        private static CargaItemDTO ParseCargaItem(string[] cells)
+        {
+          
+
+            return new CargaItemDTO
+            {
+                Nrc = cells.ElementAtOrDefault(0) ?? string.Empty,
+                ExperienciaEducativa = cells.ElementAtOrDefault(1) ?? string.Empty,
+                HorasContacto = ParseInt(cells.ElementAtOrDefault(2)),
+                HorasPago = ParseInt(cells.ElementAtOrDefault(3)),
+                ClaveProgramatica = cells.ElementAtOrDefault(4) ?? string.Empty,
+                MotivoRh = cells.ElementAtOrDefault(5) ?? string.Empty,
+                IndActDocente = cells.ElementAtOrDefault(6) ?? string.Empty,
+                Imparte = string.Equals(cells.ElementAtOrDefault(7), "SI",
+                                         StringComparison.OrdinalIgnoreCase),
+                HorasExcCarga = ParseInt(cells.ElementAtOrDefault(8)),
+                NumPersonalSuplente = NullIfEmpty(cells.ElementAtOrDefault(9)),
+                NombreSuplente = NullIfEmpty(cells.ElementAtOrDefault(10)),
+            };
+        }
+
+
+        private static bool IsHeaderRow(string[] cells) =>
+            cells.Length >= 2 && cells[0] == "NRC" && cells[1] == "Experiencia Educativa";
+
+        private static bool IsNrcRow(string? value) =>
+            !string.IsNullOrWhiteSpace(value) && value.All(char.IsDigit);
+
+        private static int ParseInt(string? value) =>
+            int.TryParse(value, out var n) ? n : 0;
+
+        private static string? NullIfEmpty(string? value) =>
+            string.IsNullOrWhiteSpace(value) ? null : value;
+
+        private static string InnerTextOf(HtmlNode root, string xpath)
+        {
+            var node = root.SelectSingleNode(xpath);
+            return node is null
+                ? string.Empty
+                : HtmlEntity.DeEntitize(node.InnerText).Trim();
+        }
+    }
+}
 public static class DescargasParser
 {
     public static List<OfertaDTO> Parse(Stream stream, string fileName)
@@ -180,5 +494,11 @@ public static class DescargasParser
 public interface IProgramacionAcademicaService
 {
     Task<List<OfertaDTO>> ProcesarArchivoAsync(IFormFile archivo);
+
+    Task<bool> GuardarOfertasAsync(List<OfertaDTO> ofertas, int idPeriodo);
+
+    Task<List<CargaConOfertaDTO>> ProcesarCargasAsync(
+    IFormFile archivoCarga,
+    List<OfertaDTO> ofertasEnSesion);
 }
 

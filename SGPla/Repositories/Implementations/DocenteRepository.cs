@@ -16,6 +16,17 @@ namespace SGPla.Repositories.Implementations
             _context = context;
         }
 
+        public async Task<Dictionary<string, int>>
+      ObtenerIdsPorNumeroPersonalAsync(List<string> numerosPersonal)
+        {
+            return await _context.Docente
+                .Where(d => numerosPersonal.Contains(d.NumeroPersonal))
+                .ToDictionaryAsync(
+                    d => d.NumeroPersonal,
+                    d => d.IdDocente
+                );
+        }
+
         public async Task<List<string>> ObtenerNumerosPersonalRegistradosAsync(
         List<string> numerosPersonal)
         {

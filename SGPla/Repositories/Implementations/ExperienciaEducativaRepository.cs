@@ -91,5 +91,15 @@ namespace SGPla.Repositories.Implementations
             _context.ExperienciaEducativa.UpdateRange(experienciasEducativas);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<Dictionary<string, int>> ObtenerIdsPorNombreAsync(List<string> nombres)
+        {
+            return await _context.ExperienciaEducativa
+                .Where(e => nombres.Contains(e.Nombre))
+                .ToDictionaryAsync(
+                    e => e.Nombre,
+                    e => e.IdExperienciaEducativa
+                );
+        }
     }
 }

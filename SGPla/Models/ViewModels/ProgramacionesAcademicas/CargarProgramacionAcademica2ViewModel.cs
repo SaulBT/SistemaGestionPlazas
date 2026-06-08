@@ -9,6 +9,9 @@ public class CargarProgramacionAcademica2ViewModel
 
     public List<OfertaDTO>? OfertasAsignadas { get; set; }
 
+    // CargarProgramacionAcademica2ViewModel.cs
+    public List<CargaConOfertaDTO>? CargasAcademicas { get; set; }
+
 
     /// <summary>Mensaje de error si el parseo falló.</summary>
     public string? Error { get; set; }
