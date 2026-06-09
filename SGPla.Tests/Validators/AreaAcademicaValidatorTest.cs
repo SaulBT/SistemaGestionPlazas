@@ -15,7 +15,7 @@ public class AreaAcademicaValidatorTests
         _areaAcademicaValidator = new AreaAcademicaValidator(_areaAcademicaRepositoryMock.Object);
     }
 
-    //CP-35
+    //CP-03-02
     [Fact]
     public void CrearAreaAcademicaConCamposNulos()
     {
@@ -33,7 +33,7 @@ public class AreaAcademicaValidatorTests
         Assert.Contains("obligatorio", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
-    //CP-39
+    //CP-03-06
     [Fact]
     public async Task ObtenerAreaAcademicaConIdInvalida()
     {
@@ -44,7 +44,7 @@ public class AreaAcademicaValidatorTests
         Assert.Contains("La Id es inválida", ex.Message);
     }
 
-    //CP-40
+    //CP-03-07
     [Fact]
     public async Task ObtenerAreaAcademicaInexistente()
     {
@@ -61,7 +61,7 @@ public class AreaAcademicaValidatorTests
         Assert.Contains("No existe esa Área Académica.", ex.Message);
     }
 
-    //CP-42
+    //CP-03-09
     [Fact]
     public async Task EditarAreaAcademicaConIdInvalida()
     {
@@ -80,7 +80,7 @@ public class AreaAcademicaValidatorTests
         Assert.Contains("La Id es inválida", ex.Message);
     }
 
-    //CP-43
+    //CP-03-10
     [Fact]
     public async Task EditarAreaAcademicaConCamposNulos()
     {
@@ -103,7 +103,7 @@ public class AreaAcademicaValidatorTests
         Assert.Contains("obligatorio", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
-    //CP-44
+    //CP-03-11
     [Fact]
     public async Task EditarAreaAcademicaInexistente()
     {
@@ -126,7 +126,7 @@ public class AreaAcademicaValidatorTests
         Assert.Contains("No existe esa Área Académica.", ex.Message);
     }
 
-    //CP-46
+    //CP-03-13
     [Fact]
     public async Task EliminarAreaAcademicaConIdInvalida()
     {
@@ -137,7 +137,7 @@ public class AreaAcademicaValidatorTests
         Assert.Contains("La Id es inválida", ex.Message);
     }
 
-    //CP-47
+    //CP-03-14
     [Fact]
     public async Task EliminarAreaAcademicaInexistente()
     {

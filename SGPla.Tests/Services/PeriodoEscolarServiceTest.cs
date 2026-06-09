@@ -24,6 +24,7 @@ namespace SGPla.Tests.Services
             _periodoEscolarService = new PeriodoEscolarService(_periodoEscolarRepositoryMock.Object, _periodoEscolarValidatorMock.Object);
         }
 
+        //CP-07-01
         [Fact]
 
         public async Task CrearPeriodoEscolar()
@@ -53,7 +54,7 @@ namespace SGPla.Tests.Services
             Assert.Equal(result.Codigo, periodoEscolar.Codigo);
         }
 
-
+        //CP-07-06
         [Fact]
 
         public async Task EditarPeriodoEscolar()
@@ -80,7 +81,7 @@ namespace SGPla.Tests.Services
             Assert.Equal(dto.Periodo, periodoEscolar.Periodo);
         }
 
-
+        //CP-07-15
         [Fact]
         public async Task EliminarPeriodoEscolar()
         {
@@ -91,7 +92,7 @@ namespace SGPla.Tests.Services
             Assert.True(result);
         }
 
-
+        //CP-07-14
         [Fact]
         public async Task ObtenerPeriodoEscolarPorId()
         {
@@ -109,6 +110,7 @@ namespace SGPla.Tests.Services
 
         }
 
+        //CP-07-13
         [Fact]
         public async Task BuscarPeriodoEscolarPorFiltro()
         {
@@ -134,7 +136,7 @@ namespace SGPla.Tests.Services
 
         }
 
-
+        //CP-07-12
         [Fact]
         public async Task ObtenerTodos()
         {

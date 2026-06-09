@@ -21,7 +21,7 @@ public class AreaAcademicaServiceTests
             _areaAcademicaValidatorMock.Object);
     }
 
-    //CP-34
+    //CP-03-01
     [Fact]
     public async Task CrearAreaAcademica()
     {
@@ -55,7 +55,7 @@ public class AreaAcademicaServiceTests
             Times.Once);
     }
 
-    //CP-36
+    //CP-03-03
     [Fact]
     public async Task ObtenerListaDeAreasAcademicas()
     {
@@ -93,7 +93,7 @@ public class AreaAcademicaServiceTests
         Assert.Equal("Teléfono: (228) 863-18-90 Ext: 12708", resultado[1].Telefono);
     }
 
-    //CP-37
+    //CP-03-04
     [Fact]
     public async Task ObtenerListaDeAreasAcademicasPorNombre()
     {
@@ -122,7 +122,7 @@ public class AreaAcademicaServiceTests
         Assert.Equal("Teléfono: (228) 863-18-90 Ext: 12708", resultado[0].Telefono);
     }
 
-    //CP-38
+    //CP-03-05
     [Fact]
     public async Task ObtenerAreaAcademicaPorId()
     {
@@ -156,7 +156,7 @@ public class AreaAcademicaServiceTests
         _areaAcademicaRepositoryMock.Verify(repository => repository.ObtenerPorIdAsync(idAreaAcademica), Times.Once);
     }
 
-    //CP-41
+    //CP-03-08
     [Fact]
     public async Task EditarAreaAcademica()
     {
@@ -188,7 +188,7 @@ public class AreaAcademicaServiceTests
             Times.Once);
     }
 
-    //CP-45
+    //CP-03-12
     [Fact]
     public async Task EliminarAreaAcademica()
     {

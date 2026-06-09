@@ -24,7 +24,7 @@ public class PlanEstudiosValidatorTests
             Mock.Of<ILogger<PlanEstudiosValidator>>());
     }
 
-    // CP-83
+    //CP-06-02
     [Fact]
     public void ProcesarArchivoConDatosNulos()
     {
@@ -39,7 +39,7 @@ public class PlanEstudiosValidatorTests
         Assert.Equal("El Archivo es obligatorio.", exception.Message);
     }
 
-    // CP-84
+    //CP-06-03
     [Fact]
     public void ProcesarArchivoConFormatoInvalido()
     {
@@ -54,7 +54,7 @@ public class PlanEstudiosValidatorTests
         Assert.Equal("El formato del archivo no es soportado.", exception.Message);
     }
 
-    // CP-86
+    //CP-06-05
     [Fact]
     public async Task AgregarPlanDeEstudiosConIdProgramaEducativoInvalido()
     {
@@ -66,7 +66,7 @@ public class PlanEstudiosValidatorTests
         Assert.Equal("El IdProgramaEducativo es inválido.", exception.Message);
     }
 
-    // CP-87
+    //CP-06-06
     [Fact]
     public async Task AgregarPlanDeEstudiosConProgramaEducativoInexistente()
     {
@@ -81,7 +81,7 @@ public class PlanEstudiosValidatorTests
         Assert.Equal("No existe ese Programa Educativo.", exception.Message);
     }
 
-    // CP-88
+    //CP-06-07
     [Fact]
     public async Task AgregarPlanDeEstudiosSinExperienciasEducativas()
     {
@@ -97,7 +97,7 @@ public class PlanEstudiosValidatorTests
         Assert.Equal("No se puede crear un Plan de Estudios sin Experiencias Educativas.", exception.Message);
     }
 
-    // CP-89
+    //CP-06-08
     [Fact]
     public async Task AgregarPlanDeEstudiosConExperienciaEducativaRepetidaEnElPlan()
     {
@@ -113,7 +113,7 @@ public class PlanEstudiosValidatorTests
         Assert.Equal("Hay Experiencias Educativas con código repetido.", exception.Message);
     }
 
-    // CP-90
+    //CP-06-09
     [Fact]
     public async Task AgregarPlanDeEstudiosConExperienciaEducativaRepetidaEnElSistema()
     {
@@ -133,7 +133,7 @@ public class PlanEstudiosValidatorTests
         Assert.Equal("Ya hay una Experiencia Educativa con el Código FBGR 80001 en el sistema.", exception.Message);
     }
 
-    // CP-91
+    //CP-06-10
     [Fact]
     public async Task AgregarPlanDeEstudiosConValoresDeExperienciaEducativaNulos()
     {
@@ -157,7 +157,7 @@ public class PlanEstudiosValidatorTests
         Assert.Equal("El Código es obligatorio en todas las Experiencias Educativas nuevas.", exception.Message);
     }
 
-    // CP-92
+    //CP-06-11
     [Fact]
     public async Task AgregarPlanDeEstudiosConCodigoDeUnaExperienciaEducativaInvalido()
     {
@@ -183,7 +183,7 @@ public class PlanEstudiosValidatorTests
         Assert.Equal("El Código de una Experiencia Educativa es inválido.", exception.Message);
     }
 
-    // CP-96
+    //CP-06-15
     [Fact]
     public async Task ObtenerPlanDeEstudiosConIdInvalida()
     {
@@ -192,7 +192,7 @@ public class PlanEstudiosValidatorTests
         Assert.Equal("La IdPlanEstudios es inválida.", exception.Message);
     }
 
-    // CP-97
+    //CP-06-16
     [Fact]
     public async Task ObtenerPlanDeEstudiosInexistente()
     {
@@ -205,7 +205,7 @@ public class PlanEstudiosValidatorTests
         Assert.Equal("No existe ese Plan de Estudios.", exception.Message);
     }
 
-    // CP-99
+    //CP-06-18
     [Fact]
     public async Task EditarPlanDeEstudiosConIdPlanEstudiosInvalida()
     {
@@ -217,7 +217,7 @@ public class PlanEstudiosValidatorTests
         Assert.Equal("La IdPlanEstudios es inválida.", exception.Message);
     }
 
-    // CP-100
+    //CP-06-19
     [Fact]
     public async Task EditarPlanDeEstudiosConExperienciaEducativaAEliminarConIdInvalida()
     {
@@ -238,7 +238,7 @@ public class PlanEstudiosValidatorTests
         Assert.Equal("La Id de una Experiencia Educativa para eliminar es inválida.", exception.Message);
     }
 
-    // CP-101
+    //CP-06-20
     [Fact]
     public async Task EditarPlanDeEstudiosConExperienciaEducativaAEliminarInexistente()
     {
@@ -263,7 +263,7 @@ public class PlanEstudiosValidatorTests
         Assert.Equal("No existe la Experiencia Educativa con Id 187 para eliminar.", exception.Message);
     }
 
-    // CP-102
+    //CP-06-21
     [Fact]
     public async Task EditarPlanDeEstudiosConExperienciaEducativaAEditarConCodigoDuplicado()
     {
@@ -329,7 +329,7 @@ public class PlanEstudiosValidatorTests
         Assert.Equal("Ya hay una Experiencia Educativa con el Código FBGR 80014 en el Plan de Estudios.", exception.Message);
     }
 
-    // CP-103
+    //CP-06-22
     [Fact]
     public async Task EditarPlanDeEstudiosConExperienciaEducativaAEditarConCodigoDuplicadoEnOtroPlanDeEstudios()
     {
@@ -373,7 +373,7 @@ public class PlanEstudiosValidatorTests
         Assert.Equal("Ya hay una Experiencia Educativa con el Código FBGR 80014 en el sistema.", exception.Message);
     }
 
-    // CP-104
+    //CP-06-23
     [Fact]
     public async Task EditarPlanDeEstudiosConExperienciaEducativaAEditarConIdInvalida()
     {
@@ -403,7 +403,7 @@ public class PlanEstudiosValidatorTests
         Assert.Equal("La Id de una Experiencia Educativa a editar es inválida.", exception.Message);
     }
 
-    // CP-105
+    //CP-06-24
     [Fact]
     public async Task EditarPlanDeEstudiosConExperienciaEducativaAEditarInexistente()
     {
@@ -439,7 +439,7 @@ public class PlanEstudiosValidatorTests
         Assert.Equal("No existe ninguna Experiencia Educativa a editar con Id 93.", exception.Message);
     }
 
-    // CP-106
+    //CP-06-25
     [Fact]
     public async Task EditarPlanDeEstudiosConExperienciaEducativaAEditarConValoresNulos()
     {
@@ -469,7 +469,7 @@ public class PlanEstudiosValidatorTests
         Assert.Equal("El Código es obligatorio en todas las Experiencias Educativas a editar.", exception.Message);
     }
 
-    // CP-107
+    //CP-06-26
     [Fact]
     public async Task EditarPlanDeEstudiosConExperienciaEducativaAEditarConCodigoInvalido()
     {
@@ -501,7 +501,7 @@ public class PlanEstudiosValidatorTests
         Assert.Equal("El Código de una Experiencia Educativa a editar es inválido.", exception.Message);
     }
 
-    // CP-108
+    //CP-06-27
     [Fact]
     public async Task EditarPlanDeEstudiosConExperienciaEducativaNuevaConCodigoDuplicado()
     {
@@ -550,7 +550,7 @@ public class PlanEstudiosValidatorTests
         Assert.Equal("Ya hay una Experiencia Educativa con el Código FBGR 80001 en el Plan de Estudios.", exception.Message);
     }
 
-    // CP-109
+    //CP-06-28
     [Fact]
     public async Task EditarPlanDeEstudiosConExperienciaEducativaNuevaConCodigoDuplicadoEnOtroPlanDeEstudios()
     {
@@ -585,7 +585,7 @@ public class PlanEstudiosValidatorTests
         Assert.Equal("Ya hay una Experiencia Educativa con el Código FBGR 80014 en el sistema.", exception.Message);
     }
 
-    // CP-110
+    //CP-06-29
     [Fact]
     public async Task EditarPlanDeEstudiosConExperienciaEducativaNuevaConValoresNulos()
     {
@@ -614,7 +614,7 @@ public class PlanEstudiosValidatorTests
         Assert.Equal("El Código es obligatorio en todas las Experiencias Educativas nuevas.", exception.Message);
     }
 
-    // CP-111
+    //CP-06-30
     [Fact]
     public async Task EditarPlanDeEstudiosConExperienciaEducativaNuevaConCodigoInvalido()
     {
@@ -645,7 +645,7 @@ public class PlanEstudiosValidatorTests
         Assert.Equal("El Código de una Experiencia Educativa nueva es inválido.", exception.Message);
     }
 
-    // CP-113
+    //CP-06-32
     [Fact]
     public async Task EliminarPlanDeEstudiosConIdInvalida()
     {
@@ -654,7 +654,7 @@ public class PlanEstudiosValidatorTests
         Assert.Equal("La IdPlanEstudios es inválida.", exception.Message);
     }
 
-    // CP-114
+    //CP-06-33
     [Fact]
     public async Task EliminarPlanDeEstudiosInexistente()
     {

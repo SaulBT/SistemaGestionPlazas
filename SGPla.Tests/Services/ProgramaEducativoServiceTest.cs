@@ -31,7 +31,7 @@ public class ProgramaEducativoServiceTest
         );
     }
 
-    // CP-01
+    //CP-05-01
     [Fact]
     public async Task CrearProgramaEducativo()
     {
@@ -67,7 +67,7 @@ public class ProgramaEducativoServiceTest
         _programaEducativoRepositoryMock.Verify(r => r.CrearAsync(It.IsAny<ProgramaEducativo>()), Times.Once);
     }
 
-    //CP-06
+    //CP-05-05
 
     [Fact]
     public async Task ObtenerListaDeProgramasEducativos()
@@ -134,7 +134,7 @@ public class ProgramaEducativoServiceTest
         );
     }
 
-    //CP-07
+    //CP-05-06
     [Fact]
     public async Task ObtenerListaDeProgramasEducativosConFiltro()
     {
@@ -200,7 +200,7 @@ public class ProgramaEducativoServiceTest
         );
     }
 
-    //CP-08
+    //CP-05-07
     [Fact]
     public async Task ObtenerProgramaEducativo()
     {
@@ -233,7 +233,7 @@ public class ProgramaEducativoServiceTest
         _programaEducativoRepositoryMock.Verify(repository => repository.ObtenerPorIdAsync(8), Times.Once);
     }
 
-    //CP-10
+    //CP-05-09
     [Fact]
     public async Task EditarProgramaEducativo()
     {
@@ -273,7 +273,7 @@ public class ProgramaEducativoServiceTest
         _programaEducativoRepositoryMock.Verify(repository => repository.ActualizarAsync(It.IsAny<ProgramaEducativo>()), Times.Once);
     }
 
-    //CP-15
+    //CP-05-14
     [Fact]
     public async Task EliminarProgramaEducativo()
     {
