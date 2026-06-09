@@ -78,5 +78,12 @@
         public const string MODALIDAD_SEMIESCOLARIZADA = "Semi escolarizado";
         public const string MODALIDAD_DISTANCIA = "A distancia";
         public static List<string> MODALIDADES = new List<string> { MODALIDAD_ESCOLARIZADA, MODALIDAD_ABIERTA, MODALIDAD_VIRTUAL, MODALIDAD_MIXTA, MODALIDAD_SEMIESCOLARIZADA, MODALIDAD_DISTANCIA };
+
+        public const string DR = "Dr.";
+        public const string DRA = "Dra.";
+        public const string MTRO = "Mtro.";
+        public const string MTRA = "Mtra.";
+        public const string LIC = "Lic.";
+        public static List<string> GRADOS = [LIC, MTRO, MTRA, DR, DRA];
     }
 }
