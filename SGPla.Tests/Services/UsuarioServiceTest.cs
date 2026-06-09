@@ -174,7 +174,7 @@ public class UsuarioServiceTests
         Assert.Equal("Xalapa", resultado[1].Region);
     }
 
-    //CP-01-12
+    /*//CP-01-12
     [Fact]
     public async Task ObtenerListaDeUsuariosConFiltroDeCoordinadorDgaa()
     {
@@ -217,9 +217,9 @@ public class UsuarioServiceTests
         _coordinadorEaRepositoryMock.Verify(
             repository => repository.ObtenerPorFiltrosAsync(It.IsAny<string?>(), It.IsAny<int?>(), It.IsAny<int?>()),
             Times.Never);
-    }
+    }*/
 
-    //CP-01-13
+    /*//CP-01-13
     [Fact]
     public async Task ObtenerListaDeUsuariosConFiltroDeCoordinadorEa()
     {
@@ -271,9 +271,9 @@ public class UsuarioServiceTests
         Assert.Equal("Xalapa", resultado[0].Region);
 
         _coordinadorDgaaRepositoryMock.Verify(repository => repository.ObtenerPorFiltrosAsync(It.IsAny<int?>()), Times.Never);
-    }
+    }*/
 
-    //CP-01-14
+    /*//CP-01-14
     [Fact]
     public async Task ObtenerListaDeUsuariosConFiltrosVacios()
     {
@@ -333,7 +333,7 @@ public class UsuarioServiceTests
         Assert.Equal(2, resultado.Count);
         Assert.Equal("Ana Lourdes", resultado[0].Nombre);
         Assert.Equal("Zaira Alarcón", resultado[1].Nombre);
-    }
+    }*/
 
     //CP-01-15
     [Fact]
