@@ -1,5 +1,5 @@
 ﻿@using SGPla.Models.DTOs.Oferta
-@using SGPla.Models.DTOs.Cargas
+@using SGPla.Models.DTOs.ProgramacionAcademica
 
 @using SGPla.Models.ViewModels.ProgramacionesAcademicas
 @model CargarProgramacionAcademica2ViewModel
@@ -13,38 +13,67 @@
 
     string Horario(HorarioDia? h) => h is null ? "—" : $"{h.Inicio:hh\\:mm}-{h.Fin:hh\\:mm}";
 }
+<h3>Archivos de entrada</h3>
 
-<!-- Subir archivo -->
-<form method="post" action="@Url.Action("Index", "ProgramacionesAcademicas")" enctype="multipart/form-data">
-    <div style="display:inline-flex; gap:10px; align-items:flex-end; padding-bottom:30px;">
-        <div>
-            <label style="display:block; margin-bottom:4px; font-weight:500;">Archivo .xls de descargas</label>
-            <input type="file" name="archivo" accept=".xls,.xlsx" />
-        </div>
-        <button type="submit">Procesar</button>
-    </div>
-</form>
+<div style="display:flex; gap:20px; flex-wrap:wrap; margin-bottom:30px;">
 
+    <form method="post"
+          action="@Url.Action("CargarVacantes", "ProgramacionesAcademicas")"
+          enctype="multipart/form-data">
 
+        <fieldset style="padding:15px;">
+            <legend>Vacantes</legend>
 
-<!-- ── Sección: Cargas Académicas ─────────────────────────────────────── -->
-<hr style="margin: 40px 0;" />
-<h3 style="margin-bottom:16px;">Cargas Académicas</h3>
+            <input type="file"
+                   name="archivoVacantes"
+                   accept=".xls,.xlsx" />
 
-<form method="post" action="@Url.Action("CargarCargas", "ProgramacionesAcademicas")"
-      enctype="multipart/form-data">
-    <div style="display:inline-flex; gap:10px; align-items:flex-end; padding-bottom:20px;">
-        <div>
-            <label style="display:block; margin-bottom:4px; font-weight:500;">
-                Archivo .xls de cargas
-            </label>
-            <input type="file" name="archivoCarga" accept=".xls,.xlsx" />
-        </div>
-        <button type="submit">Procesar cargas</button>
-    </div>
-</form>
+            <button type="submit">
+                Procesar
+            </button>
+        </fieldset>
 
-@if (Model.CargasAcademicas != null)
+    </form>
+
+    <form method="post"
+          action="@Url.Action("CargarDescargas", "ProgramacionesAcademicas")"
+          enctype="multipart/form-data">
+
+        <fieldset style="padding:15px;">
+            <legend>Descargas</legend>
+
+            <input type="file"
+                   name="archivoDescargas"
+                   accept=".xls,.xlsx" />
+
+            <button type="submit">
+                Procesar
+            </button>
+        </fieldset>
+
+    </form>
+
+    <form method="post"
+          action="@Url.Action("CargarCargas", "ProgramacionesAcademicas")"
+          enctype="multipart/form-data">
+
+        <fieldset style="padding:15px;">
+            <legend>Cargas</legend>
+
+            <input type="file"
+                   name="archivoCarga"
+                   accept=".xls,.xlsx" />
+
+            <button type="submit">
+                Procesar
+            </button>
+        </fieldset>
+
+    </form>
+
+</div>
+
+@if (Model.CargasAcademicas?.Any() == true)
 {
     var sinCruce = Model.CargasAcademicas.Count(c => !c.NrcEncontrado);
     var conCruce = Model.CargasAcademicas.Count(c => c.NrcEncontrado);
@@ -110,7 +139,8 @@
 }
 
 <!-- Resultados -->
-@if (Model.OfertasVacantes != null)
+@if (Model.OfertasVacantes?.Any() == true)
+
 {
     <p style="padding-bottom:10px;">
         <strong>@Model.OfertasVacantes.Count</strong> clases encontradas.
@@ -158,7 +188,7 @@
 }
 
 <!-- Resultados -->
-@if (Model.OfertasAsignadas != null)
+@if (Model.OfertasAsignadas?.Any() == true)
 {
     <p style="padding-bottom:10px;">
         <strong>@Model.OfertasAsignadas.Count</strong> clases encontradas.

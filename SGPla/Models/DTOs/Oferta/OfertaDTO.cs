@@ -18,6 +18,8 @@
         public int HorasPago { get; set; }
         public string Plaza { get; set; } = "";
 
+        public string? TC { get; set; }
+
         public HorarioDia? Lunes { get; set; }
         public HorarioDia? Martes { get; set; }
         public HorarioDia? Miercoles { get; set; }
@@ -28,7 +30,7 @@
         public string? NP { get; set; }
         public string? NombreDocente { get; set; }
         public string? TipoIngreso { get; set; }
-        public string? TC { get; set; }
+     
 
         public int Articulo { get; set; }
 

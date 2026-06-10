@@ -16,7 +16,7 @@ namespace SGPla.Repositories.Implementations
             _context = context;
         }
 
-        public async Task<bool> GuardarOfertas(List<Oferta> ofertas)
+        public async Task GuardarOfertas(List<Oferta> ofertas)
         {
             await using var transaction = await _context.Database.BeginTransactionAsync();
 
@@ -29,15 +29,11 @@ namespace SGPla.Repositories.Implementations
 
                 await transaction.CommitAsync();
                 
-                return true;
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 await transaction.RollbackAsync();
-                //cambiar tipo que regresa
-
-                throw e;
-
+                throw;
             }
         }
 
