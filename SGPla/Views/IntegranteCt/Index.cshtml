@@ -1,0 +1,20 @@
+﻿@model SGPla.Models.ViewModels.IntegranteCt.IndexViewModel
+@{
+	Layout = "_LayoutEntidadAcademica";
+	ViewData["Title"] = "Consejo Técnico";
+}
+
+<form id="form" method="get" action="@Url.Action("Index", "IntegranteCt")">
+	<!-- Búsqueda y Nuevo integrante -->
+	<div style="display: flex; flex-direction: column; gap: 10px; justify-content: space-between">
+        <!--Barra de Búsqueda-->
+        @await Component.InvokeAsync("Buscador", new BuscadorModel
+        {
+            Name = "busqueda",
+            Placeholder = "Buscar Plan de Estudios",
+            Action = Url.Action("Index", "PlanesEstudios"),
+            Method = "get",
+            Value = Context.Request.Query["busqueda"]
+        })
+	</div>
+</form>
