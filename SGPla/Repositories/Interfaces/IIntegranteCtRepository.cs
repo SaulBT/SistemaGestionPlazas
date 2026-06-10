@@ -14,5 +14,7 @@ namespace SGPla.Repositories.Interfaces
         Task EliminarAsync(IntegranteCt integrante);
         Task<bool> ExistePorIdAsync(int idIntegranteCt);
         Task<bool> ExistePorNombre(string nombre, int idEntidadAcademica);
+        Task<int> ContarAsync(int idEntidadAcademica);
+        Task<int> ContarAsync(int idEntidadAcademica, string busqueda);
     }
 }

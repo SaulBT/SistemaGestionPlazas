@@ -82,5 +82,15 @@ namespace SGPla.Repositories.Implementations
 
             return await _context.IntegranteCt.AnyAsync(i => i.IdEntidadAcademica == idEntidadAcademica && i.Nombre.Contains(nombre));
         }
+
+        public async Task<int> ContarAsync(int idEntidadAcademica)
+        {
+            return await _context.IntegranteCt.Where(i => i.IdEntidadAcademica == idEntidadAcademica).CountAsync();
+        }
+
+        public async Task<int> ContarAsync(int idEntidadAcademica, string busqueda)
+        {
+            return await _context.IntegranteCt.Where(i => i.IdEntidadAcademica == idEntidadAcademica && i.Nombre.Contains(busqueda)).CountAsync();
+        }
     }
 }
