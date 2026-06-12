@@ -72,10 +72,16 @@ namespace SGPla.Validations.Implementations
 
         private void validarArchivosGenerales(CargarArchivoDTO dto)
         {
-            if (string.IsNullOrEmpty(dto.NombreArchivo))
-                throw new ValidacionExcepction("El Nombre del Archivo es obligatorio.", "400");
-            if (string.IsNullOrEmpty(dto.RutaArchivo))
-                throw new ValidacionExcepction("La Ruta del Archivo es obligatoria.", "400");
+            if (dto != null)
+            {
+                if (string.IsNullOrEmpty(dto.NombreArchivo))
+                    throw new ValidacionExcepction("El Nombre del Archivo es obligatorio.", "400");
+                if (string.IsNullOrEmpty(dto.RutaArchivo))
+                    throw new ValidacionExcepction("La Ruta del Archivo es obligatoria.", "400");
+
+            }
+            else
+                throw new ValidacionExcepction("No se cargó ningún archivo.", "400");
         }
 
         private async Task validarGradosAgregadosRegistro(List<AgregarGradoDTO> lista)
