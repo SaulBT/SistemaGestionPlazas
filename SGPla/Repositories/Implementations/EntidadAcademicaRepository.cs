@@ -22,17 +22,25 @@ namespace SGPla.Repositories.Implementations
                 .ToListAsync();
         }
 
-        public async Task<List<EntidadAcademica>> ObtenerOpcionesAsync(string region, int idAreaAcademica)
+        public async Task<List<EntidadAcademica>> ObtenerOpcionesAsync(string region, int? idAreaAcademica = null)
         {
-            return await _context.EntidadAcademica
-            .AsNoTracking()
-            .OrderBy(e => e.Nombre).Where(e => e.Region == region && e.IdAreaAcademica == idAreaAcademica)
-            .Select(e => new EntidadAcademica
+            var query = _context.EntidadAcademica
+                .AsNoTracking()
+                .Where(e => e.Region == region);
+
+            if (idAreaAcademica.HasValue)
             {
-                IdEntidadAcademica = e.IdEntidadAcademica,
-                Nombre = e.Nombre
-            })
-            .ToListAsync();
+                query = query.Where(e => e.IdAreaAcademica == idAreaAcademica.Value);
+            }
+
+            return await query
+                .OrderBy(e => e.Nombre)
+                .Select(e => new EntidadAcademica
+                {
+                    IdEntidadAcademica = e.IdEntidadAcademica,
+                    Nombre = e.Nombre
+                })
+                .ToListAsync();
         }
 
         public async Task<List<EntidadAcademica>> ObtenerDiezAsync(int indiceInicial)

@@ -87,7 +87,7 @@ app.MapStaticAssets();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=ProgramacionesAcademicas}/{action=Index}/{id?}")
+    pattern: "{controller=ProgramacionesAcademicas}/{action=CargarProgramacionAcademicaPaso1}/{id?}")
 
     .WithStaticAssets();
 

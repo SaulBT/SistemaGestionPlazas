@@ -7,7 +7,6 @@ using SGPla.Models.DTOs.ProgramaEducativo;
 using SGPla.Models.ViewModels.ProgramasEducativos;
 using SGPla.Repositories.Interfaces;
 using SGPla.Services.Interfaces;
-using System.Numerics;
 
 namespace SGPla.Controllers
 {
@@ -16,7 +15,7 @@ namespace SGPla.Controllers
         private readonly IProgramaEducativoService _programaEducativoService;
         private readonly IEntidadAcademicaRepository _entidadAcademicaRepository;
         private readonly ILogger<ProgramasEducativosController> _logger;
-        private int paginaActual = 1;
+        private int _paginaActual = 1;
 
         private static List<string> HEADERS_TABLA_INDEX = ["Nombre", "Región", "Área Académica", "Entidad Académica", "Acciones"];
 
@@ -33,7 +32,7 @@ namespace SGPla.Controllers
         // GET: ProgramasEducativos
         public async Task<IActionResult> Index(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int pagina = 1, int cantidad = 10)
         {
-            paginaActual = pagina;
+            _paginaActual = pagina;
             var regionesCombo = Constantes.REGIONES
                 .Select(r => new OptionModel { Value = r, Text = r, Selected = r == region })
                 .ToList();
@@ -78,7 +77,7 @@ namespace SGPla.Controllers
                 IdAreaSeleccionada = idAreaAcademica,
                 IdEntidadSeleccionada = idEntidadAcademica,
                 Busqueda = busqueda,
-                PaginaActual = paginaActual,
+                PaginaActual = _paginaActual,
                 CantidadPorPagina = cantidad
             });
         }
@@ -100,8 +99,8 @@ namespace SGPla.Controllers
                 var resultado = await _programaEducativoService.BuscarPorFiltroPaginadoAsync(filtros);
                 if (resultado.Items.Count == 0)
                 {
-                    paginaActual = 1;
-                    filtros.Pagina = paginaActual;
+                    _paginaActual = 1;
+                    filtros.Pagina = _paginaActual;
                     resultado = await _programaEducativoService.BuscarPorFiltroPaginadoAsync(filtros);
                 }
                 if (resultado.Items.Count == 0)
@@ -116,7 +115,7 @@ namespace SGPla.Controllers
                         Rows = new List<TableRowModel>(),
                         Pagination = new PaginationInfo
                         {
-                            CurrentPage = paginaActual,
+                            CurrentPage = _paginaActual,
                             PageSize = cantidad,
                             TotalItems = 0,
                             OnPageChange = "cambiarPagina"
@@ -172,7 +171,7 @@ namespace SGPla.Controllers
                     }).ToList(),
                     Pagination = new PaginationInfo
                     {
-                        CurrentPage = paginaActual,
+                        CurrentPage = _paginaActual,
                         PageSize = cantidad,
                         TotalItems = resultado.TotalCount,
                         OnPageChange = "cambiarPagina"

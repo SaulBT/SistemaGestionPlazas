@@ -1,9 +1,10 @@
-﻿using HtmlAgilityPack;
+﻿using ExcelDataReader;
+using HtmlAgilityPack;
+using SGPla.Models;
 using SGPla.Models.DTOs.Oferta;
-using System.Text;
-using ExcelDataReader;
-using System.Text.RegularExpressions;
 using SGPla.Models.DTOs.ProgramacionAcademica;
+using System.Text;
+using System.Text.RegularExpressions;
 
 
 
@@ -16,5 +17,7 @@ public interface IProgramacionAcademicaService
     Task<List<CargaConOfertaDTO>> ProcesarCargasAsync(
     IFormFile archivoCarga,
     List<OfertaDTO> ofertasEnSesion);
+
+    Task<List<EntidadAcademica>> ObtenerOpcionesEntidadAcademicaAsync(string region);
 }
 

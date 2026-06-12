@@ -1,83 +1,124 @@
-﻿window.configBanderaArchivo = window.configBanderaArchivo || {
-    idBandera: 'banderaArchivoDefault'
-};
+﻿
+const archivos = {};
+const cambios = {};
 
-
-var archivo = null;
-const input = document.getElementById("inputFile");
-const fileContainer = document.getElementById("fileContainer");
-const fileName = document.getElementById("fileName");
-const btnCargar = document.getElementById("btnCargar");
-const btnConfirmar = document.getElementById("btnConfirmar");
-
-var cambio = false;
-
-function cargarArchivo() {
-    input.click();
+function obtenerElementos(idModal) {
+    return {
+        input: document.getElementById(`inputFile-${idModal}`),
+        fileContainer: document.getElementById(`fileContainer-${idModal}`),
+        fileName: document.getElementById(`fileName-${idModal}`),
+        btnCargar: document.getElementById(`btnCargar-${idModal}`),
+        btnConfirmar: document.getElementById(`btnConfirmar-${idModal}`)
+    };
 }
 
-function desplegarArchivo() {
+function cargarArchivo(idModal) {
+    const { input } = obtenerElementos(idModal);
 
-    if (input.files.length > 0) {
-        archivo = input.files[0];
-        mostrarArchivo();
-        cambio = true;
+    if (input) {
+        input.click();
     }
 }
 
-function actualizarBandera(archivoCargado) {
-    const banderaElement = document.getElementById(window.configBanderaArchivo.idBandera);
-    const icono = banderaElement.querySelector('i');
-    if (archivoCargado) {
-        icono.className = 'bi bi-file-earmark-check-fill';
-        icono.style.color = "var(--VerdeSecundario)";
-    } else {
-        icono.className = 'bi bi-file-earmark-x-fill';
-        icono.style.color = "var(--negativo-rojo-letra)";
+function desplegarArchivo(idModal) {
+    const { input } = obtenerElementos(idModal);
+
+    if (input && input.files.length > 0) {
+        archivos[idModal] = input.files[0];
+        mostrarArchivo(idModal);
+        cambios[idModal] = true;
     }
 }
 
-function quitarArchivo() {
-    if (archivo != null) {
-        ocultarArchivo();
-        actualizarBandera(false);
-        cambio = true;
+function actualizarBandera(idBandera, archivoCargado) {
+
+    // compatibilidad con sistema viejo
+    if (!idBandera) {
+        const config = window.configBanderaArchivo;
+        if (!config || !config.idBandera) return;
+        idBandera = config.idBandera;
+    }
+
+    const banderaElement = document.getElementById(idBandera);
+    if (!banderaElement) return;
+
+    const icono = banderaElement.querySelector("i");
+    if (!icono) return;
+
+    icono.className = archivoCargado
+        ? "bi bi-file-earmark-check-fill"
+        : "bi bi-file-earmark-x-fill";
+
+    icono.style.color = archivoCargado
+        ? "var(--VerdeSecundario)"
+        : "var(--negativo-rojo-letra)";
+}
+
+function quitarArchivo(idModal, idBandera) {
+    if (archivos[idModal]) {
+        archivos[idModal] = null;
+        ocultarArchivo(idModal);
+        cambios[idModal] = true;
+
+        actualizarBandera(idBandera, false);
     }
 }
 
-function confirmar(nombreModal) {
-    cambio = false;
-    actualizarBandera(true);
-    cerrarModal(nombreModal)
+function confirmar(idModal, idBandera) {
+
+    cambios[idModal] = false;
+
+    actualizarBandera(idBandera, true);
+
+    cerrarModal(idModal);
 }
 
-function cancelar(nombreModal) {
-    if (cambio) {
-        if (archivo != null) {
-            input.value = "";
-            archivo = null;
-            ocultarArchivo();
-        } else {
-            archivo = input.files[0];
-            mostrarArchivo();
+function cancelar(idModal) {
+    const { input } = obtenerElementos(idModal);
+
+    if (cambios[idModal]) {
+        if (archivos[idModal]) {
+            if (input) {
+                input.value = "";
+            }
+
+            archivos[idModal] = null;
+            ocultarArchivo(idModal);
         }
     }
 
-    cambio = false;
-
-    cerrarModal(nombreModal)
+    cambios[idModal] = false;
+    cerrarModal(idModal);
 }
 
-function mostrarArchivo() {
+function mostrarArchivo(idModal) {
+    const {
+        fileContainer,
+        fileName,
+        btnCargar,
+        btnConfirmar
+    } = obtenerElementos(idModal);
+
+    if (!archivos[idModal]) {
+        return;
+    }
+
     fileContainer.style.display = "flex";
-    fileName.textContent = archivo.name;
+    fileName.textContent = archivos[idModal].name;
     btnCargar.style.display = "none";
-    btnConfirmar.style.display = "inline"
+    btnConfirmar.style.display = "inline";
 }
 
-function ocultarArchivo() {
+function ocultarArchivo(idModal) {
+    const {
+        fileContainer,
+        fileName,
+        btnCargar,
+        btnConfirmar
+    } = obtenerElementos(idModal);
+
     fileContainer.style.display = "none";
     fileName.textContent = "";
     btnCargar.style.display = "inline";
-    btnConfirmar.style.display = "none"
+    btnConfirmar.style.display = "none";
 }

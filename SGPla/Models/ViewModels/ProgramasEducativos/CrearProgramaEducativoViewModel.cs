@@ -30,7 +30,6 @@ namespace SGPla.Models.ViewModels.ProgramasEducativos
 
 
 
-        // 🔹 Combos (para la vista)
         [ValidateNever]
         public List<OptionModel> Regiones { get; set; }
 
@@ -40,8 +39,7 @@ namespace SGPla.Models.ViewModels.ProgramasEducativos
         [ValidateNever]
         public List<OptionModel> Entidades { get; set; }
 
-        //[ValidateNever]
-       // public List<OptionModel> ListaCampus { get; set; } 
+       
 
     }
 }

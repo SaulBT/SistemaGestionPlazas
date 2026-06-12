@@ -1,8 +1,9 @@
 ﻿using SGPla.Mappers;
 using SGPla.Models;
-using SGPla.Models.DTOs.ProgramacionAcademica;
 using SGPla.Models.DTOs.Oferta;
+using SGPla.Models.DTOs.ProgramacionAcademica;
 using SGPla.Parsers;
+using SGPla.Repositories.Implementations;
 using SGPla.Repositories.Interfaces;
 using SGPla.Validations.Interfaces;
 
@@ -14,13 +15,15 @@ namespace SGPla.Services.Implementations
         public readonly IProgramacionAcademicaRepository _programacionAcademicaRepository;
         public readonly IDocenteRepository _docenteRepository;
         public readonly IExperienciaEducativaRepository _experienciaRepository; 
+        public readonly IEntidadAcademicaRepository _entidadAcademicaRepository;
 
-        public ProgramacionAcademicaService(IProgramacionAcademicaValidator programacionAcademicaValidator, IProgramacionAcademicaRepository programacionAcademicaRepository, IDocenteRepository docenteRepository, IExperienciaEducativaRepository experienciaRepository)
+        public ProgramacionAcademicaService(IProgramacionAcademicaValidator programacionAcademicaValidator, IProgramacionAcademicaRepository programacionAcademicaRepository, IDocenteRepository docenteRepository, IExperienciaEducativaRepository experienciaRepository, IEntidadAcademicaRepository entidadAcademicaRepository )
         {
             _programacionAcademicaValidator = programacionAcademicaValidator;
             _programacionAcademicaRepository = programacionAcademicaRepository;
             _docenteRepository = docenteRepository;
             _experienciaRepository = experienciaRepository;
+            _entidadAcademicaRepository = entidadAcademicaRepository;
         }
 
         public async Task<List<OfertaDTO>> ProcesarArchivoAsync(IFormFile archivo)
@@ -31,9 +34,9 @@ namespace SGPla.Services.Implementations
 
             var ofertas = DescargasParser.Parse(ms, archivo.FileName);
 
-            //await _programacionAcademicaValidator.ValidarDocentes(ofertas);
-            //await _programacionAcademicaValidator.ValidarProgramas(ofertas);
-            //await _programacionAcademicaValidator.ValidarExperiencias(ofertas);
+            await _programacionAcademicaValidator.ValidarDocentes(ofertas);
+            await _programacionAcademicaValidator.ValidarProgramas(ofertas);
+            await _programacionAcademicaValidator.ValidarExperiencias(ofertas);
 
             return ofertas;
         }
@@ -141,6 +144,11 @@ namespace SGPla.Services.Implementations
             }
 
             return resultado;
+        }
+
+        public async Task<List<EntidadAcademica>> ObtenerOpcionesEntidadAcademicaAsync(string region)
+        {
+            return await _entidadAcademicaRepository.ObtenerOpcionesAsync(region);
         }
 
     }

@@ -121,7 +121,7 @@ namespace SGPla.Repositories.Implementations
         public async Task<List<Periodo>> ObtenerTodosAsync()
         {
             return await _context.Periodo
-               .OrderBy(a => a.Codigo)
+               .OrderByDescending(a => a.Codigo)
                .ToListAsync();
         }
     }

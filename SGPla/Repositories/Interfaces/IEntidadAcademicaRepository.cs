@@ -17,7 +17,7 @@ namespace SGPla.Repositories.Interfaces
         Task ActualizarAsync(EntidadAcademica entidadAcademica);
         Task EliminarAsync(EntidadAcademica entidadAcademica);
 
-        Task<List<EntidadAcademica>> ObtenerOpcionesAsync(string region, int idAreaAcademica);
+        Task<List<EntidadAcademica>> ObtenerOpcionesAsync(string region, int? idAreaAcademica = null);
 
         Task<int> ContarPorFiltroAsync(string? region, int? idAreaAcademica, string? nombre);
 

@@ -5,6 +5,11 @@ namespace SGPla.ViewComponents
 {
     public class ModalArchivoViewComponent : ViewComponent
     {
-        public IViewComponentResult Invoke(ModalArchivoModel model) { return View(model); }
+        public IViewComponentResult Invoke(ModalArchivoModel? model)
+        {
+            model ??= new ModalArchivoModel();
+
+            return View(model);
+        }
     }
 }
