@@ -14,10 +14,11 @@ namespace SGPla.Repositories.Implementations
             _context = context;
         }
 
-        public async Task RegistrarAsync(Docente docente)
+        public async Task<Docente> RegistrarAsync(Docente docente)
         {
             await _context.Docente.AddAsync(docente);
             await _context.SaveChangesAsync();
+            return docente;
         }
 
         public async Task<Docente?> ObtenerPorIdAsync(int idDocente)
