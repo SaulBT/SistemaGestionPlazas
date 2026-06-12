@@ -85,5 +85,16 @@
         public const string MTRA = "Mtra.";
         public const string LIC = "Lic.";
         public static List<string> GRADOS = [LIC, MTRO, MTRA, DR, DRA];
+
+        public const string LICENCIATURA = "Licenciatura";
+        public const string DOCTORADO = "Doctorado";
+        public const string MAESTRIA = "Maestria";
+        public static List<string> GRADOS_DOCENTES = [LICENCIATURA, MAESTRIA, DOCTORADO];
+
+        public const string INVESTIGADOR = "Investigador";
+        public const string DOCENTE = "Docente";
+        public const string TECNICO_ACADEMICO = "Técnico Académico";
+        public const string DOCENTE_POR_ASIGNATURA = "Docente por Asignatura";
+        public static List<string> PUESTOS = [INVESTIGADOR, DOCENTE, TECNICO_ACADEMICO, DOCENTE_POR_ASIGNATURA];
     }
 }

@@ -4,6 +4,7 @@ using SGPla.Models.DTOs.Docentes;
 using SGPla.Models.DTOs.Grados;
 using SGPla.Repositories.Interfaces;
 using SGPla.Services.Interfaces;
+using SGPla.Validations.Interfaces;
 
 namespace SGPla.Services.Implementations
 {
@@ -13,21 +14,26 @@ namespace SGPla.Services.Implementations
         private readonly IGradoRepository _gradoRepository;
         private readonly IArchivoRepository _archivoRepository;
         private readonly IArchivoService _archivoService;
+        private readonly IDocenteValidator _validacion;
 
         public AspiranteService(
             IAspiranteRepository aspiranteRepository,
             IGradoRepository gradoRepository,
             IArchivoRepository archivoRepository,
-            IArchivoService archivoService)
+            IArchivoService archivoService,
+            IDocenteValidator validacion)
         {
             _aspiranteRepository = aspiranteRepository;
             _gradoRepository = gradoRepository;
             _archivoRepository = archivoRepository;
             _archivoService = archivoService;
+            _validacion = validacion;
         }
 
         public async Task RegistrarAspiranteAsync(RegistrarDocenteDTO dto)
         {
+            await _validacion.ValidarRegistroAsync(dto);
+
             DatosArchivoGuardadoDTO? archivoGuardado = null;
             Archivo? archivoRegistrado = null;
 
@@ -72,6 +78,8 @@ namespace SGPla.Services.Implementations
 
         public async Task<DatosDocenteDTO> ObtenerAspiranteAsync(int idDocente)
         {
+            await _validacion.ValidarIdAsync(idDocente);
+
             var aspirante = await _aspiranteRepository.ObtenerPorIdAsync(idDocente);
             var grados = await _gradoRepository.ObtenerTodosAsync(idDocente);
 
@@ -114,6 +122,8 @@ namespace SGPla.Services.Implementations
 
         public async Task EditarAspiranteAsync(EditarDocenteDTO dto)
         {
+            await _validacion.ValidarEdicionAsync(dto);
+
             var aspirante = await _aspiranteRepository.ObtenerPorIdAsync(dto.IdDocente);
             DatosArchivoGuardadoDTO? archivoNuevoGuardado = null;
             Archivo? archivoAnterior = null;
@@ -185,6 +195,7 @@ namespace SGPla.Services.Implementations
 
         public async Task EliminarAspiranteAsync(int idDocente)
         {
+            await _validacion.ValidarIdAsync(idDocente);
             var docente = await _aspiranteRepository.ObtenerPorIdAsync(idDocente);
             var grados = await _gradoRepository.ObtenerTodosAsync(idDocente);
             var archivo = await _archivoRepository.ObtenerPorIdAsync((int)docente.IdArchivosGenerales);
