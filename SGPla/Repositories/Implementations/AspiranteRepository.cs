@@ -5,20 +5,19 @@ using SGPla.Repositories.Interfaces;
 
 namespace SGPla.Repositories.Implementations
 {
-    public class DocenteRepository : IDocenteRepository
+    public class AspiranteRepository: IAspiranteRepository
     {
         private readonly GestionDePlazasDbContext _context;
 
-        public DocenteRepository(GestionDePlazasDbContext context)
+        public AspiranteRepository(GestionDePlazasDbContext context)
         {
             _context = context;
         }
 
-        public async Task<Docente> RegistrarAsync(Docente docente)
+        public async Task RegistrarAsync(Docente docente)
         {
             await _context.Docente.AddAsync(docente);
             await _context.SaveChangesAsync();
-            return docente;
         }
 
         public async Task<Docente?> ObtenerPorIdAsync(int idDocente)
@@ -32,7 +31,7 @@ namespace SGPla.Repositories.Implementations
         {
             return await _context.Docente
                 .AsNoTracking()
-                .Where(d => !string.IsNullOrEmpty(d.NumeroPersonal))
+                .Where(d => string.IsNullOrEmpty(d.NumeroPersonal))
                 .ToListAsync();
         }
 
@@ -42,13 +41,12 @@ namespace SGPla.Repositories.Implementations
 
             var lista = await _context.Docente
                 .AsNoTracking()
-                .Where(d => !string.IsNullOrEmpty(d.NumeroPersonal))
+                .Where(d => string.IsNullOrEmpty(d.NumeroPersonal))
                 .ToListAsync();
 
             if (!string.IsNullOrEmpty(busqueda))
                 lista = lista.Where(d =>
-                        d.Nombre.Contains(busqueda) ||
-                        d.NumeroPersonal?.Contains(busqueda) == true)
+                        d.Nombre.Contains(busqueda))
                     .ToList();
 
             return lista.Skip(skip).ToList();
@@ -60,8 +58,6 @@ namespace SGPla.Repositories.Implementations
             docenteOriginal.Nombre = docenteEditado.Nombre;
             docenteOriginal.DescripcionPerfil = docenteEditado.DescripcionPerfil;
             docenteOriginal.IdArchivosGenerales = docenteEditado.IdArchivosGenerales;
-            docenteOriginal.NumeroPersonal = docenteEditado.NumeroPersonal;
-            docenteOriginal.Puesto = docenteEditado.Puesto;
             await _context.SaveChangesAsync();
         }
 
@@ -75,13 +71,12 @@ namespace SGPla.Repositories.Implementations
         {
             var total = 0;
             var lista = await _context.Docente
-                .Where(d => !string.IsNullOrEmpty(d.NumeroPersonal))
+                .Where(d => string.IsNullOrEmpty(d.NumeroPersonal))
                 .ToListAsync();
             if (!string.IsNullOrEmpty(busqueda))
                 total = lista
                     .Where(d =>
-                        d.Nombre.Contains(busqueda) ||
-                        d.NumeroPersonal?.Contains(busqueda) == true)
+                        d.Nombre.Contains(busqueda))
                     .Count();
             else
                 total = lista.Count();
@@ -92,11 +87,6 @@ namespace SGPla.Repositories.Implementations
         public async Task<bool> ExistePorIdAsync(int idDocente)
         {
             return await _context.Docente.AnyAsync(d => d.IdDocente == idDocente);
-        }
-
-        public async Task<bool> ExistePorNumeroAsync(string numeroPersonal)
-        {
-            return await _context.Docente.AnyAsync(d => (!string.IsNullOrEmpty(d.NumeroPersonal) && d.NumeroPersonal.Contains(numeroPersonal)));
         }
     }
 }

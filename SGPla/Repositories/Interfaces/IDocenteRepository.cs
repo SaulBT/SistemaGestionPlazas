@@ -4,7 +4,7 @@ namespace SGPla.Repositories.Interfaces
 {
     public interface IDocenteRepository
     {
-        Task RegistrarAsync(Docente docente);
+        Task<Docente> RegistrarAsync(Docente docente);
         Task<Docente?> ObtenerPorIdAsync(int idDocente);
         Task<List<Docente>> ObtenerTodosAsync();
         Task<List<Docente>> ObtenerPorPaginaAsync(string busqueda, int pagina, int cantidad);
