@@ -61,6 +61,10 @@ builder.Services.AddScoped<IPeriodoEscolarValidator, PeriodoEscolarValidator>();
 builder.Services.AddScoped<IArchivoRepository, ArchivoRepository>();
 builder.Services.AddScoped<IArchivoService, ArchivoService>();
 
+builder.Services.AddScoped<IIntegranteCtService, IntegranteCtService>();
+builder.Services.AddScoped<IIntegranteCtRepository, IntegranteCtRepository>();
+builder.Services.AddScoped<IIntegranteCtValidator, IntegranteCtValidator>();
+
 
 
 var app = builder.Build();

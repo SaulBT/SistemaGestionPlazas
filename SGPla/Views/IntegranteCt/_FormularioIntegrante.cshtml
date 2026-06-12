@@ -1,0 +1,48 @@
+﻿@using SGPla.Models.ViewModels.IntegranteCt
+@model FormularioIntegranteViewModel
+
+<input type="hidden"
+       id="IdIntegrante"
+       name="IdIntegrante"
+       value="@Model?.IdIntegranteCt" />
+
+@await Component.InvokeAsync("InputField", new InputFieldModel
+{
+    Id = "Cargo",
+    Name = "Cargo",
+    Label = "Cargo",
+    Valor = Model?.Cargo,
+    Flexible = true,
+    Error = ViewData.ModelState["Cargo"]?.Errors.FirstOrDefault()?.ErrorMessage,
+    MaximoCaracteres = 50
+})
+
+<div style="display:flex; gap:10px;align-items:flex-start; justify-content:space-evenly;">
+
+    @await Component.InvokeAsync("SelectField", new SelectFieldModel
+    {
+        Id = "Grado",
+        Name = "Grado",
+        Label = "Grado",
+        Options = Model.Grados,
+        Flexible = true,
+        Error = ViewData.ModelState["Nombre"]?.Errors.FirstOrDefault()?.ErrorMessage,
+        ContainerStyle = "flex: none; width:30%",
+        Placeholder = "..."
+    })
+
+    @await Component.InvokeAsync("InputField", new InputFieldModel
+    {
+        Id = "Nombre",
+        Name = "Nombre",
+        Label = "Nombre",
+        Valor = Model?.Nombre,
+        Flexible = true,
+        Error = ViewData.ModelState["Nombre"]?.Errors.FirstOrDefault()?.ErrorMessage
+    })
+</div>
+
+
+
+
+

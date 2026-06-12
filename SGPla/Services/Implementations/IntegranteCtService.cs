@@ -77,7 +77,7 @@ namespace SGPla.Services.Implementations
             }
             else
             {
-                integrantes = await _repositorio.ObtenerPorPaginaAsync(idEntidadAcademica, pagina, cantidad)
+                integrantes = await _repositorio.ObtenerPorPaginaAsync(idEntidadAcademica, pagina, cantidad);
                 total = await _repositorio.ContarAsync(idEntidadAcademica);
             }
 

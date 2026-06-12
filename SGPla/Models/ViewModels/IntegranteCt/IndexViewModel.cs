@@ -1,7 +1,13 @@
-﻿namespace SGPla.Models.ViewModels.IntegranteCt
+﻿
+
+namespace SGPla.Models.ViewModels.IntegranteCt
 {
     public class IndexViewModel
     {
-        public TableModel TablaIntegrantes { get; set; } = new TableModel();
+        public TableModel Table { get; set; }
+
+        public FormularioIntegranteViewModel Formulario { get; set; }
+
+        public string? Busqueda { get; set; }
     }
 }

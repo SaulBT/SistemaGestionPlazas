@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SGPla.Commons;
 using SGPla.Commons.Factories;
+using SGPla.Models.Components;
 using SGPla.Models.DTOs.IntegranteCt;
 using SGPla.Models.ViewModels.IntegranteCt;
 using SGPla.Services.Interfaces;
+using static Azure.Core.HttpHeader;
 
 namespace SGPla.Controllers
 {
@@ -18,21 +20,37 @@ namespace SGPla.Controllers
         private const string NOMBRE_LOGGER = "FRONT-INTEGRANTES-";
         private const string LOG_ERROR_ID = "La IdEntidadAcademica no es válida";
 
+        public IntegranteCtController(IIntegranteCtService integranteCtService, ILogger<IntegranteCtController> logger)
+        {
+            _integranteCtService = integranteCtService;
+            _logger = logger;
+        }
+
         public async Task<IActionResult> Index(string? nombre, int pagina = 1, int cantidad = 10)
         {
             HttpContext.Session.SetInt32(SESSION_ID_ENTIDAD, 1);
             var vista = new IndexViewModel
             {
-                TablaIntegrantes = TablaFactory.GenerarTablaConMensaje(HEADERS_TABLA, string.Format(Constantes.ERROR_TABLA, Constantes.INTEGRANTES_CT))
+                Table = TablaFactory.GenerarTablaConMensaje(HEADERS_TABLA, string.Format(Constantes.ERROR_TABLA, Constantes.INTEGRANTES_CT))
             };
             paginaActual = pagina;
+            vista.Formulario = new FormularioIntegranteViewModel();
+            var gradosCombo = Constantes.GRADOS
+                .Select(g => new OptionModel
+                {
+                    Value = g,
+                    Text = g,
+                    Selected = false
+                }).ToList();
+
+            vista.Formulario.Grados = gradosCombo;
 
             try
             {
                 int? idEntidadAcademica = HttpContext.Session.GetInt32(SESSION_ID_ENTIDAD);
                 if (idEntidadAcademica != null && idEntidadAcademica > 0)
                 {
-                    vista.TablaIntegrantes = await LlenarTablaAsync(nombre, (int)idEntidadAcademica, pagina, cantidad);
+                    vista.Table = await LlenarTablaAsync(nombre, (int)idEntidadAcademica, pagina, cantidad);
                 }
             }
             catch (ValidacionExcepction vx)

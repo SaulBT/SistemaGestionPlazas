@@ -1,6 +1,7 @@
 ﻿@model SelectFieldModel
 
-<div class="select-field @(Model.Flexible ? "flexible" : "")">
+<div class="select-field @(Model.Flexible ? "flexible" : "")"
+     style="@Model.ContainerStyle">
     @if (!string.IsNullOrWhiteSpace(Model.Label))
     {
         <div class="text-wrapper">
