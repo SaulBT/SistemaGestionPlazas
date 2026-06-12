@@ -2,7 +2,6 @@
 using SGPla.Models.DTOs.Archivo;
 using SGPla.Models.DTOs.Docentes;
 using SGPla.Models.DTOs.Grados;
-using SGPla.Repositories.Implementations;
 using SGPla.Repositories.Interfaces;
 using SGPla.Services.Interfaces;
 
@@ -94,16 +93,112 @@ namespace SGPla.Services.Implementations
             foreach (var aspirante in aspirantes)
             {
                 var grados = await _gradoRepository.ObtenerTodosAsync(aspirante.IdDocente);
-                //TODO: Agregar el ultimo grado al DTO y CAMBIAR LA BD PARA QUE IdArchivosGenerales NO SEA NULLABLE
+                var ultimoGrado = "";
+                foreach (var grado in grados)
+                {
+                    if (grado.Ultimo)
+                        ultimoGrado = grado.Grado1;
+                }
+
                 items.Add(new ListaAspiranteDTO
                 {
                     IdDocente = aspirante.IdDocente,
                     Nombre = aspirante.Nombre,
-                    IdArchivosGenerales = (int)aspirante.IdArchivosGenerales
+                    IdArchivosGenerales = (int)aspirante.IdArchivosGenerales,
+                    UltimoGrado = ultimoGrado
                 });
             }
 
             return (items, total);
+        }
+
+        public async Task EditarAspiranteAsync(EditarDocenteDTO dto)
+        {
+            var aspirante = await _aspiranteRepository.ObtenerPorIdAsync(dto.IdDocente);
+            DatosArchivoGuardadoDTO? archivoNuevoGuardado = null;
+            Archivo? archivoAnterior = null;
+            string? rutaAnterior = null;
+
+            try
+            {
+                if (dto.NuevoArchivo && dto.ArchivosGenerales != null)
+                {
+                    archivoNuevoGuardado = await _archivoService.GuardarAsync(dto.ArchivosGenerales.RutaArchivo, dto.ArchivosGenerales.NombreArchivo, "archivos-docente");
+                    archivoAnterior = await _archivoRepository.ObtenerPorIdAsync((int)aspirante.IdArchivosGenerales);
+
+                    if (archivoAnterior != null)
+                    {
+                        rutaAnterior = archivoAnterior.Ruta;
+
+                        archivoAnterior.Nombre = archivoNuevoGuardado.NombreOriginal;
+                        archivoAnterior.Ruta = archivoNuevoGuardado.Ruta;
+                        archivoAnterior.Tipo = archivoNuevoGuardado.Tipo;
+                        archivoAnterior.Tamanio = archivoNuevoGuardado.Tamanio;
+                        await _archivoRepository.EliminarAsync(archivoAnterior);
+                    }
+                }
+
+                aspirante.Nombre = dto.Nombre;
+                aspirante.DescripcionPerfil = dto.DescripcionPerfil;
+
+                if (dto.GradosAgregados.Count > 0)
+                {
+                    var gradosAgregados = dto.GradosAgregados.Select(g => mapearAgregadoGradoAGrado(g, aspirante.IdDocente)).ToList();
+                    foreach (var grado in gradosAgregados)
+                    {
+                        await _gradoRepository.AgregarAsync(grado);
+                    }
+                }
+
+                if (dto.GradosEditados.Count > 0)
+                {
+                    var datosGrados = dto.GradosEditados.Select(g => mapearDatosGradoAGrado(g, aspirante.IdDocente)).ToList();
+                    foreach (var grado in datosGrados)
+                    {
+                        await _gradoRepository.EditarAsync(grado);
+                    }
+                }
+
+                if (dto.IdsGradosEliminados.Count > 0)
+                {
+                    foreach (var idGrado in dto.IdsGradosEliminados)
+                    {
+                        var grado = await _gradoRepository.ObtenerAsync(idGrado);
+                        if (grado != null)
+                            await _gradoRepository.EliminarAsync(grado);
+                    }
+                }
+
+                await _aspiranteRepository.EditarAsync(aspirante);
+
+                if (!string.IsNullOrWhiteSpace(rutaAnterior) && archivoNuevoGuardado != null)
+                    await _archivoService.EliminarAsync(rutaAnterior);
+            }
+            catch
+            {
+                if (archivoNuevoGuardado != null)
+                    await _archivoService.EliminarAsync(archivoNuevoGuardado.Ruta);
+
+                throw;
+            }
+        }
+
+        public async Task EliminarAspiranteAsync(int idDocente)
+        {
+            var docente = await _aspiranteRepository.ObtenerPorIdAsync(idDocente);
+            var grados = await _gradoRepository.ObtenerTodosAsync(idDocente);
+            var archivo = await _archivoRepository.ObtenerPorIdAsync((int)docente.IdArchivosGenerales);
+
+            foreach (var grado in grados)
+            {
+                await _gradoRepository.EliminarAsync(grado);
+            }
+            if (archivo != null)
+            {
+                await _archivoRepository.EliminarAsync(archivo);
+                await _archivoService.EliminarAsync(archivo.Ruta);
+            }
+            await _aspiranteRepository.EliminarAsync(docente);
         }
 
         private DatosGradoDTO mapearGradoAGradoDTO(Grado grado)
