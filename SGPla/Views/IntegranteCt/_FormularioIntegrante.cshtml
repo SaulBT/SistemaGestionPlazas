@@ -14,7 +14,7 @@
     Valor = Model?.Cargo,
     Flexible = true,
     Error = ViewData.ModelState["Cargo"]?.Errors.FirstOrDefault()?.ErrorMessage,
-    MaximoCaracteres = 50
+    MaximoCaracteres = 100
 })
 
 <div style="display:flex; gap:10px;align-items:flex-start; justify-content:space-evenly;">
@@ -39,7 +39,8 @@
         Label = "Nombre",
         Valor = Model?.Nombre,
         Flexible = true,
-        Error = ViewData.ModelState["Nombre"]?.Errors.FirstOrDefault()?.ErrorMessage
+        Error = ViewData.ModelState["Nombre"]?.Errors.FirstOrDefault()?.ErrorMessage,
+        MaximoCaracteres = 200
     })
 </div>
 

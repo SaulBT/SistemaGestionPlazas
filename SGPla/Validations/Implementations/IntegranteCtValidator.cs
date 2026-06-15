@@ -55,11 +55,8 @@ namespace SGPla.Validations.Implementations
                 throw new ValidacionExcepction("El Grado es obligatorio.", "400");
             if (!Constantes.GRADOS.Contains(grado))
                 throw new ValidacionExcepction("El Grado es inválido.", "400");
-            if (!registroExistente)
-            {
-                if (await _integranteRepositorio.ExistePorNombre(nombre, idEntidadAcademica))
-                    throw new ValidacionExcepction("Ya existe ese Integrante", "409");
-            }
+            if (await _integranteRepositorio.ExistePorNombre(nombre, idEntidadAcademica))
+                throw new ValidacionExcepction("Ya existe ese Integrante", "409");
         }
 
         private async Task validarIntegranteAsync(int idIntegranteCt)

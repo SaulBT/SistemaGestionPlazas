@@ -9,15 +9,15 @@
 <div> 
     <!-- Acciones -->
     <div style="display:flex; gap:10px; padding-bottom:20px; align-items:center; justify-content:space-between">
-        <form>
+        <form id = "filtrosForm" method="get" action="@Url.Action("Index", "IntegranteCt")">
             <!-- Barra de búsqueda -->
             @await Component.InvokeAsync("Buscador", new BuscadorModel
             {
-                Name = "busqueda",
+                Name = "nombre",
                 Placeholder = "Buscar integrante de consejo técnico...",
                 Action = Url.Action("Index", "IntegranteCt"),
                 Method = "get",
-                Value = Context.Request.Query["busqueda"]
+                Value = Context.Request.Query["nombre"]
             })
 
             <!-- Campos ocultos para paginación -->
