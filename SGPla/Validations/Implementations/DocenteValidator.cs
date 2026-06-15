@@ -39,6 +39,10 @@ namespace SGPla.Validations.Implementations
                 if (!await _docenteRepository.ExistePorIdAsync(idDocente))
                     throw new ValidacionExcepction("No existe ese Docente.", "404");
             }
+            else
+            {
+                throw new ValidacionExcepction("La Id del Docente es inválida.", "400");
+            }
         }
 
         public async Task ValidarEdicionAsync(EditarDocenteDTO dto)
@@ -87,6 +91,7 @@ namespace SGPla.Validations.Implementations
         private async Task validarGradosAgregadosRegistro(List<AgregarGradoDTO> lista)
         {
             var hayUltimo = false;
+            var cantidad = 0;
 
             if (lista.Count > 1)
             {
@@ -100,7 +105,10 @@ namespace SGPla.Validations.Implementations
                     if (string.IsNullOrEmpty(grado.Titulo))
                         throw new ValidacionExcepction("El Titulo del Grado es obligatorio.", "400");
                     if (grado.Ultimo)
+                    {
                         hayUltimo = true;
+                        cantidad++;
+                    }
                     await ValidarIdAsync(grado.IdDocente);
                 }
             }
@@ -109,20 +117,21 @@ namespace SGPla.Validations.Implementations
                 throw new ValidacionExcepction("Debe haber al menos un Grado.", "400");
             }
 
-            if (!hayUltimo)
+            if (!hayUltimo || cantidad < 0)
                 throw new ValidacionExcepction("Tiene que haber un Grado marcado como último.", "400");
+            if (cantidad > 1)
+                throw new ValidacionExcepction("Sólo puede hber un Grado marcado como último.", "400");
         }
 
         private async Task validarGradosAsync(List<AgregarGradoDTO> gradosAgregados, List<DatosGradoDTO> gradosEditados, List<int> gradosEliminados, int idDocente)
         {
             var grados = await _gradoRepository.ObtenerTodosAsync(idDocente);
-            var hayUltimo = false;
 
             if (gradosEliminados.Count > 0)
             {
                 foreach (var id in gradosEliminados)
                 {
-                    await validarIdGrado(id);
+                    await validarIdGrado(id, idDocente);
                     var grado = grados.First(g => g.IdGrado == id);
                     grados.Remove(grado);
                 }
@@ -132,9 +141,11 @@ namespace SGPla.Validations.Implementations
             {
                 foreach(var grado in gradosEditados)
                 {
-                    await validarIdGrado(grado.IdGrado);
+                    await validarIdGrado(grado.IdGrado, idDocente);
                     await ValidarIdAsync(grado.IdDocente);
 
+                    if (grado.IdDocente != idDocente)
+                        throw new ValidacionExcepction($"La Id del Docente del Grado editado con Id {grado.IdGrado} no concuerda con la Id del Docente editado.", "400");
                     if (string.IsNullOrEmpty(grado.Grado))
                         throw new ValidacionExcepction("El Nombre del Grado es obligatorio.", "400");
                     if (!Constantes.GRADOS_DOCENTES.Contains(grado.Grado))
@@ -152,7 +163,8 @@ namespace SGPla.Validations.Implementations
                 foreach(var grado in gradosAgregados)
                 {
                     await ValidarIdAsync(grado.IdDocente);
-
+                    if (grado.IdDocente != idDocente)
+                        throw new ValidacionExcepction("La Id del Docente de un Grado agregado no concuerda con la Id del Docente editado.", "400");
                     if (string.IsNullOrEmpty(grado.Grado))
                         throw new ValidacionExcepction("El Nombre del Grado es obligatorio.", "400");
                     if (!Constantes.GRADOS_DOCENTES.Contains(grado.Grado))
@@ -187,17 +199,20 @@ namespace SGPla.Validations.Implementations
             if (!hayUltimoEnGrados && !hayUltimoEnNuevos)
                 throw new ValidacionExcepction("Tiene que haber un Grado marcado como último.", "400");
             if (hayUltimoEnGrados && hayUltimoEnNuevos)
-                throw new ValidacionExcepction("No puede de haber más de un Grado marcado como último.", "400");
+                throw new ValidacionExcepction("Sólo puede hber un Grado marcado como último.", "400");
             if (cantidadUltimoEnGrados > 1 || cantidadUltimoEnNuevos > 1)
-                throw new ValidacionExcepction("No puede de haber más de un Grado marcado como último.", "400");
+                throw new ValidacionExcepction("Sólo puede hber un Grado marcado como último.", "400");
         }
 
-        private async Task validarIdGrado(int idGrado)
+        private async Task validarIdGrado(int idGrado, int idDocente)
         {
             if (idGrado > 0)
             {
-                if (!await _docenteRepository.ExistePorIdAsync(idGrado))
+                var grado = await _gradoRepository.ObtenerAsync(idGrado);
+                if (grado == null)
                     throw new ValidacionExcepction($"No existe ningún grado con la Id {idGrado}.", "404");
+                else if (grado.IdDocente != idDocente)
+                    throw new ValidacionExcepction($"La Id del Docente del Grado eliminado con Id {grado.IdGrado} no concuerda con la Id del Docente editado.", "400");
             }
             else
                 throw new ValidacionExcepction("La Id del Grado es inválida.", "400");
