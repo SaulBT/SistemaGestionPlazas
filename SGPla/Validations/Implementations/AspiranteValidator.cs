@@ -65,6 +65,8 @@ namespace SGPla.Validations.Implementations
 
         private void validarArchivosGenerales(CargarArchivoDTO dto)
         {
+            if (dto == null)
+                throw new ValidacionExcepction("No se cargó ningún archivo.", "400");
             if (string.IsNullOrEmpty(dto.NombreArchivo))
                 throw new ValidacionExcepction("El Nombre del Archivo es obligatorio.", "400");
             if (string.IsNullOrEmpty(dto.RutaArchivo))
