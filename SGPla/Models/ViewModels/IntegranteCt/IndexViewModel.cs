@@ -9,5 +9,9 @@ namespace SGPla.Models.ViewModels.IntegranteCt
         public FormularioIntegranteViewModel Formulario { get; set; }
 
         public string? Busqueda { get; set; }
+
+        public int PaginaActual { get; set; }
+
+        public int CantidadPorPagina { get; set; }
     }
 }

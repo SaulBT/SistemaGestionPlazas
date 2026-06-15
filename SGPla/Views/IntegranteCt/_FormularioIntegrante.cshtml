@@ -2,8 +2,8 @@
 @model FormularioIntegranteViewModel
 
 <input type="hidden"
-       id="IdIntegrante"
-       name="IdIntegrante"
+       id="IdIntegranteCt"
+       name="IdIntegranteCt"
        value="@Model?.IdIntegranteCt" />
 
 @await Component.InvokeAsync("InputField", new InputFieldModel
@@ -28,7 +28,8 @@
         Flexible = true,
         Error = ViewData.ModelState["Nombre"]?.Errors.FirstOrDefault()?.ErrorMessage,
         ContainerStyle = "flex: none; width:30%",
-        Placeholder = "..."
+        Placeholder = "...",
+        SelectedValue = Model.Grado
     })
 
     @await Component.InvokeAsync("InputField", new InputFieldModel

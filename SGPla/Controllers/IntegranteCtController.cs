@@ -31,7 +31,9 @@ namespace SGPla.Controllers
             HttpContext.Session.SetInt32(SESSION_ID_ENTIDAD, 1);
             var vista = new IndexViewModel
             {
-                Table = TablaFactory.GenerarTablaConMensaje(HEADERS_TABLA, string.Format(Constantes.ERROR_TABLA, Constantes.INTEGRANTES_CT))
+                Table = TablaFactory.GenerarTablaConMensaje(HEADERS_TABLA, string.Format(Constantes.ERROR_TABLA, Constantes.INTEGRANTES_CT)),
+                PaginaActual = paginaActual,
+                CantidadPorPagina = cantidad
             };
             paginaActual = pagina;
             vista.Formulario = new FormularioIntegranteViewModel();
@@ -96,7 +98,7 @@ namespace SGPla.Controllers
                         Cells = new List<TableCellModel>
                         {
                             new() {Value = integrante.Cargo},
-                            new() {Value = integrante.Nombre},
+                            new() {Value = integrante.Grado + " " + integrante.Nombre},
                             new()
                             {
                                 Actions = new List<TableActionModel>
@@ -104,10 +106,12 @@ namespace SGPla.Controllers
                                     new()
                                     {
                                         Accion = "editar",
+                                        OnClick = $"abrirModalEditarIntegrante({integrante.IdIntegranteCt}, '{integrante.Cargo}', '{integrante.Nombre}', '{integrante.Grado}')"
                                     },
                                     new()
                                     {
                                         Accion = "eliminar",
+                                        OnClick = $"abrirModalConfirmacion('¿Desea eliminar este integrante?', function() {{ eliminarIntegrante({integrante.IdIntegranteCt}); }})"
                                     }
                                 }
                             }
@@ -129,5 +133,131 @@ namespace SGPla.Controllers
 
             }
         }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Crear(RegistrarIntegranteCtDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var gradosCombo = Constantes.GRADOS
+                .Select(g => new OptionModel
+                {
+                    Value = g,
+                    Text = g,
+                    Selected = false
+                }).ToList();
+
+                var model = new IndexViewModel
+                {
+                    Table = await LlenarTablaAsync("", 1),
+                    Formulario = new FormularioIntegranteViewModel
+                    {
+                        Nombre = dto.Nombre,
+                        Cargo = dto.Cargo,
+                        Grado = dto.Grado,
+                        Grados = gradosCombo
+                    }
+                };
+                return View("Index", model);
+            }
+            try
+            {
+                dto.IdEntidadAcademica = (int)HttpContext.Session.GetInt32(SESSION_ID_ENTIDAD);
+                await _integranteCtService.RegistrarIntegranteAsync(dto);
+                TempData["Success"] = "Integrante registrado exitosamente";
+            }
+            catch(Exception ex)
+            {
+                TempData["Error"] = ex.Message;
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Editar(DatosIntegranteCtDto dto)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    dto.IdEntidadAcademica = (int)HttpContext.Session.GetInt32(SESSION_ID_ENTIDAD);
+                    await _integranteCtService.EditarIntegranteAsync(dto);
+                    TempData["Success"] = "Cambios guardados con éxito";
+                }
+                catch (Exception ex)
+                {
+                    TempData["Error"] = ex.Message;
+                }
+            }
+            else
+            {
+                var gradosCombo = Constantes.GRADOS
+                .Select(g => new OptionModel
+                {
+                    Value = g,
+                    Text = g,
+                    Selected = false
+                }).ToList();
+
+                var model = new IndexViewModel
+                {
+                    Table = await LlenarTablaAsync("", 1),
+                    Formulario = new FormularioIntegranteViewModel
+                    {
+                        IdIntegranteCt = dto.IdIntegranteCt,
+                        Nombre = dto.Nombre,
+                        Cargo = dto.Cargo,
+                        Grado = dto.Grado,
+                        Grados = gradosCombo
+                    }
+                };
+                return View("Index", model);
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Eliminar(int id)
+        {
+            try
+            {
+                await _integranteCtService.EliminarIntegranteAsync(id);
+                TempData["Success"] = "Integrante eliminado exitosamente";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = ex.Message;
+            }
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Buscar(string busqueda)
+        {
+            try
+            {
+                BusquedaIntegranteCtDto dto = new BusquedaIntegranteCtDto
+                {
+                    IdEntidadAcademica = (int)HttpContext.Session.GetInt32(SESSION_ID_ENTIDAD),
+                    Nombre = busqueda,
+                    Pagina = paginaActual
+                };
+                var resultados = await _integranteCtService.ObtenerTodosIntegrantesPorPaginaAsync(dto);
+                return View("Index", resultados);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+
     }
 }

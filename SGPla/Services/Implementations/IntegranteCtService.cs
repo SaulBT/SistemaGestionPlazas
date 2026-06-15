@@ -40,6 +40,8 @@ namespace SGPla.Services.Implementations
             {
                 Nombre = nombre,
                 Cargo = integranteDto.Cargo,
+                IdIntegranteCt = integranteDto.IdIntegranteCt,
+                IdEntidadAcademica = integranteDto.IdEntidadAcademica
             };
             await _repositorio.EditarAsync(integrante);
         }
@@ -96,7 +98,7 @@ namespace SGPla.Services.Implementations
         {
             var nombreGrado = integrante.Nombre;
             var grado = nombreGrado.Substring(0, nombreGrado.IndexOf('.')+1);
-            var nombre = nombreGrado.Substring(nombreGrado.IndexOf('.') + 1);
+            var nombre = nombreGrado.Substring(nombreGrado.IndexOf('.') + 2);
             return new DatosIntegranteCtDto
             {
                 IdIntegranteCt = integrante.IdIntegranteCt,

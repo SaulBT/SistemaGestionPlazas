@@ -19,9 +19,12 @@
                 Method = "get",
                 Value = Context.Request.Query["busqueda"]
             })
-        </form>
 
-        
+            <!-- Campos ocultos para paginación -->
+            <input type="hidden" name="pagina" id="paginaHidden" value="@Model.PaginaActual" />
+            <input type="hidden" name="cantidad" id="cantidadHidden" value="@Model.CantidadPorPagina" />
+
+        </form>
         <!-- Botón agregar -->
         @await Component.InvokeAsync("Boton", new
         {
@@ -84,7 +87,27 @@
 
 
     </div>
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <script>
 
+                document.addEventListener("DOMContentLoaded", function () {
+
+                    document.getElementById("formIntegrante").action =
+                        "@Url.Action("Crear", "IntegranteCt")";
+
+                    abrirModal("modalIntegrante");
+
+                    history.replaceState(
+                        null,
+                        "",
+                        "@Url.Action("Index", "IntegranteCt")"
+                    );
+
+                });
+
+        </script>
+    }
 </div>
 
 <script>
@@ -99,9 +122,10 @@
         document.getElementById("formIntegrante").action =
             "@Url.Action("Crear", "IntegranteCt")";
 
-        document.getElementById("IdIntegrante").value = "";
+        document.getElementById("IdIntegranteCt").value = "";
         document.getElementById("Cargo").value = "";
         document.getElementById("Nombre").value = "";
+        document.getElementById("Grado").value = "";
 
         abrirModal("modalIntegrante");
     }
@@ -109,16 +133,17 @@
     // =========================
     // EDITAR
     // =========================
-    function abrirModalEditarIntegrante(id, numero, descripcion) {
+    function abrirModalEditarIntegrante(id, cargo, nombre, grado) {
 
         limpiarErroresFormularioIntegrante();
 
         document.getElementById("formIntegrante").action =
-            "@Url.Action("Editar", "Integrantes")";
+            "@Url.Action("Editar", "IntegranteCt")";
 
-        document.getElementById("IdIntegrante").value = id;
-        document.getElementById("Numero").value = numero;
-        document.getElementById("Descripcion").value = descripcion;
+        document.getElementById("IdIntegranteCt").value = id;
+        document.getElementById("Cargo").value = cargo;
+        document.getElementById("Nombre").value = nombre;
+        document.getElementById("Grado").value = grado;
 
         abrirModal("modalIntegrante");
     }
@@ -133,6 +158,10 @@
     function limpiarErroresFormularioIntegrante() {
 
         document.querySelectorAll(".input-error-text")
+            .forEach(e => {
+                e.innerText = "";
+            });
+        document.querySelectorAll(".select-error-text")
             .forEach(e => {
                 e.innerText = "";
             });
