@@ -14,14 +14,14 @@ namespace SGPla.Services.Implementations
         private readonly IGradoRepository _gradoRepository;
         private readonly IArchivoRepository _archivoRepository;
         private readonly IArchivoService _archivoService;
-        private readonly IDocenteValidator _validacion;
+        private readonly IAspiranteValidator _validacion;
 
         public AspiranteService(
             IAspiranteRepository aspiranteRepository,
             IGradoRepository gradoRepository,
             IArchivoRepository archivoRepository,
             IArchivoService archivoService,
-            IDocenteValidator validacion)
+            IAspiranteValidator validacion)
         {
             _aspiranteRepository = aspiranteRepository;
             _gradoRepository = gradoRepository;

@@ -8,7 +8,7 @@ using SGPla.Validations.Interfaces;
 
 namespace SGPla.Validations.Implementations
 {
-    public class AspiranteValidator : IDocenteValidator
+    public class AspiranteValidator : IAspiranteValidator
     {
         private readonly IAspiranteRepository _aspiranteRepository;
         private readonly IGradoRepository _gradoRepository;
