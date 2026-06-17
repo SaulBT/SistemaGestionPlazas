@@ -183,8 +183,6 @@
         <!-- Modal eliminar -->
         @Html.AntiForgeryToken()
 
-        <input type="hidden" name="id" id="deleteArticuloId" />
-
         @await Component.InvokeAsync("Modal", new ModalModel
         {
             Id = "modalEliminarExperiencia",
