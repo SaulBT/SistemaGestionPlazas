@@ -18,7 +18,15 @@
                     @foreach (var cell in row.Cells)
                     {
                         <td>
-                            @if (cell.Actions != null && cell.Actions.Any())
+                            @if (cell.Actions == null && string.IsNullOrEmpty(cell.Value))
+                            {
+                                @await Component.InvokeAsync("CheckboxField", new CheckboxFieldModel
+                                {
+                                    Checked = cell.CheckBox,
+                                    Disabled = true
+                                })
+                            }
+                            else if (cell.Actions != null && cell.Actions.Any())
                             {
                                 <div class="table-actions">
                                     @foreach (var action in cell.Actions)
