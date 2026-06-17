@@ -1,4 +1,6 @@
-﻿namespace SGPla.Models.ViewModels.Docentes
+﻿using SGPla.Models.Components;
+
+namespace SGPla.Models.ViewModels.Docentes
 {
     public class RegistrarDocenteViewModel
     {
@@ -7,6 +9,7 @@
         public IFormFile Archivo { get; set; }
         public TableModel Tabla { get; set; } = new TableModel();
         public string NumeroPersonal { get; set; } = string.Empty;
+        public List<OptionModel> OpcionesPuesto { get; set; } = [];
         public string Puesto { get; set; } = string.Empty;
         public bool Recarga { get; set; } = false;
     }
