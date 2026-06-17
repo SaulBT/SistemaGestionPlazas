@@ -18,57 +18,69 @@
 })
 
 
-<div style="padding-bottom:var(--padding-end); ">
-	<div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:flex-start; justify-content:space-evenly;">
+<div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:flex-start; justify-content:space-evenly;">
 
-		<div id="contenedorRegion" style="flex:1; min-width:0;">
-			@await Component.InvokeAsync("InputField", new InputFieldModel
-			{
-				Id = "region",
-				Name = "Region",
-				Label = "Región:",
-				Valor = Model.Region,
-				Flexible = true,
-				Error = ViewData.ModelState["Region"]?.Errors.FirstOrDefault()?.ErrorMessage,
-				MaximoCaracteres = 5,
-				Disabled = true
-			})
-		</div>
-
-		<div id="contenedorEntidadAcademica" style="flex:3; min-width:0;">
-			@await Component.InvokeAsync("InputField", new InputFieldModel
-			{
-				Id = "entidadAcademica",
-				Name = "EntidadAcademica",
-				Label = "Entidad Académica:",
-				Valor = Model.NombreEntidadAcademica,
-				Flexible = true,
-				Error = ViewData.ModelState["NombreEntidadAcademica"]?.Errors.FirstOrDefault()?.ErrorMessage,
-				MaximoCaracteres = 94,
-				Disabled = true
-
-			})
-		</div>
-
-		<div id="contenedorPeriodo" style="flex:3; min-width:0;">
-			@await Component.InvokeAsync("InputField", new InputFieldModel
-			{
-				Id = "periodo",
-				Name = "Periodo",
-				Label = "Periodo:",
-				Valor = Model.NombrePeriodo,
-				Flexible = true,
-				Error = ViewData.ModelState["NombrePeriodo"]?.Errors.FirstOrDefault()?.ErrorMessage,
-				MaximoCaracteres = 94,
-				Disabled = true
-			})
-		</div>
-           
+	<div id="contenedorRegion" style="flex:1; min-width:0;">
+		@await Component.InvokeAsync("InputField", new InputFieldModel
+		{
+			Id = "region",
+			Name = "Region",
+			Label = "Región:",
+			Valor = Model.Region,
+			Flexible = true,
+			Error = ViewData.ModelState["Region"]?.Errors.FirstOrDefault()?.ErrorMessage,
+			MaximoCaracteres = 5,
+			Disabled = true
+		})
 	</div>
 
+	<div id="contenedorEntidadAcademica" style="flex:3; min-width:0;">
+		@await Component.InvokeAsync("InputField", new InputFieldModel
+		{
+			Id = "entidadAcademica",
+			Name = "EntidadAcademica",
+			Label = "Entidad Académica:",
+			Valor = Model.NombreEntidadAcademica,
+			Flexible = true,
+			Error = ViewData.ModelState["NombreEntidadAcademica"]?.Errors.FirstOrDefault()?.ErrorMessage,
+			MaximoCaracteres = 94,
+			Disabled = true
 
-<div>
+		})
+	</div>
 
+	<div id="contenedorPeriodo" style="flex:3; min-width:0;">
+		@await Component.InvokeAsync("InputField", new InputFieldModel
+		{
+			Id = "periodo",
+			Name = "Periodo",
+			Label = "Periodo:",
+			Valor = Model.NombrePeriodo,
+			Flexible = true,
+			Error = ViewData.ModelState["NombrePeriodo"]?.Errors.FirstOrDefault()?.ErrorMessage,
+			MaximoCaracteres = 94,
+			Disabled = true
+		})
+	</div>
+</div>
+
+
+<div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:flex-start; justify-content:space-evenly;">
+
+	<div id="contenedorPrograma" style="flex:3; min-width:0;">
+		@await Component.InvokeAsync("SelectField", new SelectFieldModel
+		{
+			Id = "Programa",
+			Label = "Programa",
+			Options = Model.Programas,
+			Name = "Programa",
+			SelectedValue = Model.IdArticulo?.ToString(),
+			Error = ViewData.ModelState["Programa"]?.Errors.FirstOrDefault()?.ErrorMessage
+		})
+	</div>
+</div>
+
+<div class="mb-4">
 	<ul class="nav nav-tabs">
 		<li class="nav-item">
 			<button class="nav-link active"
@@ -88,21 +100,17 @@
 			</button>
 		</li>
 	</ul>
-
 </div>
-
-
 
 <div class="tab-content">
 
-	<div class="tab-pane fade show active" id="asignadas">
-		<div style="display:flex; gap:10px; justify-content:left">
-			@await Component.InvokeAsync("Table", Model.TableAsignadas)
-		</div>
+	<div class="tab-pane fade show active pt-3" id="asignadas">
+		@await Component.InvokeAsync("Table", Model.TableAsignadas)
 	</div>
 
-	<div class="tab-pane fade" id="vacantes">
-		<div>
+	<div class="tab-pane fade pt-3" id="vacantes">
+
+		<div class="mb-4" style="max-width:300px;">
 			@await Component.InvokeAsync("SelectField", new SelectFieldModel
 			{
 				Id = "Articulo",
@@ -114,9 +122,8 @@
 			})
 		</div>
 
-		<div style="display:flex; gap:10px; justify-content:left">
-			@await Component.InvokeAsync("Table", Model.TableVacantes)
-		</div>
+		@await Component.InvokeAsync("Table", Model.TableVacantes)
+
 	</div>
 
 </div>
@@ -152,15 +159,26 @@
 
 
 <script>
-															document.getElementById("Articulo").addEventListener("change", async function () {
-				const response = await fetch(
-					`/ProgramacionesAcademicas/AsignarArticulo?idArticulo=${this.value}`,
-					{ method: "POST" }
-				);
+	document.getElementById("Articulo").addEventListener("change", async function () {
+		const response = await fetch(
+			`/ProgramacionesAcademicas/AsignarArticulo?idArticulo=${this.value}`,
+			{ method: "POST" }
+		);
 
-				const html = await response.text();
-				document.open();
-				document.write(html);
-				document.close();
-			});
+		const html = await response.text();
+		document.open();
+		document.write(html);
+		document.close();
+	});
+</script>
+
+<script>
+	document.getElementById("Programa")
+	.addEventListener("change", function () {
+
+		const programa = encodeURIComponent(this.value);
+
+		window.location =
+			`/ProgramacionesAcademicas/FiltrarPrograma?programa=${programa}`;
+	});
 </script>
