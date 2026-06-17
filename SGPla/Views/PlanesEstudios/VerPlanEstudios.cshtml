@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Plan de Estudios";
+    ViewBag.RegresarUrl = Url.Action("Index", "PlanesEstudios");
 }
 
 <form id="filtrosForm" method="get" action="@Url.Action("VerPlanEstudios", "PlanesEstudios")">

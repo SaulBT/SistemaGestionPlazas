@@ -1,6 +1,7 @@
 ﻿@model SGPla.Models.ViewModels.PlanesEstudios.EditarPlanViewModel
 @{
 	ViewData["Title"] = "Cargar Plan de Estudios";
+    ViewBag.RegresarUrl = Url.Action("Index", "PlanesEstudios");
 }
 
 <form method="post" action="@Url.Action("GuardarPlanEstudiosEditado", "PlanesEstudios")" enctype="multipart/form-data">
