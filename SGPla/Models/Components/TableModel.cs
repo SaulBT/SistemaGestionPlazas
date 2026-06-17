@@ -17,7 +17,8 @@ public class TableRowModel
 public class TableCellModel
 {
     public string Value { get; set; } = string.Empty;
-    public bool CheckBox { get; set; } = false;
+    public bool IsCheckBox { get; set; } = false;
+    public bool Checked { get; set; } = false;
 
     public List<TableActionModel>? Actions { get; set; }
 }
