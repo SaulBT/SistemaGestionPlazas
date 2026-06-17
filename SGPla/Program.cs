@@ -61,6 +61,14 @@ builder.Services.AddScoped<IPeriodoEscolarValidator, PeriodoEscolarValidator>();
 builder.Services.AddScoped<IArchivoRepository, ArchivoRepository>();
 builder.Services.AddScoped<IArchivoService, ArchivoService>();
 
+builder.Services.AddScoped<IDocenteService, DocenteService>();
+builder.Services.AddScoped<IDocenteRepository, DocenteRepository>();
+builder.Services.AddScoped<IDocenteValidator, DocenteValidator>();
+builder.Services.AddScoped<IAspiranteService, AspiranteService>();
+builder.Services.AddScoped<IAspiranteRepository, AspiranteRepository>();
+builder.Services.AddScoped<IAspiranteValidator, AspiranteValidator>();
+builder.Services.AddScoped<IGradoRepository, GradoRepository>();
+
 
 
 var app = builder.Build();
@@ -82,7 +90,7 @@ app.MapStaticAssets();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Usuarios}/{action=Index}/{id?}")
+    pattern: "{controller=Docentes}/{action=Index}/{id?}")
     .WithStaticAssets();
 
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
