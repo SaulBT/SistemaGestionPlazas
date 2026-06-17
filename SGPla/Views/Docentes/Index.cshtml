@@ -1,0 +1,32 @@
+﻿@using SGPla.Models.ViewModels.Docentes
+@model IndexViewModel
+@{
+	Layout = "_LayoutEntidadAcademica";
+	ViewData["Title"] = "Personal Académico";
+}
+
+<div style="margin-left: 20px;">
+    @await Component.InvokeAsync("Tabs",
+    new TabsModel
+    {
+        Id = "tabs",
+        TabActivaPorDefecto = Model.TabActivada,
+        Tabs =
+        [
+            new()
+                {
+                    Titulo = "Personal Académico",
+                    IconClass = "bi bi-info-circle",
+                    PartialView = "_TabPersonal",
+                    PartialModel = Model.TabDocentes
+                },
+
+                new()
+                {
+                    Titulo = "Personal Externo",
+                    PartialView = "_TabPersonal",
+                    PartialModel = Model.TabAspirantes
+                }
+        ]
+    })
+</div>
