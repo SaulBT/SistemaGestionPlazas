@@ -43,6 +43,6 @@
 
     @if (!string.IsNullOrEmpty(Model.Error))
     {
-        <span class="select-error-text">@Model.Error</span>
+        <span id="@Model.Id-Error" class="select-error-text">@Model.Error</span>
     }
 </div>
