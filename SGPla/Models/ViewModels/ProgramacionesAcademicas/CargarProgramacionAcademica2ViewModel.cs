@@ -8,6 +8,13 @@ namespace SGPla.Models.ViewModels.ProgramacionesAcademicas;
 
 public class CargarProgramacionAcademica2ViewModel
 {
+    
+    public string NombrePeriodo { get; set; }
+
+    public string NombreEntidadAcademica { get; set; }
+
+
+    public string EntidadAcademicaSeleccionada { get; set; }
 
     public TableModel TableAsignadas { get; set; }
     public TableModel TableVacantes { get; set; }

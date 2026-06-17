@@ -75,13 +75,15 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
 }
+
+app.UseSession();
+
 app.UseRouting();
 
 app.UseAuthentication();
 
 app.UseAuthorization();
 
-app.UseSession();
 
 app.MapStaticAssets();
 

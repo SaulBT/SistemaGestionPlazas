@@ -3,7 +3,6 @@ using SGPla.Models;
 using SGPla.Models.DTOs.Oferta;
 using SGPla.Models.DTOs.ProgramacionAcademica;
 using SGPla.Parsers;
-using SGPla.Repositories.Implementations;
 using SGPla.Repositories.Interfaces;
 using SGPla.Validations.Interfaces;
 
@@ -48,9 +47,10 @@ namespace SGPla.Services.Implementations
 
 
 
-            await _programacionAcademicaValidator.ValidarDocentes(ofertas);
-            await _programacionAcademicaValidator.ValidarProgramas(ofertas);
-            await _programacionAcademicaValidator.ValidarExperiencias(ofertas);
+            //await _programacionAcademicaValidator.ValidarProgramas(ofertas);
+            //await _programacionAcademicaValidator.ValidarExperiencias(ofertas);
+            //await _programacionAcademicaValidator.ValidarDocentes(ofertas);
+
 
             return ofertas;
         }

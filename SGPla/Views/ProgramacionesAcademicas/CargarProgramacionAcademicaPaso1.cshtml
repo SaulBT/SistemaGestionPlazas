@@ -4,176 +4,176 @@
 @model CargarProgramacionAcademica1ViewModel
 
 @{
-    ViewData["Title"] = "Crear programación académica";
-    ViewBag.RegresarUrl = Url.Action("Index", "ProgramacionesAcademicas");
+	ViewData["Title"] = "Crear programación académica";
+	ViewBag.RegresarUrl = Url.Action("Index", "ProgramacionesAcademicas");
 }
 
 @await Component.InvokeAsync("Stepper", new StepperModel
 {
-    PasoActual = 1,
-    Paso1Texto = "Subir Archivo",
-    Paso2Texto = "Experiencias Educativas"
+	PasoActual = 1,
+	Paso1Texto = "Subir Archivo",
+	Paso2Texto = "Experiencias Educativas"
 })
 
 <form id="form" method="post" action="@Url.Action("ValidarPaso1", "ProgramacionesAcademicas")" enctype="multipart/form-data">
-    @Html.AntiForgeryToken()
+	@Html.AntiForgeryToken()
 
-    <div class="d-flex flex-column gap-3">
+	<div class="d-flex flex-column gap-3">
 
-        @await Component.InvokeAsync("SelectField", new SelectFieldModel
-        {
-            Id = "Region",
-            Label = "Región",
-            Options = Model.Regiones,
-            Name = "Region",
-            SelectedValue = Model.Region?.ToString(),
-            Error = ViewData.ModelState["Region"]?.Errors.FirstOrDefault()?.ErrorMessage
-        })
+		@await Component.InvokeAsync("SelectField", new SelectFieldModel
+		{
+			Id = "Region",
+			Label = "Región",
+			Options = Model.Regiones,
+			Name = "Region",
+			SelectedValue = Model.Region?.ToString(),
+			Error = ViewData.ModelState["Region"]?.Errors.FirstOrDefault()?.ErrorMessage
+		})
 
-        @await Component.InvokeAsync("SelectField", new SelectFieldModel
-        {
-            Id = "Periodo",
-            Label = "Periodo",
-            Options = Model.Periodos,
-            Name = "IdPeriodo",
-            SelectedValue = Model.IdPeriodo?.ToString(),
-            Error = ViewData.ModelState["IdPeriodo"]?.Errors.FirstOrDefault()?.ErrorMessage
-        })
+		@await Component.InvokeAsync("SelectField", new SelectFieldModel
+		{
+			Id = "Periodo",
+			Label = "Periodo",
+			Options = Model.Periodos,
+			Name = "IdPeriodo",
+			SelectedValue = Model.IdPeriodo?.ToString(),
+			Error = ViewData.ModelState["IdPeriodo"]?.Errors.FirstOrDefault()?.ErrorMessage
+		})
 
-        @await Component.InvokeAsync("SelectField", new SelectFieldModel
-        {
-            Id = "Entidad",
-            Label = "Entidad Académica",
-            Options = Model.Entidades,
-            Name = "IdEntidadAcademica",
-            SelectedValue = Model.IdEntidadAcademica?.ToString(),
-            Error = ViewData.ModelState["IdEntidadAcademica"]?.Errors.FirstOrDefault()?.ErrorMessage
-        })
+		@await Component.InvokeAsync("SelectField", new SelectFieldModel
+		{
+			Id = "Entidad",
+			Label = "Entidad Académica",
+			Options = Model.Entidades,
+			Name = "IdEntidadAcademica",
+			SelectedValue = Model.IdEntidadAcademica?.ToString(),
+			Error = ViewData.ModelState["IdEntidadAcademica"]?.Errors.FirstOrDefault()?.ErrorMessage
+		})
 
-        <!-- BOTONES SUBIR ARCHIVO -->
-        <div class="d-flex flex-column gap-3">
+		<!-- BOTONES SUBIR ARCHIVO -->
+		<div class="d-flex flex-column gap-3">
 
-            <div style="display:inline-flex; gap:10px">
-                @await Component.InvokeAsync("Boton", new
-                {
-                    Accion = "cargar",
-                    Texto = "Subir Archivo 1",
-                    OnClick = "abrirModalArchivo1()"
-                })
+			<div style="display:inline-flex; gap:10px">
+				@await Component.InvokeAsync("Boton", new
+				{
+					Accion = "cargar",
+					Texto = "Subir Archivo Vacantes",
+					OnClick = "abrirModalArchivo1()"
+				})
 
-                <div id="banderaArchivo1" class="text-wrapper" style="display:inline-flex; align-content:center">
-                    <i class="bi bi-file-earmark-x-fill" style="font-size:20px;color:var(--negativo-rojo-letra)"></i>
-                </div>
-            </div>
+				<div id="banderaArchivo1" class="text-wrapper" style="display:inline-flex; align-content:center">
+					<i class="bi bi-file-earmark-x-fill" style="font-size:20px;color:var(--negativo-rojo-letra)"></i>
+				</div>
+			</div>
 
-            <div style="display:inline-flex; gap:10px">
-                @await Component.InvokeAsync("Boton", new
-                {
-                    Accion = "cargar",
-                    Texto = "Subir Archivo 2",
-                    OnClick = "abrirModalArchivo2()"
-                })
+			<div style="display:inline-flex; gap:10px">
+				@await Component.InvokeAsync("Boton", new
+				{
+					Accion = "cargar",
+					Texto = "Subir Archivo Descargas",
+					OnClick = "abrirModalArchivo2()"
+				})
 
-                <div id="banderaArchivo2" class="text-wrapper" style="display:inline-flex; align-content:center">
-                    <i class="bi bi-file-earmark-x-fill" style="font-size:20px;color:var(--negativo-rojo-letra)"></i>
-                </div>
-            </div>
+				<div id="banderaArchivo2" class="text-wrapper" style="display:inline-flex; align-content:center">
+					<i class="bi bi-file-earmark-x-fill" style="font-size:20px;color:var(--negativo-rojo-letra)"></i>
+				</div>
+			</div>
 
-        </div>
+		</div>
 
-    </div>
+	</div>
 
-    <!-- BOTONES -->
-    <div style="display:flex; justify-content:flex-end; gap:var(--button-gap)">
-        <a href="@Url.Action("CargarProgramacionAcademicaPaso1", "ProgramacionesAcademicas")" style="display: inline-block; text-decoration: none;">
-            @await Component.InvokeAsync("Boton", new
-            {
-                Accion = "Cancelar"
-            })
-        </a>
-        @await Component.InvokeAsync("Boton", new
-        {
-            Accion = "siguiente",
-            OnClick = "document.getElementById('form').submit()"
-        })
-    </div>
+	<!-- BOTONES -->
+	<div style="display:flex; justify-content:flex-end; gap:var(--button-gap)">
+		<a href="@Url.Action("CargarProgramacionAcademicaPaso1", "ProgramacionesAcademicas")" style="display: inline-block; text-decoration: none;">
+			@await Component.InvokeAsync("Boton", new
+			{
+				Accion = "Cancelar"
+			})
+		</a>
+		@await Component.InvokeAsync("Boton", new
+		{
+			Accion = "siguiente",
+			OnClick = "document.getElementById('form').submit()"
+		})
+	</div>
 
-    <!-- MODALES -->
-    <div>
-        @await Component.InvokeAsync("ModalArchivo",
-  new ModalArchivoModel
-  {
-      Id = "modalArchivo1",
-      IdBandera = "banderaArchivo1",
-      NombreArchivo = "ArchivoVacantes",
-      FormatosAceptados = ".xlsx, .xls",
-      TamanioMaximo = 20
-  })
+	<!-- MODALES -->
+	<div>
+		@await Component.InvokeAsync("ModalArchivo",
+		  new ModalArchivoModel
+		  {
+			  Id = "modalArchivo1",
+			  IdBandera = "banderaArchivo1",
+			  NombreArchivo = "ArchivoVacantes",
+			  FormatosAceptados = ".xlsx, .xls",
+			  TamanioMaximo = 20
+		  })
 
-        @await Component.InvokeAsync("ModalArchivo",
-        new ModalArchivoModel
-        {
-            Id = "modalArchivo2",
-            IdBandera = "banderaArchivo2",
-            NombreArchivo = "ArchivoDescargas",
-            FormatosAceptados = ".xlsx, .xls",
-            TamanioMaximo = 20
-        })
-    </div>
+		@await Component.InvokeAsync("ModalArchivo",
+		new ModalArchivoModel
+		{
+			Id = "modalArchivo2",
+			IdBandera = "banderaArchivo2",
+			NombreArchivo = "ArchivoDescargas",
+			FormatosAceptados = ".xlsx, .xls",
+			TamanioMaximo = 20
+		})
+	</div>
 
 </form>
 
 <script>
-        function abrirModalArchivo1() {
-        abrirModal("modalArchivo1");
-    }
-    function abrirModalArchivo2() {
-        abrirModal("modalArchivo2");
-    }
+		function abrirModalArchivo1() {
+		abrirModal("modalArchivo1");
+	}
+	function abrirModalArchivo2() {
+		abrirModal("modalArchivo2");
+	}
 
 
-    document.addEventListener("DOMContentLoaded", function () {
+	document.addEventListener("DOMContentLoaded", function () {
 
-        const region = document.querySelector("[name='Region']");
-        const entidad = document.querySelector("[name='IdEntidadAcademica']");
+		const region = document.querySelector("[name='Region']");
+		const entidad = document.querySelector("[name='IdEntidadAcademica']");
 
-        async function cargarEntidades() {
-            if (!region || !entidad) return;
+		async function cargarEntidades() {
+			if (!region || !entidad) return;
 
-            const reg = region.value;
-            const defaultOption = entidad.options[0];
+			const reg = region.value;
+			const defaultOption = entidad.options[0];
 
-            if (!reg) {
-                entidad.innerHTML = "";
-                entidad.appendChild(defaultOption);
-                entidad.selectedIndex = 0;
-                return;
-            }
+			if (!reg) {
+				entidad.innerHTML = "";
+				entidad.appendChild(defaultOption);
+				entidad.selectedIndex = 0;
+				return;
+			}
 
-            try {
-                const response = await fetch(
-                    `/ProgramacionesAcademicas/ObtenerEntidades?region=${encodeURIComponent(reg)}`
-                );
-                const data = await response.json();
+			try {
+				const response = await fetch(
+					`/ProgramacionesAcademicas/ObtenerEntidades?region=${encodeURIComponent(reg)}`
+				);
+				const data = await response.json();
 
-                entidad.innerHTML = "";
-                entidad.appendChild(defaultOption);
+				entidad.innerHTML = "";
+				entidad.appendChild(defaultOption);
 
-                data.forEach(e => {
-                    const option = document.createElement("option");
-                    option.value = e.value;
-                    option.text = e.text;
-                    entidad.appendChild(option);
-                });
-            } catch (error) {
-                console.error("Error cargando entidades:", error);
-            }
-        }
+				data.forEach(e => {
+					const option = document.createElement("option");
+					option.value = e.value;
+					option.text = e.text;
+					entidad.appendChild(option);
+				});
+			} catch (error) {
+				console.error("Error cargando entidades:", error);
+			}
+		}
 
-        region?.addEventListener("change", cargarEntidades);
-    });
+		region?.addEventListener("change", cargarEntidades);
+	});
 </script>
 
 @section Scripts {
-    <script src="~/js/cargarArchivo.js"></script>
+	<script src="~/js/cargarArchivo.js"></script>
 }

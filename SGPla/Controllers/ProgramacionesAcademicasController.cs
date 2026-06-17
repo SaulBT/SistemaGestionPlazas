@@ -19,7 +19,11 @@ public class ProgramacionesAcademicasController : Controller
     private int _paginaActual = 1;
     private static List<string> HEADERS_TABLA_ASIGNADAS = ["Experiencia educativa", "NRC", "H/S/M", "Tipo contratación", "Horario", "Docente"];
     private static List<string> HEADERS_TABLA_VACANTES = ["Experiencia educativa", "NRC", "H/S/M", "Tipo contratación", "Horario", "Artículo"];
-
+    private const string SESSION_REGION = "Region";
+    private const string SESSION_ID_PERIODO = "IdPeriodo";
+    private const string SESSION_ID_ENTIDAD = "IdEntidad";
+    private const string SESSION_NOMBRE_PERIODO = "NombrePeriodo";
+    private const string SESSION_NOMBRE_ENTIDAD = "NombreEntidadAcademica";
 
     public ProgramacionesAcademicasController(
         ILogger<ProgramacionesAcademicasController> logger,
@@ -283,6 +287,16 @@ public class ProgramacionesAcademicasController : Controller
             todas.AddRange(ofertasDescargas);
 
             HttpContext.Session.SetString("Ofertas", JsonSerializer.Serialize(todas));
+            var periodoSeleccionado = (await _periodoEscolarService.ObtenerTodosAsync())
+                .FirstOrDefault(p => p.IdPeriodoEscolar == modelo.IdPeriodo!.Value);
+            var entidadSeleccionada = (await _programacionAcademicaService.ObtenerOpcionesEntidadAcademicaAsync(modelo.Region))
+                .FirstOrDefault(e => e.IdEntidadAcademica == modelo.IdEntidadAcademica!.Value);
+
+            HttpContext.Session.SetString(SESSION_REGION, modelo.Region);
+            HttpContext.Session.SetInt32(SESSION_ID_PERIODO, modelo.IdPeriodo.Value);
+            HttpContext.Session.SetString(SESSION_NOMBRE_PERIODO, periodoSeleccionado?.PeriodoMostrar ?? "");
+            HttpContext.Session.SetInt32(SESSION_ID_ENTIDAD, modelo.IdEntidadAcademica.Value);
+            HttpContext.Session.SetString(SESSION_NOMBRE_ENTIDAD, entidadSeleccionada?.Nombre ?? "");
         }
         catch (Exception ex)
         {
@@ -290,39 +304,50 @@ public class ProgramacionesAcademicasController : Controller
             return RedirectToAction("CargarProgramacionAcademicaPaso1");
         }
 
-        return RedirectToAction("CargarProgramacionAcademicaPaso2", new { region = modelo.Region, idPeriodo = modelo.IdPeriodo, idEntidadAcademica = modelo.IdEntidadAcademica });
+        return await CargarProgramacionAcademicaPaso2();
     }
-
     [HttpGet]
-    public async Task<IActionResult> CargarProgramacionAcademicaPaso2(string region, int idPeriodo, int idEntidadAcademica)
+    public async Task<IActionResult> CargarProgramacionAcademicaPaso2()
     {
-        var vm = await ObtenerViewModelDesdeSesion(idPeriodo);
+        var region = HttpContext.Session.GetString(SESSION_REGION);
+        var idPeriodo = HttpContext.Session.GetInt32(SESSION_ID_PERIODO);
+        var idEntidadAcademica = HttpContext.Session.GetInt32(SESSION_ID_ENTIDAD);
+
+        if (string.IsNullOrEmpty(region) || idPeriodo is null || idEntidadAcademica is null)
+        {
+            TempData["Error"] = "No hay información de la carga. Vuelve a iniciar el proceso.";
+            return RedirectToAction(nameof(CargarProgramacionAcademicaPaso1));
+        }
+
+        var vm = await ObtenerViewModelDesdeSesion(idPeriodo.Value);
         vm.Region = region;
-        vm.IdEntidadAcademica = idEntidadAcademica;
-
-
+        vm.IdEntidadAcademica = idEntidadAcademica.Value;
+        vm.NombrePeriodo = HttpContext.Session.GetString(SESSION_NOMBRE_PERIODO);
+        vm.NombreEntidadAcademica = HttpContext.Session.GetString(SESSION_NOMBRE_ENTIDAD);
 
         return View("CargarProgramacionAcademicaPaso2", vm);
     }
 
-
     [HttpPost]
-    public IActionResult AsignarArticulo(int idArticulo)
+    public async Task<IActionResult> AsignarArticulo(int idArticulo)
     {
         var ofertas = ObtenerOfertasSesion();
 
         foreach (var oferta in ofertas)
-        {
             oferta.Articulo = idArticulo;
-        }
 
-        HttpContext.Session.SetString(
-            "Ofertas",
-            JsonSerializer.Serialize(ofertas));
+        HttpContext.Session.SetString("Ofertas", JsonSerializer.Serialize(ofertas));
 
-        return Ok();
+        var idPeriodo = HttpContext.Session.GetInt32(SESSION_ID_PERIODO)!.Value;
+        var vm = await ObtenerViewModelDesdeSesion(idPeriodo);
+        vm.Region = HttpContext.Session.GetString(SESSION_REGION);
+        vm.IdEntidadAcademica = HttpContext.Session.GetInt32(SESSION_ID_ENTIDAD)!.Value;
+        vm.NombrePeriodo = HttpContext.Session.GetString(SESSION_NOMBRE_PERIODO);
+        vm.NombreEntidadAcademica = HttpContext.Session.GetString(SESSION_NOMBRE_ENTIDAD);
+        vm.IdArticulo = idArticulo; // ← esto
+
+        return View("CargarProgramacionAcademicaPaso2", vm);
     }
-
     // Ajax
 
     [HttpGet]

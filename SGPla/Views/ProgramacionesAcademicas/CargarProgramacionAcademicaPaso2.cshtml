@@ -18,6 +18,54 @@
 })
 
 
+<div style="padding-bottom:var(--padding-end); ">
+	<div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:flex-start; justify-content:space-evenly;">
+
+		<div id="contenedorRegion" style="flex:1; min-width:0;">
+			@await Component.InvokeAsync("InputField", new InputFieldModel
+			{
+				Id = "region",
+				Name = "Region",
+				Label = "Región:",
+				Valor = Model.Region,
+				Flexible = true,
+				Error = ViewData.ModelState["Region"]?.Errors.FirstOrDefault()?.ErrorMessage,
+				MaximoCaracteres = 5,
+				Disabled = true
+			})
+		</div>
+
+		<div id="contenedorEntidadAcademica" style="flex:3; min-width:0;">
+			@await Component.InvokeAsync("InputField", new InputFieldModel
+			{
+				Id = "entidadAcademica",
+				Name = "EntidadAcademica",
+				Label = "Entidad Académica:",
+				Valor = Model.NombreEntidadAcademica,
+				Flexible = true,
+				Error = ViewData.ModelState["NombreEntidadAcademica"]?.Errors.FirstOrDefault()?.ErrorMessage,
+				MaximoCaracteres = 94,
+				Disabled = true
+
+			})
+		</div>
+
+		<div id="contenedorPeriodo" style="flex:3; min-width:0;">
+			@await Component.InvokeAsync("InputField", new InputFieldModel
+			{
+				Id = "periodo",
+				Name = "Periodo",
+				Label = "Periodo:",
+				Valor = Model.NombrePeriodo,
+				Flexible = true,
+				Error = ViewData.ModelState["NombrePeriodo"]?.Errors.FirstOrDefault()?.ErrorMessage,
+				MaximoCaracteres = 94,
+				Disabled = true
+			})
+		</div>
+           
+	</div>
+
 
 <div>
 
@@ -104,15 +152,15 @@
 
 
 <script>
-				document.getElementById("Articulo")
-	.addEventListener("change", async function () {
+															document.getElementById("Articulo").addEventListener("change", async function () {
+				const response = await fetch(
+					`/ProgramacionesAcademicas/AsignarArticulo?idArticulo=${this.value}`,
+					{ method: "POST" }
+				);
 
-		await fetch(
-			`/ProgramacionesAcademicas/AsignarArticulo?idArticulo=${this.value}`,
-			{
-				method: "POST"
+				const html = await response.text();
+				document.open();
+				document.write(html);
+				document.close();
 			});
-
-		location.reload();
-	});
 </script>
