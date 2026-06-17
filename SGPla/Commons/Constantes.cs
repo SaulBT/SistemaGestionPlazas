@@ -54,6 +54,7 @@
         public const string ENTIDADES_ACADEMICAS = "Entidades Académicas";
         public const string PERIODOS_ESCOLARES = "Períodos Escolares";
         public const string PROGRAMAS_EDUCATIVOS = "Programas Educativos";
+        public const string INTEGRANTES_CT = "Integrantes del Consejo Técnico";
 
         public const string ARCHIVO = "Archivo";
         public const string RUTA_ARCHIVO = "Ruta del Archivo";

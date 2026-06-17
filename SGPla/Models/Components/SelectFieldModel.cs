@@ -13,6 +13,8 @@
 
         public List<OptionModel> Options { get; set; } = new();
         public Dictionary<string, string>? HtmlAttributes { get; set; }
+        public string? ContainerStyle { get; set; } = string.Empty;
+
     }
 
     public class OptionModel

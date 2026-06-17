@@ -42,6 +42,7 @@ namespace SGPla.Repositories.Implementations
 
             return await _context.IntegranteCt.Where(i => i.IdEntidadAcademica == idEntidadAcademica)
                 .Skip(skip)
+                .Take(cantidad)
                 .AsNoTracking()
                 .OrderBy(i => i.Nombre)
                 .ToListAsync();
@@ -76,11 +77,22 @@ namespace SGPla.Repositories.Implementations
             return await _context.IntegranteCt.AnyAsync(i => i.IdIntegranteCt == idIntegranteCt);
         }
 
-        public async Task<bool> ExistePorNombre(string nombre, int idEntidadAcademica)
+        public async Task<bool> ExistePorNombre(string nombre, int idEntidadAcademica, int idIntegrante)
         {
             if (nombre == null) return false;
 
-            return await _context.IntegranteCt.AnyAsync(i => i.IdEntidadAcademica == idEntidadAcademica && i.Nombre.Contains(nombre));
+            int coincidencias = await _context.IntegranteCt.Where(i => i.IdEntidadAcademica == idEntidadAcademica && (i.IdIntegranteCt != idIntegrante) && i.Nombre.EndsWith(". "+nombre)).CountAsync();
+            return (coincidencias > 0);
+        }
+
+        public async Task<int> ContarAsync(int idEntidadAcademica)
+        {
+            return await _context.IntegranteCt.Where(i => i.IdEntidadAcademica == idEntidadAcademica).CountAsync();
+        }
+
+        public async Task<int> ContarAsync(int idEntidadAcademica, string busqueda)
+        {
+            return await _context.IntegranteCt.Where(i => i.IdEntidadAcademica == idEntidadAcademica && i.Nombre.Contains(busqueda)).CountAsync();
         }
     }
 }

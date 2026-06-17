@@ -8,7 +8,7 @@ namespace SGPla.Services.Interfaces
         Task EditarIntegranteAsync(DatosIntegranteCtDto integranteDto);
         Task<DatosIntegranteCtDto> ObtenerIntegrantePorIdAsync(int idIntegranteCt);
         Task<List<DatosIntegranteCtDto>> ObtenerTodosIntegrantesAsync(int idEntidadAcademica);
-        Task<List<DatosIntegranteCtDto>> ObtenerTodosIntegrantesPorPaginaAsync(BusquedaIntegranteCtDto busquedaDto);
+        Task<(List<DatosIntegranteCtDto> items, int cantidad)> ObtenerTodosIntegrantesPorPaginaAsync(BusquedaIntegranteCtDto busquedaDto);
         Task EliminarIntegranteAsync(int idIntegranteCt);
     }
 }
