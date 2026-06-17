@@ -22,7 +22,7 @@ namespace SGPla.Validations.Implementations
                 throw new ValidacionExcepction("No se enviaron datos", "400");
 
             await validarEntidadAsync(integranteDto.IdEntidadAcademica);
-            await validarCamposAsync(integranteDto.Nombre, integranteDto.Cargo, integranteDto.Grado, integranteDto.IdEntidadAcademica);
+            await validarCamposAsync(integranteDto.Nombre, integranteDto.Cargo, integranteDto.Grado, integranteDto.IdEntidadAcademica, -1);
         }
 
         public async Task ValidarEdicionAsync(DatosIntegranteCtDto integranteDto)
@@ -32,7 +32,7 @@ namespace SGPla.Validations.Implementations
 
             await validarIntegranteAsync(integranteDto.IdIntegranteCt);
             await validarEntidadAsync(integranteDto.IdEntidadAcademica);
-            await validarCamposAsync(integranteDto.Nombre, integranteDto.Cargo, integranteDto.Grado, integranteDto.IdEntidadAcademica, true);
+            await validarCamposAsync(integranteDto.Nombre, integranteDto.Cargo, integranteDto.Grado, integranteDto.IdEntidadAcademica, integranteDto.IdIntegranteCt);
         }
 
         public async Task ValidarIdIntegranteAsync(int idIntegrante)
@@ -45,7 +45,7 @@ namespace SGPla.Validations.Implementations
             await validarEntidadAsync(idEntidad);
         }
 
-        private async Task validarCamposAsync(string nombre, string cargo, string grado, int idEntidadAcademica, bool registroExistente = false)
+        private async Task validarCamposAsync(string nombre, string cargo, string grado, int idEntidadAcademica, int idIntegrante)
         {
             if (string.IsNullOrEmpty(cargo))
                 throw new ValidacionExcepction("El Cargo es obligatorio.", "400");
@@ -55,7 +55,7 @@ namespace SGPla.Validations.Implementations
                 throw new ValidacionExcepction("El Grado es obligatorio.", "400");
             if (!Constantes.GRADOS.Contains(grado))
                 throw new ValidacionExcepction("El Grado es inválido.", "400");
-            if (await _integranteRepositorio.ExistePorNombre(nombre, idEntidadAcademica))
+            if (await _integranteRepositorio.ExistePorNombre(nombre, idEntidadAcademica, idIntegrante))
                 throw new ValidacionExcepction("Ya existe ese Integrante", "409");
         }
 

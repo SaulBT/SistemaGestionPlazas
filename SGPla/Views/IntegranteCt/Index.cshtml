@@ -14,7 +14,7 @@
             @await Component.InvokeAsync("Buscador", new BuscadorModel
             {
                 Name = "nombre",
-                Placeholder = "Buscar integrante de consejo técnico...",
+                Placeholder = "Buscar por nombre...",
                 Action = Url.Action("Index", "IntegranteCt"),
                 Method = "get",
                 Value = Context.Request.Query["nombre"]

@@ -77,12 +77,12 @@ namespace SGPla.Repositories.Implementations
             return await _context.IntegranteCt.AnyAsync(i => i.IdIntegranteCt == idIntegranteCt);
         }
 
-        public async Task<bool> ExistePorNombre(string nombre, int idEntidadAcademica)
+        public async Task<bool> ExistePorNombre(string nombre, int idEntidadAcademica, int idIntegrante)
         {
             if (nombre == null) return false;
 
-            int coincidencias = await _context.IntegranteCt.Where(i => i.IdEntidadAcademica == idEntidadAcademica && i.Nombre.EndsWith(". "+nombre)).CountAsync();
-            return (coincidencias > 1);
+            int coincidencias = await _context.IntegranteCt.Where(i => i.IdEntidadAcademica == idEntidadAcademica && (i.IdIntegranteCt != idIntegrante) && i.Nombre.EndsWith(". "+nombre)).CountAsync();
+            return (coincidencias > 0);
         }
 
         public async Task<int> ContarAsync(int idEntidadAcademica)
