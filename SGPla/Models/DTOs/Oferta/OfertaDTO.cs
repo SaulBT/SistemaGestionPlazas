@@ -9,7 +9,6 @@
             $"{Inicio:hh\\:mm}-{Fin:hh\\:mm}";
     }
 
-
     public class OfertaDTO
     {
         public string Programa { get; set; } = "";
@@ -30,7 +29,7 @@
         public string? NP { get; set; }
         public string? NombreDocente { get; set; }
         public string? TipoIngreso { get; set; }
-     
+
 
         public int Articulo { get; set; }
 
@@ -45,5 +44,11 @@
             if (Viernes is not null) yield return ("Viernes", Viernes);
             if (Sabado is not null) yield return ("Sábado", Sabado);
         }
+
+        public int IdPeriodo { get; set; }
+
+        public int IdProgramaEducativo { get; set; }
+
+
     }
 }

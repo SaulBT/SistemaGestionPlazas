@@ -145,6 +145,16 @@ namespace SGPla.Repositories.Implementations
                 .Select(p => p.Nombre)
                 .ToListAsync();
         }
+
+        public async Task<Dictionary<string, int>> ObtenerIdsProgramasAsync(
+     List<string> programas)
+        {
+            return await _context.ProgramaEducativo
+                .Where(p => programas.Contains(p.Nombre))
+                .ToDictionaryAsync(
+                    p => p.Nombre,
+                    p => p.IdProgramaEducativo);
+        }
     }
 }
 

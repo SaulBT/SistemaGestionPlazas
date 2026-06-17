@@ -12,7 +12,7 @@
 {
     PasoActual = 1,
     Paso1Texto = "Subir Archivo",
-    Paso2Texto = "Visualización de Programación Académica"
+    Paso2Texto = "Experiencias Educativas"
 })
 
 <form id="form" method="post" action="@Url.Action("ValidarPaso1", "ProgramacionesAcademicas")" enctype="multipart/form-data">
@@ -105,7 +105,9 @@
   {
       Id = "modalArchivo1",
       IdBandera = "banderaArchivo1",
-      NombreArchivo = "ArchivoVacantes"
+      NombreArchivo = "ArchivoVacantes",
+      FormatosAceptados = ".xlsx, .xls",
+      TamanioMaximo = 20
   })
 
         @await Component.InvokeAsync("ModalArchivo",
@@ -113,7 +115,9 @@
         {
             Id = "modalArchivo2",
             IdBandera = "banderaArchivo2",
-            NombreArchivo = "ArchivoDescargas"
+            NombreArchivo = "ArchivoDescargas",
+            FormatosAceptados = ".xlsx, .xls",
+            TamanioMaximo = 20
         })
     </div>
 

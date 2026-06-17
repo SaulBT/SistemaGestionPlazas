@@ -437,14 +437,15 @@
     }
 
 
-    document.addEventListener('DOMContentLoaded', () => {
+       (function () {
+        const tableId = '@Model.TableId';
 
-        document.querySelectorAll('table[data-pagination-mode]')
-            .forEach(table => {
-
-                inicializarTablaCliente(table.id);
-            });
-    });
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => inicializarTablaCliente(tableId));
+        } else {
+            inicializarTablaCliente(tableId);
+        }
+    })();
 
 
         function refrescarTablaCliente(tableId) {

@@ -40,7 +40,10 @@ namespace SGPla.Mappers
                 TipoContratacion = dto.TC,
                 Incluida = false,
                 Hsm = dto.HorasPago,
-                EstadoSolicitudApertura = "Aceptada"
+                EstadoSolicitudApertura = "Aceptada",
+                IdArticulo = dto.Articulo,
+                IdPeriodo = dto.IdPeriodo,
+                IdProgramaEducativo = dto.IdProgramaEducativo
             };
         }
 

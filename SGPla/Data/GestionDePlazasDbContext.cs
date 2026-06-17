@@ -586,6 +586,7 @@ public partial class GestionDePlazasDbContext : DbContext
             entity.Property(e => e.EstadoSolicitudApertura)
                 .HasMaxLength(50)
                 .IsUnicode(false)
+                .HasDefaultValue("Aceptada", "DF_Oferta_EstadoSolicitudApertura")
                 .HasColumnName("estadoSolicitudApertura");
             entity.Property(e => e.Hsm).HasColumnName("hsm");
             entity.Property(e => e.IdArchivoApertura).HasColumnName("idArchivoApertura");
@@ -593,6 +594,7 @@ public partial class GestionDePlazasDbContext : DbContext
             entity.Property(e => e.IdDocente).HasColumnName("idDocente");
             entity.Property(e => e.IdExperienciaEducativa).HasColumnName("idExperienciaEducativa");
             entity.Property(e => e.IdPeriodo).HasColumnName("idPeriodo");
+            entity.Property(e => e.IdProgramaEducativo).HasColumnName("idProgramaEducativo");
             entity.Property(e => e.Incluida).HasColumnName("incluida");
             entity.Property(e => e.Justificacion)
                 .HasMaxLength(50)
@@ -607,7 +609,7 @@ public partial class GestionDePlazasDbContext : DbContext
                 .IsUnicode(false)
                 .HasColumnName("nrc");
             entity.Property(e => e.Plaza)
-                .HasMaxLength(4)
+                .HasMaxLength(5)
                 .IsUnicode(false)
                 .HasColumnName("plaza");
             entity.Property(e => e.TipoContratacion)
@@ -621,6 +623,7 @@ public partial class GestionDePlazasDbContext : DbContext
 
             entity.HasOne(d => d.IdArticuloNavigation).WithMany(p => p.Oferta)
                 .HasForeignKey(d => d.IdArticulo)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Oferta_Articulo");
 
             entity.HasOne(d => d.IdDocenteNavigation).WithMany(p => p.Oferta)
@@ -636,6 +639,11 @@ public partial class GestionDePlazasDbContext : DbContext
                 .HasForeignKey(d => d.IdPeriodo)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Oferta_Periodo");
+
+            entity.HasOne(d => d.IdProgramaEducativoNavigation).WithMany(p => p.Oferta)
+                .HasForeignKey(d => d.IdProgramaEducativo)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Oferta_ProgramaEducativo");
         });
 
         modelBuilder.Entity<OfertaAviso>(entity =>

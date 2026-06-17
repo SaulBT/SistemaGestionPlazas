@@ -11,19 +11,21 @@ public partial class Oferta
 
     public int IdExperienciaEducativa { get; set; }
 
-    public int? IdArticulo { get; set; }
+    public int IdProgramaEducativo { get; set; }
+
+    public int IdArticulo { get; set; }
 
     public int IdPeriodo { get; set; }
 
     public string? Plaza { get; set; }
 
-    public string TipoContratacion { get; set; } = null!;
+    public string? TipoContratacion { get; set; }
 
     public string Nrc { get; set; } = null!;
 
     public bool Incluida { get; set; }
 
-    public string Justificacion { get; set; } = null!;
+    public string? Justificacion { get; set; }
 
     public int? IdArchivoApertura { get; set; }
 
@@ -37,13 +39,15 @@ public partial class Oferta
 
     public virtual Archivo? IdArchivoAperturaNavigation { get; set; }
 
-    public virtual Articulo? IdArticuloNavigation { get; set; }
+    public virtual Articulo IdArticuloNavigation { get; set; } = null!;
 
     public virtual Docente? IdDocenteNavigation { get; set; }
 
     public virtual ExperienciaEducativa IdExperienciaEducativaNavigation { get; set; } = null!;
 
     public virtual Periodo IdPeriodoNavigation { get; set; } = null!;
+
+    public virtual ProgramaEducativo IdProgramaEducativoNavigation { get; set; } = null!;
 
     public virtual ICollection<Log> Log { get; set; } = new List<Log>();
 

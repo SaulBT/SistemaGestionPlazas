@@ -10,9 +10,9 @@ using System.Text.RegularExpressions;
 
 public interface IProgramacionAcademicaService
 {
-    Task<List<OfertaDTO>> ProcesarArchivoAsync(IFormFile archivo);
+    Task<List<OfertaDTO>> ProcesarArchivoOfertasAsync(IFormFile archivo, TipoArchivoOferta tipoArchivo);
 
-    Task<bool> GuardarOfertasAsync(List<OfertaDTO> ofertas, int idPeriodo, int idArticulo);
+    Task<bool> GuardarOfertasAsync(List<OfertaDTO> ofertas);
 
     Task<List<CargaConOfertaDTO>> ProcesarCargasAsync(
     IFormFile archivoCarga,

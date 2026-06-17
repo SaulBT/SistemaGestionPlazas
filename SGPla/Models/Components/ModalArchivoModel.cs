@@ -6,7 +6,7 @@
 
         public string IdBandera { get; set; } = string.Empty;
 
-        public string NombreArchivo { get; set; } = string.Empty;
+        public string NombreArchivo { get; set; } = "Archivo";
         public string FormatosAceptados { get; set; } = string.Empty;
         public int TamanioMaximo { get; set; }
         public string OnConfirm { get; set; } = string.Empty;

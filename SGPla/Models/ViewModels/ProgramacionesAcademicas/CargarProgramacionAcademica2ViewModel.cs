@@ -1,10 +1,17 @@
-﻿using SGPla.Models.DTOs.Oferta;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using SGPla.Models.Componentes;
+using SGPla.Models.Components;
+using SGPla.Models.DTOs.Oferta;
 using SGPla.Models.DTOs.ProgramacionAcademica;
 
 namespace SGPla.Models.ViewModels.ProgramacionesAcademicas;
 
 public class CargarProgramacionAcademica2ViewModel
 {
+
+    public TableModel TableAsignadas { get; set; }
+    public TableModel TableVacantes { get; set; }
+
     public List<OfertaDTO>? OfertasVacantes { get; set; }
 
     public List<OfertaDTO>? OfertasAsignadas { get; set; }
@@ -14,4 +21,15 @@ public class CargarProgramacionAcademica2ViewModel
     public string? Error { get; set; }
 
     public bool Procesado => OfertasVacantes != null || OfertasAsignadas != null || Error != null;
+
+
+
+    public List<OptionModel> Articulos { get; set; }
+
+    public int? IdArticulo { get; set; }
+
+    public string? Region { get; set; }
+    public int? IdPeriodo { get; set; }
+
+    public int? IdEntidadAcademica { get; set; } = 0;
 }

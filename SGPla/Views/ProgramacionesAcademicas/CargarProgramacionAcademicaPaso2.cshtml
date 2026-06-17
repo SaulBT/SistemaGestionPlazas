@@ -5,199 +5,114 @@
 @model CargarProgramacionAcademica2ViewModel
 
 @{
-    Layout = "_LayoutSuperUsuario";
-    ViewData["Title"] = "Prueba Parser Descargas";
+	Layout = "_LayoutSuperUsuario";
+	ViewData["Title"] = "Experiencias Educativas";
 
-    const string Th = "border:1px solid #ccc; padding:6px 10px; white-space:nowrap; text-align:left;";
-    const string Td = "border:1px solid #eee; padding:5px 10px; white-space:nowrap;";
-
-    string Horario(HorarioDia? h) => h is null ? "—" : $"{h.Inicio:hh\\:mm}-{h.Fin:hh\\:mm}";
+	string Horario(HorarioDia? h) => h is null ? "—" : $"{h.Inicio:hh\\:mm}-{h.Fin:hh\\:mm}";
 }
-<h3>Archivos de entrada</h3>
-
-
-
-@if (Model.CargasAcademicas?.Any() == true)
+@await Component.InvokeAsync("Stepper", new StepperModel
 {
-    var sinCruce = Model.CargasAcademicas.Count(c => !c.NrcEncontrado);
-    var conCruce = Model.CargasAcademicas.Count(c => c.NrcEncontrado);
-
-    <p style="padding-bottom:10px;">
-        <strong>@Model.CargasAcademicas.Count</strong> materias en el archivo —
-        <span style="color:green"><strong>@conCruce</strong> encontradas en oferta</span>,
-        <span style="color:#b00"><strong>@sinCruce</strong> sin coincidencia</span>.
-    </p>
-
-    <div style="overflow-x:auto;">
-        <table style="border-collapse:collapse; width:100%; font-size:13px;">
-            <thead>
-                <tr style="background:#f0f0f0;">
-                    <th style="@Th">NP</th>
-                    <th style="@Th">Docente (Carga)</th>
-                    <th style="@Th">Plaza</th>
-                    <th style="@Th">Categoría</th>
-                    <th style="@Th">NRC</th>
-                    <th style="@Th">Experiencia Educativa</th>
-                    <th style="@Th">Hrs Contacto</th>
-                    <th style="@Th">Hrs Pago</th>
-                    <th style="@Th">Motivo RH</th>
-                    <th style="@Th">Act. Doc.</th>
-                    <th style="@Th">Imparte</th>
-                    <th style="@Th">Programa (Oferta)</th>
-                    <th style="@Th">NP Oferta</th>
-                    <th style="@Th">Docente (Oferta)</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var c in Model.CargasAcademicas)
-                {
-                    var rowBg = c.NrcEncontrado ? "" : "background:#fff3f3;";
-                    <tr style="border-bottom:1px solid #ddd; @rowBg">
-                        <td style="@Td">@c.NumeroPersonal</td>
-                        <td style="@Td">@c.NombreDocente</td>
-                        <td style="@Td">@c.Plaza</td>
-                        <td style="@Td">@c.Categoria</td>
-                        <td style="@Td">@c.Nrc</td>
-                        <td style="@Td">@c.ExperienciaEducativa</td>
-                        <td style="@Td; text-align:center">@c.HorasContacto</td>
-                        <td style="@Td; text-align:center">@c.HorasPago</td>
-                        <td style="@Td">@c.MotivoRh</td>
-                        <td style="@Td">@c.IndActDocente</td>
-                        <td style="@Td; text-align:center">@(c.Imparte ? "✓" : "✗")</td>
-                        <td style="@Td">@(c.Programa ?? "—")</td>
-                        <td style="@Td">@(c.NpOferta ?? "—")</td>
-                        <td style="@Td">@(c.DocenteOferta ?? "—")</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-}
-
-<!-- Error -->
-@if (Model.Error != null)
-{
-    <div style="color:red; margin-bottom:20px;">
-        ⚠️ @Model.Error
-    </div>
-}
-
-<!-- Resultados -->
-@if (Model.OfertasVacantes?.Any() == true)
-
-{
-    <p style="padding-bottom:10px;">
-        <strong>@Model.OfertasVacantes.Count</strong> clases encontradas.
-    </p>
-
-    <div style="overflow-x:auto;">
-        <table style="border-collapse:collapse; width:100%; font-size:13px;">
-            <thead>
-                <tr style="background:#f0f0f0;">
-                    <th style="@Th">Programa</th>
-                    <th style="@Th">NRC</th>
-                    <th style="@Th">Experiencia Educativa</th>
-                    <th style="@Th">Hrs Pago</th>
-                    <th style="@Th">Plaza</th>
-                    <th style="@Th">Lunes</th>
-                    <th style="@Th">Martes</th>
-                    <th style="@Th">Miércoles</th>
-                    <th style="@Th">Jueves</th>
-                    <th style="@Th">Viernes</th>
-                    <th style="@Th">Sábado</th>
-                    <th style="@Th">Articulo</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var ofertas in Model.OfertasVacantes)
-                {
-                    <tr style="border-bottom:1px solid #ddd;">
-                        <td style="@Td">@ofertas.Programa</td>
-                        <td style="@Td">@ofertas.NRC</td>
-                        <td style="@Td">@ofertas.ExperienciaEducativa</td>
-                        <td style="@Td; text-align:center">@ofertas.HorasPago</td>
-                        <td style="@Td">@ofertas.Plaza</td>
-                        <td style="@Td">@Horario(ofertas.Lunes)</td>
-                        <td style="@Td">@Horario(ofertas.Martes)</td>
-                        <td style="@Td">@Horario(ofertas.Miercoles)</td>
-                        <td style="@Td">@Horario(ofertas.Jueves)</td>
-                        <td style="@Td">@Horario(ofertas.Viernes)</td>
-                        <td style="@Td">@Horario(ofertas.Sabado)</td>
-                        <td style="@Td">@ofertas.Articulo</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-}
-
-<!-- Resultados -->
-@if (Model.OfertasAsignadas?.Any() == true)
-{
-    <p style="padding-bottom:10px;">
-        <strong>@Model.OfertasAsignadas.Count</strong> clases encontradas.
-    </p>
-
-    <div style="overflow-x:auto;">
-        <table style="border-collapse:collapse; width:100%; font-size:13px;">
-            <thead>
-                <tr style="background:#f0f0f0;">
-                    <th style="@Th">Programa</th>
-                    <th style="@Th">NRC</th>
-                    <th style="@Th">Experiencia Educativa</th>
-                    <th style="@Th">Hrs Pago</th>
-                    <th style="@Th">Plaza</th>
-                    <th style="@Th">Lunes</th>
-                    <th style="@Th">Martes</th>
-                    <th style="@Th">Miércoles</th>
-                    <th style="@Th">Jueves</th>
-                    <th style="@Th">Viernes</th>
-                    <th style="@Th">Sábado</th>
-                    <th style="@Th">NP</th>
-                    <th style="@Th">Docente</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var ofertas in Model.OfertasAsignadas)
-                {
-                    <tr style="border-bottom:1px solid #ddd;">
-                        <td style="@Td">@ofertas.Programa</td>
-                        <td style="@Td">@ofertas.NRC</td>
-                        <td style="@Td">@ofertas.ExperienciaEducativa</td>
-                        <td style="@Td; text-align:center">@ofertas.HorasPago</td>
-                        <td style="@Td">@ofertas.Plaza</td>
-                        <td style="@Td">@Horario(ofertas.Lunes)</td>
-                        <td style="@Td">@Horario(ofertas.Martes)</td>
-                        <td style="@Td">@Horario(ofertas.Miercoles)</td>
-                        <td style="@Td">@Horario(ofertas.Jueves)</td>
-                        <td style="@Td">@Horario(ofertas.Viernes)</td>
-                        <td style="@Td">@Horario(ofertas.Sabado)</td>
-                        <td style="@Td">@ofertas.NP</td>
-                        <td style="@Td">@ofertas.NombreDocente</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-
-        <form method="post" action="@Url.Action("Guardar", "ProgramacionesAcademicas")">
-            @Html.AntiForgeryToken()
-
-            <!-- Botones -->
-            <div style="display:flex; justify-content:flex-end; gap:var(--button-gap)">
-                <a href="@Url.Action("Index", "ProgramacionesAcademicas")" style="display: inline-block; text-decoration: none;">
-                    @await Component.InvokeAsync("Boton", new
-                    {
-                        Accion = "Cancelar"
-                    })
-                </a>
-                @await Component.InvokeAsync("Boton", new
-                {
-                    Accion = "Guardar",
-                    ButtonType = "submit"
-                })
-            </div>
-        </form>
-    </div>
+	PasoActual = 2,
+	Paso1Texto = "Subir Archivo",
+	Paso2Texto = "Experiencias Educativas"
+})
 
 
-}
+
+<div>
+
+	<ul class="nav nav-tabs">
+		<li class="nav-item">
+			<button class="nav-link active"
+					data-bs-toggle="tab"
+					data-bs-target="#asignadas"
+					type="button">
+				Asignadas
+			</button>
+		</li>
+
+		<li class="nav-item">
+			<button class="nav-link"
+					data-bs-toggle="tab"
+					data-bs-target="#vacantes"
+					type="button">
+				Vacantes
+			</button>
+		</li>
+	</ul>
+
+</div>
+
+
+
+<div class="tab-content">
+
+	<div class="tab-pane fade show active" id="asignadas">
+		<div style="display:flex; gap:10px; justify-content:left">
+			@await Component.InvokeAsync("Table", Model.TableAsignadas)
+		</div>
+	</div>
+
+	<div class="tab-pane fade" id="vacantes">
+		<div>
+			@await Component.InvokeAsync("SelectField", new SelectFieldModel
+			{
+				Id = "Articulo",
+				Label = "Artículo",
+				Options = Model.Articulos,
+				Name = "Articulo",
+				SelectedValue = Model.IdArticulo?.ToString(),
+				Error = ViewData.ModelState["Articulo"]?.Errors.FirstOrDefault()?.ErrorMessage
+			})
+		</div>
+
+		<div style="display:flex; gap:10px; justify-content:left">
+			@await Component.InvokeAsync("Table", Model.TableVacantes)
+		</div>
+	</div>
+
+</div>
+
+<form method="post" action="@Url.Action("Guardar", "ProgramacionesAcademicas")">
+	@Html.AntiForgeryToken()
+
+	<!-- Botones -->
+	<div style="display:flex; justify-content:flex-end; gap:var(--button-gap)">
+		<a href="@Url.Action("Index", "ProgramacionesAcademicas")" style="display: inline-block; text-decoration: none;">
+			@await Component.InvokeAsync("Boton", new
+			{
+				Accion = "Cancelar"
+			})
+		</a>
+		@await Component.InvokeAsync("Boton", new
+		{
+			Accion = "Guardar",
+			ButtonType = "submit"
+		})
+	</div>
+</form>
+
+
+<script>
+	document.addEventListener('shown.bs.tab', function (e) {
+		const target = e.target.getAttribute('data-bs-target');
+		document.querySelector(target)
+			?.querySelectorAll('table[data-pagination-mode="client"]')
+			.forEach(t => inicializarTablaCliente(t.id));
+	});
+</script>
+
+
+<script>
+				document.getElementById("Articulo")
+	.addEventListener("change", async function () {
+
+		await fetch(
+			`/ProgramacionesAcademicas/AsignarArticulo?idArticulo=${this.value}`,
+			{
+				method: "POST"
+			});
+
+		location.reload();
+	});
+</script>

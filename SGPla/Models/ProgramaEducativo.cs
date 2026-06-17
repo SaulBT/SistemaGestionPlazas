@@ -15,5 +15,7 @@ public partial class ProgramaEducativo
 
     public virtual EntidadAcademica IdEntidadAcademicaNavigation { get; set; } = null!;
 
+    public virtual ICollection<Oferta> Oferta { get; set; } = new List<Oferta>();
+
     public virtual ICollection<PlanEstudios> PlanEstudios { get; set; } = new List<PlanEstudios>();
 }
