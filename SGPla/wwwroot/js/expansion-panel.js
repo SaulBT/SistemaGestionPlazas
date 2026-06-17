@@ -16,10 +16,10 @@
 function actualizarIcono(icon, isOpen) {
 
     if (isOpen) {
-        icon.textContent = "▼";
+        icon.textContent = "►";
     }
     else {
-        icon.textContent = "►";
+        icon.textContent = "▼";
     }
 }
 

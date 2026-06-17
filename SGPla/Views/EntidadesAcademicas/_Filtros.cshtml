@@ -1,0 +1,17 @@
+﻿@using SGPla.Models.ViewModels.EntidadesAcademicas
+@model IndexViewModel
+
+<div id="filtrosContainer" style="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease;">
+    @await Component.InvokeAsync("SelectField", new SelectFieldModel
+    {
+        Label = "Región",
+        Options = Model.Regiones,
+        Name = "region"
+    })
+    @await Component.InvokeAsync("SelectField", new SelectFieldModel
+    {
+        Label = "Área Académica",
+        Options = Model.Areas,
+        Name = "idAreaAcademica"
+    })
+</div>
