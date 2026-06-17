@@ -54,8 +54,11 @@
         public const string ENTIDADES_ACADEMICAS = "Entidades Académicas";
         public const string PERIODOS_ESCOLARES = "Períodos Escolares";
         public const string PROGRAMAS_EDUCATIVOS = "Programas Educativos";
+        public const string PERSONAL_ACADEMICO = "Personal Académico";
         public const string PERSONALES_ACADEMICOS = "Personales Académicos";
+        public const string PERSONAL_EXTERNO = "Personal Externo";
         public const string PERSONALES_EXTERNOS = "Personales Externos";
+        public const string GRADO = "Grado";
 
         public const string ARCHIVO = "Archivo";
         public const string RUTA_ARCHIVO = "Ruta del Archivo";
