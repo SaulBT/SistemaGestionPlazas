@@ -1,4 +1,5 @@
-﻿using SGPla.Models.Components;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using SGPla.Models.Components;
 
 namespace SGPla.Models.ViewModels.ProgramacionesAcademicas
 {
@@ -19,7 +20,10 @@ namespace SGPla.Models.ViewModels.ProgramacionesAcademicas
 
         public List<OptionModel> Periodos { get; set; }
 
+        public int? IdEntidadAcademica { get; set; }
+         public int? IdPeriodo { get; set; }
 
 
-    }
+
+        }
 }

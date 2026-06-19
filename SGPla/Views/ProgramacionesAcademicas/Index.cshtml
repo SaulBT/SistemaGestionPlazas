@@ -22,17 +22,36 @@
             <div id="filtrosContainer" style="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease;">
                 @await Component.InvokeAsync("SelectField", new SelectFieldModel
                 {
-                    Label = "Región",
+                    Id = "Region",
+                    Label = "Región: ",
                     Options = Model.Regiones,
-                    Name = "region"
+                    Name = "Region",
+                    SelectedValue = Model.Region?.ToString(),
+                    Error = ViewData.ModelState["Region"]?.Errors.FirstOrDefault()?.ErrorMessage
                 })
               
                 <div id="contenedorEntidad">
                     @await Component.InvokeAsync("SelectField", new SelectFieldModel
                     {
-                        Label = "Entidad Académica",
+                        Id = "Entidad",
+                        Label = "Entidad Académica: ",
                         Options = Model.Entidades,
-                        Name = "idEntidadAcademica"
+                        Name = "IdEntidadAcademica",
+                        SelectedValue = Model.IdEntidadAcademica?.ToString(),
+                        Error = ViewData.ModelState["IdEntidadAcademica"]?.Errors.FirstOrDefault()?.ErrorMessage
+                    })
+                </div>
+
+                <div>
+                    
+                    @await Component.InvokeAsync("SelectField", new SelectFieldModel
+                    {
+                        Id = "Periodo",
+                        Label = "Periodo: ",
+                        Options = Model.Periodos,
+                        Name = "IdPeriodo",
+                        SelectedValue = Model.IdPeriodo?.ToString(),
+                        Error = ViewData.ModelState["IdPeriodo"]?.Errors.FirstOrDefault()?.ErrorMessage
                     })
                 </div>
             </div>
@@ -90,41 +109,50 @@
     </div>
 </div>
 
+
 <script>
+      
+
+
     document.addEventListener("DOMContentLoaded", function () {
-        const form = document.getElementById("filtrosForm");
-        const region = document.getElementById("region");
-        const area = document.getElementById("idAreaAcademica");
-        const entidad = document.getElementById("idEntidadAcademica");
-        const contenedorEntidad = document.getElementById("contenedorEntidad");
 
-        function toggleEntidad() {
-            if (!area || !contenedorEntidad) return;
-            contenedorEntidad.style.display = area.value ? "inline-flex" : "none";
+        const region = document.querySelector("[name='Region']");
+        const entidad = document.querySelector("[name='IdEntidadAcademica']");
+
+        async function cargarEntidades() {
+            if (!region || !entidad) return;
+
+            const reg = region.value;
+            const defaultOption = entidad.options[0];
+
+            if (!reg) {
+                entidad.innerHTML = "";
+                entidad.appendChild(defaultOption);
+                entidad.selectedIndex = 0;
+                return;
+            }
+
+            try {
+                const response = await fetch(
+                    `/ProgramacionesAcademicas/ObtenerEntidades?region=${encodeURIComponent(reg)}`
+                );
+                const data = await response.json();
+
+                entidad.innerHTML = "";
+                entidad.appendChild(defaultOption);
+
+                data.forEach(e => {
+                    const option = document.createElement("option");
+                    option.value = e.value;
+                    option.text = e.text;
+                    entidad.appendChild(option);
+                });
+            } catch (error) {
+                console.error("Error cargando entidades:", error);
+            }
         }
 
-        toggleEntidad();
-
-        if (region) {
-            region.addEventListener("change", function () {
-                if (entidad) entidad.value = "";
-                form.submit();
-            });
-        }
-
-        if (area) {
-            area.addEventListener("change", function () {
-                if (entidad) entidad.value = "";
-                toggleEntidad();
-                form.submit();
-            });
-        }
-
-        if (entidad) {
-            entidad.addEventListener("change", function () {
-                form.submit();
-            });
-        }
+        region?.addEventListener("change", cargarEntidades);
     });
 </script>
 
