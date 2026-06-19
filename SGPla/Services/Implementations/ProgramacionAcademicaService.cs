@@ -57,6 +57,11 @@ namespace SGPla.Services.Implementations
 
         public async Task<bool> GuardarOfertasAsync(List<OfertaDTO> ofertas)
         {
+            await _programacionAcademicaValidator.ValidarProgramas(ofertas);
+            await _programacionAcademicaValidator.ValidarExperiencias(ofertas);
+            await _programacionAcademicaValidator.ValidarDocentes(ofertas);
+            await _programacionAcademicaValidator.ValidarArticulo(ofertas);
+
             var numerosPersonal = ofertas
                 .Select(o => o.NP)
                 .Where(np => !string.IsNullOrWhiteSpace(np))

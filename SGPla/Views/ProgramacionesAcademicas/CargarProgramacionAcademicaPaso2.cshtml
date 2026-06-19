@@ -71,10 +71,10 @@
 		@await Component.InvokeAsync("SelectField", new SelectFieldModel
 		{
 			Id = "Programa",
-			Label = "Programa",
+			Label = "Programa Educativo:",
 			Options = Model.Programas,
 			Name = "Programa",
-			SelectedValue = Model.IdArticulo?.ToString(),
+			SelectedValue = Model.ProgramaSeleccionado,
 			Error = ViewData.ModelState["Programa"]?.Errors.FirstOrDefault()?.ErrorMessage
 		})
 	</div>
@@ -151,10 +151,25 @@
 <script>
 	document.addEventListener('shown.bs.tab', function (e) {
 		const target = e.target.getAttribute('data-bs-target');
+
+		sessionStorage.setItem('tabActiva', target);
+
 		document.querySelector(target)
 			?.querySelectorAll('table[data-pagination-mode="client"]')
 			.forEach(t => inicializarTablaCliente(t.id));
 	});
+
+	function restaurarTabActiva() {
+		const tabGuardada = sessionStorage.getItem('tabActiva');
+		if (!tabGuardada) return;
+
+		const boton = document.querySelector(`button[data-bs-target="${tabGuardada}"]`);
+		if (boton) {
+			new bootstrap.Tab(boton).show();
+		}
+	}
+
+	document.addEventListener('DOMContentLoaded', restaurarTabActiva);
 </script>
 
 

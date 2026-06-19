@@ -85,7 +85,7 @@
 
 	<!-- BOTONES -->
 	<div style="display:flex; justify-content:flex-end; gap:var(--button-gap)">
-		<a href="@Url.Action("CargarProgramacionAcademicaPaso1", "ProgramacionesAcademicas")" style="display: inline-block; text-decoration: none;">
+		<a href="@Url.Action("Index", "ProgramacionesAcademicas")" style="display: inline-block; text-decoration: none;">
 			@await Component.InvokeAsync("Boton", new
 			{
 				Accion = "Cancelar"

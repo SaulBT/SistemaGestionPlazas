@@ -1,5 +1,143 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@using SGPla.Models.ViewModels.ProgramacionesAcademicas
+@model IndexViewModel
+
 @{
+    Layout = "_LayoutSuperUsuario";
+    ViewData["Title"] = "Programas Educativos";
 }
+
+<div>
+    <form id="filtrosForm" method="get" action="@Url.Action("Index", "ProgramasEducativos")">
+
+        <!-- Filtros -->
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            @await Component.InvokeAsync("Boton", new BotonModel
+            {
+                Accion = "ver",
+                Tipo = "secundario",
+                Texto = "Mostrar Filtros",
+                OnClick = "toggleFilters()",
+                Id = "botonFiltros"
+            })
+            <div id="filtrosContainer" style="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease;">
+                @await Component.InvokeAsync("SelectField", new SelectFieldModel
+                {
+                    Label = "Región",
+                    Options = Model.Regiones,
+                    Name = "region"
+                })
+              
+                <div id="contenedorEntidad">
+                    @await Component.InvokeAsync("SelectField", new SelectFieldModel
+                    {
+                        Label = "Entidad Académica",
+                        Options = Model.Entidades,
+                        Name = "idEntidadAcademica"
+                    })
+                </div>
+            </div>
+        </div>
+        
+
+        <!-- Acciones -->
+        <div style="display:flex; gap:10px; padding-bottom:20px; padding-top:20px; align-items:center; justify-content:space-between">
+            @await Component.InvokeAsync("Buscador", new BuscadorModel
+            {
+                Name = "busqueda",
+                Placeholder = "Buscar programacion academica...",
+                Action = Url.Action("Index", "ProgramacionesAcademicas"),
+                Method = "get",
+                Value = Context.Request.Query["busqueda"]
+            })
+            <a href="@Url.Action("CargarProgramacionAcademicaPaso1", "ProgramacionesAcademicas")" style="display: inline-block; text-decoration: none;">
+                @await Component.InvokeAsync("Boton", new
+                {
+                    Accion = "Agregar",
+                    Texto = "Cargar Programación Académica"
+                })
+            </a>
+        </div>
+
+        <!-- Campos ocultos para paginación -->
+        <input type="hidden" name="pagina" id="paginaHidden" value="@Model.PaginaActual" />
+        <input type="hidden" name="cantidad" id="cantidadHidden" value="@Model.CantidadPorPagina" />
+
+    </form>
+
+    <!-- Tabla con Datos -->
+    @* <div style="display:flex; gap:10px; padding-top:0px;justify-content:left">
+        @await Component.InvokeAsync("Table", Model.Table)
+    </div> *@
+
+    <!-- Ventanas Modales -->
+    <div>
+        <!-- Confirmación eliminación -->
+        <form id="formEliminarProgramaEducativo" method="post" action="@Url.Action("EliminarProgramaEducativo", "ProgramasEducativos")">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" id="deleteProgramaEducativoId" />
+            @await Component.InvokeAsync("Modal", new ModalModel
+            {
+                Id = "modalConfirmacion",
+                Tipo = "confirm",
+                Titulo = "Confirmación",
+                Mensaje = "¿Estás seguro de que deseas eliminar este programa educativo?",
+                OnConfirm = "confirmarModal()",
+                OnCancel = "cerrarModal('modalConfirmacion')"
+            })
+        </form>
+
+       
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.getElementById("filtrosForm");
+        const region = document.getElementById("region");
+        const area = document.getElementById("idAreaAcademica");
+        const entidad = document.getElementById("idEntidadAcademica");
+        const contenedorEntidad = document.getElementById("contenedorEntidad");
+
+        function toggleEntidad() {
+            if (!area || !contenedorEntidad) return;
+            contenedorEntidad.style.display = area.value ? "inline-flex" : "none";
+        }
+
+        toggleEntidad();
+
+        if (region) {
+            region.addEventListener("change", function () {
+                if (entidad) entidad.value = "";
+                form.submit();
+            });
+        }
+
+        if (area) {
+            area.addEventListener("change", function () {
+                if (entidad) entidad.value = "";
+                toggleEntidad();
+                form.submit();
+            });
+        }
+
+        if (entidad) {
+            entidad.addEventListener("change", function () {
+                form.submit();
+            });
+        }
+    });
+</script>
+
+<script>
+    function eliminarProgramaEducativo(id) {
+        document.getElementById("deleteProgramaEducativoId").value = id;
+        document.getElementById("formEliminarProgramaEducativo").submit();
+    }
+</script>
+
+<script>
+    window.configFiltros = {
+        storageKey: 'filtrosVisibles_programaseducativos'
+    };
+</script>
+<script src="js/filtros.js"></script>

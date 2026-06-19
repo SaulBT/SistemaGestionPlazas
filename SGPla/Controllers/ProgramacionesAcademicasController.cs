@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SGPla.Commons;
+using SGPla.Commons.Factories;
 using SGPla.Models;
 using SGPla.Models.Components;
 using SGPla.Models.DTOs.Articulo;
@@ -9,6 +10,13 @@ using SGPla.Services.Interfaces;
 using System.Text.Json;
 
 namespace SGPla.Controllers;
+
+
+enum TipoTablaOferta
+{
+    Asignadas,
+    Vacantes
+}
 
 public class ProgramacionesAcademicasController : Controller
 {
@@ -38,18 +46,16 @@ public class ProgramacionesAcademicasController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> CargarProgramacionAcademicaPaso1()
+    public async Task<IActionResult> Index()
     {
-        HttpContext.Session.Remove("Ofertas");
-        HttpContext.Session.Remove("Cargas");
-
-        var regionesCombo = Constantes.REGIONES
-               .Select(r => new OptionModel { Value = r, Text = r })
-               .ToList();
+        IndexViewModel modelo = new IndexViewModel();
+        modelo.Regiones = Constantes.REGIONES
+            .Select(r => new OptionModel { Value = r, Text = r })
+            .ToList();
 
         var periodos = await _periodoEscolarService.ObtenerTodosAsync();
 
-        var periodosCombo = periodos
+        modelo.Periodos = periodos
             .Select(p => new OptionModel
             {
                 Value = p.IdPeriodoEscolar.ToString(),
@@ -57,57 +63,71 @@ public class ProgramacionesAcademicasController : Controller
             })
             .ToList();
 
-        List<EntidadAcademica> entidades;
+        List<EntidadAcademica> entidades = [];
 
-        entidades = new List<EntidadAcademica>();
+        if (!string.IsNullOrEmpty(modelo.Region))
+        {
+            entidades =
+                await _programacionAcademicaService
+                    .ObtenerOpcionesEntidadAcademicaAsync(modelo.Region);
+        }
 
-
-        var entidadesCombo = entidades
+        modelo.Entidades = entidades
             .Select(e => new OptionModel
             {
                 Value = e.IdEntidadAcademica.ToString(),
-                Text = e.Nombre,
+                Text = e.Nombre
             })
             .ToList();
 
-
-
-        return View(new CargarProgramacionAcademica1ViewModel
-        {
-            Regiones = regionesCombo,
-            Entidades = entidadesCombo,
-            Periodos = periodosCombo,
-        });
+        return View("Index", modelo);
     }
 
+    [HttpGet]
+    public async Task<IActionResult> CargarProgramacionAcademicaPaso1()
+    {
+        HttpContext.Session.Remove("Ofertas");
+        HttpContext.Session.Remove("Cargas");
 
-    //[HttpPost]
-    //public async Task<IActionResult> CargarCargas(IFormFile archivoCarga)
-    //{
-    //    var vm = ObtenerViewModelDesdeSesion();
+        CargarProgramacionAcademica1ViewModel modelo = new CargarProgramacionAcademica1ViewModel();
+        await CargarCombos(modelo);
 
-    //    if (archivoCarga is null || archivoCarga.Length == 0)
-    //    {
-    //        vm.Error = "Selecciona un archivo de cargas antes de continuar.";
-    //        return View("Index", vm);
-    //    }
+        return (View("CargarProgramacionAcademicaPaso1", modelo));
+    }
 
-    //    try
-    //    {
-    //        vm.CargasAcademicas =
-    //            await _programacionAcademicaService
-    //                .ProcesarCargasAsync(
-    //                    archivoCarga,
-    //                    ObtenerOfertasSesion());
+    public async Task CargarCombos(CargarProgramacionAcademica1ViewModel modelo)
+    {
+        modelo.Regiones = Constantes.REGIONES
+             .Select(r => new OptionModel { Value = r, Text = r })
+             .ToList();
 
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        vm.Error = ex.Message;
-    //    }
+        var periodos = await _periodoEscolarService.ObtenerTodosAsync();
 
-    //    return View("CargarProgramacionAcademicaPaso1", vm);
-    //}
+        modelo.Periodos = periodos
+            .Select(p => new OptionModel
+            {
+                Value = p.IdPeriodoEscolar.ToString(),
+                Text = p.PeriodoMostrar,
+            })
+            .ToList();
+
+        List<EntidadAcademica> entidades = [];
+
+        if (!string.IsNullOrEmpty(modelo.Region))
+        {
+            entidades =
+                await _programacionAcademicaService
+                    .ObtenerOpcionesEntidadAcademicaAsync(modelo.Region);
+        }
+
+        modelo.Entidades = entidades
+            .Select(e => new OptionModel
+            {
+                Value = e.IdEntidadAcademica.ToString(),
+                Text = e.Nombre
+            })
+            .ToList();
+    }
 
     [HttpPost]
     public async Task<IActionResult> Guardar()
@@ -119,20 +139,18 @@ public class ProgramacionesAcademicasController : Controller
 
         try
         {
-
             var guardado =
                 await _programacionAcademicaService
                     .GuardarOfertasAsync(ofertas);
-            return Ok(
-                guardado
-                    ? "Ofertas guardadas exitosamente."
-                    : "No se pudo hacer el registro");
+            TempData["Success"] = "Cambios guardados con éxito";
+            return RedirectToAction(nameof(Index));
+
         }
         catch (Exception ex)
         {
-            return StatusCode(
-                500,
-                $"Error al guardar las ofertas: {ex.Message}");
+            TempData["Error"] = ex.Message;
+            var vm = await ObtenerViewModelCompletoAsync();
+            return View("CargarProgramacionAcademicaPaso2", vm);
         }
     }
 
@@ -148,40 +166,43 @@ public class ProgramacionesAcademicasController : Controller
     [HttpGet]
     public async Task<IActionResult> FiltrarPrograma(string? programa)
     {
+        var vm = await ObtenerViewModelCompletoAsync(programa);
+        return View("CargarProgramacionAcademicaPaso2", vm);
+    }
+
+    private async Task<CargarProgramacionAcademica2ViewModel> ObtenerViewModelCompletoAsync(string? programa = null)
+    {
         var vm = await ObtenerViewModelDesdeSesion(programa);
 
         vm.Region = HttpContext.Session.GetString(SESSION_REGION);
         vm.IdEntidadAcademica = HttpContext.Session.GetInt32(SESSION_ID_ENTIDAD)!.Value;
         vm.NombrePeriodo = HttpContext.Session.GetString(SESSION_NOMBRE_PERIODO);
         vm.NombreEntidadAcademica = HttpContext.Session.GetString(SESSION_NOMBRE_ENTIDAD);
+        vm.ProgramaSeleccionado = programa;
 
-        return View("CargarProgramacionAcademicaPaso2", vm);
+        return vm;
     }
 
     private async Task<CargarProgramacionAcademica2ViewModel> ObtenerViewModelDesdeSesion(string? programa = null)
     {
         var ofertas = ObtenerOfertasSesion();
 
-
-
         var programasCombo = ofertas
-     .Select(o => o.Programa)
-     .Distinct()
-     .OrderBy(p => p)
-     .Select(p => new OptionModel
-     {
-         Value = p,
-         Text = p
-     })
-     .ToList();
+         .Select(o => o.Programa)
+         .Distinct()
+         .OrderBy(p => p)
+         .Select(p => new OptionModel
+         {
+             Value = p,
+             Text = p
+         })
+         .ToList();
 
         HttpContext.Session.SetString(
             "Ofertas",
             JsonSerializer.Serialize(ofertas));
 
-        var ofertasFiltradas = programa == null
-     ? ofertas
-     : ofertas.Where(o => o.Programa == programa);
+        var ofertasFiltradas = programa == null ? ofertas : ofertas.Where(o => o.Programa == programa);
 
         var ofertasAsignadas = ofertasFiltradas
             .Where(o => o.NP != null)
@@ -206,36 +227,23 @@ public class ProgramacionesAcademicasController : Controller
             OfertasVacantes = ofertasVacantes,
             OfertasAsignadas = ofertasAsignadas,
 
-            TableAsignadas = new TableModel
-            {
-                TableId = "tablaAsignadas",
-                Headers = HEADERS_TABLA_ASIGNADAS,
-                Rows = ofertasAsignadas.Select(oferta => new TableRowModel
-                {
-                    Cells = new List<TableCellModel>
-                        {
-                            new() { Value = oferta.ExperienciaEducativa },
-                            new() { Value = oferta.NRC },
-                            new() { Value = oferta.HorasPago.ToString() },
-                            new() { Value = oferta.TC },
-                            new() { Value = oferta.TC },
-                            new() { Value = oferta.NombreDocente }
-                        }
-                }).ToList(),
-                Pagination = new PaginationInfo
-                {
-                    CurrentPage = _paginaActual,
-                    TotalItems = ofertas.Count,
-                    OnPageChange = "cambiarPagina",
-                    PaginationMode = "client"
-                }
-            },
-            TableVacantes = new TableModel
-            {
-                TableId = "tablaVacantes",
+            TableAsignadas = await LlenarTablaAsync(TipoTablaOferta.Asignadas, articulos, ofertasAsignadas, programa),
+            TableVacantes = await LlenarTablaAsync(TipoTablaOferta.Vacantes, articulos, ofertasVacantes, programa),
 
-                Headers = HEADERS_TABLA_VACANTES,
-                Rows = ofertasVacantes.Select(oferta => new TableRowModel
+            Articulos = articulosCombo,
+            Programas = programasCombo
+        };
+    }
+
+    private async Task<TableModel> LlenarTablaAsync(TipoTablaOferta tipoOferta, IEnumerable<DetallesArticuloDTO> articulos, List<OfertaDTO>? ofertas, string? programa)
+    {
+        try
+        {
+            return new TableModel
+            {
+                TableId = tipoOferta == TipoTablaOferta.Vacantes ? "tablaVacantes" : "tablaAsignadas",
+                Headers = tipoOferta == TipoTablaOferta.Vacantes ? HEADERS_TABLA_VACANTES : HEADERS_TABLA_ASIGNADAS,
+                Rows = ofertas.Select(oferta => new TableRowModel
                 {
                     Cells = new List<TableCellModel>
                         {
@@ -244,11 +252,17 @@ public class ProgramacionesAcademicasController : Controller
                             new() { Value = oferta.HorasPago.ToString() },
                             new() { Value = oferta.TC },
                             new() { Value = oferta.TC },
-                            new()
+
+                            tipoOferta == TipoTablaOferta.Vacantes
+                            ? new()
                             {
                                 Value = articulos
-                                    .FirstOrDefault(a => a.IdArticulo == oferta.Articulo)?
-                                    .Numero ?? "—"
+                                .FirstOrDefault(a => a.IdArticulo == oferta.Articulo)?
+                                .Numero ?? "—"
+                            }
+                            : new()
+                            {
+                                Value = oferta.NombreDocente
                             }
                         }
                 }).ToList(),
@@ -259,43 +273,29 @@ public class ProgramacionesAcademicasController : Controller
                     OnPageChange = "cambiarPagina",
                     PaginationMode = "client"
                 }
-            },
-            Articulos = articulosCombo,
-            Programas = programasCombo
-        };
+            };
+        }
+        catch (Exception)
+        {
+            return TablaFactory.GenerarTablaConMensaje(HEADERS_TABLA_ASIGNADAS, string.Format(Constantes.ERROR_TABLA, Constantes.PLANES_ESTUDIOS));
+        }
     }
 
     [HttpPost]
     public async Task<IActionResult> ValidarPaso1(CargarProgramacionAcademica1ViewModel modelo)
     {
-        if (modelo.ArchivoVacantes == null || modelo.ArchivoVacantes.Length == 0)
+        if (!ModelState.IsValid)
         {
-            TempData["Error"] = "Selecciona el archivo de vacantes antes de continuar.";
-            return RedirectToAction("CargarProgramacionAcademicaPaso1");
-        }
+            var erroresArchivos = ModelState
+                .Where(x => x.Key == nameof(modelo.ArchivoVacantes)
+                         || x.Key == nameof(modelo.ArchivoDescargas))
+                .SelectMany(x => x.Value.Errors)
+                .Select(e => e.ErrorMessage);
 
-        if (modelo.ArchivoDescargas == null || modelo.ArchivoDescargas.Length == 0)
-        {
-            TempData["Error"] = "Selecciona el archivo de descargas antes de continuar.";
-            return RedirectToAction("CargarProgramacionAcademicaPaso1");
-        }
+            TempData["Error"] = string.Join("|", erroresArchivos);
 
-        if (string.IsNullOrEmpty(modelo.Region))
-        {
-            TempData["Error"] = "Selecciona una región antes de continuar.";
-            return RedirectToAction("CargarProgramacionAcademicaPaso1");
-        }
-
-        if (modelo.IdPeriodo == null)
-        {
-            TempData["Error"] = "Selecciona un periodo escolar antes de continuar.";
-            return RedirectToAction("CargarProgramacionAcademicaPaso1");
-        }
-
-        if (modelo.IdEntidadAcademica == null)
-        {
-            TempData["Error"] = "Selecciona una entidad académica antes de continuar.";
-            return RedirectToAction("CargarProgramacionAcademicaPaso1");
+            await CargarCombos(modelo);
+            return View("CargarProgramacionAcademicaPaso1", modelo);
         }
 
         try
@@ -327,11 +327,12 @@ public class ProgramacionesAcademicasController : Controller
         catch (Exception ex)
         {
             TempData["Error"] = $"Error al procesar los archivos: {ex.Message}";
-            return RedirectToAction("CargarProgramacionAcademicaPaso1");
+            await CargarCombos(modelo);
+            return View("CargarProgramacionAcademicaPaso1", modelo);
         }
-
         return await CargarProgramacionAcademicaPaso2();
     }
+
     [HttpGet]
     public async Task<IActionResult> CargarProgramacionAcademicaPaso2()
     {
@@ -345,12 +346,7 @@ public class ProgramacionesAcademicasController : Controller
             return RedirectToAction(nameof(CargarProgramacionAcademicaPaso1));
         }
 
-        var vm = await ObtenerViewModelDesdeSesion();
-        vm.Region = region;
-        vm.IdEntidadAcademica = idEntidadAcademica.Value;
-        vm.NombrePeriodo = HttpContext.Session.GetString(SESSION_NOMBRE_PERIODO);
-        vm.NombreEntidadAcademica = HttpContext.Session.GetString(SESSION_NOMBRE_ENTIDAD);
-
+        var vm = await ObtenerViewModelCompletoAsync();
         return View("CargarProgramacionAcademicaPaso2", vm);
     }
 
@@ -364,12 +360,7 @@ public class ProgramacionesAcademicasController : Controller
 
         HttpContext.Session.SetString("Ofertas", JsonSerializer.Serialize(ofertas));
 
-        var idPeriodo = HttpContext.Session.GetInt32(SESSION_ID_PERIODO)!.Value;
-        var vm = await ObtenerViewModelDesdeSesion();
-        vm.Region = HttpContext.Session.GetString(SESSION_REGION);
-        vm.IdEntidadAcademica = HttpContext.Session.GetInt32(SESSION_ID_ENTIDAD)!.Value;
-        vm.NombrePeriodo = HttpContext.Session.GetString(SESSION_NOMBRE_PERIODO);
-        vm.NombreEntidadAcademica = HttpContext.Session.GetString(SESSION_NOMBRE_ENTIDAD);
+        var vm = await ObtenerViewModelCompletoAsync();
         vm.IdArticulo = idArticulo;
 
         return View("CargarProgramacionAcademicaPaso2", vm);

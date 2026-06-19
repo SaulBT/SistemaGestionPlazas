@@ -1,6 +1,7 @@
 ﻿using SGPla.Models.DTOs.Oferta;
 using SGPla.Repositories.Interfaces;
 using SGPla.Validations.Interfaces;
+using System.Runtime.CompilerServices;
 
 namespace SGPla.Validations.Implementations
 {
@@ -100,5 +101,17 @@ namespace SGPla.Validations.Implementations
 
         }
 
+        public async Task<bool> ValidarArticulo(List<OfertaDTO> ofertas)
+        {
+            foreach (OfertaDTO oferta in ofertas)
+            {
+                if (oferta.Articulo <= 0)
+                {
+                    throw new ArgumentException("Asigne un artículo válido a las ofertas");
+                }
+            }
+            return true;
+        }
+ 
     }
 }

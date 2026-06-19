@@ -9,5 +9,7 @@ namespace SGPla.Validations.Interfaces
         Task<bool> ValidarProgramas(List<OfertaDTO> ofertas);
 
         Task<bool> ValidarExperiencias(List<OfertaDTO> ofertas);
+
+        Task<bool> ValidarArticulo(List<OfertaDTO> ofertas);
     }
 }

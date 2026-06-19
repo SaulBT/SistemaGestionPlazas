@@ -26,4 +26,6 @@ public class CargarProgramacionAcademica2ViewModel
     public int? IdEntidadAcademica { get; set; } = 0;
 
     public int? IdPeriodo { get; set; } = 0;
+
+    public string? ProgramaSeleccionado;
 }
