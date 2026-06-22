@@ -93,7 +93,7 @@ namespace SGPla.Validations.Implementations
             var hayUltimo = false;
             var cantidad = 0;
 
-            if (lista.Count > 1)
+            if (lista.Count > 0)
             {
                 foreach (var grado in lista)
                 {
@@ -109,7 +109,6 @@ namespace SGPla.Validations.Implementations
                         hayUltimo = true;
                         cantidad++;
                     }
-                    await ValidarIdAsync(grado.IdDocente);
                 }
             }
             else

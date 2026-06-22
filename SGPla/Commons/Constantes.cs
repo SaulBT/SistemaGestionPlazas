@@ -55,6 +55,11 @@
         public const string PERIODOS_ESCOLARES = "Períodos Escolares";
         public const string PROGRAMAS_EDUCATIVOS = "Programas Educativos";
         public const string INTEGRANTES_CT = "Integrantes del Consejo Técnico";
+        public const string PERSONAL_ACADEMICO = "Personal Académico";
+        public const string PERSONALES_ACADEMICOS = "Personales Académicos";
+        public const string PERSONAL_EXTERNO = "Personal Externo";
+        public const string PERSONALES_EXTERNOS = "Personales Externos";
+        public const string GRADO = "Grado";
 
         public const string ARCHIVO = "Archivo";
         public const string RUTA_ARCHIVO = "Ruta del Archivo";
@@ -88,9 +93,10 @@
         public static List<string> GRADOS = [LIC, MTRO, MTRA, DR, DRA];
 
         public const string LICENCIATURA = "Licenciatura";
+        public const string ESPECIALIDAD = "Especialidad";
         public const string DOCTORADO = "Doctorado";
-        public const string MAESTRIA = "Maestria";
-        public static List<string> GRADOS_DOCENTES = [LICENCIATURA, MAESTRIA, DOCTORADO];
+        public const string MAESTRIA = "Maestría";
+        public static List<string> GRADOS_DOCENTES = [LICENCIATURA, ESPECIALIDAD, MAESTRIA, DOCTORADO];
 
         public const string INVESTIGADOR = "Investigador";
         public const string DOCENTE = "Docente";

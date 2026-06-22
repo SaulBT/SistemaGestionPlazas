@@ -21,7 +21,7 @@ namespace SGPla.ViewComponents
                 opt.Selected = opt.Value == selected;
             }
 
-            model.Error = state?.Errors.FirstOrDefault()?.ErrorMessage;
+            model.Error = state?.Errors.FirstOrDefault()?.ErrorMessage ?? model.Error;
 
 
             return View(model);

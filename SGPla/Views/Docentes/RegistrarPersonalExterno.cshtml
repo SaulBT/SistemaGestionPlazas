@@ -1,0 +1,35 @@
+﻿@using SGPla.Models.ViewModels.Docentes
+@model RegistrarDocenteViewModel
+@{
+    Layout = "_LayoutEntidadAcademica";
+    ViewData["Title"] = "Nuevo Personal Externo";
+}
+
+<form>
+    @await Component.InvokeAsync("InputField", new InputFieldModel
+    {
+        Id = "ifNombre",
+        Name = "Nombre",
+        Label = "Nombre:",
+        Valor = Model.Nombre,
+        Flexible = true
+    })
+
+    @await Component.InvokeAsync("TextAreaField", new TextAreaFieldModel
+    {
+        Id = "taDescripcion",
+        Name = "DescripcionPerfil",
+        Label = "Descripción",
+        Value = Model.DescripcionPerfil,
+        Rows = 5
+    })
+
+    @await Component.InvokeAsync("Boton", new
+    {
+        Accion = "cargar",
+        Texto = "Subir Archivo",
+        OnClick = "abrirModalArchivo()"
+    })
+
+    @await Component.InvokeAsync("Table", Model.Tabla)
+</form>
