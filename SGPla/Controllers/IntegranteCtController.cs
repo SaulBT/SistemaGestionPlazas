@@ -37,7 +37,7 @@ namespace SGPla.Controllers
             };
             paginaActual = pagina;
             vista.Formulario = new FormularioIntegranteViewModel();
-            var gradosCombo = Constantes.GRADOS
+            var gradosCombo = Constantes.GRADOS_INTEGRANTE
                 .Select(g => new OptionModel
                 {
                     Value = g,
@@ -141,7 +141,7 @@ namespace SGPla.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var gradosCombo = Constantes.GRADOS
+                var gradosCombo = Constantes.GRADOS_INTEGRANTE
                 .Select(g => new OptionModel
                 {
                     Value = g,
@@ -195,7 +195,7 @@ namespace SGPla.Controllers
             }
             else
             {
-                var gradosCombo = Constantes.GRADOS
+                var gradosCombo = Constantes.GRADOS_INTEGRANTE
                 .Select(g => new OptionModel
                 {
                     Value = g,

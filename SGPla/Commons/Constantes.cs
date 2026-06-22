@@ -60,6 +60,7 @@
         public const string PERSONAL_EXTERNO = "Personal Externo";
         public const string PERSONALES_EXTERNOS = "Personales Externos";
         public const string GRADO = "Grado";
+        public const string GRADOS = "Grados";
 
         public const string ARCHIVO = "Archivo";
         public const string RUTA_ARCHIVO = "Ruta del Archivo";
@@ -90,7 +91,7 @@
         public const string MTRO = "Mtro.";
         public const string MTRA = "Mtra.";
         public const string LIC = "Lic.";
-        public static List<string> GRADOS = [LIC, MTRO, MTRA, DR, DRA];
+        public static List<string> GRADOS_INTEGRANTE = [LIC, MTRO, MTRA, DR, DRA];
 
         public const string LICENCIATURA = "Licenciatura";
         public const string ESPECIALIDAD = "Especialidad";
