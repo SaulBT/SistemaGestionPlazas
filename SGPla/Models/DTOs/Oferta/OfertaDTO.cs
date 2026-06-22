@@ -49,6 +49,7 @@
 
         public int IdProgramaEducativo { get; set; }
 
+        public string? Region { get; set; }
 
     }
 }

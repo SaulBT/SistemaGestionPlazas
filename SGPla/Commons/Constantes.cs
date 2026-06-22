@@ -54,6 +54,8 @@
         public const string ENTIDADES_ACADEMICAS = "Entidades Académicas";
         public const string PERIODOS_ESCOLARES = "Períodos Escolares";
         public const string PROGRAMAS_EDUCATIVOS = "Programas Educativos";
+        public const string PROGRAMACION_ACADEMICA = "Programación Académica";
+        public const string PROGRAMACIONES_ACADEMICAS = "Programaciones Académicas";
 
         public const string ARCHIVO = "Archivo";
         public const string RUTA_ARCHIVO = "Ruta del Archivo";

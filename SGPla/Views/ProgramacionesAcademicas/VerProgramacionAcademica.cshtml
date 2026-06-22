@@ -1,0 +1,97 @@
+﻿@using SGPla.Models.ViewModels.ProgramacionesAcademicas
+@model VerProgramacionAcademicaViewModel
+
+@{
+    Layout = "_LayoutSuperUsuario";
+    ViewData["Title"] = "Experiencias Educativas";
+}
+
+<div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:flex-start; justify-content:space-evenly;">
+    <div style="flex:1; min-width:0;">
+        @await Component.InvokeAsync("InputField", new InputFieldModel
+        {
+            Id = "region",
+            Name = "Region",
+            Label = "Región:",
+            Valor = Model.Region,
+            Flexible = true,
+            MaximoCaracteres = 5,
+            Disabled = true
+        })
+    </div>
+    <div style="flex:3; min-width:0;">
+        @await Component.InvokeAsync("InputField", new InputFieldModel
+        {
+            Id = "entidadAcademica",
+            Name = "EntidadAcademica",
+            Label = "Entidad Académica:",
+            Valor = Model.NombreEntidadAcademica,
+            Flexible = true,
+            MaximoCaracteres = 94,
+            Disabled = true
+        })
+    </div>
+    <div style="flex:3; min-width:0;">
+        @await Component.InvokeAsync("InputField", new InputFieldModel
+        {
+            Id = "periodo",
+            Name = "Periodo",
+            Label = "Periodo:",
+            Valor = Model.NombrePeriodo,
+            Flexible = true,
+            MaximoCaracteres = 94,
+            Disabled = true
+        })
+    </div>
+    <div style="flex:3; min-width:0;">
+        @await Component.InvokeAsync("InputField", new InputFieldModel
+        {
+            Id = "programa",
+            Name = "Programa",
+            Label = "Programa Educativo:",
+            Valor = Model.NombrePrograma,
+            Flexible = true,
+            MaximoCaracteres = 94,
+            Disabled = true
+        })
+    </div>
+</div>
+
+<div class="mb-4">
+    <ul class="nav nav-tabs">
+        <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#asignadas" type="button">Asignadas</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#vacantes" type="button">Vacantes</button>
+        </li>
+    </ul>
+</div>
+
+<div class="tab-content">
+    <div class="tab-pane fade show active pt-3" id="asignadas">
+        @await Component.InvokeAsync("Table", Model.TableAsignadas)
+    </div>
+    <div class="tab-pane fade pt-3" id="vacantes">
+        @await Component.InvokeAsync("Table", Model.TableVacantes)
+    </div>
+</div>
+
+<!-- Botón Regresar -->
+<div>
+    <a href="@Url.Action("Index", "ProgramacionesAcademicas")" style="display: inline-block; text-decoration: none;">
+        @await Component.InvokeAsync("Boton", new
+        {
+            Accion = "Regresar"
+        })
+    </a>
+</div>
+
+<script>
+    document.addEventListener('shown.bs.tab', function (e) {
+        const target = e.target.getAttribute('data-bs-target');
+        document.querySelector(target)
+            ?.querySelectorAll('table[data-pagination-mode="client"]')
+            .forEach(t => inicializarTablaCliente(t.id));
+    });
+</script>

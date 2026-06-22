@@ -1,5 +1,7 @@
 ﻿using DocumentFormat.OpenXml.Bibliography;
+using DocumentFormat.OpenXml.Office2010.PowerPoint;
 using SGPla.Models.Components;
+using SGPla.Models.DTOs.ProgramacionAcademica;
 
 namespace SGPla.Models.ViewModels.ProgramacionesAcademicas
 {
@@ -7,7 +9,9 @@ namespace SGPla.Models.ViewModels.ProgramacionesAcademicas
     {
         public List<OptionModel> Regiones { get; set; }
 
-        public List<OptionModel> Entidades {  get; set; }
+        public List<OptionModel> Entidades { get; set; }
+
+        public List<OptionModel> Programas { get; set; }
 
 
         public int PaginaActual { get; set; } = 1;
@@ -21,9 +25,13 @@ namespace SGPla.Models.ViewModels.ProgramacionesAcademicas
         public List<OptionModel> Periodos { get; set; }
 
         public int? IdEntidadAcademica { get; set; }
-         public int? IdPeriodo { get; set; }
+
+        public int? IdProgramaEducativo { get; set; }
+        public int? IdPeriodo { get; set; }
+
+        public List<ResumenOfertaProgramacionAcademicaDTO> ResumenesProgramacionesAcademicas { get; set; }
 
 
 
-        }
+    }
 }

@@ -3,12 +3,11 @@
 
 @{
     Layout = "_LayoutSuperUsuario";
-    ViewData["Title"] = "Programas Educativos";
+    ViewData["Title"] = "Programaciones Académicas";
 }
 
 <div>
-    <form id="filtrosForm" method="get" action="@Url.Action("Index", "ProgramasEducativos")">
-
+    <form id="filtrosForm" method="get" action="@Url.Action("Index", "ProgramacionesAcademicas")">
         <!-- Filtros -->
         <div style="display: flex; flex-direction: column; gap: 10px;">
             @await Component.InvokeAsync("Boton", new BotonModel
@@ -39,6 +38,18 @@
                         Name = "IdEntidadAcademica",
                         SelectedValue = Model.IdEntidadAcademica?.ToString(),
                         Error = ViewData.ModelState["IdEntidadAcademica"]?.Errors.FirstOrDefault()?.ErrorMessage
+                    })
+                </div>
+
+                <div id="contenedorPrograma">
+                    @await Component.InvokeAsync("SelectField", new SelectFieldModel
+                    {
+                        Id = "Programa",
+                        Label = "Programa Educativo: ",
+                        Options = Model.Programas,
+                        Name = "IdProgramaEducativo",
+                        SelectedValue = Model.IdProgramaEducativo?.ToString(),
+                        Error = ViewData.ModelState["IdProgramaEducativo"]?.Errors.FirstOrDefault()?.ErrorMessage
                     })
                 </div>
 
@@ -84,9 +95,9 @@
     </form>
 
     <!-- Tabla con Datos -->
-    @* <div style="display:flex; gap:10px; padding-top:0px;justify-content:left">
+     <div style="display:flex; gap:10px; padding-top:0px;justify-content:left">
         @await Component.InvokeAsync("Table", Model.Table)
-    </div> *@
+    </div> 
 
     <!-- Ventanas Modales -->
     <div>
@@ -104,20 +115,21 @@
                 OnCancel = "cerrarModal('modalConfirmacion')"
             })
         </form>
-
-       
     </div>
 </div>
 
 
 <script>
-      
-
-
     document.addEventListener("DOMContentLoaded", function () {
 
         const region = document.querySelector("[name='Region']");
         const entidad = document.querySelector("[name='IdEntidadAcademica']");
+        const programa = document.querySelector("[name='IdProgramaEducativo']");
+        const periodo = document.querySelector("[name='IdPeriodo']");
+        const form = document.getElementById("filtrosForm");
+
+        programa?.addEventListener("change", () => form.submit());
+        periodo?.addEventListener("change", () => form.submit());
 
         async function cargarEntidades() {
             if (!region || !entidad) return;
@@ -152,20 +164,47 @@
             }
         }
 
+        async function cargarProgramas() {
+            if (!entidad || !programa) return;
+
+            const ent = entidad.value;
+            const defaultOption = programa.options[0];
+
+            if (!ent) {
+                programa.innerHTML = "";
+                programa.appendChild(defaultOption);
+                programa.selectedIndex = 0;
+                return;
+            }
+
+            try {
+                const response = await fetch(
+                    `/ProgramacionesAcademicas/ObtenerProgramas?entidad=${encodeURIComponent(ent)}`
+                );
+                const data = await response.json();
+
+                programa.innerHTML = "";
+                programa.appendChild(defaultOption);
+
+                data.forEach(e => {
+                    const option = document.createElement("option");
+                    option.value = e.value;
+                    option.text = e.text;
+                    programa.appendChild(option);
+                });
+            } catch (error) {
+                console.error("Error cargando programas:", error);
+            }
+        }
+
         region?.addEventListener("change", cargarEntidades);
+        entidad?.addEventListener("change", cargarProgramas);
     });
 </script>
 
 <script>
-    function eliminarProgramaEducativo(id) {
-        document.getElementById("deleteProgramaEducativoId").value = id;
-        document.getElementById("formEliminarProgramaEducativo").submit();
-    }
-</script>
-
-<script>
     window.configFiltros = {
-        storageKey: 'filtrosVisibles_programaseducativos'
+        storageKey: 'filtrosVisibles_programacionesAcademicas'
     };
 </script>
 <script src="js/filtros.js"></script>

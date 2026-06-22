@@ -2,6 +2,7 @@
 using SGPla.Models;
 using SGPla.Models.DTOs.Oferta;
 using SGPla.Models.DTOs.ProgramacionAcademica;
+using SGPla.Models.DTOs.ProgramaEducativo;
 using SGPla.Parsers;
 using SGPla.Repositories.Interfaces;
 using SGPla.Validations.Interfaces;
@@ -179,5 +180,34 @@ namespace SGPla.Services.Implementations
             return await _entidadAcademicaRepository.ObtenerOpcionesAsync(region);
         }
 
+        public async Task<List<ResumenOfertaProgramacionAcademicaDTO>> ObtenerResumenPorProgramaPeriodoAsync(BuscarProgramacionAcademicaDTO? filtro)
+        {
+            var resumen = await _programacionAcademicaRepository.ObtenerResumenPorProgramaPeriodoAsync(filtro);
+
+            foreach (var item in resumen)
+            {
+                var periodoDto = PeriodoEscolarMapper.ToDTO(new Periodo
+                {
+                    IdPeriodo = item.IdPeriodo,
+                    Codigo = item.CodigoPeriodo
+                });
+
+                item.PeriodoMostrar = periodoDto.PeriodoMostrar;
+            }
+
+            return resumen;
+        }
+
+        public async Task<List<ProgramaEducativo>> ObtenerOpcionesProgramaEducativoAsync(int idEntidadAcademica)
+        {
+            return await _programaEducativoRepository.ObtenerPorFiltroAsync(new BuscarProgramaEducativoDTO { IdEntidadAcademica = idEntidadAcademica });
+        }
+
+        public async Task<List<OfertaDTO>> ObtenerOfertasGuardadasAsync(
+    int idEntidadAcademica, int idProgramaEducativo, int idPeriodo)
+        {
+            return await _programacionAcademicaRepository
+                .ObtenerOfertasGuardadasAsync(idEntidadAcademica, idProgramaEducativo, idPeriodo);
+        }
     }
 }

@@ -19,5 +19,13 @@ public interface IProgramacionAcademicaService
     List<OfertaDTO> ofertasEnSesion);
 
     Task<List<EntidadAcademica>> ObtenerOpcionesEntidadAcademicaAsync(string region);
+
+    Task<List<ProgramaEducativo>> ObtenerOpcionesProgramaEducativoAsync(int idEntidadAcademica);
+
+    Task<List<ResumenOfertaProgramacionAcademicaDTO>> ObtenerResumenPorProgramaPeriodoAsync(BuscarProgramacionAcademicaDTO? filtro);
+
+    Task<List<OfertaDTO>> ObtenerOfertasGuardadasAsync(int idEntidadAcademica, int idProgramaEducativo, int idPeriodo);
+
+
 }
 
