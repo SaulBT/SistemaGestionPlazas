@@ -23,6 +23,7 @@ namespace SGPla.Controllers
         private const string INDEX = "Index:";
         private const string REGISTRAR_ACADEMICO = "RegistrarPersonalAcademicoAsync:";
         private const string REGISTRAR_EXTERNO = "RegistrarPersonalExterno:";
+        private const string EDITAR_ACADEMICO = "EditarPersonalAcademicoAsync:";
 
         private const string LOG_ERROR_GRADOS_AGREGADOS = "No se pudo cargar la lista de Grados agregados.";
 
@@ -34,6 +35,8 @@ namespace SGPla.Controllers
         private static List<string> HEADERS_TABLA_GRADOS = ["Grado", "Área", "Mayor grado de estudios", "Acciones"];
 
         private const string SESSION_GRADOS_AGREGADOS = "GradosAgregados";
+        private const string SESSION_GRADOS_EDITADOS = "GradosEditados";
+        private const string SESSION_GRADOS_ELIMINADOS = "GradosEliminados";
 
         public DocentesController(
             IDocenteService docenteService,
@@ -444,6 +447,56 @@ namespace SGPla.Controllers
             return true;
         }
 
+        // =============
+        // EditarDocente
+        // =============
+
+        //Vista
+        [HttpGet]
+        public IActionResult EditarPersonalInterno(EditarDocenteViewModel modelo)
+        {
+
+        }
+
+        private async Task<EditarDocenteViewModel> inicializarEdicionDocenteAsync(int idDocente)
+        {
+            var modelo = new EditarDocenteViewModel
+            {
+                Tabla = TablaFactory.GenerarTablaConMensaje(HEADERS_TABLA_GRADOS, string.Format(Constantes.ERROR_TABLA, Constantes.GRADOS)),
+                OpcionesPuesto = generarListaPuestos("")
+            };
+
+            try
+            {
+                var datosDocente = await _docenteService.ObtenerDocenteAsync(idDocente);
+                modelo.IdDocente = idDocente;
+                modelo.Nombre = datosDocente.Nombre;
+                modelo.DescripcionPerfil = datosDocente.DescripcionPerfil;
+                modelo.Tabla = generarTablaGradosEdicion(datosDocente.Grados);
+                modelo.NumeroPersonal = datosDocente.NumeroPersonal;
+                modelo.OpcionesPuesto = generarListaPuestos(datosDocente.Puesto);
+
+                var formularioGrados = new FormularioGradoViewModel
+                {
+                    ListaGrados = generarListaGrados()
+                };
+                modelo.Formluario = formularioGrados;
+                modelo.Recarga = true;
+                modelo.NuevoArchivo = false;
+
+                HttpContext.Session.SetString(SESSION_GRADOS_AGREGADOS, JsonSerializer.Serialize(new List<AgregarGradoDTO>()));
+                HttpContext.Session.SetString(SESSION_GRADOS_EDITADOS, JsonSerializer.Serialize(new List<DatosGradoDTO>()));
+                HttpContext.Session.SetString(SESSION_GRADOS_ELIMINADOS, JsonSerializer.Serialize(new List<int>()));
+
+                return modelo;
+            }
+            catch (ValidacionExcepction vx)
+            {
+                this.LanzarError(_logger, vx, NOMBRE_LOGGER, EDITAR_ACADEMICO, Constantes.LOG_ERROR_INESPERADO);
+                return modelo;
+            }
+        }
+
         // ==========
         // Utils
         // ==========
@@ -478,6 +531,45 @@ namespace SGPla.Controllers
                                 {
                                     Accion = "eliminar",
                                     OnClick = $"abrirModalEliminarGrado('{grado.IdTemporal}')"
+                                }
+                            }
+                        }
+                    }
+                }).ToList()
+            };
+        }
+
+        private TableModel generarTablaGradosEdicion(List<DatosGradoDTO> lista)
+        {
+            if (lista.Count == 0)
+                return TablaFactory.GenerarTablaConMensaje(HEADERS_TABLA_GRADOS, "No se han agregado grados.");
+            return new TableModel()
+            {
+                Headers = HEADERS_TABLA_GRADOS,
+                Rows = lista.Select(grado => new TableRowModel
+                {
+                    Cells = new List<TableCellModel>
+                    {
+                        new() { Value = grado.Grado },
+                        new() { Value = grado.Titulo },
+                        new()
+                        {
+                            IsCheckBox = true,
+                            Checked = grado.Ultimo
+                        },
+                        new()
+                        {
+                            Actions = new List<TableActionModel>
+                            {
+                                new()
+                                {
+                                    Accion = "editar",
+                                    OnClick = $"abrirModalEditarGrado('{grado.IdGrado}', '{grado.Grado}', '{grado.Titulo}', {grado.Ultimo.ToString().ToLower()})"
+                                },
+                                new()
+                                {
+                                    Accion = "eliminar",
+                                    OnClick = $"abrirModalEliminarGrado('{grado.IdGrado}')"
                                 }
                             }
                         }
