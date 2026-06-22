@@ -21,15 +21,14 @@ function abrirModalAgregarGrado() {
 }
 
 function limpiarErrorresAgregar() {
-    //errorGradoAgregar.textContent = "";
-    //errorGradoAgregar.style.display = "none";
+    errorGradoAgregar.textContent = "";
+    errorGradoAgregar.style.display = "none";
 
     errorAreaAgregar.textContent = "";
     errorAreaAgregar.style.display = "none";
 }
 
 async function agregarGrado() {
-    console.log("Si está entrando a la agregación.");
     limpiarErrorresAgregar();
     if (verificarCamposAgregar()) {
         const response = await fetch(`${UrlAgregarGrado}?grado=${encodeURIComponent(gradoAgregar.value)}&titulo=${encodeURIComponent(areaAgregar.value)}&ultimo=${encodeURIComponent(ultimoAgregar.checked)}`, {
@@ -50,8 +49,8 @@ function verificarCamposAgregar() {
 
     if (!gradoAgregar.value) {
         correcto = false;
-        //errorGradoAgregar.textContent = "El Grado es obligatorio.";
-        //errorGradoAgregar.style.display = "block";
+        errorGradoAgregar.textContent = "El Grado es obligatorio.";
+        errorGradoAgregar.style.display = "block";
     }
     if (!areaAgregar.value) {
         correcto = false;
@@ -75,25 +74,25 @@ const errorGradoEditar = document.getElementById("sfGradoEditar-Error");
 const errorAreaEditar = document.getElementById("ifAreaEditar-Error");
 
 function abrirModalEditarGrado(idTemporal, grado, titulo, ultimo) {
+
     limpiarErrorresEditar();
-    abrirModal("modalEditarGrado")
 
     idTemporalEditar.value = idTemporal;
     gradoEditar.value = grado;
     areaEditar.value = titulo;
     ultimoEditar.checked = ultimo;
+    abrirModal("modalEditarGrado");
 }
 
 function limpiarErrorresEditar() {
-    //errorGradoEditar.textContent = "";
-    //errorGradoEditar.style.display = "none";
+    errorGradoEditar.textContent = "";
+    errorGradoEditar.style.display = "none";
 
     errorAreaEditar.textContent = "";
     errorAreaEditar.style.display = "none";
 }
 
 async function editarGrado() {
-    console.log("Si está entrando a la edición.");
     limpiarErrorresEditar();
     if (verificarCamposEditar()) {
         const response = await fetch(`${UrlEditarGrado}?idTemporal=${encodeURIComponent(idTemporalEditar.value)}&grado=${encodeURIComponent(gradoEditar.value)}&titulo=${encodeURIComponent(areaEditar.value)}&ultimo=${encodeURIComponent(ultimoEditar.checked)}`, {
@@ -114,8 +113,8 @@ function verificarCamposEditar() {
 
     if (!gradoEditar.value) {
         correcto = false;
-        //errorGradoAgregar.textContent = "El Grado es obligatorio.";
-        //errorGradoAgregar.style.display = "block";
+        errorGradoEditar.textContent = "El Grado es obligatorio.";
+        errorGradoEditar.style.display = "block";
     }
     if (!areaEditar.value) {
         correcto = false;
@@ -124,4 +123,26 @@ function verificarCamposEditar() {
     }
 
     return correcto;
+}
+
+// ==========
+// Eliminar
+// ==========
+var idTemporalEliminar = 0;
+function abrirModalEliminarGrado(idTemporal) {
+    idTemporalEliminar = idTemporal;
+    abrirModal("modalEliminarGrado");
+}
+
+async function eliminarGrado(edicion) {
+    const response = await fetch(`${UrlEliminarGrado}?idTemporal=${encodeURIComponent(idTemporalEliminar)}`, {
+        method: "GET"
+    });
+
+    if (response.ok) {
+        const html = await response.text();
+        tabla.innerHTML = html;
+
+        cerrarModal("modalEliminarGrado");
+    }
 }
