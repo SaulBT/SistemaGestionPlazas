@@ -92,9 +92,10 @@
         public static List<string> GRADOS = [LIC, MTRO, MTRA, DR, DRA];
 
         public const string LICENCIATURA = "Licenciatura";
+        public const string ESPECIALIDAD = "Especialidad";
         public const string DOCTORADO = "Doctorado";
-        public const string MAESTRIA = "Maestria";
-        public static List<string> GRADOS_DOCENTES = [LICENCIATURA, MAESTRIA, DOCTORADO];
+        public const string MAESTRIA = "Maestría";
+        public static List<string> GRADOS_DOCENTES = [LICENCIATURA, ESPECIALIDAD, MAESTRIA, DOCTORADO];
 
         public const string INVESTIGADOR = "Investigador";
         public const string DOCENTE = "Docente";
