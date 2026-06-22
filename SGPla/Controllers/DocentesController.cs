@@ -314,7 +314,8 @@ namespace SGPla.Controllers
                     };
                     await _docenteService.RegistrarDocenteAsync(dto);
                     TempData["Success"] = string.Format(Constantes.TOAST_GUARDADO_EL, Constantes.PERSONAL_ACADEMICO);
-                    return RedirectToAction(nameof(IndexAsync));
+                    System.IO.File.Delete(ruta);
+                    return RedirectToAction("Index");
                 }
                 else
                 {
@@ -471,7 +472,7 @@ namespace SGPla.Controllers
                                 new()
                                 {
                                     Accion = "editar",
-                                    OnClick = $"abrirModalEditarGrado('{grado.IdTemporal}', '{grado.Grado}', '{grado.Titulo}', '{grado.Ultimo}')"
+                                    OnClick = $"abrirModalEditarGrado('{grado.IdTemporal}', '{grado.Grado}', '{grado.Titulo}', {grado.Ultimo.ToString().ToLower()})"
                                 },
                                 new()
                                 {
@@ -586,7 +587,7 @@ namespace SGPla.Controllers
         }
 
         [HttpGet]
-        public IActionResult EliminarGradoRegistro(int idTemporal, string grado, string titulo, bool ultimo)
+        public IActionResult EliminarGradoRegistro(int idTemporal)
         {
             bool error = false;
             var tabla = new TableModel();
