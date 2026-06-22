@@ -19,7 +19,7 @@ public partial class Docente
 
     public virtual ICollection<Dictamen> Dictamen { get; set; } = new List<Dictamen>();
 
-    public virtual Grado? Grado { get; set; }
+    public virtual ICollection<Grado> Grado { get; set; } = new List<Grado>();
 
     public virtual Archivo? IdArchivosGeneralesNavigation { get; set; }
 
