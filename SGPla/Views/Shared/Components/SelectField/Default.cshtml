@@ -17,8 +17,8 @@
                         Model.HtmlAttributes != null
                             ? string.Join(" ", Model.HtmlAttributes.Select(a => $"{a.Key}=\"{a.Value}\""))
                             : ""
-                    )>
-                >
+                )
+        >
 
             @* Placeholder *@
             @if (!string.IsNullOrWhiteSpace(Model.Placeholder))
@@ -29,7 +29,7 @@
                 </option>
             }
 
-            @foreach (var option in Model.Options)
+            @foreach (var option in Model.Options ?? Enumerable.Empty<OptionModel>())
             {
                 <option value="@option.Value"
                         selected="@(option.Selected ? "selected" : null)">
