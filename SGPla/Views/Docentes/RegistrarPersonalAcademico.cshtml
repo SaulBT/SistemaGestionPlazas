@@ -5,7 +5,7 @@
     ViewData["Title"] = "Nuevo Personal Academico";
 }
 
-<form method="post" action="@Url.Action("GuardarDocente", "PlanesEstudios")" enctype="multipart/form-data">
+<form method="post" action="@Url.Action("GuardarDocente", "Docentes")" enctype="multipart/form-data">
     <div class="d-flex row gap-3">
         <!-- Nombre -->
         @await Component.InvokeAsync("InputField", new InputFieldModel
@@ -36,6 +36,10 @@
                 Texto = "Subir Archivo",
                 OnClick = "abrirModalArchivo()"
             })
+
+            <div id="banderaArchivo" class="text-wrapper" style="display:inline-flex; align-content:center">
+                <i class="bi bi-file-earmark-x-fill" style="font-size:20px;color:var(--negativo-rojo-letra)"></i>
+            </div>
         </div>
 
         <div class="d-flex justify-content-end">
@@ -84,6 +88,14 @@
             })
         </div>
     </div>
+
+    <!-- Modal Archivo -->
+    @await Component.InvokeAsync("ModalArchivo", new ModalArchivoModel
+    {
+        Id = "modalArchivo",
+        FormatosAceptados = ".pdf",
+        TamanioMaximo = 20
+    })
 </form>
 
 <!-- MODALES -->
@@ -127,6 +139,14 @@
         const response = await fetch('@Url.Action("CancelarAccion", "Docentes")');
         const data = await response.json();
         window.location.href = data.url;
+    }
+
+    function abrirModalArchivo() {
+        abrirModal("modalArchivo");
+    }
+
+    window.configBanderaArchivo = {
+        idBandera: 'banderaArchivo'
     }
 </script>
 
