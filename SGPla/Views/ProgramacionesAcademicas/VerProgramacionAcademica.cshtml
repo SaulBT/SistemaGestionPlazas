@@ -56,25 +56,35 @@
         })
     </div>
 </div>
+<div class="tabs-container" id="miTabs">
 
-<div class="mb-4">
-    <ul class="nav nav-tabs">
-        <li class="nav-item">
-            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#asignadas" type="button">Asignadas</button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#vacantes" type="button">Vacantes</button>
-        </li>
-    </ul>
-</div>
+    <div class="tabs-header">
 
-<div class="tab-content">
-    <div class="tab-pane fade show active pt-3" id="asignadas">
-        @await Component.InvokeAsync("Table", Model.TableAsignadas)
+        <button class="tab-button active" data-tab="0"
+                onclick="seleccionarTab('miTabs', 0)">
+            Asignadas
+        </button>
+
+        <button class="tab-button"
+                data-tab="1"
+                onclick="seleccionarTab('miTabs', 1)">
+            Vacantes
+        </button>
+
     </div>
-    <div class="tab-pane fade pt-3" id="vacantes">
-        @await Component.InvokeAsync("Table", Model.TableVacantes)
+
+    <div class="tabs-body">
+
+        <div class="tab-content active" data-tab="0">
+            @await Component.InvokeAsync("Table", Model.TableAsignadas)
+        </div>
+
+        <div class="tab-content" data-tab="1">
+            @await Component.InvokeAsync("Table", Model.TableVacantes)
+        </div>
+
     </div>
+
 </div>
 
 <!-- Botón Regresar -->
@@ -86,6 +96,29 @@
         })
     </a>
 </div>
+
+<script>
+            function seleccionarTab(containerId, index) {
+
+        const container = document.getElementById(containerId);
+
+        const buttons = container.querySelectorAll(".tab-button");
+        const contents = container.querySelectorAll(".tab-content");
+
+        buttons.forEach(b => b.classList.remove("active"));
+        contents.forEach(c => c.classList.remove("active"));
+
+        const btn = container.querySelector(`[data-tab="${index}"].tab-button`);
+        const content = container.querySelector(`[data-tab="${index}"].tab-content`);
+
+        if (!btn || !content) return;
+
+        btn.classList.add("active");
+        content.classList.add("active");
+
+        localStorage.setItem(`tabs-${containerId}`, index);
+    }
+</script>
 
 <script>
     document.addEventListener('shown.bs.tab', function (e) {

@@ -452,11 +452,11 @@ namespace SGPla.Controllers
         // =============
 
         //Vista
-        [HttpGet]
-        public IActionResult EditarPersonalInterno(EditarDocenteViewModel modelo)
-        {
+        //[HttpGet]
+        //public IActionResult EditarPersonalInterno(EditarDocenteViewModel modelo)
+        //{
 
-        }
+        //}
 
         private async Task<EditarDocenteViewModel> inicializarEdicionDocenteAsync(int idDocente)
         {

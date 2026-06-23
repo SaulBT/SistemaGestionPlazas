@@ -62,8 +62,8 @@
 			Disabled = true
 		})
 	</div>
-</div>
 
+</div>
 
 <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:flex-start; justify-content:space-evenly;">
 
@@ -80,53 +80,52 @@
 	</div>
 </div>
 
-<div class="mb-4">
-	<ul class="nav nav-tabs">
-		<li class="nav-item">
-			<button class="nav-link active"
-					data-bs-toggle="tab"
-					data-bs-target="#asignadas"
-					type="button">
-				Asignadas
-			</button>
-		</li>
+<div class="tabs-container" id="miTabs">
 
-		<li class="nav-item">
-			<button class="nav-link"
-					data-bs-toggle="tab"
-					data-bs-target="#vacantes"
-					type="button">
-				Vacantes
-			</button>
-		</li>
-	</ul>
-</div>
+	<div class="tabs-header">
 
-<div class="tab-content">
+		<button class="tab-button active" data-tab="0"
+				onclick="seleccionarTab('miTabs', 0)">
+			Asignadas
+		</button>
 
-	<div class="tab-pane fade show active pt-3" id="asignadas">
-		@await Component.InvokeAsync("Table", Model.TableAsignadas)
+		<button class="tab-button"
+				data-tab="1"
+				onclick="seleccionarTab('miTabs', 1)">
+			Vacantes
+		</button>
+
 	</div>
 
-	<div class="tab-pane fade pt-3" id="vacantes">
+	<div class="tabs-body">
 
-		<div class="mb-4" style="max-width:300px;">
-			@await Component.InvokeAsync("SelectField", new SelectFieldModel
-			{
-				Id = "Articulo",
-				Label = "Artículo",
-				Options = Model.Articulos,
-				Name = "Articulo",
-				SelectedValue = Model.IdArticulo?.ToString(),
-				Error = ViewData.ModelState["Articulo"]?.Errors.FirstOrDefault()?.ErrorMessage
-			})
+		<div class="tab-content active" data-tab="0">
+			@await Component.InvokeAsync("Table", Model.TableAsignadas)
 		</div>
 
-		@await Component.InvokeAsync("Table", Model.TableVacantes)
+		<div class="tab-content" data-tab="1">
+			<div class="mb-4" style="max-width:300px;">
+				@await Component.InvokeAsync("SelectField", new SelectFieldModel
+				{
+					Id = "Articulo",
+					Label = "Artículo: ",
+					Options = Model.Articulos,
+					Name = "Articulo",
+					SelectedValue = Model.IdArticulo?.ToString(),
+					Error = ViewData.ModelState["Articulo"]?.Errors.FirstOrDefault()?.ErrorMessage
+				})
+			</div>
+
+			@await Component.InvokeAsync("Table", Model.TableVacantes)
+		</div>
 
 	</div>
 
 </div>
+
+	
+
+
 
 <form method="post" action="@Url.Action("Guardar", "ProgramacionesAcademicas")">
 	@Html.AntiForgeryToken()
@@ -149,27 +148,26 @@
 
 
 <script>
-	document.addEventListener('shown.bs.tab', function (e) {
-		const target = e.target.getAttribute('data-bs-target');
+			function seleccionarTab(containerId, index) {
 
-		sessionStorage.setItem('tabActiva', target);
+		const container = document.getElementById(containerId);
 
-		document.querySelector(target)
-			?.querySelectorAll('table[data-pagination-mode="client"]')
-			.forEach(t => inicializarTablaCliente(t.id));
-	});
+		const buttons = container.querySelectorAll(".tab-button");
+		const contents = container.querySelectorAll(".tab-content");
 
-	function restaurarTabActiva() {
-		const tabGuardada = sessionStorage.getItem('tabActiva');
-		if (!tabGuardada) return;
+		buttons.forEach(b => b.classList.remove("active"));
+		contents.forEach(c => c.classList.remove("active"));
 
-		const boton = document.querySelector(`button[data-bs-target="${tabGuardada}"]`);
-		if (boton) {
-			new bootstrap.Tab(boton).show();
-		}
+		const btn = container.querySelector(`[data-tab="${index}"].tab-button`);
+		const content = container.querySelector(`[data-tab="${index}"].tab-content`);
+
+		if (!btn || !content) return;
+
+		btn.classList.add("active");
+		content.classList.add("active");
+
+		localStorage.setItem(`tabs-${containerId}`, index);
 	}
-
-	document.addEventListener('DOMContentLoaded', restaurarTabActiva);
 </script>
 
 
@@ -195,5 +193,23 @@
 
 		window.location =
 			`/ProgramacionesAcademicas/FiltrarPrograma?programa=${programa}`;
+	});
+</script>
+
+
+<script>
+				window.addEventListener("load", () => {
+
+		document.querySelectorAll(".tabs-container").forEach(container => {
+
+			const containerId = container.id;
+
+			const savedIndex = localStorage.getItem(`tabs-${containerId}`);
+
+			if (savedIndex === null) return;
+
+			seleccionarTab(containerId, parseInt(savedIndex));
+		});
+
 	});
 </script>
