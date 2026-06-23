@@ -131,7 +131,7 @@ namespace SGPla.Controllers
                                     new()
                                     {
                                         Accion = "editar",
-                                        Url = Url.Action("EditarPersonalAcademico", "Docentes", new {modelo = new EditarDocenteViewModel{ IdDocente = docente.IdDocente } })
+                                        Url = Url.Action("EditarPersonalAcademico", "Docentes", new {IdDocente = docente.IdDocente})
                                     },
                                     new()
                                     {
@@ -473,7 +473,7 @@ namespace SGPla.Controllers
                 HttpContext.Session.SetString(SESSION_GRADOS_AGREGADOS, JsonSerializer.Serialize(new List<AgregarGradoDTO>()));
                 HttpContext.Session.SetString(SESSION_GRADOS_EDITADOS, JsonSerializer.Serialize(new List<DatosGradoDTO>()));
                 HttpContext.Session.SetString(SESSION_GRADOS_ELIMINADOS, JsonSerializer.Serialize(new List<int>()));
-                HttpContext.Session.SetString(SESSION_GRADOS, JsonSerializer.Serialize(new List<DatosGradoDTO>()));
+                HttpContext.Session.SetString(SESSION_GRADOS, JsonSerializer.Serialize(datosDocente.Grados));
 
                 return (modelo, false);
             }
@@ -550,10 +550,11 @@ namespace SGPla.Controllers
                     return RedirectToAction("Index");
                 }
 
-                if (!validarEdicion(grados, modelo.Archivo, EDITAR_ACADEMICO))
+                if (!validarEdicion(grados, modelo.NuevoArchivo, modelo.Archivo, EDITAR_ACADEMICO))
                     return await EditarPersonalAcademicoAsync(modelo);
 
                 await procesarEdicionDocenteAsync(modelo, gradosAgregados, gradosEditados, gradosEliminados);
+                TempData["Success"] = string.Format(Constantes.TOAST_GUARDADO_EL, Constantes.PERSONAL_ACADEMICO);
 
                 return RedirectToAction("Index");
             }
@@ -593,7 +594,7 @@ namespace SGPla.Controllers
                 Puesto = modelo.Puesto
             };
 
-            if (modelo.NuevoArchivo)
+            if (modelo.Archivo is not null)
             {
                 var (nombre, ruta) = await _archivoService.GuardarTemporalmenteAsync(modelo.Archivo);
                 var archivoDTO = new CargarArchivoDTO
@@ -603,6 +604,7 @@ namespace SGPla.Controllers
                 };
 
                 docenteDto.ArchivosGenerales = archivoDTO;
+                docenteDto.NuevoArchivo = true;
             }
 
             await _docenteService.EditarDocenteAsync(docenteDto);
@@ -675,12 +677,12 @@ namespace SGPla.Controllers
                                 new()
                                 {
                                     Accion = "editar",
-                                    OnClick = $"abrirModalEditarGrado('{grado.IdGrado}', '{grado.Grado}', '{grado.Titulo}', {grado.Ultimo.ToString().ToLower()})"
+                                    OnClick = $"abrirModalEditarGrado('{grado.IdGrado}', '{grado.IdDocente}', '{grado.Grado}', '{grado.Titulo}', {grado.Ultimo.ToString().ToLower()})"
                                 },
                                 new()
                                 {
                                     Accion = "eliminar",
-                                    OnClick = $"abrirModalEliminarGrado('{grado.IdGrado}')"
+                                    OnClick = $"abrirModalEliminarGrado('{grado.IdGrado}', {(grado.IdTemporal > 0).ToString().ToLower()})"
                                 }
                             }
                         }
@@ -747,7 +749,7 @@ namespace SGPla.Controllers
             return true;
         }
 
-        private bool validarEdicion(List<DatosGradoDTO> grados, IFormFile archivo, string metodo)
+        private bool validarEdicion(List<DatosGradoDTO> grados, bool nuevoArchivo, IFormFile? archivo, string metodo)
         {
             if (grados.Count < 1)
             {
@@ -775,7 +777,7 @@ namespace SGPla.Controllers
                 return false;
             }
 
-            if (archivo == null)
+            if (nuevoArchivo && archivo == null)
             {
                 this.LanzarError(_logger, null, NOMBRE_LOGGER, metodo, Constantes.LOG_ERROR_VALIDACION, "Debes cargar un archivo.");
                 return false;
@@ -900,7 +902,7 @@ namespace SGPla.Controllers
         }
 
         //Gestionar Grados Edicion
-        [HttpGet]
+        [HttpPost]
         public IActionResult AgregarGradoEdicion([FromBody] AgregarGradoDTO agregarGradoDTO)
         {
             try
@@ -972,7 +974,7 @@ namespace SGPla.Controllers
             return (gradosAgregados, grados);
         }
 
-        [HttpGet]
+        [HttpPost]
         public IActionResult EditarGradoEdicion([FromBody] DatosGradoDTO datosGradoDTO)
         {
             try
@@ -1045,19 +1047,24 @@ namespace SGPla.Controllers
             }
             else if (datosGradoDTO.IdGrado > 0 && datosGradoDTO.IdTemporal == 0)
             {
-                var gradoEditado = gradosEditados.FirstOrDefault(g => g.IdGrado == datosGradoDTO.IdGrado);
-                ArgumentNullException.ThrowIfNull(gradoEditado, "Grado a editar en lista de Grados editados.");
-
                 var grado = grados.FirstOrDefault(g => g.IdGrado == datosGradoDTO.IdGrado);
                 ArgumentNullException.ThrowIfNull(grado, "Grado a editar en lista de Grados.");
-
-                gradoEditado.Grado = datosGradoDTO.Grado;
-                gradoEditado.Titulo = datosGradoDTO.Titulo;
-                gradoEditado.Ultimo = datosGradoDTO.Ultimo;
 
                 grado.Grado = datosGradoDTO.Grado;
                 grado.Titulo = datosGradoDTO.Titulo;
                 grado.Ultimo = datosGradoDTO.Ultimo;
+
+                var gradoEditado = gradosEditados.FirstOrDefault(g => g.IdGrado == datosGradoDTO.IdGrado);
+                if (gradoEditado is null)
+                    gradosEditados.Add(datosGradoDTO);
+                else
+                {
+                    gradoEditado.IdGrado = datosGradoDTO.IdGrado;
+                    gradoEditado.IdDocente = datosGradoDTO.IdDocente;
+                    gradoEditado.Grado = datosGradoDTO.Grado;
+                    gradoEditado.Titulo = datosGradoDTO.Titulo;
+                    gradoEditado.Ultimo = datosGradoDTO.Ultimo;
+                }
             }
             else
             {
@@ -1142,13 +1149,14 @@ namespace SGPla.Controllers
             }
             else
             {
-                var gradoEditadoEliminado = gradosEditados.FirstOrDefault(g => g.IdGrado == idGrado);
-                ArgumentNullException.ThrowIfNull(gradoEditadoEliminado, "Grado a eliminar en lista de Grados editados.");
                 var grado = grados.FirstOrDefault(g => g.IdGrado == idGrado);
                 ArgumentNullException.ThrowIfNull(grado, "Grado a eliminar en lista de Grados.");
-
-                gradosEditados.Remove(gradoEditadoEliminado);
                 grados.Remove(grado);
+
+                var gradoEditadoEliminado = gradosEditados.FirstOrDefault(g => g.IdGrado == idGrado);
+                if (gradoEditadoEliminado is not null)
+                    gradosEditados.Remove(gradoEditadoEliminado);
+
                 gradosEliminados.Add(idGrado);
             }
 

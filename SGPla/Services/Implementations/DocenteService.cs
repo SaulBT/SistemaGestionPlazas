@@ -138,7 +138,7 @@ namespace SGPla.Services.Implementations
                         archivoAnterior.Ruta = archivoNuevoGuardado.Ruta;
                         archivoAnterior.Tipo = archivoNuevoGuardado.Tipo;
                         archivoAnterior.Tamanio = archivoNuevoGuardado.Tamanio;
-                        await _archivoRepository.EliminarAsync(archivoAnterior);
+                        //await _archivoRepository.EliminarAsync(archivoAnterior);
                     }
                 }
 
@@ -215,6 +215,7 @@ namespace SGPla.Services.Implementations
             return new DatosGradoDTO
             {
                 IdGrado = grado.IdGrado,
+                IdDocente = grado.IdDocente,
                 Grado = grado.Grado1,
                 Titulo = grado.Titulo,
                 Ultimo = grado.Ultimo
