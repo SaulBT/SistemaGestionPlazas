@@ -1,0 +1,46 @@
+﻿@model SGPla.Models.Components.TabsModel
+
+<div class="tabs-container" id="@Model.Id">
+
+    <div class="tabs-header">
+
+        @for (int i = 0; i < Model.Tabs.Count; i++)
+        {
+            var tab = Model.Tabs[i];
+
+            <button type="button"
+                    class="tab-button @(i == Model.TabActivaPorDefecto ? "active" : "")"
+                    onclick="seleccionarTab('@Model.Id', @i)">
+
+                @if (!string.IsNullOrEmpty(tab.IconClass))
+                {
+                    <i class="@tab.IconClass"></i>
+                }
+
+                <span>@tab.Titulo</span>
+
+            </button>
+        }
+
+    </div>
+
+    <div class="tabs-body">
+
+        @for (int i = 0; i < Model.Tabs.Count; i++)
+        {
+            var tab = Model.Tabs[i];
+
+            <div class="tab-content @(i == Model.TabActivaPorDefecto ? "active" : "")">
+
+                @await Html.PartialAsync(
+                    tab.PartialView,
+                    tab.PartialModel
+                )
+
+            </div>
+        }
+
+    </div>
+
+</div>
+<script src="js/tabs.js"></script>

@@ -10,38 +10,16 @@
     <form id="filtrosForm" method="get" action="@Url.Action("Index", "ProgramasEducativos")">
 
         <!-- Filtros -->
-        <div style="display: flex; flex-direction: column; gap: 10px;">
-            @await Component.InvokeAsync("Boton", new BotonModel
-            {
-                Accion = "ver",
-                Tipo = "secundario",
-                Texto = "Mostrar Filtros",
-                OnClick = "toggleFilters()",
-                Id = "botonFiltros"
-            })
-            <div id="filtrosContainer" style="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease;">
-                @await Component.InvokeAsync("SelectField", new SelectFieldModel
-                {
-                    Label = "Región",
-                    Options = Model.Regiones,
-                    Name = "region"
-                })
-                @await Component.InvokeAsync("SelectField", new SelectFieldModel
-                {
-                    Label = "Área Académica",
-                    Options = Model.Areas,
-                    Name = "idAreaAcademica"
-                })
-                <div id="contenedorEntidad">
-                    @await Component.InvokeAsync("SelectField", new SelectFieldModel
-                    {
-                        Label = "Entidad Académica",
-                        Options = Model.Entidades,
-                        Name = "idEntidadAcademica"
-                    })
-                </div>
-            </div>
-        </div>
+        @await Component.InvokeAsync("ExpansionPanel",
+        new ExpansionPanelModel
+        {
+            Id = "panel-filtros",
+            Titulo = "Filtros",
+            PartialView = "_Filtros",
+            PartialModel = Model,
+            IconClass = "bi bi-funnel-fill"
+        })
+
         
 
         <!-- Acciones -->

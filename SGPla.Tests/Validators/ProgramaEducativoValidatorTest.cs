@@ -31,7 +31,7 @@ namespace SGPla.Tests.Validators
                 );
         }
 
-        //CP-02
+        //CP-05-02
         [Fact]
         public async Task CrearProgramaEducativoConDatosNulos()
         {
@@ -67,7 +67,7 @@ namespace SGPla.Tests.Validators
             Assert.Contains("El nombre del programa educativo es obligatorio.", ex.Message);
         }
 
-        //CP-03
+        //CP-05-03
         [Fact]
         public async Task CrearProgramaEducativoConIdEntidadAcademicaInvalida()
         {
@@ -84,7 +84,7 @@ namespace SGPla.Tests.Validators
             Assert.Contains("La entidad académica es obligatoria.", ex.Message);
         }
 
-        //CP-04
+        //CP-05-04
         [Fact]
         public async Task CrearProgramaEducativoConAreaAcademicaInexistente()
         {
@@ -104,7 +104,7 @@ namespace SGPla.Tests.Validators
      
 
 
-        //CP-09
+        //CP-05-08
         [Fact]
         public async Task ObtenerProgramaEducativoConIdInvalido()
         {
@@ -115,7 +115,7 @@ namespace SGPla.Tests.Validators
             Assert.Contains("El ID del programa educativo no es válido.", ex.Message);
         }
 
-        //CP-11
+        //CP-05-10
         [Fact]
         public async Task EditarProgramaEducativoConValoresNulos()
         {
@@ -143,7 +143,7 @@ namespace SGPla.Tests.Validators
             Assert.Contains("El nombre del programa educativo es obligatorio.", ex.Message);
         }
 
-        //CP-12
+        //CP-05-11
         [Fact]
         public async Task EditarProgramaEducativoConIdEntidadAcademicaInvalida()
         {
@@ -165,7 +165,7 @@ namespace SGPla.Tests.Validators
 
 
 
-        //CP-13
+        //CP-05-12
         [Fact]
         public async Task EditarProgramaEducativoConNombreInvalido()
         {
@@ -197,7 +197,7 @@ namespace SGPla.Tests.Validators
         }
 
 
-        //CP-14
+        //CP-05-13
         [Fact]
         public async Task EditarProgramaEducativoInexistente()
         {
@@ -229,7 +229,7 @@ namespace SGPla.Tests.Validators
 
 
 
-        //CP-16
+        //CP-05-15
         [Fact]
         public async Task EliminarProgramaEducativoConIdInvalido()
         {

@@ -1,5 +1,5 @@
 ﻿@{
-    Layout = "_LayoutSuperUsuario";
+    Layout = "_LayoutEntidadAcademica";
     ViewData["Title"] = "Inicio";
 }
 
@@ -413,6 +413,41 @@
     
 
     <br />
+
+    <div style="margin-left: 20px;">
+        @await Component.InvokeAsync("Tabs",
+        new TabsModel
+        {
+            Id = "tabs-plan-academico",
+
+            Tabs =
+            [
+                new()
+                {
+                    Titulo = "Datos Generales",
+                    IconClass = "bi bi-info-circle",
+                    PartialView = "_DatosGenerales",
+                    PartialModel = Model
+                },
+
+                new()
+                {
+                    Titulo = "Profesores",
+                    PartialView = "_Profesores",
+                    PartialModel = Model
+                },
+
+                new()
+                {
+                    Titulo = "Documentos",
+                    IconClass = "bi bi-file-earmark-text",
+                    PartialView = "_Documentos",
+                    PartialModel = Model
+                }
+            ]
+        })
+    </div>
+
 </div>
 
 

@@ -21,7 +21,7 @@ public class ArticuloValidatorTests
     }
 
 
-    //CP-69
+    //CP-02-02
     [Fact]
     public async Task CrearArticuloSinNumero()
     {
@@ -37,7 +37,7 @@ public class ArticuloValidatorTests
         Assert.Equal("El número del artículo debe contener al menos un número.", ex.Message);
     }
 
-    //CP-70
+    //CP-02-03
     [Fact]
     public async Task CrearArticuloConNumeroRepetido()
     {
@@ -65,7 +65,7 @@ public class ArticuloValidatorTests
         Assert.Equal($"El número de articulo '{dto.Numero}' ya existe. Por favor, elija un número diferente.", ex.Message);
     }
 
-    //CP-71
+    //CP-02-04
     [Fact]
     public async Task CrearArticuloConValoresNulos()
     {
@@ -81,7 +81,7 @@ public class ArticuloValidatorTests
         Assert.Equal("El número del artículo es obligatorio.", ex.Message);
     }
 
-    //CP-74
+    //CP-02-07
     [Fact]
     public async Task ObtenerArticulosConCadenaVacia()
     {
@@ -93,7 +93,7 @@ public class ArticuloValidatorTests
         Assert.Equal("La cadena de búsqueda no puede estar vacía.", ex.Message);
     }
 
-    //CP-76
+    //CP-02-09
     [Fact]
     public async Task ObtenerArticuloPorIdConIdInvalido()
     {
@@ -104,7 +104,7 @@ public class ArticuloValidatorTests
         Assert.Equal("El ID del artículo no es válido.", ex.Message);
     }
 
-    //CP-78
+    //CP-02-11
     [Fact]
     public async Task EditarArticuloConValoresNulos()
     {
@@ -120,7 +120,7 @@ public class ArticuloValidatorTests
         Assert.Equal("El número del artículo es obligatorio.", ex.Message);
     }
 
-    //CP-79
+    //CP-02-12
     [Fact]
     public async Task EditarArticuloNumeroRepetido()
     {
@@ -155,7 +155,7 @@ public class ArticuloValidatorTests
         Assert.Equal($"El número de articulo '{dto.Numero}' ya existe. Por favor, elija un número diferente.", ex.Message);
     }
 
-    //CP-81
+    //CP-02-14
     [Fact]
     public async Task EliminarArticuloConIdInvalido()
     {

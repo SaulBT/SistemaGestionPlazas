@@ -20,7 +20,7 @@ public class EntidadAcademicaServiceTests
             _entidadAcademicaValidatorMock.Object);
     }
 
-    //CP-48
+    //CP-04-01
     [Fact]
     public async Task CrearEntidadAcademica()
     {
@@ -57,7 +57,7 @@ public class EntidadAcademicaServiceTests
         _entidadAcademicaRepositoryMock.Verify(repository => repository.CrearAsync(It.IsAny<EntidadAcademica>()), Times.Once);
     }
 
-    //CP-54
+    //CP-04-07
     [Fact]
     public async Task ObtenerListaDeEntidadesAcademicas()
     {
@@ -141,7 +141,7 @@ public class EntidadAcademicaServiceTests
         _entidadAcademicaRepositoryMock.Verify(repository => repository.ObtenerDiezAsync(1), Times.Once);
     }
 
-    //CP-55
+    //CP-04-08
     [Fact]
     public async Task ObtenerListaDeEntidadesAcademicasConFiltro()
     {
@@ -196,7 +196,7 @@ public class EntidadAcademicaServiceTests
         _entidadAcademicaRepositoryMock.Verify(repository => repository.ObtenerPorFiltroAsync(filtro.Region, filtro.IdAreaAcademica, filtro.Nombre, 1, filtro.Cantidad), Times.Once);
     }
 
-    //CP-56
+    //CP-04-09
     [Fact]
     public async Task ObtenerEntidadAcademica()
     {
@@ -245,7 +245,7 @@ public class EntidadAcademicaServiceTests
         _entidadAcademicaRepositoryMock.Verify(repository => repository.ObtenerPorIdAsync(12), Times.Once);
     }
 
-    //CP-58
+    //CP-04-11
     [Fact]
     public async Task EditarEntidadAcademica()
     {
@@ -279,7 +279,7 @@ public class EntidadAcademicaServiceTests
         _entidadAcademicaRepositoryMock.Verify(repository => repository.ActualizarAsync(It.IsAny<EntidadAcademica>()), Times.Once);
     }
 
-    //CP-66
+    //CP-04-19
     [Fact]
     public async Task EliminarEntidadAcademica()
     {

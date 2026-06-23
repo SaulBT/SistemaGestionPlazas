@@ -61,6 +61,18 @@ builder.Services.AddScoped<IPeriodoEscolarValidator, PeriodoEscolarValidator>();
 builder.Services.AddScoped<IArchivoRepository, ArchivoRepository>();
 builder.Services.AddScoped<IArchivoService, ArchivoService>();
 
+builder.Services.AddScoped<IIntegranteCtService, IntegranteCtService>();
+builder.Services.AddScoped<IIntegranteCtRepository, IntegranteCtRepository>();
+builder.Services.AddScoped<IIntegranteCtValidator, IntegranteCtValidator>();
+
+builder.Services.AddScoped<IDocenteService, DocenteService>();
+builder.Services.AddScoped<IDocenteRepository, DocenteRepository>();
+builder.Services.AddScoped<IDocenteValidator, DocenteValidator>();
+builder.Services.AddScoped<IAspiranteService, AspiranteService>();
+builder.Services.AddScoped<IAspiranteRepository, AspiranteRepository>();
+builder.Services.AddScoped<IAspiranteValidator, AspiranteValidator>();
+builder.Services.AddScoped<IGradoRepository, GradoRepository>();
+
 builder.Services.AddScoped<IProgramacionAcademicaRepository, ProgramacionAcademicaRepository>();
 builder.Services.AddScoped<IDocenteRepository, DocenteRepository>();
 

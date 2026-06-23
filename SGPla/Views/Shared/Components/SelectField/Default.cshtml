@@ -1,6 +1,7 @@
 ﻿@model SelectFieldModel
 
-<div class="select-field @(Model.Flexible ? "flexible" : "")">
+<div class="select-field @(Model.Flexible ? "flexible" : "")"
+     style="@Model.ContainerStyle">
     @if (!string.IsNullOrWhiteSpace(Model.Label))
     {
         <div class="text-wrapper">
@@ -17,8 +18,8 @@
                         Model.HtmlAttributes != null
                             ? string.Join(" ", Model.HtmlAttributes.Select(a => $"{a.Key}=\"{a.Value}\""))
                             : ""
-                    )>
-                >
+                )
+        >
 
             @* Placeholder *@
             @if (!string.IsNullOrWhiteSpace(Model.Placeholder))
@@ -29,7 +30,7 @@
                 </option>
             }
 
-            @foreach (var option in Model.Options)
+            @foreach (var option in Model.Options ?? Enumerable.Empty<OptionModel>())
             {
                 <option value="@option.Value"
                         selected="@(option.Selected ? "selected" : null)">
@@ -43,6 +44,6 @@
 
     @if (!string.IsNullOrEmpty(Model.Error))
     {
-        <span class="select-error-text">@Model.Error</span>
+        <span id="@Model.Id-Error" class="select-error-text">@Model.Error</span>
     }
 </div>

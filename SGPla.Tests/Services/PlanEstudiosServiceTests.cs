@@ -19,7 +19,7 @@ public class PlanEstudiosServiceTests
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
     }
 
-    // CP-82
+    //CP-06-01
     [Fact]
     public void ProcesarArchivoDePlanDeEstudios()
     {
@@ -68,7 +68,7 @@ public class PlanEstudiosServiceTests
         }
     }
 
-    // CP-85
+    //CP-06-04
     [Fact]
     public async Task AgregarPlanDeEstudios()
     {
@@ -179,7 +179,7 @@ public class PlanEstudiosServiceTests
         experienciaEducativaRepositoryMock.Verify(r => r.CrearExperienciasEducativasAsync(It.IsAny<List<ExperienciaEducativa>>()), Times.Once);
     }
 
-    // CP-93
+    //CP-06-12
     [Fact]
     public async Task ObtenerTodosLosPlanesDeEstudio()
     {
@@ -222,7 +222,7 @@ public class PlanEstudiosServiceTests
         planEstudiosRepositoryMock.Verify(r => r.ObtenerTodosAsync(), Times.Once);
     }
 
-    // CP-94
+    //CP-06-13
     [Fact]
     public async Task ObtenerPlanesDeEstudioPorFiltro()
     {
@@ -268,7 +268,7 @@ public class PlanEstudiosServiceTests
         planEstudiosRepositoryMock.Verify(r => r.ContarPorFiltroAsync(filtro.IdEntidadAcademica, filtro.IdProgramaEducativo, filtro.Nombre), Times.Once);
     }
 
-    // CP-95
+    //CP-06-14
     [Fact]
     public async Task ObtenerPlanDeEstudiosPorId()
     {
@@ -344,7 +344,7 @@ public class PlanEstudiosServiceTests
         experienciaEducativaRepositoryMock.Verify(r => r.ObtenerExperienciasEducativasPorIdPlanEstudiosAsync(67), Times.Once);
     }
 
-    // CP-98
+    //CP-06-17
     [Fact]
     public async Task EditarPlanDeEstudios()
     {
@@ -453,7 +453,7 @@ public class PlanEstudiosServiceTests
         experienciaEducativaRepositoryMock.Verify(r => r.CrearExperienciasEducativasAsync(It.IsAny<List<ExperienciaEducativa>>()), Times.Once);
     }
 
-    // CP-112
+    //CP-06-31
     [Fact]
     public async Task EliminarPlanDeEstudios()
     {

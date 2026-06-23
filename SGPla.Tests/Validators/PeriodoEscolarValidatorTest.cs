@@ -17,7 +17,7 @@ namespace SGPla.Tests.Validators
             _periodoEscolarValidator = new PeriodoEscolarValidator(_periodoEscolarRepositoryMock.Object);
         }
 
-
+        //CP-07-02
         [Fact]
         public async Task CrearPeriodoEscolarConAnioInvalido()
         {
@@ -30,6 +30,7 @@ namespace SGPla.Tests.Validators
             Assert.Contains("El año debe ser un número positivo.", ex.Message);
         }
 
+        //CP-07-03
         [Fact]
         public async Task CrearPeriodoEscolarConPeriodoVacio()
         {
@@ -42,6 +43,7 @@ namespace SGPla.Tests.Validators
             Assert.Contains("El periodo no puede estar vacío.", ex.Message);
         }
 
+        //CP-07-04
         [Fact]
         public async Task CrearPeriodoEscolarConPeriodoInvalido()
         {
@@ -54,6 +56,7 @@ namespace SGPla.Tests.Validators
             Assert.Contains("El periodo no es un periodo válido.", ex.Message);
         }
 
+        //CP-07-05
         [Fact]
         public async Task CrearPeriodoEscolarDuplicado()
         {
@@ -70,7 +73,7 @@ namespace SGPla.Tests.Validators
             Assert.Contains("Ya existe un periodo escolar con los mismos datos.", ex.Message);
         }
 
-
+        //CP-07-07
         [Fact]
         public async Task EditarPeriodoEscolarConAnioInvalido()
         {
@@ -83,6 +86,7 @@ namespace SGPla.Tests.Validators
             Assert.Contains("El año debe ser un número positivo.", ex.Message);
         }
 
+        //CP-07-07
         [Fact]
         public async Task EditarPeriodoEscolarConPeriodoNulo()
         {
@@ -95,6 +99,7 @@ namespace SGPla.Tests.Validators
             Assert.Contains("El periodo no puede estar vacío.", ex.Message);
         }
 
+        //CP-07-08
         [Fact]
         public async Task EditarPeriodoEscolarInexistente()
         {
@@ -111,6 +116,7 @@ namespace SGPla.Tests.Validators
             Assert.Contains("El periodo escolar no existe.", ex.Message);
         }
 
+        //CP-07-09
         [Fact]
         public async Task EditarPeriodoEscolarConDatosDuplicados()
         {
@@ -131,7 +137,7 @@ namespace SGPla.Tests.Validators
             Assert.Contains("Ya existe un periodo escolar con los mismos datos.", ex.Message);
         }
 
-
+        //CP-07-11
         [Fact]
         public async Task ObtenerPeriodoEscolarConIdInvalido()
         {
@@ -157,6 +163,7 @@ namespace SGPla.Tests.Validators
             Assert.Contains("El ID del periodo escolar no es válido.", ex.Message);
         }
 
+        //CP-07-16
         [Fact]
         public async Task EliminarPeriodoEscolarInexistente()
         {
@@ -175,6 +182,7 @@ namespace SGPla.Tests.Validators
             Assert.Contains("El periodo escolar no existe.", ex.Message);
         }
 
+        //CP-07-17
         [Fact]
         public async Task EliminarPeriodoEscolarConRelaciones()
         {

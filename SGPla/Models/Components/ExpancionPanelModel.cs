@@ -1,0 +1,17 @@
+﻿namespace SGPla.Models.Components
+{
+    public class ExpansionPanelModel
+    {
+        public string Id { get; set; }
+
+        public string Titulo { get; set; }
+
+        public string PartialView { get; set; }
+
+        public object? PartialModel { get; set; }
+
+        public bool ExpandidoPorDefecto { get; set; } = false;
+
+        public string? IconClass { get; set; }
+    }
+}

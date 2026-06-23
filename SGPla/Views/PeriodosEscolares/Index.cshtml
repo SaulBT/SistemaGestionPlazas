@@ -37,6 +37,15 @@
 				})
 			</div>
 		</div>
+		@await Component.InvokeAsync("ExpansionPanel",
+		new ExpansionPanelModel
+		{
+			Id = "panel-filtros",
+			Titulo = "Filtros",
+			PartialView = "_Filtros",
+			PartialModel = Model,
+			IconClass = "bi bi-funnel-fill"
+		})
 		
 
 		<!-- Acciones -->

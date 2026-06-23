@@ -27,7 +27,7 @@ public class UsuarioValidatorTests
             _entidadAcademicaRepositoryMock.Object);
     }
 
-    //CP-03
+    //CP-01-03
     [Fact]
     public async Task CrearCoordinadorEaConValoresNulos()
     {
@@ -46,7 +46,7 @@ public class UsuarioValidatorTests
         Assert.Equal("El nombre es obligatorio.", ex.Message);
     }
 
-    //CP-04
+    //CP-01-04
     [Fact]
     public async Task CrearCoordinadorEaConCorreoInvalido()
     {
@@ -65,7 +65,7 @@ public class UsuarioValidatorTests
         Assert.Equal("El formato del correo no es válido.", ex.Message);
     }
 
-    //CP-05
+    //CP-01-05
     [Fact]
     public async Task CrearCoordinadorEaCorreoRepetido()
     {
@@ -92,7 +92,7 @@ public class UsuarioValidatorTests
         Assert.Equal("El correo ya está en uso.", ex.Message);
     }
 
-    //CP-06
+    //CP-01-06
     [Fact]
     public async Task CrearUsuarioConRolInvalido()
     {
@@ -111,7 +111,7 @@ public class UsuarioValidatorTests
         Assert.Equal("El rol no es válido.", ex.Message);
     }
 
-    //CP-07
+    //CP-01-07
     [Fact]
     public async Task CrearCoordinadorDgaaConIdEntiadAcademica()
     {
@@ -130,7 +130,7 @@ public class UsuarioValidatorTests
         Assert.Equal("El rol no corresponde con la dependencia seleccionada.", ex.Message);
     }
 
-    //CP-08
+    //CP-01-08
     [Fact]
     public async Task CrearCoordinadorEaConIdAreaAcademica()
     {
@@ -149,7 +149,7 @@ public class UsuarioValidatorTests
         Assert.Equal("El rol no corresponde con la dependencia seleccionada.", ex.Message);
     }
 
-    //CP-09
+    //CP-01-09
     [Fact]
     public async Task CrearCoordinadorEaConEntidadAcademicaInexistente()
     {
@@ -180,7 +180,7 @@ public class UsuarioValidatorTests
         Assert.Equal("No existe esa Entidad Académica.", ex.Message);
     }
 
-    //CP-10
+    //CP-01-10
     [Fact]
     public async Task CrearCoordinadorDgaaConAreaAcademicaInexistente()
     {
@@ -211,7 +211,7 @@ public class UsuarioValidatorTests
         Assert.Equal("No existe esa Área Académica.", ex.Message);
     }
 
-    //CP-17
+    //CP-01-17
     [Fact]
     public async Task ObtenerUsuarioConValoresNulos()
     {
@@ -227,7 +227,7 @@ public class UsuarioValidatorTests
         Assert.Equal("El IdUsuario es obligatorio.", ex.Message);
     }
 
-    //CP-18
+    //CP-01-18
     [Fact]
     public async Task ObtenerUsuarioConRolInvalido()
     {
@@ -243,7 +243,7 @@ public class UsuarioValidatorTests
         Assert.Equal("El rol no es válido.", ex.Message);
     }
 
-    //CP-19
+    //CP-01-19
     [Fact]
     public async Task ObtenerUsuarioInexistente()
     {
@@ -263,7 +263,7 @@ public class UsuarioValidatorTests
         Assert.Equal("El Usuario no existe.", ex.Message);
     }
 
-    //CP-22
+    //CP-01-22
     [Fact]
     public async Task EditarCoordinadorEaConValoresNulos()
     {
@@ -282,7 +282,7 @@ public class UsuarioValidatorTests
         Assert.Equal("La IdUsuario es obligatoria.", ex.Message);
     }
 
-    //CP-23
+    //CP-01-23
     [Fact]
     public async Task EditarUsuarioConRolInvalido()
     {
@@ -301,7 +301,7 @@ public class UsuarioValidatorTests
         Assert.Equal("El rol no es válido.", ex.Message);
     }
 
-    //CP-24
+    //CP-01-24
     [Fact]
     public async Task EditarCoordinadorDgaaConIdEntidadAcademica()
     {
@@ -324,7 +324,7 @@ public class UsuarioValidatorTests
         Assert.Equal("El rol no corresponde con la dependencia editada.", ex.Message);
     }
 
-    //CP-25
+    //CP-01-25
     [Fact]
     public async Task EditarCoordinadorEaConIdAreaAcademica()
     {
@@ -347,7 +347,7 @@ public class UsuarioValidatorTests
         Assert.Equal("El rol no corresponde con la dependencia editada.", ex.Message);
     }
 
-    //CP-26
+    //CP-01-26
     [Fact]
     public async Task EditarCoordinadorEaConEntidadAcademicaInexistente()
     {
@@ -374,7 +374,7 @@ public class UsuarioValidatorTests
         Assert.Equal("No existe esa Entidad Académica.", ex.Message);
     }
 
-    //CP-27
+    //CP-01-27
     [Fact]
     public async Task EditarCoordinadorDgaaConAreaAcademicaInexistente()
     {
@@ -401,7 +401,7 @@ public class UsuarioValidatorTests
         Assert.Equal("No existe esa Área Académica.", ex.Message);
     }
 
-    //CP-28
+    //CP-01-28
     [Fact]
     public async Task EditarUsuarioInexistente()
     {
@@ -424,7 +424,7 @@ public class UsuarioValidatorTests
         Assert.Equal("No existe ese usuario.", ex.Message);
     }
 
-    //CP-31
+    //CP-01-31
     [Fact]
     public async Task EliminarUsuarioConValoresNulos()
     {
@@ -440,7 +440,7 @@ public class UsuarioValidatorTests
         Assert.Equal("El IdUsuario es obligatorio.", ex.Message);
     }
 
-    //CP-32
+    //CP-01-32
     [Fact]
     public async Task EliminarUsuarioConRolInvalido()
     {
@@ -456,7 +456,7 @@ public class UsuarioValidatorTests
         Assert.Equal("El rol no es válido.", ex.Message);
     }
 
-    //CP-33
+    //CP-01-33
     [Fact]
     public async Task EliminarUsuarioInexistente()
     {

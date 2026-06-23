@@ -99,39 +99,37 @@
                 }
                 <!-- CABECERA DINÁMICA -->
                 <div class="cabecera-seccion mb-3">
-
-                    <div class="d-flex justify-content-between align-items-center">
+                    @{
+                        var regresarUrl = ViewBag.RegresarUrl ?? ViewData["RegresarUrl"];
+                        var regresarOnClick = ViewBag.RegresarOnClick ?? ViewData["RegresarOnClick"];
+                        var mostrarBoton = !string.IsNullOrEmpty(regresarUrl?.ToString()) ||
+                                          !string.IsNullOrEmpty(regresarOnClick?.ToString());
+                    }
+                    @if (mostrarBoton)
+                    {
+                        if (!string.IsNullOrEmpty(regresarUrl?.ToString()))
+                        {
+                            <a href="@regresarUrl" class="link-regresar">
+                                <i class="bi bi-arrow-left"></i>
+                                Regresar
+                            </a>
+                        }
+                        else if (!string.IsNullOrEmpty(regresarOnClick?.ToString()))
+                        {
+                            <a href="javascript:void(0)"
+                               onclick="@regresarOnClick"
+                               class="link-regresar">
+                                <i class="bi bi-arrow-left"></i>
+                                Regresar
+                            </a>
+                        }
+                    }
+                    <div class="d-flex justify-content-between align-items-center" style="padding-top:10px">
                         <h2 class="titulo-seccion mb-0">
                             @ViewData["Title"]
                         </h2>
         
-                        @{
-                            var regresarUrl = ViewBag.RegresarUrl ?? ViewData["RegresarUrl"];
-                            var regresarOnClick = ViewBag.RegresarOnClick ?? ViewData["RegresarOnClick"];
-                            var mostrarBoton = !string.IsNullOrEmpty(regresarUrl?.ToString()) ||
-                                              !string.IsNullOrEmpty(regresarOnClick?.ToString());
-                        }
-        
-                        @if (mostrarBoton)
-                        {
-                            if (!string.IsNullOrEmpty(regresarUrl?.ToString()))
-                            {
-                                // Opción 1: Redirección por URL
-                                <a href="@regresarUrl"
-                                       style="display: inline-block; text-decoration: none;">
-                                    @await Component.InvokeAsync("Boton", new { Accion = "Regresar" })
-                                </a>
-                            }
-                            else if (!string.IsNullOrEmpty(regresarOnClick?.ToString()))
-                            {
-                                // Opción 2: Evento JavaScript personalizado
-                                @await Component.InvokeAsync("Boton", new
-                                {
-                                    Accion = "Regresar",
-                                    OnClick = regresarOnClick
-                                })
-                            }
-                        }
+                        
                     </div>
 
                     
@@ -142,7 +140,7 @@
                             <ol class="breadcrumb">
 
                                 <li class="breadcrumb-item">
-                                    <a href="/">Inicio</a>
+                                    Inicio
                                 </li>
 
                                 @if (!string.IsNullOrEmpty(controller))
@@ -162,7 +160,6 @@
                             </ol>
                         </nav>
                     }
-
                 </div>
 
                 <!-- CONTENIDO REAL -->

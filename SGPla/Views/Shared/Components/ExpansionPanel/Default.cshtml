@@ -1,0 +1,38 @@
+﻿@model SGPla.Models.Components.ExpansionPanelModel
+
+<div class="expansion-panel">
+
+    <button class="expansion-header"
+            type="button"
+            onclick="toggleExpansionPanel('@Model.Id')">
+
+        <div class="expansion-header-left">
+
+            @if (!string.IsNullOrEmpty(Model.IconClass))
+            {
+                <i class="@Model.IconClass"></i>
+            }
+
+            <span>@Model.Titulo</span>
+
+        </div>
+
+        <span id="icon-@Model.Id" class="expansion-icon" style="font-family:none">
+            @(Model.ExpandidoPorDefecto ? "▼" : "►")
+        </span>
+
+    </button>
+
+    <div id="@Model.Id"
+         class="expansion-content @(Model.ExpandidoPorDefecto ? "show" : "")">
+
+        @await Html.PartialAsync(
+            Model.PartialView,
+            Model.PartialModel
+        )
+
+    </div>
+
+</div>
+
+<script src="js/expansion-panel.js"></script>

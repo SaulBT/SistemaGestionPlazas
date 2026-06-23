@@ -54,6 +54,13 @@
         public const string ENTIDADES_ACADEMICAS = "Entidades Académicas";
         public const string PERIODOS_ESCOLARES = "Períodos Escolares";
         public const string PROGRAMAS_EDUCATIVOS = "Programas Educativos";
+        public const string INTEGRANTES_CT = "Integrantes del Consejo Técnico";
+        public const string PERSONAL_ACADEMICO = "Personal Académico";
+        public const string PERSONALES_ACADEMICOS = "Personales Académicos";
+        public const string PERSONAL_EXTERNO = "Personal Externo";
+        public const string PERSONALES_EXTERNOS = "Personales Externos";
+        public const string GRADO = "Grado";
+        public const string GRADOS = "Grados";
         public const string PROGRAMACION_ACADEMICA = "Programación Académica";
         public const string PROGRAMACIONES_ACADEMICAS = "Programaciones Académicas";
 
@@ -80,5 +87,24 @@
         public const string MODALIDAD_SEMIESCOLARIZADA = "Semi escolarizado";
         public const string MODALIDAD_DISTANCIA = "A distancia";
         public static List<string> MODALIDADES = new List<string> { MODALIDAD_ESCOLARIZADA, MODALIDAD_ABIERTA, MODALIDAD_VIRTUAL, MODALIDAD_MIXTA, MODALIDAD_SEMIESCOLARIZADA, MODALIDAD_DISTANCIA };
+
+        public const string DR = "Dr.";
+        public const string DRA = "Dra.";
+        public const string MTRO = "Mtro.";
+        public const string MTRA = "Mtra.";
+        public const string LIC = "Lic.";
+        public static List<string> GRADOS_INTEGRANTE = [LIC, MTRO, MTRA, DR, DRA];
+
+        public const string LICENCIATURA = "Licenciatura";
+        public const string ESPECIALIDAD = "Especialidad";
+        public const string DOCTORADO = "Doctorado";
+        public const string MAESTRIA = "Maestría";
+        public static List<string> GRADOS_DOCENTES = [LICENCIATURA, ESPECIALIDAD, MAESTRIA, DOCTORADO];
+
+        public const string INVESTIGADOR = "Investigador";
+        public const string DOCENTE = "Docente";
+        public const string TECNICO_ACADEMICO = "Técnico Académico";
+        public const string DOCENTE_POR_ASIGNATURA = "Docente por Asignatura";
+        public static List<string> PUESTOS = [INVESTIGADOR, DOCENTE, TECNICO_ACADEMICO, DOCENTE_POR_ASIGNATURA];
     }
 }

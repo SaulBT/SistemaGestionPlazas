@@ -9,55 +9,16 @@
 <form id="form" method="get" action="@Url.Action("Index", "PlanesEstudios")">
 
     <!-- Filtros -->
-    <div style="display: flex; flex-direction: column; gap: 10px;">
-        @await Component.InvokeAsync("Boton", new BotonModel
-        {
-            Accion = "ver",
-            Tipo = "secundario",
-            Texto = "Mostrar Filtros",
-            OnClick = "toggleFilters()",
-            Id = "botonFiltros"
-        })
-        <div id="filtrosContainer" style="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease;">
-            @await Component.InvokeAsync("SelectField", new SelectFieldModel
-            {
-                Id = "Region",
-                Label = "Región",
-                Options = Model.Regiones,
-                Name = "region"
-            })
+    @await Component.InvokeAsync("ExpansionPanel",
+    new ExpansionPanelModel
+    {
+        Id = "panel-filtros",
+        Titulo = "Filtros",
+        PartialView = "_Filtros",
+        PartialModel = Model,
+        IconClass = "bi bi-funnel-fill"
+    })
 
-            <div id="contenedorArea" style="display:none">
-                @await Component.InvokeAsync("SelectField", new SelectFieldModel
-                {
-                    Id = "Area",
-                    Label = "Área Académica",
-                    Options = Model.Areas,
-                    Name = "idAreaAcademica"
-                })
-            </div>
-
-            <div id="contenedorEntidad" style="display:none">
-                @await Component.InvokeAsync("SelectField", new SelectFieldModel
-                {
-                    Id = "Entidad",
-                    Label = "Entidad Académica",
-                    Options = Model.Entidades,
-                    Name = "idEntidadAcademica"
-                })
-            </div>
-
-            <div id="contenedorPrograma" style="display:none">
-                @await Component.InvokeAsync("SelectField", new SelectFieldModel
-                {
-                    Id = "Programa",
-                    Label = "Programa Educativo",
-                    Options = Model.ProgramasEducativos,
-                    Name = "idProgramaEducativo"
-                })
-            </div>
-        </div>
-    </div>
     
 
     <!-- Acciones -->
