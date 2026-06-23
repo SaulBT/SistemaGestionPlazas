@@ -1,11 +1,12 @@
 ﻿@using SGPla.Models.ViewModels.Docentes
-@model RegistrarDocenteViewModel
+@model EditarDocenteViewModel
 @{
     Layout = "_LayoutEntidadAcademica";
     ViewData["Title"] = "Nuevo Personal Academico";
 }
 
-<form method="post" action="@Url.Action("GuardarDocente", "Docentes")" enctype="multipart/form-data">
+<form method="post" action="@Url.Action("EditarDocente", "Docentes")" enctype="multipart/form-data">
+    <input name="Recarga" type="hidden" value="@Model.Recarga" />
     <div class="d-flex row gap-3">
         <!-- Nombre -->
         @await Component.InvokeAsync("InputField", new InputFieldModel
@@ -41,6 +42,7 @@
                 <i class="bi bi-file-earmark-x-fill" style="font-size:20px;color:var(--negativo-rojo-letra)"></i>
             </div>
         </div>
+        <input id="nuevoArchivo" name="NuevoArchivo" type="hidden" value="@Model.NuevoArchivo" />
 
         <div class="d-flex justify-content-end">
             @await Component.InvokeAsync("Boton", new
@@ -126,7 +128,7 @@
     Tipo = "confirm",
     Titulo = "Eliminar Grado",
     Mensaje = "Esta acción es irreversible ¿Está seguro de eliminar el Grado?",
-    OnConfirm = "eliminarGrado(false)",
+    OnConfirm = "eliminarGrado(true)",
     OnCancel = "cerrarModal('modalEliminarGrado')"
 })
 
