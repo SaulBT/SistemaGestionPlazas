@@ -11,7 +11,7 @@ namespace SGPla.Validations.Implementations
         private readonly IProgramaEducativoRepository _programaEducativoRepository;
         private readonly IProgramacionAcademicaRepository _programacionAcademicaRepository;
 
-        public ProgramacionAcademicaValidator(IDocenteRepository docenteRepository, IProgramaEducativoRepository programaEducativoRepository, IProgramacionAcademicaRepository programacionAcademicaRepository  )
+        public ProgramacionAcademicaValidator(IDocenteRepository docenteRepository, IProgramaEducativoRepository programaEducativoRepository, IProgramacionAcademicaRepository programacionAcademicaRepository)
         {
             _docenteRepository = docenteRepository;
             _programaEducativoRepository = programaEducativoRepository;
@@ -59,10 +59,16 @@ namespace SGPla.Validations.Implementations
             }
 
             var registrados = await _programaEducativoRepository
-                .ObtenerNombresProgramasRegistradosAsync(programas);
+    .ObtenerNombresProgramasRegistradosAsync(programas);
+
+            var clavesRegistradas = registrados
+                .Select(ObtenerClavePrograma)
+                .ToHashSet();
+
             var noRegistrados = programas
-                .Except(registrados)
+                .Where(p => !clavesRegistradas.Contains(ObtenerClavePrograma(p)))
                 .ToList();
+
             if (noRegistrados.Any())
             {
                 throw new Exception(
@@ -76,12 +82,13 @@ namespace SGPla.Validations.Implementations
         public async Task<bool> ValidarExperiencias(List<OfertaDTO> ofertas)
         {
             var relaciones = ofertas
-         .Where(x =>
-             !string.IsNullOrWhiteSpace(x.Programa) &&
-             !string.IsNullOrWhiteSpace(x.ExperienciaEducativa))
-         .Select(x => $"{x.Programa}|{x.ExperienciaEducativa}")
-         .Distinct()
-         .ToList();
+                .Where(x =>
+                    !string.IsNullOrWhiteSpace(x.Programa) &&
+                    !string.IsNullOrWhiteSpace(x.ExperienciaEducativa))
+                .Select(x =>
+                    $"{ObtenerClavePrograma(x.Programa)}|{x.ExperienciaEducativa}")
+                .Distinct()
+                .ToList();
 
             var registradas = await _programacionAcademicaRepository
                 .ObtenerRelacionesValidasAsync(ofertas);
@@ -98,7 +105,6 @@ namespace SGPla.Validations.Implementations
             }
 
             return true;
-
         }
 
         public async Task<bool> ValidarArticulo(List<OfertaDTO> ofertas)
@@ -112,6 +118,11 @@ namespace SGPla.Validations.Implementations
             }
             return true;
         }
- 
+
+        private static string ObtenerClavePrograma(string nombre)
+        {
+            return nombre.Split('-')[0].Trim();
+        }
+
     }
 }

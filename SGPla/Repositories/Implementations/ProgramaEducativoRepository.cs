@@ -138,22 +138,43 @@ namespace SGPla.Repositories.Implementations
         }
 
         public async Task<List<string>> ObtenerNombresProgramasRegistradosAsync(
-        List<string> programas)
+     List<string> programas)
         {
-            return await _context.ProgramaEducativo
-                .Where(p => programas.Contains(p.Nombre))
-                .Select(p => p.Nombre)
+            var claves = programas
+                .Select(ObtenerClavePrograma)
+                .Distinct()
+                .ToHashSet();
+
+            var programasBd = await _context.ProgramaEducativo
                 .ToListAsync();
+
+            return programasBd
+                .Where(p => claves.Contains(ObtenerClavePrograma(p.Nombre)))
+                .Select(p => p.Nombre)
+                .ToList();
         }
 
         public async Task<Dictionary<string, int>> ObtenerIdsProgramasAsync(
-     List<string> programas)
+      List<string> programas)
         {
-            return await _context.ProgramaEducativo
-                .Where(p => programas.Contains(p.Nombre))
-                .ToDictionaryAsync(
-                    p => p.Nombre,
+            var codigosArchivo = programas
+                .Select(ObtenerClavePrograma)
+                .Distinct()
+                .ToHashSet();
+
+            var programasBd = await _context.ProgramaEducativo
+                .ToListAsync();
+
+            return programasBd
+                .Where(p => codigosArchivo.Contains(ObtenerClavePrograma(p.Nombre)))
+                .ToDictionary(
+                    p => ObtenerClavePrograma(p.Nombre),
                     p => p.IdProgramaEducativo);
+        }
+
+        private static string ObtenerClavePrograma(string nombre)
+        {
+            return nombre.Split('-')[0].Trim();
         }
     }
 }

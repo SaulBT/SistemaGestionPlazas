@@ -82,20 +82,28 @@ namespace SGPla.Services.Implementations
                 .ObtenerIdsPorNombreAsync(nombresExperiencia);
 
             var nombresProgramas = ofertas
-     .Where(o => !string.IsNullOrWhiteSpace(o.Programa))
-     .Select(o => o.Programa)
-     .Distinct()
-     .ToList();
+                .Where(o => !string.IsNullOrWhiteSpace(o.Programa))
+                .Select(o => o.Programa)
+                .Distinct()
+                .ToList();
 
             var idsProgramas = await _programaEducativoRepository
                 .ObtenerIdsProgramasAsync(nombresProgramas);
 
-           
             var ofertasModel = new List<Oferta>();
 
             foreach (var dto in ofertas)
             {
-                dto.IdProgramaEducativo = idsProgramas[dto.Programa];
+                var clavePrograma = ObtenerClavePrograma(dto.Programa);
+
+                if (!idsProgramas.TryGetValue(clavePrograma, out var idPrograma))
+                {
+                    throw new ArgumentException(
+                        $"No existe un programa con clave '{clavePrograma}'.");
+                }
+
+                dto.IdProgramaEducativo = idPrograma;
+
                 var oferta = OfertaMapper.ToModel(dto);
 
                 if (!string.IsNullOrWhiteSpace(dto.NP))
@@ -129,7 +137,12 @@ namespace SGPla.Services.Implementations
 
             return true;
         }
-        
+
+        private static string ObtenerClavePrograma(string nombre)
+        {
+            return nombre.Split('-')[0].Trim();
+        }
+
         public async Task<List<CargaConOfertaDTO>> ProcesarCargasAsync(
             IFormFile archivoCarga,
             List<OfertaDTO> ofertasEnSesion)

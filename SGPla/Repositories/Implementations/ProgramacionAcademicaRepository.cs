@@ -40,27 +40,38 @@ namespace SGPla.Repositories.Implementations
 
 
 
+        private static string ObtenerClavePrograma(string nombre)
+        {
+            return nombre.Split('-')[0].Trim();
+        }
+
         public async Task<List<string>> ObtenerRelacionesValidasAsync(List<OfertaDTO> ofertas)
         {
-            var relaciones = ofertas
+            var relacionesArchivo = ofertas
                 .Where(x =>
                     !string.IsNullOrWhiteSpace(x.Programa) &&
                     !string.IsNullOrWhiteSpace(x.ExperienciaEducativa))
-                .Select(x => $"{x.Programa}|{x.ExperienciaEducativa}")
+                .Select(x =>
+                    $"{ObtenerClavePrograma(x.Programa)}|{x.ExperienciaEducativa}")
                 .Distinct()
-                .ToList();
+                .ToHashSet();
 
-            var relacionesValidas = await _context.ExperienciaEducativa
-                .Select(ee =>
-                    ee.IdPlanEstudiosNavigation
-                        .IdProgramaEducativoNavigation.Nombre
-                    + "|" +
-                    ee.Nombre)
-                .Where(relacion => relaciones.Contains(relacion))
-                .Distinct()
+            var relacionesBd = await _context.ExperienciaEducativa
+                .Select(ee => new
+                {
+                    Programa =
+                        ee.IdPlanEstudiosNavigation
+                          .IdProgramaEducativoNavigation.Nombre,
+                    Experiencia = ee.Nombre
+                })
                 .ToListAsync();
 
-            return relacionesValidas;
+            return relacionesBd
+                .Select(x =>
+                    $"{ObtenerClavePrograma(x.Programa)}|{x.Experiencia}")
+                .Where(relacionesArchivo.Contains)
+                .Distinct()
+                .ToList();
         }
 
         public async Task<List<ResumenOfertaProgramacionAcademicaDTO>> ObtenerResumenPorProgramaPeriodoAsync(BuscarProgramacionAcademicaDTO? filtro)
