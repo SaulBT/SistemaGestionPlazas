@@ -137,7 +137,7 @@ namespace SGPla.Repositories.Implementations
                     .ThenInclude(p => p.IdEntidadAcademicaNavigation)
                 .Include(o => o.IdExperienciaEducativaNavigation)
                 .Include(o => o.IdDocenteNavigation)
-                .Include(o => o.Horario) // <-- clave: traer los horarios
+                .Include(o => o.Horario) 
                 .Where(o =>
                     o.IdProgramaEducativo == idProgramaEducativo &&
                     o.IdPeriodo == idPeriodo &&

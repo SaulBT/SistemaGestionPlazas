@@ -23,7 +23,7 @@
 		@await Component.InvokeAsync("SelectField", new SelectFieldModel
 		{
 			Id = "Region",
-			Label = "Región",
+			Label = "Región:",
 			Options = Model.Regiones,
 			Name = "Region",
 			SelectedValue = Model.Region?.ToString(),
@@ -32,22 +32,22 @@
 
 		@await Component.InvokeAsync("SelectField", new SelectFieldModel
 		{
-			Id = "Periodo",
-			Label = "Periodo",
-			Options = Model.Periodos,
-			Name = "IdPeriodo",
-			SelectedValue = Model.IdPeriodo?.ToString(),
-			Error = ViewData.ModelState["IdPeriodo"]?.Errors.FirstOrDefault()?.ErrorMessage
-		})
-
-		@await Component.InvokeAsync("SelectField", new SelectFieldModel
-		{
 			Id = "Entidad",
-			Label = "Entidad Académica",
+			Label = "Entidad Académica:",
 			Options = Model.Entidades,
 			Name = "IdEntidadAcademica",
 			SelectedValue = Model.IdEntidadAcademica?.ToString(),
 			Error = ViewData.ModelState["IdEntidadAcademica"]?.Errors.FirstOrDefault()?.ErrorMessage
+		})
+
+		@await Component.InvokeAsync("SelectField", new SelectFieldModel
+		{
+			Id = "Periodo",
+			Label = "Periodo Escolar:",
+			Options = Model.Periodos,
+			Name = "IdPeriodo",
+			SelectedValue = Model.IdPeriodo?.ToString(),
+			Error = ViewData.ModelState["IdPeriodo"]?.Errors.FirstOrDefault()?.ErrorMessage
 		})
 
 		<!-- BOTONES SUBIR ARCHIVO -->
