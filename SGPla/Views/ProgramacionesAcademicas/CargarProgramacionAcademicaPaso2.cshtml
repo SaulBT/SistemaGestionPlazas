@@ -17,6 +17,33 @@
 	Paso2Texto = "Experiencias Educativas"
 })
 
+@{
+	string HorarioRow(string dia, HorarioDia? h)
+	{
+		var texto = h == null
+			? "—"
+			: $"{h.Inicio:hh\\:mm} - {h.Fin:hh\\:mm}";
+
+		return $"<tr><td>{dia}</td><td>{texto}</td></tr>";
+	}
+
+	string BuildHorarioHtml(OfertaDTO oferta)
+	{
+		var html = "<table class='table table-bordered text-center'>";
+		html += "<thead><tr><th>Día</th><th>Horario</th></tr></thead><tbody>";
+
+		html += HorarioRow("Lunes", oferta.Lunes);
+		html += HorarioRow("Martes", oferta.Martes);
+		html += HorarioRow("Miércoles", oferta.Miercoles);
+		html += HorarioRow("Jueves", oferta.Jueves);
+		html += HorarioRow("Viernes", oferta.Viernes);
+		html += HorarioRow("Sábado", oferta.Sabado);
+
+		html += "</tbody></table>";
+
+		return html;
+	}
+}
 
 <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:flex-start; justify-content:space-evenly;">
 
@@ -123,6 +150,13 @@
 
 </div>
 
+@await Component.InvokeAsync("Modal", new ModalModel
+{
+	Id = "modalHorario",
+	Tipo = "info",
+	Titulo = "Horario"
+})
+
 	
 
 
@@ -212,4 +246,38 @@
 		});
 
 	});
+</script>
+
+<script>
+		function abrirModalHorario(oferta) {
+		const formatear = (h) => {
+			const inicio = h?.Inicio ?? h?.inicio;
+			const fin = h?.Fin ?? h?.fin;
+			return (inicio && fin)
+				? `${inicio.substring(0,5)} - ${fin.substring(0,5)}`
+				: "—";
+		};
+
+		const dias = [
+			{ nombre: "Lunes", valor: oferta.Lunes },
+			{ nombre: "Martes", valor: oferta.Martes },
+			{ nombre: "Miércoles", valor: oferta.Miercoles },
+			{ nombre: "Jueves", valor: oferta.Jueves },
+			{ nombre: "Viernes", valor: oferta.Viernes },
+			{ nombre: "Sábado", valor: oferta.Sabado },
+		];
+
+		const html = `
+			<table class="table table-bordered text-center">
+				<thead>
+					<tr>${dias.map(d => `<th>${d.nombre}</th>`).join("")}</tr>
+				</thead>
+				<tbody>
+					<tr>${dias.map(d => `<td>${formatear(d.valor)}</td>`).join("")}</tr>
+				</tbody>
+			</table>
+		`;
+		document.getElementById("modalHorario-body").innerHTML = html;
+		abrirModal("modalHorario");
+	}
 </script>

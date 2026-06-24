@@ -8,6 +8,7 @@ using SGPla.Models.DTOs.Oferta;
 using SGPla.Models.DTOs.ProgramacionAcademica;
 using SGPla.Models.ViewModels.ProgramacionesAcademicas;
 using SGPla.Services.Interfaces;
+using System.Text;
 using System.Text.Json;
 
 namespace SGPla.Controllers;
@@ -151,7 +152,7 @@ public class ProgramacionesAcademicasController : Controller
                     new()
                     {
                          Actions = new List<TableActionModel>
-                        {
+                         {
                             new TableActionModel()
                             {
                                 Accion = "ver",
@@ -360,8 +361,16 @@ public class ProgramacionesAcademicasController : Controller
                             new() { Value = oferta.NRC },
                             new() { Value = oferta.HorasPago.ToString() },
                             new() { Value = oferta.TC },
-                            new() { Value = oferta.TC },
+                            new() { Actions = new List<TableActionModel>
+                            {
 
+                             new TableActionModel
+{
+    Accion = "informacion",
+    OnClick = $"abrirModalHorario({JsonSerializer.Serialize(oferta)})"
+}
+                            }
+                            },
                             tipoOferta == TipoTablaOferta.Vacantes
                             ? new()
                             {
@@ -521,4 +530,5 @@ public class ProgramacionesAcademicasController : Controller
 
         return View("VerProgramacionAcademica", modelo);
     }
+
 }

@@ -97,6 +97,15 @@
     </a>
 </div>
 
+@await Component.InvokeAsync("Modal", new ModalModel
+{
+    Id = "modalHorario",
+    Tipo = "info",
+    Titulo = "Horario"
+})
+
+	
+
 <script>
             function seleccionarTab(containerId, index) {
 
@@ -128,3 +137,40 @@
             .forEach(t => inicializarTablaCliente(t.id));
     });
 </script>
+
+
+
+<script>
+        function abrirModalHorario(oferta) {
+        const formatear = (h) => {
+            const inicio = h?.Inicio ?? h?.inicio;
+            const fin = h?.Fin ?? h?.fin;
+            return (inicio && fin)
+                ? `${inicio.substring(0,5)} - ${fin.substring(0,5)}`
+                : "—";
+        };
+
+        const dias = [
+            { nombre: "Lunes", valor: oferta.Lunes },
+            { nombre: "Martes", valor: oferta.Martes },
+            { nombre: "Miércoles", valor: oferta.Miercoles },
+            { nombre: "Jueves", valor: oferta.Jueves },
+            { nombre: "Viernes", valor: oferta.Viernes },
+            { nombre: "Sábado", valor: oferta.Sabado },
+        ];
+
+        const html = `
+            <table class="table table-bordered text-center">
+                <thead>
+                    <tr>${dias.map(d => `<th>${d.nombre}</th>`).join("")}</tr>
+                </thead>
+                <tbody>
+                    <tr>${dias.map(d => `<td>${formatear(d.valor)}</td>`).join("")}</tr>
+                </tbody>
+            </table>
+        `;
+        document.getElementById("modalHorario-body").innerHTML = html;
+        abrirModal("modalHorario");
+    }
+</script>
+

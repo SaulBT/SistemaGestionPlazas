@@ -28,4 +28,6 @@ public class CargarProgramacionAcademica2ViewModel
     public int? IdPeriodo { get; set; } = 0;
 
     public string? ProgramaSeleccionado;
+
+    public Dictionary<string, HorarioDia?> HorarioDocente { get; set; }
 }

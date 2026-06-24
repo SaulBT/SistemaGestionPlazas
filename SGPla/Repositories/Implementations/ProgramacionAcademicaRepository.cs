@@ -121,7 +121,7 @@ namespace SGPla.Repositories.Implementations
                     EEVacantes = g.Count(x => x.IdDocente == null),
                     TotalEE = g.Count()
                 })
-                .OrderBy(r => r.EntidadAcademica)
+                .OrderByDescending(g => g.CodigoPeriodo)
                 .ThenBy(r => r.ProgramaEducativo)
                 .ToListAsync();
 
@@ -130,28 +130,54 @@ namespace SGPla.Repositories.Implementations
 
 
         public async Task<List<OfertaDTO>> ObtenerOfertasGuardadasAsync(
-    int idEntidadAcademica, int idProgramaEducativo, int idPeriodo)
+     int idEntidadAcademica, int idProgramaEducativo, int idPeriodo)
         {
-            return await _context.Oferta
+            var ofertas = await _context.Oferta
                 .Include(o => o.IdProgramaEducativoNavigation)
+                    .ThenInclude(p => p.IdEntidadAcademicaNavigation)
+                .Include(o => o.IdExperienciaEducativaNavigation)
+                .Include(o => o.IdDocenteNavigation)
+                .Include(o => o.Horario) // <-- clave: traer los horarios
                 .Where(o =>
                     o.IdProgramaEducativo == idProgramaEducativo &&
                     o.IdPeriodo == idPeriodo &&
                     o.IdProgramaEducativoNavigation.IdEntidadAcademica == idEntidadAcademica)
-                .Select(o => new OfertaDTO
-                {
-                    Programa = o.IdProgramaEducativoNavigation.Nombre,
-                    ExperienciaEducativa = o.IdExperienciaEducativaNavigation.Nombre,
-                    NRC = o.Nrc,
-                    HorasPago = o.Hsm,
-                    TC = o.TipoContratacion,
-                    NombreDocente = o.IdDocenteNavigation.Nombre,
-                    NP = o.IdDocenteNavigation.NumeroPersonal,
-                    Articulo = o.IdArticulo,
-                    IdPeriodo = o.IdPeriodo,
-                    Region = o.IdProgramaEducativoNavigation.IdEntidadAcademicaNavigation.Region,
-                })
                 .ToListAsync();
+
+            return ofertas.Select(o => new OfertaDTO
+            {
+                Programa = o.IdProgramaEducativoNavigation.Nombre,
+                ExperienciaEducativa = o.IdExperienciaEducativaNavigation.Nombre,
+                NRC = o.Nrc,
+                HorasPago = o.Hsm,
+                TC = o.TipoContratacion,
+                NombreDocente = o.IdDocenteNavigation?.Nombre,
+                NP = o.IdDocenteNavigation?.NumeroPersonal,
+                Articulo = o.IdArticulo,
+                IdPeriodo = o.IdPeriodo,
+                Region = o.IdProgramaEducativoNavigation.IdEntidadAcademicaNavigation.Region,
+
+                Lunes = MapHorario(o.Horario, "Lunes"),
+                Martes = MapHorario(o.Horario, "Martes"),
+                Miercoles = MapHorario(o.Horario, "Miercoles"),
+                Jueves = MapHorario(o.Horario, "Jueves"),
+                Viernes = MapHorario(o.Horario, "Viernes"),
+                Sabado = MapHorario(o.Horario, "Sabado"),
+            }).ToList();
+        }
+
+        private static HorarioDia? MapHorario(IEnumerable<Horario> horarios, string dia)
+        {
+            var h = horarios.FirstOrDefault(x =>
+                x.Dia.Equals(dia, StringComparison.OrdinalIgnoreCase));
+
+            if (h is null) return null;
+
+            return new HorarioDia
+            {
+                Inicio = h.HoraInicio.ToTimeSpan(),
+                Fin = h.HoraFin.ToTimeSpan()
+            };
         }
     }
 }

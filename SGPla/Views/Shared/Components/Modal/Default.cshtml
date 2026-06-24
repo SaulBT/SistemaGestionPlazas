@@ -1,4 +1,4 @@
-﻿@model ModalModel
+﻿@model SGPla.Models.ModalModel
 
 <div class="modal-overlay" id="@Model.Id">
 
@@ -7,10 +7,14 @@
         <!-- Header -->
         <div class="modal-header">
             <h3>@Model.Titulo</h3>
+            <button type="button" class="modal-close" aria-label="Cerrar"
+                    onclick="cerrarModal('@Model.Id')">
+                <i class="bi bi-x-lg"></i>
+            </button>
         </div>
 
         <!-- Body -->
-        <div class="modal-body">
+        <div class="modal-body" id="@Model.Id-body">
 
             @if (!string.IsNullOrEmpty(Model.Body))
             {
@@ -23,24 +27,25 @@
 
         </div>
 
-        <!-- Footer -->
-        <div class="modal-footer">
+        <!-- Footer: solo aparece si es tipo "confirm" -->
+        @if (Model.Tipo == "confirm")
+        {
+            <div class="modal-footer">
 
-            @if (Model.Tipo == "confirm")
-            {
                 @await Component.InvokeAsync("Boton", new
                 {
                     Accion = "Cancelar",
-                    OnClick = Model.OnCancel
+                    OnClick = $"cerrarModal('{Model.Id}'); {Model.OnCancel}"
                 })
-            }
-            @await Component.InvokeAsync("Boton", new
-            {
-                Accion = Model.Accion,
-                OnClick = Model.OnConfirm
-            })
 
-        </div>
+                @await Component.InvokeAsync("Boton", new
+                {
+                    Accion = Model.Accion,
+                    OnClick = Model.OnConfirm
+                })
+
+            </div>
+        }
 
     </div>
 
