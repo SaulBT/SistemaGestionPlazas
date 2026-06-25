@@ -1,4 +1,5 @@
 ﻿const tabla = document.getElementById("contenedorTabla");
+const idDocente = document.getElementById("idDocente");
 
 // ==========
 // Agregar
@@ -28,35 +29,32 @@ function limpiarErrorresAgregar() {
     errorAreaAgregar.style.display = "none";
 }
 
-/*async function agregarGrado() {
+async function agregarGrado(edicion) {
     limpiarErrorresAgregar();
+    var datosGrado = {};
+
     if (verificarCamposAgregar()) {
-        const response = await fetch(`${UrlAgregarGrado}?grado=${encodeURIComponent(gradoAgregar.value)}&titulo=${encodeURIComponent(areaAgregar.value)}&ultimo=${encodeURIComponent(ultimoAgregar.checked)}`, {
-            method: "GET"
-        });
-
-        if (response.ok) {
-            const html = await response.text();
-            tabla.innerHTML = html;
-
-            cerrarModal("modalAgregarGrado");
+        if (edicion) {
+            datosGrado = {
+                "IdDocente": idDocente.value,
+                "Grado": gradoAgregar.value,
+                "Titulo": areaAgregar.value,
+                "Ultimo": ultimoAgregar.checked
+            }
+        } else {
+            datosGrado = {
+                "Grado": gradoAgregar.value,
+                "Titulo": areaAgregar.value,
+                "Ultimo": ultimoAgregar.checked
+            }
         }
-    }
-}*/
 
-async function agregarGrado() {
-    limpiarErrorresAgregar();
-    if (verificarCamposAgregar()) {
         const response = await fetch(UrlAgregarGrado, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                "Grado": gradoAgregar.value,
-                "Titulo": areaAgregar.value,
-                "Ultimo": ultimoAgregar.checked
-            })
+            body: JSON.stringify(datosGrado)
         });
 
         if (response.ok) {
@@ -64,6 +62,8 @@ async function agregarGrado() {
             tabla.innerHTML = html;
 
             cerrarModal("modalAgregarGrado");
+        } else {
+            console.log("Error");
         }
     }
 }
@@ -89,26 +89,25 @@ function verificarCamposAgregar() {
 // Editar
 // ==========
 
-const idTemporalEditar = document.getElementById("idTemporalEditar")
 var idGradoEditar = 0;
+var idTemporalEditar = 0;
 const gradoEditar = document.getElementById("sfGradoEditar");
-var idDocenteEditar = 0;
 const areaEditar = document.getElementById("ifAreaEditar");
 const ultimoEditar = document.getElementById("cfUltimoEditar");
 
 const errorGradoEditar = document.getElementById("sfGradoEditar-Error");
 const errorAreaEditar = document.getElementById("ifAreaEditar-Error");
 
-function abrirModalEditarGrado(idGrado, idDocente, grado, titulo, ultimo) {
+function abrirModalEditarGrado(idTemporal, idGrado, grado, titulo, ultimo) {
 
     limpiarErrorresEditar();
 
-    //idTemporalEditar.value = idTemporal;
     idGradoEditar = idGrado;
-    idDocenteEditar = idDocente;
+    idTemporalEditar = idTemporal;
     gradoEditar.value = grado;
     areaEditar.value = titulo;
     ultimoEditar.checked = ultimo;
+
     abrirModal("modalEditarGrado");
 }
 
@@ -120,38 +119,35 @@ function limpiarErrorresEditar() {
     errorAreaEditar.style.display = "none";
 }
 
-/*async function editarGrado() {
+async function editarGrado(edicion) {
     limpiarErrorresEditar();
+    var datosGrado = {};
+
     if (verificarCamposEditar()) {
-        const response = await fetch(`${UrlEditarGrado}?idTemporal=${encodeURIComponent(idTemporalEditar.value)}&grado=${encodeURIComponent(gradoEditar.value)}&titulo=${encodeURIComponent(areaEditar.value)}&ultimo=${encodeURIComponent(ultimoEditar.checked)}`, {
-            method: "GET"
-        });
-
-        if (response.ok) {
-            const html = await response.text();
-            tabla.innerHTML = html;
-
-            cerrarModal("modalEditarGrado");
+        if (edicion) {
+            datosGrado = {
+                "IdGrado": idGradoEditar,
+                "IdDocente": idDocente.value,
+                "IdTemporal": idTemporalEditar,
+                "Grado": gradoEditar.value,
+                "Titulo": areaEditar.value,
+                "Ultimo": ultimoEditar.checked
+            }
+        } else {
+            datosGrado = {
+                "IdTemporal": idTemporalEditar,
+                "Grado": gradoEditar.value,
+                "Titulo": areaEditar.value,
+                "Ultimo": ultimoEditar.checked
+            }
         }
-    }
-}*/
 
-async function editarGrado() {
-    limpiarErrorresEditar();
-    if (verificarCamposEditar()) {
         const response = await fetch(UrlEditarGrado, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                "IdGrado": idGradoEditar,
-                "IdDocente": idDocenteEditar,
-                "IdTemporal": idTemporalEditar.value,
-                "Grado": gradoEditar.value,
-                "Titulo": areaEditar.value,
-                "Ultimo": ultimoEditar.checked
-            })
+            body: JSON.stringify(datosGrado)
         });
 
         if (response.ok) {
@@ -159,6 +155,8 @@ async function editarGrado() {
             tabla.innerHTML = html;
 
             cerrarModal("modalEditarGrado");
+        } else {
+            console.log("Error");
         }
     }
 }
@@ -192,21 +190,13 @@ function abrirModalEliminarGrado(id, temporal) {
     abrirModal("modalEliminarGrado");
 }
 
-/*async function eliminarGrado(edicion) {
-    const response = await fetch(`${UrlEliminarGrado}?idTemporal=${encodeURIComponent(idTemporalEliminar)}`, {
-        method: "GET"
-    });
-
-    if (response.ok) {
-        const html = await response.text();
-        tabla.innerHTML = html;
-
-        cerrarModal("modalEliminarGrado");
-    }
-}*/
-
 async function eliminarGrado(edicion) {
-    const response = await fetch(`${UrlEliminarGrado}?idGrado=${encodeURIComponent(idGradoEliminar)}&temporal=${encodeURIComponent(temporalEliminar)}`, {
+    var url = "";
+    if (edicion) 
+        url = `${UrlEliminarGrado}?idGrado=${encodeURIComponent(idGradoEliminar)}&temporal=${encodeURIComponent(temporalEliminar)}`;
+    else
+        url = `${UrlEliminarGrado}?idTemporal=${encodeURIComponent(idGradoEliminar)}`;
+    const response = await fetch(url, {
         method: "GET"
     });
 
@@ -215,5 +205,7 @@ async function eliminarGrado(edicion) {
         tabla.innerHTML = html;
 
         cerrarModal("modalEliminarGrado");
+    } else {
+        console.log("Error");
     }
 }

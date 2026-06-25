@@ -14,7 +14,8 @@
             Name = "Nombre",
             Label = "Nombre:",
             Valor = Model.Nombre,
-            Flexible = true
+            Flexible = true,
+            Error = ViewData.ModelState["Plan"]?.Errors.FirstOrDefault()?.ErrorMessage,
         })
 
         <!-- Descripción -->

@@ -1,9 +1,11 @@
 ﻿using SGPla.Models.Components;
+using System.ComponentModel.DataAnnotations;
 
 namespace SGPla.Models.ViewModels.Docentes
 {
     public class RegistrarDocenteViewModel
     {
+        [Required(ErrorMessage = "El Nombre es obligatorio.")]
         public string Nombre { get; set; } = string.Empty;
         public string DescripcionPerfil { get; set; } = string.Empty;
         public IFormFile Archivo { get; set; }

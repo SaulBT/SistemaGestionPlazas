@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SGPla.Commons;
 using SGPla.Commons.Factories;
-using SGPla.Models;
 using SGPla.Models.Components;
 using SGPla.Models.DTOs.Archivo;
 using SGPla.Models.DTOs.Docentes;
@@ -31,9 +30,6 @@ namespace SGPla.Controllers
         private const string LOG_ERROR_GRADOS_EDITADOS = "No se pudo cargar la lista de Grados editados.";
         private const string LOG_ERROR_GRADOS_ELIMINADOS = "No se pudo cargar la lista de Grados eliminados";
         private const string LOG_ERROR_GRADOS = "No se pudo cargar la lista de Grados";
-
-        private const string GRADO_EDITADO = "Gado editado";
-        private const string GRADO_ELIMINADO = "Grado eliminado";
 
         private static List<string> HEADERS_TABLA_DOCENTE = ["Nombre", "Número personal", "Puesto", "Acciones"];
         private static List<string> HEADERS_TABLA_ASPIRANTE = ["Nombre", "Grado", "Perfil", "Acciones"];
@@ -131,12 +127,12 @@ namespace SGPla.Controllers
                                     new()
                                     {
                                         Accion = "editar",
-                                        Url = Url.Action("EditarPersonalAcademico", "Docentes", new {IdDocente = docente.IdDocente})
+                                        Url = Url.Action("EditarPersonalAcademico", "Docentes", new { docente.IdDocente })
                                     },
                                     new()
                                     {
                                         Accion = "eliminar",
-                                        Url = Url.Action("Docentes", "EliminarDocente")
+                                        OnClick = $"abrirModalEliminarDocente({docente.IdDocente})"
                                     }
                                 }
                             }
@@ -212,7 +208,7 @@ namespace SGPla.Controllers
                                     new()
                                     {
                                         Accion = "eliminar",
-                                        Url = Url.Action("Docentes", "EliminarAspirante")
+                                        OnClick = $"abrirModalEliminarAspirante({aspirante.IdDocente})"
                                     }
                                 }
                             }
@@ -234,6 +230,23 @@ namespace SGPla.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task EliminarDocenteAsync(int idDocente)
+        {
+            try
+            {
+                await _docenteService.EliminarDocenteAsync(idDocente);
+            }
+            catch (ValidacionExcepction vx)
+            {
+                this.LanzarError(_logger, vx, NOMBRE_LOGGER, INDEX, Constantes.LOG_ERROR_VALIDACION, string.Format(Constantes.TOAST_ERROR_ELIMINACION_EL, Constantes.PERSONAL_ACADEMICO));
+            }
+            catch (Exception ex)
+            {
+                this.LanzarError(_logger, ex, NOMBRE_LOGGER, INDEX, Constantes.LOG_ERROR_INESPERADO, string.Format(Constantes.TOAST_ERROR_ELIMINACION_EL, Constantes.PERSONAL_ACADEMICO));
+            }
+        }
+
         // ====================
         // RegistrarDocente
         // ====================
@@ -242,25 +255,33 @@ namespace SGPla.Controllers
         [HttpGet]
         public async Task<IActionResult> RegistrarPersonalAcademicoAsync(RegistrarDocenteViewModel modelo)
         {
-            var vista = new RegistrarDocenteViewModel();
-            var error = false;
-
-            if (modelo.Recarga)
+            try
             {
-                var datos = recargargarRegistroDocente(modelo);
-                vista = datos.vista;
-                error = datos.error;
+                var vista = new RegistrarDocenteViewModel();
+                var error = false;
 
-                return View("RegistrarPersonalAcademico", vista);
-            }  
+                if (modelo.Recarga)
+                {
+                    var datos = recargargarRegistroDocente(modelo);
+                    vista = datos.vista;
+                    error = datos.error;
 
-            if (error)
-            {
-                this.LanzarError(_logger, null, NOMBRE_LOGGER, REGISTRAR_ACADEMICO, LOG_ERROR_GRADOS_AGREGADOS);
-                return View("Index");
+                    return View("RegistrarPersonalAcademico", vista);
+                }
+
+                if (error)
+                {
+                    this.LanzarError(_logger, null, NOMBRE_LOGGER, REGISTRAR_ACADEMICO, LOG_ERROR_GRADOS_AGREGADOS);
+                    return View("Index");
+                }
+
+                return View("RegistrarPersonalAcademico", inicializarRegistroDocente());
             }
-
-            return View("RegistrarPersonalAcademico", inicializarRegistroDocente());
+            catch (JsonException jx)
+            {
+                this.LanzarError(_logger, jx, NOMBRE_LOGGER, REGISTRAR_ACADEMICO, Constantes.LOG_ERROR_JSON);
+                return StatusCode(500);
+            }
         }
 
         private RegistrarDocenteViewModel inicializarRegistroDocente()
@@ -276,24 +297,21 @@ namespace SGPla.Controllers
                 Recarga = true
             };
 
-            HttpContext.Session.SetString(SESSION_GRADOS_AGREGADOS, JsonSerializer.Serialize(new List<AgregarGradoDTO>()));
+            guardarEnSession<List<AgregarGradoDTO>>(SESSION_GRADOS_AGREGADOS, new List<AgregarGradoDTO>());
 
             return modelo;
         }
 
         private (RegistrarDocenteViewModel vista, bool error) recargargarRegistroDocente(RegistrarDocenteViewModel modelo)
         {
-            var gradosAgregados = HttpContext.Session.GetString(SESSION_GRADOS_AGREGADOS);
-            if (!string.IsNullOrEmpty(gradosAgregados))
-            {
-                var listaGrados = JsonSerializer.Deserialize<List<AgregarGradoDTO>>(gradosAgregados);
-                modelo.OpcionesPuesto = generarListaPuestos(modelo.Puesto);
-                modelo.Tabla = generarTablaGradosRegistro(listaGrados);
-
-                return (modelo, false);
-            }
-            else
+            var grados = obtenerDeSession<List<AgregarGradoDTO>>(SESSION_GRADOS_AGREGADOS);
+            if (grados is null)
                 return (modelo, true);
+
+            modelo.OpcionesPuesto = generarListaPuestos(modelo.Puesto);
+            modelo.Tabla = generarTablaGradosRegistro(grados);
+
+            return (modelo, false);
         }
 
         [HttpPost]
@@ -301,38 +319,19 @@ namespace SGPla.Controllers
         {
             try
             {
-                var gradosJson = HttpContext.Session.GetString(SESSION_GRADOS_AGREGADOS);
-                if (!string.IsNullOrEmpty(gradosJson))
-                {
-                    var grados = JsonSerializer.Deserialize<List<AgregarGradoDTO>>(gradosJson);
-                    if (!validarRegistro(grados, modelo.Archivo, REGISTRAR_ACADEMICO))
-                        return await RegistrarPersonalAcademicoAsync(modelo);
-
-                    var (nombre, ruta) = await _archivoService.GuardarTemporalmenteAsync(modelo.Archivo);
-
-                    var dto = new RegistrarDocenteDTO
-                    {
-                        Nombre = modelo.Nombre,
-                        DescripcionPerfil = modelo.DescripcionPerfil,
-                        ArchivosGenerales = new Models.DTOs.Archivo.CargarArchivoDTO
-                        {
-                            NombreArchivo = nombre,
-                            RutaArchivo = ruta
-                        },
-                        Grados = grados,
-                        NumeroPersonal = modelo.NumeroPersonal,
-                        Puesto = modelo.Puesto
-                    };
-                    await _docenteService.RegistrarDocenteAsync(dto);
-                    TempData["Success"] = string.Format(Constantes.TOAST_GUARDADO_EL, Constantes.PERSONAL_ACADEMICO);
-                    System.IO.File.Delete(ruta);
-                    return RedirectToAction("Index");
-                }
-                else
+                var grados = obtenerDeSession<List<AgregarGradoDTO>>(SESSION_GRADOS_AGREGADOS);
+                if (grados is null)
                 {
                     this.LanzarError(_logger, null, NOMBRE_LOGGER, REGISTRAR_ACADEMICO, LOG_ERROR_GRADOS_AGREGADOS);
-                    return RedirectToAction(nameof(IndexAsync));
+                    return RedirectToAction("Index");
                 }
+
+                if (!validarRegistroDocente(grados, modelo))
+                    return await RegistrarPersonalAcademicoAsync(modelo);
+
+                await procesarGuardadoDocenteAsync(modelo, grados);
+                TempData["Success"] = string.Format(Constantes.TOAST_GUARDADO_EL, Constantes.PERSONAL_ACADEMICO);
+                return RedirectToAction("Index");
             }
             catch (ValidacionExcepction vx)
             {
@@ -344,6 +343,67 @@ namespace SGPla.Controllers
                 this.LanzarError(_logger, ex, NOMBRE_LOGGER, REGISTRAR_ACADEMICO, Constantes.LOG_ERROR_INESPERADO);
                 return await RegistrarPersonalAcademicoAsync(modelo);
             }
+        }
+
+        private bool validarRegistroDocente(List<AgregarGradoDTO> grados, RegistrarDocenteViewModel modelo)
+        {
+            if (!ModelState.IsValid)
+            {
+                if (modelo.Archivo == null)
+                    this.LanzarError(_logger, null, NOMBRE_LOGGER, REGISTRAR_ACADEMICO, Constantes.LOG_ERROR_VALIDACION, "Debes cargar un archivo.");
+
+                return false;
+            }
+
+            if (grados.Count < 1)
+            {
+                this.LanzarError(_logger, null, NOMBRE_LOGGER, REGISTRAR_ACADEMICO, Constantes.LOG_ERROR_VALIDACION, "Agrega mínimo un Grado.");
+                return false;
+            }
+
+            var hayUlimo = false;
+            var cantidadUltimo = 0;
+            foreach (var grado in grados)
+            {
+                if (grado.Ultimo)
+                {
+                    hayUlimo = true;
+                    cantidadUltimo++;
+                }
+            }
+            if (!hayUlimo)
+            {
+                this.LanzarError(_logger, null, NOMBRE_LOGGER, REGISTRAR_ACADEMICO, Constantes.LOG_ERROR_VALIDACION, "Debe haber un Grado marcado como último.");
+                return false;
+            }
+            if (cantidadUltimo > 1)
+            {
+                this.LanzarError(_logger, null, NOMBRE_LOGGER, REGISTRAR_ACADEMICO, Constantes.LOG_ERROR_VALIDACION, "Sólo puede haber un Grado marcado como último.");
+                return false;
+            }
+
+            return true;
+        }
+
+        private async Task procesarGuardadoDocenteAsync(RegistrarDocenteViewModel modelo, List<AgregarGradoDTO> grados)
+        {
+            var (nombre, ruta) = await _archivoService.GuardarTemporalmenteAsync(modelo.Archivo);
+
+            var dto = new RegistrarDocenteDTO
+            {
+                Nombre = modelo.Nombre,
+                DescripcionPerfil = modelo.DescripcionPerfil,
+                ArchivosGenerales = new CargarArchivoDTO
+                {
+                    NombreArchivo = nombre,
+                    RutaArchivo = ruta
+                },
+                Grados = grados,
+                NumeroPersonal = modelo.NumeroPersonal,
+                Puesto = modelo.Puesto
+            };
+            await _docenteService.RegistrarDocenteAsync(dto);
+            System.IO.File.Delete(ruta);
         }
 
         // ====================
@@ -470,16 +530,21 @@ namespace SGPla.Controllers
                 modelo.Recarga = true;
                 modelo.NuevoArchivo = false;
 
-                HttpContext.Session.SetString(SESSION_GRADOS_AGREGADOS, JsonSerializer.Serialize(new List<AgregarGradoDTO>()));
-                HttpContext.Session.SetString(SESSION_GRADOS_EDITADOS, JsonSerializer.Serialize(new List<DatosGradoDTO>()));
-                HttpContext.Session.SetString(SESSION_GRADOS_ELIMINADOS, JsonSerializer.Serialize(new List<int>()));
-                HttpContext.Session.SetString(SESSION_GRADOS, JsonSerializer.Serialize(datosDocente.Grados));
+                guardarEnSession<List<AgregarGradoDTO>>(SESSION_GRADOS_AGREGADOS, new List<AgregarGradoDTO>());
+                guardarEnSession<List<DatosGradoDTO>>(SESSION_GRADOS_EDITADOS, new List<DatosGradoDTO>());
+                guardarEnSession<List<int>>(SESSION_GRADOS_ELIMINADOS, new List<int>());
+                guardarEnSession<List<DatosGradoDTO>>(SESSION_GRADOS, datosDocente.Grados);
 
                 return (modelo, false);
             }
             catch (ValidacionExcepction vx)
             {
                 this.LanzarError(_logger, vx, NOMBRE_LOGGER, EDITAR_ACADEMICO, Constantes.LOG_ERROR_VALIDACION, string.Format(Constantes.TOAST_ERROR_CARGAR_EL, Constantes.PERSONAL_ACADEMICO));
+                return (modelo, true);
+            }
+            catch (JsonException jx)
+            {
+                this.LanzarError(_logger, jx, NOMBRE_LOGGER, EDITAR_ACADEMICO, Constantes.LOG_ERROR_JSON);
                 return (modelo, true);
             }
             catch (Exception ex)
@@ -491,8 +556,10 @@ namespace SGPla.Controllers
 
         private (EditarDocenteViewModel modelo, bool error) recargarEdicionDocente(EditarDocenteViewModel modelo)
         {
-            if (modelo != null)
+            try
             {
+                ArgumentNullException.ThrowIfNull(modelo);
+
                 var formularioGrados = new FormularioGradoViewModel
                 {
                     ListaGrados = generarListaGrados()
@@ -501,21 +568,22 @@ namespace SGPla.Controllers
                 modelo.OpcionesPuesto = generarListaPuestos(modelo.Puesto);
                 modelo.Formulario = formularioGrados;
 
-                var gradosJson = HttpContext.Session.GetString(SESSION_GRADOS);
-                if (!string.IsNullOrEmpty(gradosJson))
+                var grados = obtenerDeSession<List<DatosGradoDTO>>(SESSION_GRADOS);
+                if (grados is null)
                 {
-                    var grados = JsonSerializer.Deserialize<List<DatosGradoDTO>>(gradosJson);
-                    modelo.Tabla = generarTablaGradosEdicion(grados);
-
-                    return (modelo, false);
-                }
-                else
                     this.LanzarError(_logger, null, NOMBRE_LOGGER, EDITAR_ACADEMICO, LOG_ERROR_GRADOS, string.Format(Constantes.TOAST_ERROR_GUARDAR_EL, Constantes.PERSONAL_ACADEMICO));
-            }
-            else
-                this.LanzarError(_logger, null, NOMBRE_LOGGER, EDITAR_ACADEMICO, "No se enviaron datos al recargar la vista.", string.Format(Constantes.TOAST_ERROR_GUARDAR_EL, Constantes.PERSONAL_ACADEMICO));
+                    return (new EditarDocenteViewModel(), true);
+                }
 
-            return (new EditarDocenteViewModel(), true);
+                modelo.Tabla = generarTablaGradosEdicion(grados);
+
+                return (modelo, false);
+            }
+            catch (ArgumentNullException anx)
+            {
+                this.LanzarError(_logger, anx, NOMBRE_LOGGER, EDITAR_ACADEMICO, string.Format(Constantes.LOG_GENERAL_NULO, anx.ParamName));
+                return (new EditarDocenteViewModel(), true);
+            }
         }
 
         [HttpPost]
@@ -605,9 +673,12 @@ namespace SGPla.Controllers
 
                 docenteDto.ArchivosGenerales = archivoDTO;
                 docenteDto.NuevoArchivo = true;
-            }
 
-            await _docenteService.EditarDocenteAsync(docenteDto);
+                await _docenteService.EditarDocenteAsync(docenteDto);
+                System.IO.File.Delete(ruta);
+            }
+            else
+                await _docenteService.EditarDocenteAsync(docenteDto);
         }
 
         // ==========
@@ -638,12 +709,12 @@ namespace SGPla.Controllers
                                 new()
                                 {
                                     Accion = "editar",
-                                    OnClick = $"abrirModalEditarGrado('{grado.IdTemporal}', '{grado.Grado}', '{grado.Titulo}', {grado.Ultimo.ToString().ToLower()})"
+                                    OnClick = $"abrirModalEditarGrado({grado.IdTemporal}, 0, '{grado.Grado}', '{grado.Titulo}', {grado.Ultimo.ToString().ToLower()})"
                                 },
                                 new()
                                 {
                                     Accion = "eliminar",
-                                    OnClick = $"abrirModalEliminarGrado('{grado.IdTemporal}')"
+                                    OnClick = $"abrirModalEliminarGrado({grado.IdTemporal})"
                                 }
                             }
                         }
@@ -677,12 +748,12 @@ namespace SGPla.Controllers
                                 new()
                                 {
                                     Accion = "editar",
-                                    OnClick = $"abrirModalEditarGrado('{grado.IdGrado}', '{grado.IdDocente}', '{grado.Grado}', '{grado.Titulo}', {grado.Ultimo.ToString().ToLower()})"
+                                    OnClick = $"abrirModalEditarGrado({grado.IdTemporal}, {grado.IdGrado}, '{grado.Grado}', '{grado.Titulo}', {grado.Ultimo.ToString().ToLower()})"
                                 },
                                 new()
                                 {
                                     Accion = "eliminar",
-                                    OnClick = $"abrirModalEliminarGrado('{grado.IdGrado}', {(grado.IdTemporal > 0).ToString().ToLower()})"
+                                    OnClick = $"abrirModalEliminarGrado({(grado.IdTemporal > 0 ? grado.IdTemporal : grado.IdGrado)}, {(grado.IdTemporal > 0).ToString().ToLower()})"
                                 }
                             }
                         }
@@ -787,118 +858,155 @@ namespace SGPla.Controllers
         }
 
         //Gestionar Grados Registro
-        [HttpGet]
-        public IActionResult AgregarGradoRegistro(string grado, string titulo, bool ultimo)
+        [HttpPost]
+        public IActionResult AgregarGradoRegistro([FromBody] AgregarGradoDTO gradoDTO)
         {
-            bool error = false;
-            AgregarGradoDTO gradoAgregado = new();
-            var tabla = new TableModel();
-
-            var gradosJson = HttpContext.Session.GetString(SESSION_GRADOS_AGREGADOS);
-            if (!string.IsNullOrEmpty(gradosJson))
+            try
             {
-                var grados = JsonSerializer.Deserialize<List<AgregarGradoDTO>>(gradosJson);
-                var idTemporal = 0;
-                if (grados.Count > 0)
+                ArgumentNullException.ThrowIfNull(gradoDTO, "Datos del Grado");
+
+                var grados = obtenerDeSession<List<AgregarGradoDTO>>(SESSION_GRADOS_AGREGADOS);
+                if (grados is null)
                 {
-                    idTemporal = grados.Max(g => g.IdTemporal);
-                    idTemporal++;
+                    this.LanzarError(_logger, null, NOMBRE_LOGGER, "AgregarGradoRegistro:", LOG_ERROR_GRADOS_AGREGADOS);
+                    return StatusCode(500);
                 }
 
-                gradoAgregado = new AgregarGradoDTO
-                {
-                    IdTemporal = idTemporal,
-                    Grado = grado,
-                    Titulo = titulo,
-                    Ultimo = ultimo
-                };
+                grados = procesarAgregadoGradoRegistro(grados, gradoDTO);
 
-                grados.Add(gradoAgregado);
-                gradosJson = JsonSerializer.Serialize(grados);
-                HttpContext.Session.SetString(SESSION_GRADOS_AGREGADOS, gradosJson);
-                tabla = generarTablaGradosRegistro(grados);
+                guardarEnSession<List<AgregarGradoDTO>>(SESSION_GRADOS_AGREGADOS, grados);
+                var tabla = generarTablaGradosRegistro(grados);
                 return PartialView("_TablaGrados", tabla);
             }
-            else
+            catch (JsonException jx)
             {
-                this.LanzarError(_logger, null, NOMBRE_LOGGER, "AgregarGradoRegistro:", LOG_ERROR_GRADOS_AGREGADOS);
-                return RedirectToAction(nameof(IndexAsync));
+                this.LanzarError(_logger, jx, NOMBRE_LOGGER, EDITAR_ACADEMICO, Constantes.LOG_ERROR_JSON);
+                return StatusCode(500);
+            }
+            catch (ArgumentNullException anx)
+            {
+                this.LanzarError(_logger, anx, NOMBRE_LOGGER, EDITAR_ACADEMICO, string.Format(Constantes.LOG_GENERAL_NULO, anx.ParamName));
+
+                if (anx.ParamName?.Contains("Datos del Grado") == true)
+                    return BadRequest();
+                else
+                    return StatusCode(500);
+            }
+            catch (Exception ex)
+            {
+                this.LanzarError(_logger, ex, NOMBRE_LOGGER, EDITAR_ACADEMICO, Constantes.LOG_ERROR_INESPERADO);
+                return StatusCode(500);
             }
         }
 
-        [HttpGet]
-        public IActionResult EditarGradoRegistro(int idTemporal, string grado, string titulo, bool ultimo)
+        private List<AgregarGradoDTO> procesarAgregadoGradoRegistro(List<AgregarGradoDTO> grados, AgregarGradoDTO gradoDTO)
         {
-            bool error = false;
-            var tabla = new TableModel();
-
-            var gradosJson = HttpContext.Session.GetString(SESSION_GRADOS_AGREGADOS);
-            if (!string.IsNullOrEmpty(gradosJson))
+            var idTemporal = 0;
+            if (grados.Count > 0)
             {
-                var grados = JsonSerializer.Deserialize<List<AgregarGradoDTO>>(gradosJson);
-                var gradoEditado = grados.FirstOrDefault(g => g.IdTemporal == idTemporal);
-                if (gradoEditado != null)
-                {
-                    gradoEditado.Grado = grado;
-                    gradoEditado.Titulo = titulo;
-                    gradoEditado.Ultimo = ultimo;
+                idTemporal = grados.Max(g => g.IdTemporal);
+                idTemporal++;
+            }
 
-                    gradosJson = JsonSerializer.Serialize(grados);
-                    HttpContext.Session.SetString(SESSION_GRADOS_AGREGADOS, gradosJson);
-                    tabla = generarTablaGradosRegistro(grados);
+            gradoDTO.IdTemporal = idTemporal;
+            grados.Add(gradoDTO);
+            return grados;
+        }
+
+        [HttpPost]
+        public IActionResult EditarGradoRegistro([FromBody] AgregarGradoDTO gradoDTO)
+        {
+            try
+            {
+                ArgumentNullException.ThrowIfNull(gradoDTO, "Datos del Grado");
+
+                var grados = obtenerDeSession<List<AgregarGradoDTO>>(SESSION_GRADOS_AGREGADOS);
+                if (grados is null)
+                {
+                    this.LanzarError(_logger, null, NOMBRE_LOGGER, "AgregarGradoRegistro:", LOG_ERROR_GRADOS_AGREGADOS);
+                    return StatusCode(500);
                 }
+
+                grados = procesarEdicionGradoRegistro(grados, gradoDTO);
+
+                guardarEnSession<List<AgregarGradoDTO>>(SESSION_GRADOS_AGREGADOS, grados);
+                var tabla = generarTablaGradosRegistro(grados);
+                return PartialView("_TablaGrados", tabla);
+            }
+            catch (JsonException jx)
+            {
+                this.LanzarError(_logger, jx, NOMBRE_LOGGER, EDITAR_ACADEMICO, Constantes.LOG_ERROR_JSON);
+                return StatusCode(500);
+            }
+            catch (ArgumentNullException anx)
+            {
+                this.LanzarError(_logger, anx, NOMBRE_LOGGER, EDITAR_ACADEMICO, string.Format(Constantes.LOG_GENERAL_NULO, anx.ParamName));
+
+                if (anx.ParamName?.Contains("Datos del Grado") == true)
+                    return BadRequest();
                 else
-                {
-                    error = true;
-                    this.LanzarError(_logger, null, NOMBRE_LOGGER, "EditarGradoRegistro:", string.Format(Constantes.LOG_ERROR_NULO, GRADO_EDITADO));
-                }
+                    return StatusCode(500);
             }
-            else
+            catch (Exception ex)
             {
-                error = true;
-                this.LanzarError(_logger, null, NOMBRE_LOGGER, "EditarGradoRegistro:", LOG_ERROR_GRADOS_AGREGADOS);
+                this.LanzarError(_logger, ex, NOMBRE_LOGGER, EDITAR_ACADEMICO, Constantes.LOG_ERROR_INESPERADO);
+                return StatusCode(500);
             }
+        }
 
-            if (error)
-                return RedirectToAction(nameof(IndexAsync));
+        private List<AgregarGradoDTO> procesarEdicionGradoRegistro(List<AgregarGradoDTO> grados, AgregarGradoDTO gradoDTO)
+        {
+            var gradoEditado = grados.FirstOrDefault(g => g.IdTemporal == gradoDTO.IdTemporal);
+            ArgumentNullException.ThrowIfNull(gradoEditado, "Grado a editar");
 
-            return PartialView("_TablaGrados", tabla);
+            gradoEditado.Grado = gradoDTO.Grado;
+            gradoEditado.Titulo = gradoDTO.Titulo;
+            gradoEditado.Ultimo = gradoDTO.Ultimo;
+
+            return grados;
         }
 
         [HttpGet]
         public IActionResult EliminarGradoRegistro(int idTemporal)
         {
-            bool error = false;
-            var tabla = new TableModel();
-
-            var gradosJson = HttpContext.Session.GetString(SESSION_GRADOS_AGREGADOS);
-            if (!string.IsNullOrEmpty(gradosJson))
+            try
             {
-                var grados = JsonSerializer.Deserialize<List<AgregarGradoDTO>>(gradosJson);
-                var gradoEliminado = grados.FirstOrDefault(g => g.IdTemporal == idTemporal);
-                if (gradoEliminado != null)
+                var grados = obtenerDeSession<List<AgregarGradoDTO>>(SESSION_GRADOS_AGREGADOS);
+                if (grados is null)
                 {
-                    grados.Remove(gradoEliminado);
-                    gradosJson = JsonSerializer.Serialize(grados);
-                    HttpContext.Session.SetString(SESSION_GRADOS_AGREGADOS, gradosJson);
-                    tabla = generarTablaGradosRegistro(grados);
+                    this.LanzarError(_logger, null, NOMBRE_LOGGER, "AgregarGradoRegistro:", LOG_ERROR_GRADOS_AGREGADOS);
+                    return StatusCode(500);
                 }
-                else
-                {
-                    error = true;
-                    this.LanzarError(_logger, null, NOMBRE_LOGGER, "EliminarGradoRegistro:", string.Format(Constantes.LOG_ERROR_NULO, GRADO_ELIMINADO));
-                }
+
+                grados = procesarEliminadoGradoRegistro(grados, idTemporal);
+
+                guardarEnSession<List<AgregarGradoDTO>>(SESSION_GRADOS_AGREGADOS, grados);
+                var tabla = generarTablaGradosRegistro(grados);
+                return PartialView("_TablaGrados", tabla);
             }
-            else
+            catch (JsonException jx)
             {
-                error = true;
-                this.LanzarError(_logger, null, NOMBRE_LOGGER, "EliminarGradoRegistro:", LOG_ERROR_GRADOS_AGREGADOS);
+                this.LanzarError(_logger, jx, NOMBRE_LOGGER, EDITAR_ACADEMICO, Constantes.LOG_ERROR_JSON);
+                return StatusCode(500);
             }
+            catch (ArgumentNullException anx)
+            {
+                this.LanzarError(_logger, anx, NOMBRE_LOGGER, EDITAR_ACADEMICO, string.Format(Constantes.LOG_GENERAL_NULO, anx.ParamName));
+                return StatusCode(500);
+            }
+            catch (Exception ex)
+            {
+                this.LanzarError(_logger, ex, NOMBRE_LOGGER, EDITAR_ACADEMICO, Constantes.LOG_ERROR_INESPERADO);
+                return StatusCode(500);
+            }
+        }
 
-            if (error)
-                return RedirectToAction(nameof(IndexAsync));
-
-            return PartialView("_TablaGrados", tabla);
+        private List<AgregarGradoDTO> procesarEliminadoGradoRegistro(List<AgregarGradoDTO> grados, int idTemporal)
+        {
+            var gradoEliminado = grados.FirstOrDefault(g => g.IdTemporal == idTemporal);
+            ArgumentNullException.ThrowIfNull(gradoEliminado);
+            grados.Remove(gradoEliminado);
+            return grados;
         }
 
         //Gestionar Grados Edicion
@@ -966,6 +1074,7 @@ namespace SGPla.Controllers
             {
                 Grado = agregarGradoDTO.Grado,
                 IdDocente = agregarGradoDTO.IdDocente,
+                IdTemporal = idTemporal,
                 Titulo = agregarGradoDTO.Titulo,
                 Ultimo = agregarGradoDTO.Ultimo
             };

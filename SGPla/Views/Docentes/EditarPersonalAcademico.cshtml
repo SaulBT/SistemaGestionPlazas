@@ -7,7 +7,7 @@
 
 <form method="post" action="@Url.Action("EditarDocente", "Docentes")" enctype="multipart/form-data">
     <input name="Recarga" type="hidden" value="@Model.Recarga.ToString()" />
-    <input name="IdDocente" type="hidden" value="@Model.IdDocente" />
+    <input id="idDocente" name="IdDocente" type="hidden" value="@Model.IdDocente" />
     <div class="d-flex row gap-3">
         <!-- Nombre -->
         @await Component.InvokeAsync("InputField", new InputFieldModel
