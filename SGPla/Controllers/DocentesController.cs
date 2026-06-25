@@ -236,6 +236,7 @@ namespace SGPla.Controllers
             try
             {
                 await _docenteService.EliminarDocenteAsync(idDocente);
+                TempData["Success"] = string.Format(Constantes.TOAST_ELIMINACION_EL, Constantes.PERSONAL_ACADEMICO);
             }
             catch (ValidacionExcepction vx)
             {
@@ -275,12 +276,13 @@ namespace SGPla.Controllers
                     return View("Index");
                 }
 
+                ModelState.Clear();
                 return View("RegistrarPersonalAcademico", inicializarRegistroDocente());
             }
             catch (JsonException jx)
             {
                 this.LanzarError(_logger, jx, NOMBRE_LOGGER, REGISTRAR_ACADEMICO, Constantes.LOG_ERROR_JSON);
-                return StatusCode(500);
+                return RedirectToAction("Index");
             }
         }
 
@@ -298,6 +300,7 @@ namespace SGPla.Controllers
             };
 
             guardarEnSession<List<AgregarGradoDTO>>(SESSION_GRADOS_AGREGADOS, new List<AgregarGradoDTO>());
+            
 
             return modelo;
         }
@@ -310,6 +313,7 @@ namespace SGPla.Controllers
 
             modelo.OpcionesPuesto = generarListaPuestos(modelo.Puesto);
             modelo.Tabla = generarTablaGradosRegistro(grados);
+            modelo.Formulario.ListaGrados = generarListaGrados();
 
             return (modelo, false);
         }
@@ -335,7 +339,7 @@ namespace SGPla.Controllers
             }
             catch (ValidacionExcepction vx)
             {
-                this.LanzarError(_logger, vx, NOMBRE_LOGGER, REGISTRAR_ACADEMICO, Constantes.LOG_ERROR_VALIDACION);
+                this.LanzarError(_logger, vx, NOMBRE_LOGGER, REGISTRAR_ACADEMICO, Constantes.LOG_ERROR_VALIDACION, vx.Message);
                 return await RegistrarPersonalAcademicoAsync(modelo);
             }
             catch (Exception ex)
@@ -350,10 +354,14 @@ namespace SGPla.Controllers
             if (!ModelState.IsValid)
             {
                 if (modelo.Archivo == null)
+                {
                     this.LanzarError(_logger, null, NOMBRE_LOGGER, REGISTRAR_ACADEMICO, Constantes.LOG_ERROR_VALIDACION, "Debes cargar un archivo.");
+                    return false;
+                }
 
                 return false;
             }
+
 
             if (grados.Count < 1)
             {
@@ -414,22 +422,66 @@ namespace SGPla.Controllers
         [HttpGet]
         public IActionResult RegistrarPersonalExterno(RegistrarDocenteViewModel modelo)
         {
-            var vista = new RegistrarDocenteViewModel();
-            vista.Formulario = new FormularioGradoViewModel
+            try
             {
-                ListaGrados = generarListaGrados()
+                var vista = new RegistrarDocenteViewModel();
+                var error = false;
+
+                if (modelo.Recarga)
+                {
+                    var datos = recargargarRegistroAspirante(modelo);
+                    vista = datos.vista;
+                    error = datos.error;
+
+                    return View("RegistrarPersonalAcademico", vista);
+                }
+
+                if (error)
+                {
+                    this.LanzarError(_logger, null, NOMBRE_LOGGER, REGISTRAR_EXTERNO, LOG_ERROR_GRADOS_AGREGADOS);
+                    return View("Index");
+                }
+
+                ModelState.Clear();
+                return View("RegistrarPersonalAcademico", inicializarRegistroAspirante());
+            }
+            catch (JsonException jx)
+            {
+                this.LanzarError(_logger, jx, NOMBRE_LOGGER, REGISTRAR_EXTERNO, Constantes.LOG_ERROR_JSON);
+                return RedirectToAction("Index");
+            }
+        }
+
+        private RegistrarDocenteViewModel inicializarRegistroAspirante()
+        {
+            var modelo = new RegistrarDocenteViewModel()
+            {
+                Formulario = new FormularioGradoViewModel
+                {
+                    ListaGrados = generarListaGrados()
+                },
+                Tabla = TablaFactory.GenerarTablaConMensaje(HEADERS_TABLA_GRADOS, "No se han agregado grados."),
+                OpcionesPuesto = generarListaPuestos(""),
+                Recarga = true
             };
 
-            if (modelo.Recarga)
-                return View(modelo);
-            else
-            {
-                vista.Tabla = TablaFactory.GenerarTablaConMensaje(HEADERS_TABLA_GRADOS, "No se han agregado grados.");
-                vista.Recarga = true;
-                HttpContext.Session.SetString(SESSION_GRADOS_AGREGADOS, string.Empty);
+            guardarEnSession<List<AgregarGradoDTO>>(SESSION_GRADOS_AGREGADOS, new List<AgregarGradoDTO>());
 
-                return View(vista);
-            }
+
+            return modelo;
+        }
+
+        private (RegistrarDocenteViewModel vista, bool error) recargargarRegistroAspirante(RegistrarDocenteViewModel modelo)
+        {
+            var grados = obtenerDeSession<List<AgregarGradoDTO>>(SESSION_GRADOS_AGREGADOS);
+            if (grados is null)
+                return (modelo, true);
+
+            modelo.OpcionesPuesto = generarListaPuestos(modelo.Puesto);
+            modelo.Tabla = generarTablaGradosRegistro(grados);
+            modelo.Formulario.ListaGrados = generarListaGrados();
+
+            return (modelo, false);
         }
 
         public async Task<IActionResult> GuardarAspiranteAsync(RegistrarDocenteViewModel modelo)
@@ -496,6 +548,7 @@ namespace SGPla.Controllers
             }
             else
             {
+                ModelState.Clear();
                 var (vista, error) = await inicializarEdicionDocenteAsync(modelo.IdDocente);
                 if (!error)
                     return View("EditarPersonalAcademico", vista);
@@ -521,6 +574,7 @@ namespace SGPla.Controllers
                 modelo.Tabla = generarTablaGradosEdicion(datosDocente.Grados);
                 modelo.NumeroPersonal = datosDocente.NumeroPersonal;
                 modelo.OpcionesPuesto = generarListaPuestos(datosDocente.Puesto);
+                modelo.Puesto = datosDocente.Puesto;
 
                 var formularioGrados = new FormularioGradoViewModel
                 {
@@ -618,7 +672,7 @@ namespace SGPla.Controllers
                     return RedirectToAction("Index");
                 }
 
-                if (!validarEdicion(grados, modelo.NuevoArchivo, modelo.Archivo, EDITAR_ACADEMICO))
+                if (!validarEdicionDocente(grados, modelo))
                     return await EditarPersonalAcademicoAsync(modelo);
 
                 await procesarEdicionDocenteAsync(modelo, gradosAgregados, gradosEditados, gradosEliminados);
@@ -646,6 +700,48 @@ namespace SGPla.Controllers
                 this.LanzarError(_logger, ex, NOMBRE_LOGGER, EDITAR_ACADEMICO, Constantes.LOG_ERROR_INESPERADO);
                 return RedirectToAction("Index");
             }
+        }
+
+        private bool validarEdicionDocente(List<DatosGradoDTO> grados, EditarDocenteViewModel modelo)
+        {
+            if (!ModelState.IsValid)
+            {
+                if (
+                    string.IsNullOrEmpty(modelo.Nombre) ||
+                    string.IsNullOrEmpty(modelo.DescripcionPerfil) ||
+                    string.IsNullOrEmpty(modelo.NumeroPersonal) ||
+                    string.IsNullOrEmpty(modelo.Puesto)
+                   )
+                    return false;
+            }
+
+            if (grados.Count < 1)
+            {
+                this.LanzarError(_logger, null, NOMBRE_LOGGER, REGISTRAR_ACADEMICO, Constantes.LOG_ERROR_VALIDACION, "Agrega mínimo un Grado.");
+                return false;
+            }
+            var hayUlimo = false;
+            var cantidadUltimo = 0;
+            foreach (var grado in grados)
+            {
+                if (grado.Ultimo)
+                {
+                    hayUlimo = true;
+                    cantidadUltimo++;
+                }
+            }
+            if (!hayUlimo)
+            {
+                this.LanzarError(_logger, null, NOMBRE_LOGGER, EDITAR_ACADEMICO, Constantes.LOG_ERROR_VALIDACION, "Debe haber un Grado marcado como último.");
+                return false;
+            }
+            if (cantidadUltimo > 1)
+            {
+                this.LanzarError(_logger, null, NOMBRE_LOGGER, EDITAR_ACADEMICO, Constantes.LOG_ERROR_VALIDACION, "Sólo puede haber un Grado marcado como último.");
+                return false;
+            }
+
+            return true;
         }
 
         private async Task procesarEdicionDocenteAsync(EditarDocenteViewModel modelo, List<AgregarGradoDTO> gradosAgregados, List<DatosGradoDTO> gradosEditados, List<int> gradosEliminados)
@@ -767,7 +863,7 @@ namespace SGPla.Controllers
             var listaPuestos = new List<OptionModel>();
             foreach (var p in Constantes.PUESTOS)
             {
-                if (p.Contains(puesto))
+                if (puesto is not null && p.Contains(puesto))
                     listaPuestos.Add(new OptionModel { Value = p, Text = p, Selected = true });
                 else
                     listaPuestos.Add(new OptionModel { Value = p, Text = p });

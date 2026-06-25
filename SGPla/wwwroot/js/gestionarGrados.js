@@ -16,7 +16,6 @@ function abrirModalAgregarGrado() {
     limpiarErrorresAgregar();
     abrirModal("modalAgregarGrado")
 
-    gradoAgregar.value = "Licenciatura";
     areaAgregar.value = "";
     ultimoAgregar.checked = false;
 }
@@ -63,7 +62,7 @@ async function agregarGrado(edicion) {
 
             cerrarModal("modalAgregarGrado");
         } else {
-            console.log("Error");
+            cancelarAccion();
         }
     }
 }

@@ -16,7 +16,9 @@
             Name = "Nombre",
             Label = "Nombre:",
             Valor = Model.Nombre,
-            Flexible = true
+            Flexible = true,
+            Error = ViewData.ModelState["Nombre"]?.Errors.FirstOrDefault()?.ErrorMessage,
+            MaximoCaracteres = 255,
         })
 
         <!-- Descripción -->
@@ -26,7 +28,8 @@
             Name = "DescripcionPerfil",
             Label = "Descripción",
             Value = Model.DescripcionPerfil,
-            Rows = 5
+            Rows = 5,
+            Error = ViewData.ModelState["DescripcionPerfil"]?.Errors.FirstOrDefault()?.ErrorMessage,
         })
 
         <!-- Botón de Documentos generales -->
@@ -60,21 +63,27 @@
         </div>
 
         <div class="d-flex gap-2">
+            <!-- Numero Personal -->
             @await Component.InvokeAsync("InputField", new InputFieldModel
             {
                 Id = "ifNumeroPersonal",
                 Name = "NumeroPersonal",
                 Label = "Numero personal:",
                 Valor = Model.NumeroPersonal,
-                Flexible = true
+                Flexible = true,
+                Error = ViewData.ModelState["NumeroPersonal"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                MaximoCaracteres = 10,
             })
 
+            <!-- Puesto -->
             @await Component.InvokeAsync("SelectField", new SelectFieldModel
             {
                 Label = "Puesto:",
                 Name = "Puesto",
                 Options = Model.OpcionesPuesto,
-                Flexible = true
+                Flexible = true,
+                SelectedValue = Model.Puesto,
+                Error = ViewData.ModelState["Puesto"]?.Errors.FirstOrDefault()?.ErrorMessage
             })
         </div>
 
@@ -166,6 +175,10 @@
         }
     });
 
+    async function cancelarAccion(){
+        const url = '@Url.Action("Index", "Docentes")';
+        window.location.href = url;
+    }
 </script>
 
 @section Scripts {

@@ -12,5 +12,7 @@
         public int Rows { get; set; } = 4;
 
         public bool Disabled { get; set; }
+
+        public string? Error { get; set; }
     }
 }
