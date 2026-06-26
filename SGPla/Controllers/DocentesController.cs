@@ -27,6 +27,7 @@ namespace SGPla.Controllers
         private const string REGISTRAR_EXTERNO = "RegistrarPersonalExterno:";
         private const string EDITAR_ACADEMICO = "EditarPersonalAcademicoAsync:";
         private const string EDITAR_EXTERNO = "EditarPersonalExternoAsync:";
+        private const string VER_DOCUMENTOS = "VerDocumentos:";
 
         private const string LOG_ERROR_GRADOS_AGREGADOS = "No se pudo cargar la lista de Grados agregados.";
         private const string LOG_ERROR_GRADOS_EDITADOS = "No se pudo cargar la lista de Grados editados.";
@@ -124,7 +125,7 @@ namespace SGPla.Controllers
                                     new()
                                     {
                                         Accion = "ver", //Cambiar por documentos
-                                        Url = Url.Action("Docentes", "VerDocumentos")
+                                        Url = Url.Action("VerDocumentosPersonal", "Docentes", new { id = docente.IdDocente, esDocente = true })
                                     },
                                     new()
                                     {
@@ -200,7 +201,7 @@ namespace SGPla.Controllers
                                     new()
                                     {
                                         Accion = "ver", //Cambiar por documentos
-                                        Url = Url.Action("Docentes", "VerDocumentos")
+                                        Url = Url.Action("VerDocumentosPersonal", "Docentes", new { id = aspirante.IdDocente, esDocente = false })
                                     },
                                     new()
                                     {
@@ -1080,6 +1081,89 @@ namespace SGPla.Controllers
             }
             else
                 await _aspiranteService.EditarAspiranteAsync(docenteDto);
+        }
+
+        // ======================
+        // VerDocumentosPersonal
+        // ======================
+
+        [HttpGet]
+        public async Task<IActionResult> VerDocumentosPersonalAsync(int id, bool esDocente)
+        {
+            try
+            {
+                DatosDocenteDTO datos;
+                if (esDocente)
+                    datos = await _docenteService.ObtenerDocenteAsync(id);
+                else
+                    datos = await _aspiranteService.ObtenerAspiranteAsync(id);
+
+                var modelo = new VerDocumentosPersonalViewModel
+                {
+                    IdArchivo = datos.IdArchivosGenerales,
+                    NombrePersonal = datos.Nombre
+                };
+
+                return View("VerDocumentosPersonal", modelo);
+            }
+            catch (ValidacionExcepction vx)
+            {
+                this.LanzarError(_logger, vx, NOMBRE_LOGGER, VER_DOCUMENTOS, Constantes.LOG_ERROR_VALIDACION,
+                    string.Format(Constantes.TOAST_ERROR_CARGAR_EL, esDocente ? Constantes.PERSONAL_ACADEMICO : Constantes.PERSONAL_EXTERNO));
+                return RedirectToAction("Index");
+            }
+            catch (Exception ex)
+            {
+                this.LanzarError(_logger, ex, NOMBRE_LOGGER, VER_DOCUMENTOS, Constantes.LOG_ERROR_INESPERADO);
+                return RedirectToAction("Index");
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ObtenerPdfDocenteAsync(int idArchivo)
+        {
+            try
+            {
+                var archivo = await _archivoService.DescargarAsync(idArchivo);
+                var bytes = await System.IO.File.ReadAllBytesAsync(archivo.Ruta);
+                return File(bytes, archivo.Tipo, archivo.Nombre);
+            }
+            catch (Exception ex)
+            {
+                this.LanzarError(_logger, ex, NOMBRE_LOGGER, "ObtenerPdfDocente:", Constantes.LOG_ERROR_INESPERADO);
+                return NotFound();
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> DescargarArchivoAsync(int idArchivo)
+        {
+            try
+            {
+                var archivoDto = await _archivoService.DescargarAsync(idArchivo);
+                if (archivoDto != null)
+                {
+                    var rutaCompleta = Path.Combine("Archivos/archivos-docente", archivoDto.Ruta);
+
+                    if (System.IO.File.Exists(rutaCompleta))
+                    {
+                        var stream = new FileStream(rutaCompleta, FileMode.Open, FileAccess.Read);
+                        return File(stream, archivoDto.Tipo, archivoDto.Nombre);
+                    }
+                    else
+                    {
+                        return NotFound();
+                    }
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            catch
+            {
+                return BadRequest();
+            }
         }
 
         // ==========
