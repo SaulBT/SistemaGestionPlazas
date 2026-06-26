@@ -1,12 +1,13 @@
 ﻿@using SGPla.Models.ViewModels.Docentes
-@model RegistrarDocenteViewModel
+@model EditarDocenteViewModel
 @{
     Layout = "_LayoutEntidadAcademica";
     ViewData["Title"] = "Nuevo Personal Academico";
 }
 
-<form method="post" action="@Url.Action("GuardarDocente", "Docentes")" enctype="multipart/form-data">
-    <input name="Recarga" type="hidden" value="@Model.Recarga.ToString().ToLower()" />
+<form method="post" action="@Url.Action("EditarDocente", "Docentes")" enctype="multipart/form-data">
+    <input name="Recarga" type="hidden" value="@Model.Recarga.ToString()" />
+    <input id="idDocente" name="IdDocente" type="hidden" value="@Model.IdDocente" />
     <div class="d-flex row gap-3">
         <!-- Nombre -->
         @await Component.InvokeAsync("InputField", new InputFieldModel
@@ -28,7 +29,7 @@
             Label = "Descripción",
             Value = Model.DescripcionPerfil,
             Rows = 5,
-            Error = ViewData.ModelState["DescripcionPerfil"]?.Errors.FirstOrDefault()?.ErrorMessage
+            Error = ViewData.ModelState["DescripcionPerfil"]?.Errors.FirstOrDefault()?.ErrorMessage,
         })
 
         <!-- Botón de Documentos generales -->
@@ -45,6 +46,7 @@
                 <i class="bi bi-file-earmark-x-fill" style="font-size:20px;color:var(--negativo-rojo-letra)"></i>
             </div>
         </div>
+        <input id="nuevoArchivo" name="NuevoArchivo" type="hidden" value="@Model.NuevoArchivo.ToString()" />
 
         <div class="d-flex justify-content-end">
             @await Component.InvokeAsync("Boton", new
@@ -61,7 +63,7 @@
         </div>
 
         <div class="d-flex gap-2">
-            <!-- Numero personal -->
+            <!-- Numero Personal -->
             @await Component.InvokeAsync("InputField", new InputFieldModel
             {
                 Id = "ifNumeroPersonal",
@@ -80,6 +82,7 @@
                 Name = "Puesto",
                 Options = Model.OpcionesPuesto,
                 Flexible = true,
+                SelectedValue = Model.Puesto,
                 Error = ViewData.ModelState["Puesto"]?.Errors.FirstOrDefault()?.ErrorMessage
             })
         </div>
@@ -115,7 +118,7 @@
     Titulo = "Agregar Grado",
     PartialView = "_FormularioAgregarGrado",
     PartialModel = Model.Formulario,
-    OnConfirm = "agregarGrado(false)",
+    OnConfirm = "agregarGrado(true)",
     OnCancel = "cerrarModal('modalAgregarGrado')"
 })
 <!-- Editar Grado -->
@@ -125,7 +128,7 @@
     Titulo = "Editar Grado",
     PartialView = "_FormularioEditarGrado",
     PartialModel = Model.Formulario,
-    OnConfirm = "editarGrado()",
+    OnConfirm = "editarGrado(true)",
     OnCancel = "cerrarModal('modalEditarGrado')"
 })
 <!-- Eliminar Grado -->
@@ -135,14 +138,14 @@
     Tipo = "confirm",
     Titulo = "Eliminar Grado",
     Mensaje = "Esta acción es irreversible ¿Está seguro de eliminar el Grado?",
-    OnConfirm = "eliminarGrado(false)",
+    OnConfirm = "eliminarGrado(true)",
     OnCancel = "cerrarModal('modalEliminarGrado')"
 })
 
 <script>
-    const UrlAgregarGrado = '@Url.Action("AgregarGradoRegistro", "Docentes")';
-    const UrlEditarGrado = '@Url.Action("EditarGradoRegistro", "Docentes")';
-    const UrlEliminarGrado = '@Url.Action("EliminarGradoRegistro", "Docentes")';
+    const UrlAgregarGrado = '@Url.Action("AgregarGradoEdicion", "Docentes")';
+    const UrlEditarGrado = '@Url.Action("EditarGradoEdicion", "Docentes")';
+    const UrlEliminarGrado = '@Url.Action("EliminarGradoEdicion", "Docentes")';
     
     async function cancelarAccion(){
         const response = await fetch('@Url.Action("CancelarAccion", "Docentes")');
@@ -157,6 +160,20 @@
     window.configBanderaArchivo = {
         idBandera: 'banderaArchivo'
     }
+
+    const archivoInput = document.getElementById("inputFile");
+    const nuevoArchivo = document.getElementById("nuevoArchivo");
+        archivoInput.addEventListener("change", function () {
+        const archivo = this.files[0];
+
+        if (archivo) {
+            console.log(archivo);
+            nuevoArchivo.value = true;
+        } else {
+            console.log("Se quitó");
+            nuevoArchivo.value = false;
+        }
+    });
 
     async function cancelarAccion(){
         const url = '@Url.Action("Index", "Docentes")';

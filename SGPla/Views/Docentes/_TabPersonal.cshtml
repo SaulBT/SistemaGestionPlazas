@@ -1,7 +1,7 @@
 ﻿@using SGPla.Models.ViewModels.Docentes
 @model TabIndexViewModel
 
-<form>
+<form id="form" method="get" action="@Url.Action("Index", "Docentes")">
     <div style="display:flex; gap:10px; padding-bottom:20px; padding-top:20px; align-items:center; justify-content:space-between">
         <!-- Barra de búsqueda -->
         @await Component.InvokeAsync("Buscador", new BuscadorModel
