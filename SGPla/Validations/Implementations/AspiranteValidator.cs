@@ -2,7 +2,6 @@
 using SGPla.Models.DTOs.Archivo;
 using SGPla.Models.DTOs.Docentes;
 using SGPla.Models.DTOs.Grados;
-using SGPla.Repositories.Implementations;
 using SGPla.Repositories.Interfaces;
 using SGPla.Validations.Interfaces;
 
@@ -78,7 +77,7 @@ namespace SGPla.Validations.Implementations
             var hayUltimo = false;
             var cantidad = 0;
 
-            if (lista.Count > 1)
+            if (lista.Count > 0)
             {
                 foreach (var grado in lista)
                 {
@@ -94,7 +93,6 @@ namespace SGPla.Validations.Implementations
                         hayUltimo = true;
                         cantidad++;
                     }
-                    await ValidarIdAsync(grado.IdDocente);
                 }
             }
             else
@@ -102,7 +100,7 @@ namespace SGPla.Validations.Implementations
                 throw new ValidacionExcepction("Debe haber al menos un Grado.", "400");
             }
 
-            if (!hayUltimo || cantidad < 1)
+            if (!hayUltimo || cantidad < 0)
                 throw new ValidacionExcepction("Tiene que haber un Grado marcado como último.", "400");
             if (cantidad > 1)
                 throw new ValidacionExcepction("Sólo puede hber un Grado marcado como último.", "400");
@@ -130,7 +128,7 @@ namespace SGPla.Validations.Implementations
                     await ValidarIdAsync(grado.IdDocente);
 
                     if (grado.IdDocente != idDocente)
-                        throw new ValidacionExcepction($"La Id del Aspirante del Grado editado con Id {grado.IdGrado} no concuerda con la Id del Aspirante editado.", "400");
+                        throw new ValidacionExcepction($"La Id del Docente del Grado editado con Id {grado.IdGrado} no concuerda con la Id del Docente editado.", "400");
                     if (string.IsNullOrEmpty(grado.Grado))
                         throw new ValidacionExcepction("El Nombre del Grado es obligatorio.", "400");
                     if (!Constantes.GRADOS_DOCENTES.Contains(grado.Grado))
@@ -148,9 +146,8 @@ namespace SGPla.Validations.Implementations
                 foreach (var grado in gradosAgregados)
                 {
                     await ValidarIdAsync(grado.IdDocente);
-
                     if (grado.IdDocente != idDocente)
-                        throw new ValidacionExcepction("La Id del Aspirante de un Grado agregado no concuerda con la Id del Aspirante editado.", "400");
+                        throw new ValidacionExcepction("La Id del Docente de un Grado agregado no concuerda con la Id del Docente editado.", "400");
                     if (string.IsNullOrEmpty(grado.Grado))
                         throw new ValidacionExcepction("El Nombre del Grado es obligatorio.", "400");
                     if (!Constantes.GRADOS_DOCENTES.Contains(grado.Grado))

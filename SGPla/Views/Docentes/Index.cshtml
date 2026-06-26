@@ -50,6 +50,16 @@
     OnCancel = "cerrarModal('modalEliminarAspirante')"
 })
 
+@await Component.InvokeAsync("Modal", new ModalModel
+{
+    Id = "modalPerfil",
+    Tipo = "info",
+    Titulo = "Descripción del perfil",
+    Mensaje = "",
+    OnConfirm = "cerrarModal('modalPerfil')"
+
+})
+
 <script>
     const UrlEliminarDocente = '@Url.Action("EliminarDocente", "Docentes")';
     var idDocenteEliminar = 0;
@@ -87,5 +97,10 @@
         } else {
             console.log("Error");
         }
+    }
+
+    function abrirModalPerfil(descripcionPerfil){
+        document.getElementById("modalPerfil-mensaje").innerText = descripcionPerfil;
+        abrirModal("modalPerfil");
     }
 </script>
