@@ -7,5 +7,6 @@
         public string Grado { get; set; } = string.Empty;
         public string Titulo { get; set; } = string.Empty;
         public bool Ultimo { get; set; } = false;
+        public int IdTemporal { get; set; }
     }
 }

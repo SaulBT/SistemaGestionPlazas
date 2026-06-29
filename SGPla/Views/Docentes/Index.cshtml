@@ -29,3 +29,78 @@
         ]
     })
 </div>
+
+@await Component.InvokeAsync("Modal", new ModalModel
+{
+    Id = "modalEliminarDocente",
+    Tipo = "confirm",
+    Titulo = "Eliminar Personal Académico",
+    Mensaje = "Esta acción es irreversible ¿Está seguro de eliminar al Personal Académico?",
+    OnConfirm = "eliminarDocente()",
+    OnCancel = "cerrarModal('modalEliminarDocente')"
+})
+
+@await Component.InvokeAsync("Modal", new ModalModel
+{
+    Id = "modalEliminarAspirante",
+    Tipo = "confirm",
+    Titulo = "Eliminar Personal Externo",
+    Mensaje = "Esta acción es irreversible ¿Está seguro de eliminar al Personal Externo?",
+    OnConfirm = "eliminarAspirante()",
+    OnCancel = "cerrarModal('modalEliminarAspirante')"
+})
+
+@await Component.InvokeAsync("Modal", new ModalModel
+{
+    Id = "modalPerfil",
+    Tipo = "info",
+    Titulo = "Descripción del perfil",
+    Mensaje = "",
+    OnConfirm = "cerrarModal('modalPerfil')"
+
+})
+
+<script>
+    const UrlEliminarDocente = '@Url.Action("EliminarDocente", "Docentes")';
+    var idDocenteEliminar = 0;
+
+    function abrirModalEliminarDocente(idDocente) {
+        idDocenteEliminar = idDocente;
+        abrirModal("modalEliminarDocente");
+    }
+
+    async function eliminarDocente() {
+        const response = await fetch(`${UrlEliminarDocente}?idDocente=${idDocenteEliminar}`);
+        if (response.ok) {
+            document.getElementById("form").submit();
+            cerrarModal("modalEliminarDocente")
+        } else {
+            console.log("Error");
+        }
+    }
+
+    //=====//
+
+    const UrlEliminarAspirante = '@Url.Action("EliminarAspirante", "Docentes")';
+    var idAspiranteEliminar = 0;
+
+    function abrirModalEliminarAspirante(idDocente) {
+        idAspiranteEliminar = idDocente;
+        abrirModal("modalEliminarAspirante");
+    }
+
+    async function eliminarAspirante() {
+        const response = await fetch(`${UrlEliminarAspirante}?idDocente=${idAspiranteEliminar}`);
+        if (response.ok) {
+            document.getElementById("form").submit();
+            cerrarModal("modalEliminarAspirante")
+        } else {
+            console.log("Error");
+        }
+    }
+
+    function abrirModalPerfil(descripcionPerfil){
+        document.getElementById("modalPerfil-mensaje").innerText = descripcionPerfil;
+        abrirModal("modalPerfil");
+    }
+</script>

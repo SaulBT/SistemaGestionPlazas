@@ -138,7 +138,6 @@ namespace SGPla.Services.Implementations
                         archivoAnterior.Ruta = archivoNuevoGuardado.Ruta;
                         archivoAnterior.Tipo = archivoNuevoGuardado.Tipo;
                         archivoAnterior.Tamanio = archivoNuevoGuardado.Tamanio;
-                        await _archivoRepository.EliminarAsync(archivoAnterior);
                     }
                 }
 
@@ -202,12 +201,14 @@ namespace SGPla.Services.Implementations
             {
                 await _gradoRepository.EliminarAsync(grado);
             }
+            
+            await _docenteRepository.EliminarAsync(docente);
+
             if (archivo != null)
             {
                 await _archivoRepository.EliminarAsync(archivo);
                 await _archivoService.EliminarAsync(archivo.Ruta);
             }
-            await _docenteRepository.EliminarAsync(docente);
         }
 
         private DatosGradoDTO mapearGradoAGradoDTO(Grado grado)
@@ -215,6 +216,7 @@ namespace SGPla.Services.Implementations
             return new DatosGradoDTO
             {
                 IdGrado = grado.IdGrado,
+                IdDocente = grado.IdDocente,
                 Grado = grado.Grado1,
                 Titulo = grado.Titulo,
                 Ultimo = grado.Ultimo
