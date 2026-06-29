@@ -1,7 +1,7 @@
 ﻿namespace SGPla.Models.DTOs.Aviso
 {
     public class DatosAvisoDTO
-    {
+    {/*
         public int IdAviso { get; set; }/
 
         public int IdEntidadAcademica { get; set; }/
@@ -44,6 +44,6 @@
 
         public virtual Periodo IdPeriodoNavigation { get; set; } = null!;
 
-        public virtual ICollection<OfertaAviso> OfertaAviso { get; set; } = new List<OfertaAviso>();
+        public virtual ICollection<OfertaAviso> OfertaAviso { get; set; } = new List<OfertaAviso>();*/
     }
 }

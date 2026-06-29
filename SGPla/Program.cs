@@ -80,6 +80,9 @@ builder.Services.AddScoped<IProgramacionAcademicaValidator, ProgramacionAcademic
 builder.Services.AddScoped<IProgramacionAcademicaService, ProgramacionAcademicaService>();
 //builder.Services.AddScoped<IProgramacionAcademicaRepository, ProgramacionAcademicaRepository>();
 
+builder.Services.AddScoped<IAvisoService, AvisoService>();
+builder.Services.AddScoped<IAvisoRepository, AvisoRepository>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

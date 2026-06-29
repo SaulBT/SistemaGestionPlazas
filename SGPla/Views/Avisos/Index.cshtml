@@ -1,0 +1,105 @@
+﻿
+@using SGPla.Models.ViewModels.Avisos
+@model IndexViewModel
+@{
+    Layout = "_LayoutEntidadAcademica";
+    ViewData["Title"] = "Personal Académico";
+}
+
+<div>
+    <form id="filtrosForm" method="get" action="@Url.Action("Index", "Avisos")" >
+        
+        <!-- Filtros -->
+        @await Component.InvokeAsync("ExpansionPanel", new ExpansionPanelModel
+                {
+                    Id = "panel-filtros",
+                    Titulo = "Filtros",
+                    PartialView = "_Filtros",
+                    PartialModel = Model,
+                    IconClass = "bi bi-funnel-fill"
+                })
+
+
+        <!-- Acciones -->
+        <div style="display:flex; gap:10px; padding-bottom:20px; padding-top:20px; align-items:center; justify-content:space-between">
+            @await Component.InvokeAsync("Buscador", new BuscadorModel
+            {
+                Name = "busqueda",
+                Placeholder = "Buscar aviso...",
+                Action = Url.Action("Index", "Avisos"),
+                Method = "get",
+                Value = Context.Request.Query["busqueda"]
+            })
+            <a href="@Url.Action("CrearAviso", "Avisos")" style="display: inline-block; text-decoration: none;">
+                @await Component.InvokeAsync("Boton", new
+                {
+                    Accion = "Agregar",
+                    Texto = "Crear Aviso"
+                })
+            </a>
+        </div>
+
+        <!-- Campos ocultos para paginación -->
+        <input type="hidden" name="pagina" id="paginaHidden" value="@Model.PaginaActual" />
+        <input type="hidden" name="cantidad" id="cantidadHidden" value="@Model.CantidadPorPagina" />
+
+    </form>
+
+    @await Component.InvokeAsync("Tabs",
+        new TabsModel
+        {
+            Id = "tabs-avisos",
+
+            Tabs =
+            [
+                new()
+                {
+                    Titulo = "Todos",
+                    PartialView = "_DatosGenerales",
+                    PartialModel = Model
+                },
+                new()
+                {
+                    Titulo = "Creados",
+                    PartialView = "_DatosGenerales",
+                    PartialModel = Model
+                },
+                new()
+                {
+                    Titulo = "En Revisión",
+                    PartialView = "_DatosGenerales",
+                    PartialModel = Model
+                },
+                new()
+                {
+                    Titulo = "Avalados",
+                    PartialView = "_DatosGenerales",
+                    PartialModel = Model
+                },
+                new()
+                {
+                    Titulo = "Devueltos",
+                    PartialView = "_DatosGenerales",
+                    PartialModel = Model
+                },
+                new()
+                {
+                    Titulo = "Firmados",
+                    PartialView = "_DatosGenerales",
+                    PartialModel = Model
+                },
+                new()
+                {
+                    Titulo = "Publicados",
+                    PartialView = "_DatosGenerales",
+                    PartialModel = Model
+                },
+                new()
+                {
+                    Titulo = "Actas de Ct Creadas",
+                    PartialView = "_DatosGenerales",
+                    PartialModel = Model
+                }
+            ]
+        })
+</div>

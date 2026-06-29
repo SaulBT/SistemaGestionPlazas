@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace SGPla.Views.Avisos
+namespace SGPla.Views.Home
 {
     public class _DatosGeneralesModel : PageModel
     {

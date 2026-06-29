@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace SGPla.Views.Avisos
 {
-    public class _DatosGeneralesModel : PageModel
+    public class IndexModel : PageModel
     {
         public void OnGet()
         {
