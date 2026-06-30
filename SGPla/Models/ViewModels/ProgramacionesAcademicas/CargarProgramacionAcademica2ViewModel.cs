@@ -14,6 +14,7 @@ public class CargarProgramacionAcademica2ViewModel
     public string EntidadAcademicaSeleccionada { get; set; }
     public TableModel TableAsignadas { get; set; }
     public TableModel TableVacantes { get; set; }
+    public TableModel TableCargas { get; set; }
     public List<OfertaDTO>? OfertasVacantes { get; set; }
     public List<OfertaDTO>? OfertasAsignadas { get; set; }
     public List<CargaConOfertaDTO>? CargasAcademicas { get; set; }

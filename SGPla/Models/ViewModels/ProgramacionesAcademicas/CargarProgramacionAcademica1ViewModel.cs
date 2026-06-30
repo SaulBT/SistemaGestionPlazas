@@ -26,5 +26,8 @@ namespace SGPla.Models.ViewModels.ProgramacionesAcademicas
         [Required(ErrorMessage = "Seleccione un archivo de descargas.")]
         public IFormFile? ArchivoDescargas { get; set; }
 
+        [Required(ErrorMessage = "Seleccione un archivo de cargas.")]
+        public IFormFile? ArchivoCargas { get; set; }
+
     }
 }

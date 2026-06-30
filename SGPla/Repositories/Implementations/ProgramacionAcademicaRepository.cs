@@ -17,19 +17,17 @@ namespace SGPla.Repositories.Implementations
             _context = context;
         }
 
-        public async Task GuardarOfertas(List<Oferta> ofertas)
+        public async Task GuardarOfertasYCargas(List<Oferta> ofertas, List<CargaAcademica> cargas)
         {
             await using var transaction = await _context.Database.BeginTransactionAsync();
-
             try
             {
-
                 await _context.Oferta.AddRangeAsync(ofertas);
+                await _context.CargaAcademica.AddRangeAsync(cargas);
 
                 await _context.SaveChangesAsync();
 
                 await transaction.CommitAsync();
-
             }
             catch (Exception)
             {
@@ -37,8 +35,6 @@ namespace SGPla.Repositories.Implementations
                 throw;
             }
         }
-
-
 
         private static string ObtenerClavePrograma(string nombre)
         {

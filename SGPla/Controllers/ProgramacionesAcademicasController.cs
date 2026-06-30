@@ -29,6 +29,7 @@ public class ProgramacionesAcademicasController : Controller
     private static List<string> HEADERS_TABLA_ASIGNADAS = ["Experiencia educativa", "NRC", "H/S/M", "Tipo contratación", "Horario", "Docente"];
     private static List<string> HEADERS_TABLA_VACANTES = ["Experiencia educativa", "NRC", "H/S/M", "Tipo contratación", "Horario", "Artículo"];
     private static List<string> HEADERS_TABLA_RESUMEN_OFERTA = ["Entidad Academica", "Programa Educativo", "Periodo", "EE Asignadas", "EE Vacantes", "Acciones"];
+    private static List<string> HEADERS_TABLA_CARGAS = ["NP", "Docente", "Plaza", "NRC", "Experiencia Educativa", "Hrs Contacto", "Hrs Pago", "Imparte"];
     private const string SESSION_REGION = "Region";
     private const string SESSION_ID_PERIODO = "IdPeriodo";
     private const string SESSION_ID_ENTIDAD = "IdEntidad";
@@ -239,6 +240,7 @@ public class ProgramacionesAcademicasController : Controller
     public async Task<IActionResult> Guardar()
     {
         var ofertas = ObtenerOfertasSesion();
+        var cargas = ObtenerCargasSesion();
 
         if (ofertas.Count == 0)
             return BadRequest("No hay ofertas para guardar.");
@@ -247,7 +249,7 @@ public class ProgramacionesAcademicasController : Controller
         {
             var guardado =
                 await _programacionAcademicaService
-                    .GuardarOfertasAsync(ofertas);
+                    .GuardarOfertasAsync(ofertas, cargas);
             TempData["Success"] = "Cambios guardados con éxito";
             return RedirectToAction(nameof(Index));
 
@@ -260,6 +262,24 @@ public class ProgramacionesAcademicasController : Controller
         }
     }
 
+    [HttpPost]
+    public async Task<IActionResult> CargarCargas(IFormFile archivoCarga)
+    {
+        var vm = new CargarProgramacionAcademica2ViewModel();
+
+        try
+        {
+            vm.CargasAcademicas = await _programacionAcademicaService
+                .ProcesarCargasAsync(archivoCarga);
+        }
+        catch (Exception ex)
+        {
+            vm.Error = $"Error al procesar las cargas: {ex.Message}";
+        }
+
+        return View("Index", vm);
+    }
+
     private List<OfertaDTO> ObtenerOfertasSesion()
     {
         var json = HttpContext.Session.GetString("Ofertas");
@@ -267,6 +287,16 @@ public class ProgramacionesAcademicasController : Controller
         return string.IsNullOrEmpty(json)
             ? []
             : JsonSerializer.Deserialize<List<OfertaDTO>>(json)!;
+    }
+
+
+    private List<CargaConOfertaDTO> ObtenerCargasSesion()
+    {
+        var json = HttpContext.Session.GetString("Cargas");
+
+        return string.IsNullOrEmpty(json)
+            ? []
+            : JsonSerializer.Deserialize<List<CargaConOfertaDTO>>(json)!;
     }
 
     [HttpGet]
@@ -292,6 +322,7 @@ public class ProgramacionesAcademicasController : Controller
     private async Task<CargarProgramacionAcademica2ViewModel> ObtenerViewModelDesdeSesion(string? programa = null)
     {
         var ofertas = ObtenerOfertasSesion();
+        var cargas = ObtenerCargasSesion();
 
         var programasCombo = ofertas
          .Select(o => o.Programa)
@@ -335,9 +366,11 @@ public class ProgramacionesAcademicasController : Controller
 
             TableAsignadas = await LlenarTablaAsync(TipoTablaOferta.Asignadas, articulos, ofertasAsignadas, programa),
             TableVacantes = await LlenarTablaAsync(TipoTablaOferta.Vacantes, articulos, ofertasVacantes, programa),
+            TableCargas = await LlenarTablaCargasAsync(cargas),
 
             Articulos = articulosCombo,
-            Programas = programasCombo
+            Programas = programasCombo,
+            CargasAcademicas = cargas
         };
     }
 
@@ -365,10 +398,10 @@ public class ProgramacionesAcademicasController : Controller
                             {
 
                              new TableActionModel
-{
-    Accion = "informacion",
-    OnClick = $"abrirModalHorario({JsonSerializer.Serialize(oferta)})"
-}
+                            {
+                                Accion = "informacion",
+                                OnClick = $"abrirModalHorario({JsonSerializer.Serialize(oferta)})"
+                            }
                             }
                             },
                             tipoOferta == TipoTablaOferta.Vacantes
@@ -395,7 +428,60 @@ public class ProgramacionesAcademicasController : Controller
         }
         catch (Exception)
         {
-            return TablaFactory.GenerarTablaConMensaje(tipoOferta == TipoTablaOferta.Vacantes ? HEADERS_TABLA_VACANTES : HEADERS_TABLA_ASIGNADAS, string.Format(Constantes.ERROR_TABLA, Constantes.PLANES_ESTUDIOS));
+            return TablaFactory.GenerarTablaConMensaje(tipoOferta == TipoTablaOferta.Vacantes ? HEADERS_TABLA_VACANTES : HEADERS_TABLA_ASIGNADAS, string.Format(Constantes.ERROR_TABLA, Constantes.EXPERIENCIAS_EDUCATIVAS));
+        }
+    }
+
+    private async Task<TableModel> LlenarTablaCargasAsync(List<CargaConOfertaDTO>? cargas)
+    {
+
+        if (cargas.Count() == 0)
+            return TablaFactory.GenerarTablaConMensaje( HEADERS_TABLA_CARGAS, string.Format(Constantes.TABLA_VACIA, Constantes.EXPERIENCIAS_EDUCATIVAS));
+
+        try
+        {
+            return new TableModel
+            {
+                TableId = "tablaCargas",
+                Headers = HEADERS_TABLA_CARGAS,
+                Rows = cargas.Select(carga => new TableRowModel
+                {
+                    Cells = new List<TableCellModel>
+                        {
+                            new() { Value = carga.NumeroPersonal },
+                            new() { Value = carga.NombreDocente },
+                            new() { Value = carga.Plaza ?? "—" },
+                            new() { Value = carga.Nrc ?? "—"},
+                            new() { Value = carga.ExperienciaEducativa },
+                            new() { Value = carga.HorasContacto.ToString() },
+                            new() { Value = carga.HorasPago.ToString() },
+                            new()
+                            {
+                                Value = carga.Imparte switch
+                                {
+                                    true => "SÍ",
+                                    false => "NO",
+                                    null => "—"
+                                }
+                            },
+
+                        }
+
+                            
+                        
+                }).ToList(),
+                Pagination = new PaginationInfo
+                {
+                    CurrentPage = _paginaActual,
+                    TotalItems = cargas.Count,
+                    OnPageChange = "cambiarPagina",
+                    PaginationMode = "client"
+                }
+            };
+        }
+        catch (Exception)
+        {
+            return TablaFactory.GenerarTablaConMensaje(HEADERS_TABLA_CARGAS, string.Format(Constantes.ERROR_TABLA, Constantes.EXPERIENCIAS_EDUCATIVAS));
         }
     }
 
@@ -420,6 +506,7 @@ public class ProgramacionesAcademicasController : Controller
         {
             var ofertasVacantes = await _programacionAcademicaService.ProcesarArchivoOfertasAsync(modelo.ArchivoVacantes, TipoArchivoOferta.Vacantes);
             var ofertasDescargas = await _programacionAcademicaService.ProcesarArchivoOfertasAsync(modelo.ArchivoDescargas, TipoArchivoOferta.Descargas);
+            var cargas = await _programacionAcademicaService.ProcesarCargasAsync(modelo.ArchivoCargas);
 
             var todas = new List<OfertaDTO>();
             todas.AddRange(ofertasVacantes);
@@ -431,6 +518,8 @@ public class ProgramacionesAcademicasController : Controller
             }
 
             HttpContext.Session.SetString("Ofertas", JsonSerializer.Serialize(todas));
+            HttpContext.Session.SetString("Cargas", JsonSerializer.Serialize(cargas));
+
             var periodoSeleccionado = (await _periodoEscolarService.ObtenerTodosAsync())
                 .FirstOrDefault(p => p.IdPeriodoEscolar == modelo.IdPeriodo!.Value);
             var entidadSeleccionada = (await _programacionAcademicaService.ObtenerOpcionesEntidadAcademicaAsync(modelo.Region))

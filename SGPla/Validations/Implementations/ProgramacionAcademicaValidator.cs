@@ -1,7 +1,6 @@
 ﻿using SGPla.Models.DTOs.Oferta;
 using SGPla.Repositories.Interfaces;
 using SGPla.Validations.Interfaces;
-using System.Runtime.CompilerServices;
 
 namespace SGPla.Validations.Implementations
 {

@@ -12,11 +12,10 @@ public interface IProgramacionAcademicaService
 {
     Task<List<OfertaDTO>> ProcesarArchivoOfertasAsync(IFormFile archivo, TipoArchivoOferta tipoArchivo);
 
-    Task<bool> GuardarOfertasAsync(List<OfertaDTO> ofertas);
+    Task<bool> GuardarOfertasAsync(List<OfertaDTO> ofertas, List<CargaConOfertaDTO> cargas);
 
     Task<List<CargaConOfertaDTO>> ProcesarCargasAsync(
-    IFormFile archivoCarga,
-    List<OfertaDTO> ofertasEnSesion);
+    IFormFile archivoCarga);
 
     Task<List<EntidadAcademica>> ObtenerOpcionesEntidadAcademicaAsync(string region);
 

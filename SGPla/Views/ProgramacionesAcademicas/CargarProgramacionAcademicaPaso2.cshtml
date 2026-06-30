@@ -1,6 +1,4 @@
 ﻿@using SGPla.Models.DTOs.Oferta
-@using SGPla.Models.DTOs.ProgramacionAcademica
-
 @using SGPla.Models.ViewModels.ProgramacionesAcademicas
 @model CargarProgramacionAcademica2ViewModel
 
@@ -122,6 +120,12 @@
 			Vacantes
 		</button>
 
+		<button class="tab-button"
+				data-tab="2"
+				onclick="seleccionarTab('miTabs', 2)">
+			Cargas
+		</button>
+
 	</div>
 
 	<div class="tabs-body">
@@ -144,6 +148,10 @@
 			</div>
 
 			@await Component.InvokeAsync("Table", Model.TableVacantes)
+		</div>
+
+		<div class="tab-content" data-tab="2">
+			@await Component.InvokeAsync("Table", Model.TableCargas)
 		</div>
 
 	</div>
@@ -232,7 +240,7 @@
 
 
 <script>
-				window.addEventListener("load", () => {
+		window.addEventListener("load", () => {
 
 		document.querySelectorAll(".tabs-container").forEach(container => {
 

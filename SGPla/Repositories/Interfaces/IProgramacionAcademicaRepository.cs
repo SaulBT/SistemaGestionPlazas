@@ -7,7 +7,7 @@ namespace SGPla.Repositories.Interfaces
     {
         Task<List<string>> ObtenerRelacionesValidasAsync(List<OfertaDTO> ofertas);
 
-        Task GuardarOfertas(List<Oferta> ofertas);
+        Task GuardarOfertasYCargas(List<Oferta> ofertas, List<CargaAcademica> cargas);
 
         Task<List<ResumenOfertaProgramacionAcademicaDTO>> ObtenerResumenPorProgramaPeriodoAsync(BuscarProgramacionAcademicaDTO? filtro);
 

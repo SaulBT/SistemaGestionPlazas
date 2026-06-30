@@ -6,7 +6,6 @@ using System.Text.RegularExpressions;
 
 namespace SGPla.Parsers
 {
-
     public static class CargasParser
     {
         private static readonly string[] ExpectedHeaders =
@@ -98,30 +97,42 @@ namespace SGPla.Parsers
 
                     if (docenteActual == null) continue;
 
-
                     if (firstNorm.StartsWith("Plaza:", StringComparison.OrdinalIgnoreCase))
                     {
-                        var mPlaza = Regex.Match(firstNorm, @"Plaza:\s*(\S+)", RegexOptions.IgnoreCase);
-                        plazaActual = mPlaza.Success ? mPlaza.Groups[1].Value.Trim() : "";
+                        var mPlaza = Regex.Match(firstNorm, @"Plaza:\s*(\d+)", RegexOptions.IgnoreCase);
 
-                        var mCat = Regex.Match(firstNorm,
-                            @"Categor[íi]a:\s*(.+?)\s+Puesto:", RegexOptions.IgnoreCase);
-                        categoriaActual = mCat.Success ? mCat.Groups[1].Value.Trim() : "";
-
-                        var mPuesto = Regex.Match(firstNorm,
-                            @"Puesto:\s*(.+?)\s+Tipo\s+contrataci[oó]n:", RegexOptions.IgnoreCase);
-                        puestoActual = mPuesto.Success ? mPuesto.Groups[1].Value.Trim() : "";
-
-                        var mTipo = Regex.Match(firstNorm,
-                            @"Tipo\s+contrataci[oó]n:\s*(.+)", RegexOptions.IgnoreCase);
-                        tipoContActual = mTipo.Success ? mTipo.Groups[1].Value.Trim() : "";
-
-                        if (string.IsNullOrEmpty(docenteActual.Plaza))
+                        if (mPlaza.Success)
                         {
-                            docenteActual.Plaza = plazaActual;
-                            docenteActual.Categoria = categoriaActual;
-                            docenteActual.Puesto = puestoActual;
-                            docenteActual.TipoContratacion = tipoContActual;
+                            plazaActual = mPlaza.Groups[1].Value.Trim();
+
+                            var mCat = Regex.Match(firstNorm,
+                                @"Categor[íi]a:\s*(.+?)\s+Puesto:", RegexOptions.IgnoreCase);
+                            categoriaActual = mCat.Success ? mCat.Groups[1].Value.Trim() : "";
+
+                            var mPuesto = Regex.Match(firstNorm,
+                                @"Puesto:\s*(.+?)\s+Tipo\s+contrataci[oó]n:", RegexOptions.IgnoreCase);
+                            puestoActual = mPuesto.Success ? mPuesto.Groups[1].Value.Trim() : "";
+
+                            var mTipo = Regex.Match(firstNorm,
+                                @"Tipo\s+contrataci[oó]n:\s*(.+)", RegexOptions.IgnoreCase);
+                            tipoContActual = mTipo.Success ? mTipo.Groups[1].Value.Trim() : "";
+
+                            if (string.IsNullOrEmpty(docenteActual.Plaza))
+                            {
+                                docenteActual.Plaza = plazaActual;
+                                docenteActual.Categoria = categoriaActual;
+                                docenteActual.Puesto = puestoActual;
+                                docenteActual.TipoContratacion = tipoContActual;
+                            }
+                        }
+                        else
+                        {
+                            // Bloque placeholder (Plaza vacía, Puesto: "0-", Tipo: "---").
+                            // NO heredamos los valores del bloque anterior: si esta experiencia
+                            // perteneciera a esa misma plaza, el archivo la habría puesto en la
+                            // misma tabla. Al estar en un bloque/tabla separado, lo correcto es
+                            // tratar la plaza como desconocida (null), no como "la misma de antes".
+                            plazaActual = categoriaActual = puestoActual = tipoContActual = "";
                         }
 
                         inDataSection = false;
@@ -134,10 +145,9 @@ namespace SGPla.Parsers
                         continue;
                     }
 
-
-
                     if (!inDataSection) continue;
 
+                    // ── Fila "Total de horas:" → cierra la sección de datos ──────────
                     if (vals.Length >= 3 &&
                         NormalizeSpaces(vals[1]).Equals("Total de horas:", StringComparison.OrdinalIgnoreCase))
                     {
@@ -147,10 +157,36 @@ namespace SGPla.Parsers
                         continue;
                     }
 
-                    if (vals.Length >= 8 &&
-      int.TryParse(vals[0], System.Globalization.NumberStyles.Any,
-                   System.Globalization.CultureInfo.InvariantCulture, out _))
+                    // ── Fila "HORAS DE ASIGNATURA" → sin NRC, pero SÍ suma horas ─────
+                    // Ejemplo real: ['', 'HORAS DE ASIGNATURA', '', '1', '14367', ...]
+                    // Antes esta fila se perdía porque vals[0] está vacío y no pasaba
+                    // el chequeo de "es un NRC numérico".
+                    if (vals.Length >= 4 &&
+                        string.IsNullOrWhiteSpace(vals[0]) &&
+                        NormalizeSpaces(vals[1]).Equals("HORAS DE ASIGNATURA", StringComparison.OrdinalIgnoreCase))
                     {
+                        docenteActual.Experiencias.Add(new CargaItemDTO
+                        {
+                            Nrc = string.Empty,
+                            ExperienciaEducativa = "HORAS DE ASIGNATURA",
+                            HorasContacto = ParseInt(vals.ElementAtOrDefault(2)),
+                            HorasPago = ParseInt(vals.ElementAtOrDefault(3)),
+                            ClaveProgramatica = vals.ElementAtOrDefault(4) ?? "",
+                            Plaza = plazaActual,
+                            Categoria = categoriaActual,
+                            Puesto = puestoActual,
+                            TipoContratacion = tipoContActual,
+                        });
+                        continue;
+                    }
+
+                    // ── Fila normal con NRC ───────────────────────────────────────────
+                    if (vals.Length >= 8 &&
+                        int.TryParse(vals[0], System.Globalization.NumberStyles.Any,
+                                     System.Globalization.CultureInfo.InvariantCulture, out _))
+                    {
+                        var valorImparte = vals.ElementAtOrDefault(7)?.Trim();
+
                         docenteActual.Experiencias.Add(new CargaItemDTO
                         {
                             Nrc = vals[0],
@@ -160,13 +196,12 @@ namespace SGPla.Parsers
                             ClaveProgramatica = vals.ElementAtOrDefault(4) ?? "",
                             MotivoRh = vals.ElementAtOrDefault(5) ?? "",
                             IndActDocente = vals.ElementAtOrDefault(6) ?? "",
-                            Imparte = string.Equals(
-                                                      vals.ElementAtOrDefault(7), "SI",
-                                                      StringComparison.OrdinalIgnoreCase),
+                            Imparte = string.IsNullOrWhiteSpace(valorImparte)
+                            ? null
+                            : string.Equals(valorImparte, "SI", StringComparison.OrdinalIgnoreCase),
                             HorasExcCarga = ParseInt(vals.ElementAtOrDefault(8)),
                             NumPersonalSuplente = NullIfEmpty(vals.ElementAtOrDefault(9)),
                             NombreSuplente = NullIfEmpty(vals.ElementAtOrDefault(10)),
-                            // ← plaza del bloque actual
                             Plaza = plazaActual,
                             Categoria = categoriaActual,
                             Puesto = puestoActual,
@@ -193,7 +228,6 @@ namespace SGPla.Parsers
                 Periodo = ExtractPeriodo(doc)
             };
 
-
             var docenteNodes = doc.DocumentNode
                 .SelectNodes("//span[contains(@class,'contenedorNumpersonal')]");
 
@@ -209,7 +243,6 @@ namespace SGPla.Parsers
             return result;
         }
 
-
         private static string ExtractPeriodo(HtmlDocument doc)
         {
             var periodoNode = doc.DocumentNode
@@ -223,12 +256,9 @@ namespace SGPla.Parsers
             return match.Success ? match.Groups[1].Value.Trim() : texto;
         }
 
-
         private static DocenteCargaDTO ParseDocente(HtmlNode spanNumpersonal)
         {
             var docente = new DocenteCargaDTO();
-
-
 
             var nombreNode = spanNumpersonal
                 .SelectSingleNode(".//span[contains(@class,'nombreAcademico')]");
@@ -240,7 +270,6 @@ namespace SGPla.Parsers
                 {
                     docente.NumeroPersonal = raw[..dashIdx].Trim();
                     docente.Nombre = raw[(dashIdx + 1)..].Trim();
-
                 }
                 else
                 {
@@ -248,6 +277,26 @@ namespace SGPla.Parsers
                 }
             }
 
+            // Valores del docente "principal" (su plaza/categoría base) — se fijan
+            // UNA SOLA VEZ, con el primer bloque que sí traiga Plaza.
+            // (sirve para mostrar "quién es" el académico en general)
+
+            // Valores que se le asignan a las EXPERIENCIAS de la tabla que sigue
+            // inmediatamente. A diferencia del dato anterior, estos se toman
+            // TAL CUAL vienen en cada bloque — incluso vacíos — porque el
+            // archivo de la UV los deja en blanco a propósito cuando una
+            // asignación específica no pertenece a la plaza/puesto principal
+            // (por ejemplo, horas extra que exceden el límite de pago del
+            // docente y se gestionan aparte). No hay que "rellenar" ese vacío
+            // con el bloque anterior: sería inventar un dato que el archivo
+            // no está dando.
+            string plazaItem = "", categoriaItem = "", puestoItem = "", tipoItem = "";
+
+            // Buffer temporal del bloque que se está leyendo en este momento.
+            // Los 4 campos siempre aparecen consecutivos (Plaza, Categoría,
+            // Puesto, Tipo contratación) y se confirman juntos al llegar al
+            // último (Tipo contratación).
+            string bufPlaza = "", bufCategoria = "", bufPuesto = "", bufTipo = "";
 
             var current = spanNumpersonal.NextSibling;
 
@@ -261,34 +310,59 @@ namespace SGPla.Parsers
                         break;
 
                     if (cls.Contains("contenedorPlaza"))
-                        docente.Plaza = InnerTextOf(current, ".//span[contains(@class,'textoacademico')]");
-
+                    {
+                        bufPlaza = InnerTextOf(current, ".//span[contains(@class,'textoacademico')]");
+                    }
                     else if (cls.Contains("contenedorCategoria"))
-                        docente.Categoria = InnerTextOf(current, ".//span[contains(@class,'textoacademico')]");
-
+                    {
+                        bufCategoria = InnerTextOf(current, ".//span[contains(@class,'textoacademico')]");
+                    }
                     else if (cls.Contains("contenedorPuesto"))
-                        docente.Puesto = InnerTextOf(current, ".//span[contains(@class,'textoacademico')]");
-
+                    {
+                        bufPuesto = InnerTextOf(current, ".//span[contains(@class,'textoacademico')]");
+                    }
                     else if (cls.Contains("contenedorTipocontratacion"))
-                        docente.TipoContratacion = InnerTextOf(current, ".//span[contains(@class,'textoacademico')]");
+                    {
+                        bufTipo = InnerTextOf(current, ".//span[contains(@class,'textoacademico')]");
 
+                        // Fin del bloque: se aplica TAL CUAL a las experiencias
+                        // de la tabla que sigue, vacío o no.
+                        plazaItem = bufPlaza;
+                        categoriaItem = bufCategoria;
+                        puestoItem = bufPuesto;
+                        tipoItem = bufTipo;
+
+                        // El dato "oficial" del docente (su plaza principal) es
+                        // el del PRIMER bloque que sí trae Plaza.
+                        if (string.IsNullOrEmpty(docente.Plaza) && !string.IsNullOrWhiteSpace(bufPlaza))
+                        {
+                            docente.Plaza = bufPlaza;
+                            docente.Categoria = bufCategoria;
+                            docente.Puesto = bufPuesto;
+                            docente.TipoContratacion = bufTipo;
+                        }
+
+                        bufPlaza = bufCategoria = bufPuesto = bufTipo = "";
+                    }
                     else if (string.IsNullOrEmpty(docente.Antiguedad))
+                    {
                         docente.Antiguedad = InnerTextOf(current, ".//span[contains(@class,'textoacademico')]");
+                    }
                 }
 
                 if (current.Name == "table")
                 {
-                    ParseTable(current, docente);
+                    ParseTable(current, docente, plazaItem, categoriaItem, puestoItem, tipoItem);
                 }
 
                 current = current.NextSibling;
             }
 
-
             return docente;
         }
 
-        private static void ParseTable(HtmlNode table, DocenteCargaDTO docente)
+        private static void ParseTable(HtmlNode table, DocenteCargaDTO docente,
+            string plaza, string categoria, string puesto, string tipoContratacion)
         {
             var rows = table.SelectNodes(".//tr");
             if (rows is null) return;
@@ -312,6 +386,7 @@ namespace SGPla.Parsers
 
                 if (!inDataSection) continue;
 
+                // ── "Total de horas:" → cierra la sección ────────────────────────
                 if (cells.Length >= 4 && cells[1] == "Total de horas:")
                 {
                     if (int.TryParse(cells[2], out var horas))
@@ -320,17 +395,38 @@ namespace SGPla.Parsers
                     break;
                 }
 
+                // ── "HORAS DE ASIGNATURA" → sin NRC, pero SÍ suma horas ──────────
+                if (IsHorasAsignaturaRow(cells))
+                {
+                    docente.Experiencias.Add(new CargaItemDTO
+                    {
+                        Nrc = string.Empty,
+                        ExperienciaEducativa = "HORAS DE ASIGNATURA",
+                        HorasContacto = ParseInt(cells.ElementAtOrDefault(2)),
+                        HorasPago = ParseInt(cells.ElementAtOrDefault(3)),
+                        ClaveProgramatica = cells.ElementAtOrDefault(4) ?? string.Empty,
+                        Plaza = plaza,
+                        Categoria = categoria,
+                        Puesto = puesto,
+                        TipoContratacion = tipoContratacion,
+                    });
+                    continue;
+                }
+
                 if (cells.Length >= 8 && IsNrcRow(cells[0]))
                 {
-                    docente.Experiencias.Add(ParseCargaItem(cells));
+                    var item = ParseCargaItem(cells);
+                    item.Plaza = plaza;
+                    item.Categoria = categoria;
+                    item.Puesto = puesto;
+                    item.TipoContratacion = tipoContratacion;
+                    docente.Experiencias.Add(item);
                 }
             }
         }
 
         private static CargaItemDTO ParseCargaItem(string[] cells)
         {
-
-
             return new CargaItemDTO
             {
                 Nrc = cells.ElementAtOrDefault(0) ?? string.Empty,
@@ -348,12 +444,16 @@ namespace SGPla.Parsers
             };
         }
 
-
         private static bool IsHeaderRow(string[] cells) =>
             cells.Length >= 2 && cells[0] == "NRC" && cells[1] == "Experiencia Educativa";
 
         private static bool IsNrcRow(string? value) =>
             !string.IsNullOrWhiteSpace(value) && value.All(char.IsDigit);
+
+        private static bool IsHorasAsignaturaRow(string[] cells) =>
+            cells.Length >= 4 &&
+            string.IsNullOrWhiteSpace(cells[0]) &&
+            cells[1].Trim().Equals("HORAS DE ASIGNATURA", StringComparison.OrdinalIgnoreCase);
 
         private static int ParseInt(string? value) =>
             int.TryParse(value, out var n) ? n : 0;
@@ -370,4 +470,3 @@ namespace SGPla.Parsers
         }
     }
 }
-
