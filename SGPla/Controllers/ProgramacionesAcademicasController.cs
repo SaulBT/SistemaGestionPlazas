@@ -652,4 +652,17 @@ public class ProgramacionesAcademicasController : Controller
         return View("VerProgramacionAcademica", modelo);
     }
 
+    [HttpPost]
+    public async Task<IActionResult> EditarExperienciaEducativa(int idOferta)
+    {
+        var ofertas = ObtenerOfertasSesion();
+        var oferta = ofertas.FirstOrDefault(o => o.IdOferta== idOferta);
+        if (oferta == null)
+            return NotFound("Oferta no encontrada.");
+       
+        HttpContext.Session.SetString("Ofertas", JsonSerializer.Serialize(ofertas));
+        var vm = await ObtenerViewModelCompletoAsync();
+        return View("FormularioExperienciaEducativa", vm);
+    }
+
 }

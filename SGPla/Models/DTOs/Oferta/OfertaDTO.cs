@@ -11,6 +11,7 @@
 
     public class OfertaDTO
     {
+        public int IdOferta { get; set; }
         public string Programa { get; set; } = "";
         public string NRC { get; set; } = "";
         public string ExperienciaEducativa { get; set; } = "";
@@ -33,7 +34,7 @@
 
         public int Articulo { get; set; }
 
-        public int Incluida { get; set; } = 0;
+        public bool Incluida { get; set; }
 
         public IEnumerable<(string Dia, HorarioDia Horario)> DiasConClase()
         {

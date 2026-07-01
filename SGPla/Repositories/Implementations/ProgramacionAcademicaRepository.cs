@@ -159,6 +159,7 @@ namespace SGPla.Repositories.Implementations
                 Jueves = MapHorario(o.Horario, "Jueves"),
                 Viernes = MapHorario(o.Horario, "Viernes"),
                 Sabado = MapHorario(o.Horario, "Sabado"),
+                IdOferta = o.IdOferta,
             }).ToList();
         }
 

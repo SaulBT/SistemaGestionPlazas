@@ -99,25 +99,6 @@
         @await Component.InvokeAsync("Table", Model.Table)
     </div> 
 
-    <!-- Ventanas Modales -->
-    <div>
-        <!-- Confirmación eliminación -->
-        <form id="formEliminarProgramaEducativo" method="post" action="@Url.Action("EliminarProgramaEducativo", "ProgramasEducativos")">
-            @Html.AntiForgeryToken()
-            <input type="hidden" name="id" id="deleteProgramaEducativoId" />
-            @await Component.InvokeAsync("Modal", new ModalModel
-            {
-                Id = "modalConfirmacion",
-                Tipo = "confirm",
-                Titulo = "Confirmación",
-                Mensaje = "¿Estás seguro de que deseas eliminar este programa educativo?",
-                OnConfirm = "confirmarModal()",
-                OnCancel = "cerrarModal('modalConfirmacion')"
-            })
-        </form>
-    </div>
-</div>
-
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
