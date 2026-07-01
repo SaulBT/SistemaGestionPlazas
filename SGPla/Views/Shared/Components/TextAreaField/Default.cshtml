@@ -14,4 +14,9 @@
               placeholder="@Model.Placeholder"
               class="textarea"
               disabled="@(Model.Disabled ? "disabled" : null)">@Model.Value</textarea>
+    
+    @if (!string.IsNullOrEmpty(Model.Error))
+    {
+        <span id="@Model.Id-Error" class="input-error-text">@Model.Error</span>
+    }
 </div>

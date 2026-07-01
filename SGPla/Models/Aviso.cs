@@ -33,6 +33,8 @@ public partial class Aviso
 
     public bool? Archivado { get; set; }
 
+    public string? Revision { get; set; }
+
     public virtual ICollection<Acta> Acta { get; set; } = new List<Acta>();
 
     public virtual ICollection<Horario> Horario { get; set; } = new List<Horario>();

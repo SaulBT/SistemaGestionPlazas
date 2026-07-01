@@ -13,12 +13,12 @@ namespace SGPla.Services.Implementations
             _avisoRepository = avisoRepository;
         }
 
-        public async Task<List<DatosAvisoDTO>> ObtenerTodos()
+        public async Task<(List<ListaAvisosDTO> items, int total)> ObtenerTodosAvisosAsync(FiltroAvisosDTO filtroDTO)
         {
             throw new NotImplementedException();
         }
 
-        public Task<DatosAvisoDTO?> ObtenerPorID(int idAviso)
+        public Task<DatosAvisoDTO> ObtenerAvisoPorIDAsync(int idAviso)
         {
             throw new NotImplementedException();
         }
@@ -37,5 +37,15 @@ namespace SGPla.Services.Implementations
         {
             throw new NotImplementedException();
         }
-    }
+
+        //DGAA
+        public async Task RevisarAvisoAsync(RevisionDTO revisionDTO)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task ArchivarAvisoAsync(int idAviso)
+        {
+            throw new NotImplementedException();
+        }
 }

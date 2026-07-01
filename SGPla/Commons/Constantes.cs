@@ -27,8 +27,10 @@
         public const string LOGS_ESTRUCTURA = "{0}{1} {2}";
         public const string LOG_ERROR_INESPERADO = "Error inesperado.";
         public const string LOG_ERROR_VALIDACION = "Error de validación.";
+        public const string LOG_GENERAL_NULO = "Se encontró un valor nulo: {0}.";
         public const string LOG_ERROR_NULO = "El {0} es nulo";
         public const string LOG_ERROR_NULA = "La {0} es nula";
+        public const string LOG_ERROR_JSON = "Error al serealizar/deserealizar un objeto.";
 
         //Toasts
         public const string TOAST_ERROR_GENERAL = "Ha ocurrido un error, inténtelo de nuevo más tarde.";
@@ -38,6 +40,8 @@
         public const string TOAST_ERROR_ELIMINACION_LA = "No se pudo eliminar la {0}, inténtelo nuevamente.";
         public const string TOAST_ERROR_GUARDAR_EL = "No se pudo guardar el {0}, inténtelo nuevamente.";
         public const string TOAST_ERROR_GUARDAR_LA = "No se pudo guardar la {0}, inténtelo nuevamente.";
+        public const string TOAST_ERROR_CARGAR_EL = "No se pudo cargar el {0}, inténtalo nuevamente.";
+        public const string TOAST_ERROR_CARGAR_LA = "No se pudo cargar la {0}, inténtalo nuevamente.";
 
         public const string TOAST_ELIMINACION_EL = "El {0} ha sido eliminado con éxito.";
         public const string TOAST_ELIMINACION_LA = "La {0} ha sido eliminada con éxito.";
