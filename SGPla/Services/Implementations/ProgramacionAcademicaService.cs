@@ -56,7 +56,7 @@ namespace SGPla.Services.Implementations
             return ofertas;
         }
 
-        public async Task<bool> GuardarOfertasAsync(List<OfertaDTO> ofertas, List<CargaConOfertaDTO> cargas)
+        public async Task<bool> GuardarOfertasyCargasAsync(List<OfertaDTO> ofertas, List<CargaConOfertaDTO> cargas)
         {
             await _programacionAcademicaValidator.ValidarProgramas(ofertas);
             await _programacionAcademicaValidator.ValidarExperiencias(ofertas);
@@ -162,12 +162,15 @@ namespace SGPla.Services.Implementations
                     }
                     carga.idDocente = idDocente;
 
-                    if (!experiencias.TryGetValue(carga.ExperienciaEducativa, out var idExperiencia) || string.IsNullOrWhiteSpace(carga.Nrc))
+                    bool encontrada = experiencias.TryGetValue(carga.ExperienciaEducativa, out var idExperiencia);
+
+                    if (!encontrada && !string.IsNullOrWhiteSpace(carga.Nrc))
                     {
                         throw new ArgumentException(
                             $"No existe una experiencia con nombre '{carga.ExperienciaEducativa}'.");
                     }
-                    carga.idExperienciaEducativa = idExperiencia;
+
+                    carga.idExperienciaEducativa = encontrada ? idExperiencia : null;
 
                     carga.idPeriodo = ofertasModel
                         .FirstOrDefault(o => o.IdProgramaEducativo == idPrograma)?.IdPeriodo ?? 0;

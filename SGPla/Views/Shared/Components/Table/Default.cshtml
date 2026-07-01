@@ -38,6 +38,16 @@
                                                 accion = action.Accion,
                                                 fondo = false,
                                                 onClick = action.OnClick
+                                                })
+                                        }
+                                        else if (action.Accion == "SwitchField") {
+                                            
+                                            @await Component.InvokeAsync("SwitchField", new SwitchFieldModel
+                                            {
+                                                Name = "activo",
+                                                Label = "Activo",
+                                                Checked = true,
+                                                IsLabelVisible = false
                                             })
                                         }
                                         else

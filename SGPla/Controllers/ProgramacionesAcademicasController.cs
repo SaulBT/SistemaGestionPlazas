@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using SGPla.Commons;
 using SGPla.Commons.Factories;
+using SGPla.Helpers;
 using SGPla.Models;
 using SGPla.Models.Components;
 using SGPla.Models.DTOs.Articulo;
@@ -249,7 +251,7 @@ public class ProgramacionesAcademicasController : Controller
         {
             var guardado =
                 await _programacionAcademicaService
-                    .GuardarOfertasAsync(ofertas, cargas);
+                    .GuardarOfertasyCargasAsync(ofertas, cargas);
             TempData["Success"] = "Cambios guardados con éxito";
             return RedirectToAction(nameof(Index));
 
@@ -374,49 +376,77 @@ public class ProgramacionesAcademicasController : Controller
         };
     }
 
-    private async Task<TableModel> LlenarTablaAsync(TipoTablaOferta tipoOferta, IEnumerable<DetallesArticuloDTO> articulos, List<OfertaDTO>? ofertas, string? programa)
+    private async Task<TableModel> LlenarTablaAsync(TipoTablaOferta tipoOferta, IEnumerable<DetallesArticuloDTO> articulos, List<OfertaDTO>? ofertas, string? programa, AccionesDisponibles? permisos = null)
     {
 
         if (ofertas.Count() == 0)
             return TablaFactory.GenerarTablaConMensaje(tipoOferta == TipoTablaOferta.Vacantes ? HEADERS_TABLA_VACANTES : HEADERS_TABLA_ASIGNADAS, string.Format(Constantes.TABLA_VACIA, Constantes.EXPERIENCIAS_EDUCATIVAS));
+
+
+        List<TableActionModel> acciones = new();
+
+        if (permisos != null)
+        {
+            if (permisos.Puede(Acciones.ProgramacionAcademica.VerHistorial))
+                acciones.Add(new TableActionModel { Accion = "historial", OnClick = "abrirModalEditarOferta()" });
+
+            if (permisos.Puede(Acciones.ProgramacionAcademica.Editar))
+                acciones.Add(new TableActionModel { Accion = "editar", OnClick = "abrirModalEditarOferta()" });
+
+            if (permisos.Puede(Acciones.ProgramacionAcademica.AsignarDocente))
+                acciones.Add(new TableActionModel { Accion = tipoOferta == TipoTablaOferta.Asignadas ? "derecha" : "izquierda", OnClick = "abrirModalAsignarDocente()" });
+
+            if (permisos.Puede(Acciones.ProgramacionAcademica.Ofertar) && tipoOferta == TipoTablaOferta.Vacantes)
+                acciones.Add(new TableActionModel { Accion = "SwitchField" });
+
+            if (permisos.Puede(Acciones.ProgramacionAcademica.Eliminar))
+                acciones.Add(new TableActionModel { Accion = "eliminar", OnClick = "abrirModalConfirmacion('¿Desea eliminar esta oferta?', function() { eliminarOferta(); })" });
+        }
+
+        var headers = new List<string>(
+            tipoOferta == TipoTablaOferta.Vacantes ? HEADERS_TABLA_VACANTES : HEADERS_TABLA_ASIGNADAS
+        );
+
+        if (acciones.Any())
+            headers.Add("Acciones");
+
+
 
         try
         {
             return new TableModel
             {
                 TableId = tipoOferta == TipoTablaOferta.Vacantes ? "tablaVacantes" : "tablaAsignadas",
-                Headers = tipoOferta == TipoTablaOferta.Vacantes ? HEADERS_TABLA_VACANTES : HEADERS_TABLA_ASIGNADAS,
-                Rows = ofertas.Select(oferta => new TableRowModel
+                Headers = headers,
+                Rows = ofertas.Select(oferta =>
                 {
-                    Cells = new List<TableCellModel>
+                    var cells = new List<TableCellModel>
+                    {
+                        new() { Value = oferta.ExperienciaEducativa },
+                        new() { Value = oferta.NRC },
+                        new() { Value = oferta.HorasPago.ToString() },
+                        new() { Value = oferta.TC },
+                        new() { Actions = new List<TableActionModel>
                         {
-                            new() { Value = oferta.ExperienciaEducativa },
-                            new() { Value = oferta.NRC },
-                            new() { Value = oferta.HorasPago.ToString() },
-                            new() { Value = oferta.TC },
-                            new() { Actions = new List<TableActionModel>
-                            {
-
-                             new TableActionModel
+                            new TableActionModel
                             {
                                 Accion = "informacion",
                                 OnClick = $"abrirModalHorario({JsonSerializer.Serialize(oferta)})"
                             }
-                            }
-                            },
-                            tipoOferta == TipoTablaOferta.Vacantes
-                            ? new()
-                            {
-                                Value = articulos
-                                .FirstOrDefault(a => a.IdArticulo == oferta.Articulo)?
-                                .Numero ?? "—"
-                            }
-                            : new()
-                            {
-                                Value = oferta.NombreDocente
-                            }
-                        }
+                        }},
+                        tipoOferta == TipoTablaOferta.Vacantes
+                            ? new() { Value = articulos.FirstOrDefault(a => a.IdArticulo == oferta.Articulo)?.Numero ?? "—" }
+                            : new() { Value = oferta.NombreDocente }
+                    };
+
+                    if (acciones.Any())
+                    {
+                        cells.Add(new TableCellModel { Actions = acciones });
+                    }
+
+                    return new TableRowModel { Cells = cells };
                 }).ToList(),
+
                 Pagination = new PaginationInfo
                 {
                     CurrentPage = _paginaActual,
@@ -436,7 +466,7 @@ public class ProgramacionesAcademicasController : Controller
     {
 
         if (cargas.Count() == 0)
-            return TablaFactory.GenerarTablaConMensaje( HEADERS_TABLA_CARGAS, string.Format(Constantes.TABLA_VACIA, Constantes.EXPERIENCIAS_EDUCATIVAS));
+            return TablaFactory.GenerarTablaConMensaje(HEADERS_TABLA_CARGAS, string.Format(Constantes.TABLA_VACIA, Constantes.EXPERIENCIAS_EDUCATIVAS));
 
         try
         {
@@ -465,10 +495,7 @@ public class ProgramacionesAcademicasController : Controller
                                 }
                             },
 
-                        }
-
-                            
-                        
+                    }
                 }).ToList(),
                 Pagination = new PaginationInfo
                 {
@@ -599,6 +626,11 @@ public class ProgramacionesAcademicasController : Controller
     string? nombrePeriodo,
     string? nombrePrograma)
     {
+
+        var permisos = MatrizPermisos.Para(User);
+
+
+
         var ofertas = await _programacionAcademicaService
             .ObtenerOfertasGuardadasAsync(idEntidadAcademica, idProgramaEducativo, idPeriodo);
 
@@ -607,14 +639,14 @@ public class ProgramacionesAcademicasController : Controller
 
         IEnumerable<DetallesArticuloDTO> articulos = await _articuloService.ObtenerTodosAsync();
 
-        var modelo = new VerProgramacionAcademicaViewModel
+        var modelo = new VerProgramacionAcademicaViewModel(User)
         {
             Region = ofertas.First().Region,
             NombreEntidadAcademica = nombreEntidadAcademica,
             NombrePeriodo = nombrePeriodo,
             NombrePrograma = nombrePrograma,
-            TableAsignadas = await LlenarTablaAsync(TipoTablaOferta.Asignadas, articulos, ofertasAsignadas, null),
-            TableVacantes = await LlenarTablaAsync(TipoTablaOferta.Vacantes, articulos, ofertasVacantes, null)
+            TableAsignadas = await LlenarTablaAsync(TipoTablaOferta.Asignadas, articulos, ofertasAsignadas, null, permisos),
+            TableVacantes = await LlenarTablaAsync(TipoTablaOferta.Vacantes, articulos, ofertasVacantes, null, permisos)
         };
 
         return View("VerProgramacionAcademica", modelo);

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using SGPla.Data;
 using SGPla.Repositories.Implementations;
@@ -80,6 +81,19 @@ builder.Services.AddScoped<IProgramacionAcademicaValidator, ProgramacionAcademic
 builder.Services.AddScoped<IProgramacionAcademicaService, ProgramacionAcademicaService>();
 //builder.Services.AddScoped<IProgramacionAcademicaRepository, ProgramacionAcademicaRepository>();
 
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+#if DEBUG
+        options.LoginPath = "/DevLogin";
+#else
+        options.LoginPath = "/Account/Login";
+#endif
+        options.AccessDeniedPath = "/Account/AccesoDenegado";
+    });
+
+builder.Services.AddAuthorization(); // ← faltaba esto
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -88,21 +102,19 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Home/Error");
 }
 
-app.UseSession();
+app.UseRouting();       // 1. primero rutea
 
-app.UseRouting();
+app.UseSession();       // 2. sesión
 
-app.UseAuthentication();
+app.UseAuthentication(); // 3. ¿quién eres?
 
-app.UseAuthorization();
-
+app.UseAuthorization();  // 4. ¿qué puedes hacer?
 
 app.MapStaticAssets();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=ProgramacionesAcademicas}/{action=Index}/{id?}")
-
+    pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);

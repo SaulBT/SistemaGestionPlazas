@@ -1,4 +1,7 @@
-﻿namespace SGPla.Models.ViewModels.ProgramacionesAcademicas
+﻿using SGPla.Helpers;
+using System.Security.Claims;
+
+namespace SGPla.Models.ViewModels.ProgramacionesAcademicas
 {
     public class VerProgramacionAcademicaViewModel
     {
@@ -9,5 +12,20 @@
 
         public TableModel TableAsignadas { get; set; } = new();
         public TableModel TableVacantes { get; set; } = new();
+
+        public AccionesDisponibles AccionesDisponibles { get; }
+
+        public VerProgramacionAcademicaViewModel(ClaimsPrincipal usuario)
+        {
+            AccionesDisponibles = MatrizPermisos.Para(usuario);
+        }
+
+        public bool PuedeVerHistorial => AccionesDisponibles.Puede(Acciones.ProgramacionAcademica.VerHistorial);
+        public bool PuedeEditar => AccionesDisponibles.Puede(Acciones.ProgramacionAcademica.Editar);
+        public bool PuedeRetirarDocente => AccionesDisponibles.Puede(Acciones.ProgramacionAcademica.RetirarDocente);
+        public bool PuedeAsignarDocente => AccionesDisponibles.Puede(Acciones.ProgramacionAcademica.AsignarDocente);
+        public bool PuedeEliminar => AccionesDisponibles.Puede(Acciones.ProgramacionAcademica.Eliminar);
+        public bool PuedeOfertar => AccionesDisponibles.Puede(Acciones.ProgramacionAcademica.Ofertar);
+
     }
 }

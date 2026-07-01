@@ -4,7 +4,10 @@
 
     @if (!string.IsNullOrWhiteSpace(Model.Label))
     {
-        <span class="text-wrapper">@Model.Label</span>
+        @if (Model.IsLabelVisible)
+        {
+            <span class="text-wrapper">@Model.Label</span>
+        }
     }
 
     <label class="switch">
