@@ -1,0 +1,77 @@
+﻿@using SGPla.Models.ViewModels.Avisos
+@model CrearAvisoViewModel
+@{
+    Layout = "_LayoutEntidadAcademica";
+    ViewData["Title"] = "Avisos";
+    ViewBag.RegresarUrl = Url.Action("Index", "Avisos");
+}
+
+<div>
+    <form method="post" action="@Url.Action("CrearAviso", "Avisos")" >
+        @Html.AntiForgeryToken()
+
+        <!-- Datos Personales -->
+        <div class="cabecera-seccion mb-3">
+            <h5>Datos Generales</h5>
+            <div style="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease;">
+                @await Component.InvokeAsync("SelectField", new SelectFieldModel
+                {
+                    Label = "Artículo:",
+                    Options = Model.Articulos,
+                    Name = "IdArticulo",
+                    Error = ViewData.ModelState["IdArticulo"]?.Errors.FirstOrDefault()?.ErrorMessage
+                })
+
+                @await Component.InvokeAsync("SelectField", new SelectFieldModel
+                {
+                    Label = "Periodo escolar:",
+                    Options = Model.Periodos,
+                    Name = "IdPeriodo",
+                    Error = ViewData.ModelState["IdPeriodo"]?.Errors.FirstOrDefault()?.ErrorMessage
+                })
+
+                @await Component.InvokeAsync("DatePicker", new DatePickerModel
+                {
+                    Label = "Fecha a ocupar vacantes:",
+                    Name = "FechaVacantes",
+                })
+
+                
+            </div>
+        </div>
+
+        <!-- Recepción de documentos -->
+        <div class="cabecera-seccion mb-3">
+            <h5>Recepción de Documentos</h5>
+            <div style="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease;">
+                @await Component.InvokeAsync("SelectField", new SelectFieldModel
+                        {
+                            Label = "Modalidad de entrega:",
+                            Options = Model.Modalidades,
+                            Name = "Modalidad",
+                            Error = ViewData.ModelState["Modalidad"]?.Errors.FirstOrDefault()?.ErrorMessage
+                        })
+
+                @await Component.InvokeAsync("InputField", new InputFieldModel
+                        {
+                            Label = "Lugar:",
+                            Id = "Lugar",
+                            Name = "Lugar",
+                            Error = ViewData.ModelState["Lugar"]?.Errors.FirstOrDefault()?.ErrorMessage
+                        })
+                @await Component.InvokeAsync("DatePicker", new DatePickerModel
+                {
+                    Label = "Fecha de Consejo Técnico",
+                    Name = "FechaCT"
+                })
+            </div>
+            @await Component.InvokeAsync("Table", Model.TablaHorario)
+        </div>
+
+        <!-- Experiencias educativas -->
+        <div class="cabecera-seccion mb-3">
+        </div>
+
+
+    </form>
+</div>

@@ -99,8 +99,32 @@
                 }
                 <!-- CABECERA DINÁMICA -->
                 <div class="cabecera-seccion mb-3">
-
-                    <div class="d-flex justify-content-between align-items-center">
+                    @{
+                        var regresarUrl = ViewBag.RegresarUrl ?? ViewData["RegresarUrl"];
+                        var regresarOnClick = ViewBag.RegresarOnClick ?? ViewData["RegresarOnClick"];
+                        var mostrarBoton = !string.IsNullOrEmpty(regresarUrl?.ToString()) ||
+                                          !string.IsNullOrEmpty(regresarOnClick?.ToString());
+                    }
+                    @if (mostrarBoton)
+                    {
+                        if (!string.IsNullOrEmpty(regresarUrl?.ToString()))
+                        {
+                            <a href="@regresarUrl" class="link-regresar">
+                                <i class="bi bi-arrow-left"></i>
+                                Regresar
+                            </a>
+                        }
+                        else if (!string.IsNullOrEmpty(regresarOnClick?.ToString()))
+                        {
+                            <a href="javascript:void(0)"
+                               onclick="@regresarOnClick"
+                               class="link-regresar">
+                                <i class="bi bi-arrow-left"></i>
+                                Regresar
+                            </a>
+                        }
+                    }
+                    <div class="d-flex justify-content-between align-items-center" style="padding-top:10px">
                         <h2 class="titulo-seccion mb-0">
                             @ViewData["Title"]
                         </h2>
@@ -136,35 +160,6 @@
                             </ol>
                         </nav>
                     }
-
-
-                    @{
-                        var regresarUrl = ViewBag.RegresarUrl ?? ViewData["RegresarUrl"];
-                        var regresarOnClick = ViewBag.RegresarOnClick ?? ViewData["RegresarOnClick"];
-                        var mostrarBoton = !string.IsNullOrEmpty(regresarUrl?.ToString()) ||
-                                          !string.IsNullOrEmpty(regresarOnClick?.ToString());
-                    }
-
-                    @if (mostrarBoton)
-                    {
-                        if (!string.IsNullOrEmpty(regresarUrl?.ToString()))
-                        {
-                            <a href="@regresarUrl" class="link-regresar">
-                                <i class="bi bi-arrow-left"></i>
-                                Regresar
-                            </a>
-                        }
-                        else if (!string.IsNullOrEmpty(regresarOnClick?.ToString()))
-                        {
-                            <a href="javascript:void(0)"
-                               onclick="@regresarOnClick"
-                               class="link-regresar">
-                                <i class="bi bi-arrow-left"></i>
-                                Regresar
-                            </a>
-                        }
-                    }
-
                 </div>
 
                 <!-- CONTENIDO REAL -->

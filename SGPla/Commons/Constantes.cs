@@ -88,6 +88,10 @@
         public const string MODALIDAD_DISTANCIA = "A distancia";
         public static List<string> MODALIDADES = new List<string> { MODALIDAD_ESCOLARIZADA, MODALIDAD_ABIERTA, MODALIDAD_VIRTUAL, MODALIDAD_MIXTA, MODALIDAD_SEMIESCOLARIZADA, MODALIDAD_DISTANCIA };
 
+        public const string MODALIDAD_AVISO_PRESENCIAL = "Presencial";
+        public const string MODALIDAD_AVISO_VIRTUAL = "Virtual";
+        public static List<string> MODALIDADES_AVISO = new List<string> { MODALIDAD_AVISO_PRESENCIAL, MODALIDAD_AVISO_VIRTUAL };
+
         public const string DR = "Dr.";
         public const string DRA = "Dra.";
         public const string MTRO = "Mtro.";
@@ -106,5 +110,7 @@
         public const string TECNICO_ACADEMICO = "Técnico Académico";
         public const string DOCENTE_POR_ASIGNATURA = "Docente por Asignatura";
         public static List<string> PUESTOS = [INVESTIGADOR, DOCENTE, TECNICO_ACADEMICO, DOCENTE_POR_ASIGNATURA];
+
+        public const string CAMPO_OBLIGATORIO = "Campo obligatorio";
     }
 }
