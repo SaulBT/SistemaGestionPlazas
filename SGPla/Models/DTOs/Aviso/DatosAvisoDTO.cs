@@ -10,6 +10,7 @@ namespace SGPla.Models.DTOs.Aviso
         public int IdPeriodo { get; set; }
         public int IdArticulo { get; set; }
         public int IdArchivoOriginal { get; set; }
+        public int IdArchivoFirmado { get; set; }
         public string Articulo { get; set; } = string.Empty;
         public string FechaCreacion { get; set; } = string.Empty;
         public string FechaVacantes { get; set; } = string.Empty;
@@ -23,5 +24,6 @@ namespace SGPla.Models.DTOs.Aviso
         public string Modalidad { get; set; } = string.Empty;
         public string Lugar { get; set; } = string.Empty;
         public DatosHorarioDTO Horario { get; set; } = new DatosHorarioDTO();
+        public string UrlPublicacion { get; set; } = string.Empty;
     }
 }
