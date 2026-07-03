@@ -7,7 +7,7 @@ namespace SGPla.Services.Implementations
     public class AvisoService : IAvisoService
     {
         private readonly IAvisoRepository _avisoRepository;
-        
+
         public AvisoService(IAvisoRepository avisoRepository)
         {
             _avisoRepository = avisoRepository;
@@ -48,4 +48,5 @@ namespace SGPla.Services.Implementations
         {
             throw new NotImplementedException();
         }
+    }
 }
