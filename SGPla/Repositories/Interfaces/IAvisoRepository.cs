@@ -1,13 +1,15 @@
 ﻿using SGPla.Models;
+using SGPla.Models.DTOs.Aviso;
 
 namespace SGPla.Repositories.Interfaces
 {
     public interface IAvisoRepository
     {
-        Task<List<Aviso>> ObtenerTodos();
-        Task<Aviso?> ObtenerPorID(int idAviso);
-        Task CrearAviso(Aviso aviso);
-        Task EliminarAvisoPorId(int idAviso);
-        Task ActualizarAvisoPorId(Aviso aviso);
+        Task<List<Aviso>> ObtenerTodosAsync(FiltroAvisosDTO filtro);
+        Task<Aviso?> ObtenerPorIDAsync(int idAviso);
+        Task CrearAsync(Aviso aviso);
+        Task EliminarAsync(int idAviso);
+        Task ActualizarAsync(Aviso aviso);
+        Task<int> ContarAsync(FiltroAvisosDTO filtro);
     }
 }
