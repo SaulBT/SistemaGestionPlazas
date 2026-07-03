@@ -35,6 +35,8 @@ public partial class Oferta
 
     public string? JustificacionApertura { get; set; }
 
+    public string? TipoPlaza { get; set; }
+
     public virtual ICollection<Horario> Horario { get; set; } = new List<Horario>();
 
     public virtual Archivo? IdArchivoAperturaNavigation { get; set; }

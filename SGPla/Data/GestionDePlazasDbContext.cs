@@ -195,6 +195,10 @@ public partial class GestionDePlazasDbContext : DbContext
                 .HasMaxLength(255)
                 .IsUnicode(false)
                 .HasColumnName("correo");
+            entity.Property(e => e.Estado)
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasColumnName("estado");
             entity.Property(e => e.FechaCreacion).HasColumnName("fechaCreacion");
             entity.Property(e => e.FechaInicio).HasColumnName("fechaInicio");
             entity.Property(e => e.Folio)
@@ -615,6 +619,10 @@ public partial class GestionDePlazasDbContext : DbContext
                 .HasMaxLength(3)
                 .IsUnicode(false)
                 .HasColumnName("tipoContratacion");
+            entity.Property(e => e.TipoPlaza)
+                .HasMaxLength(10)
+                .IsUnicode(false)
+                .HasColumnName("tipoPlaza");
 
             entity.HasOne(d => d.IdArchivoAperturaNavigation).WithMany(p => p.Oferta)
                 .HasForeignKey(d => d.IdArchivoApertura)
