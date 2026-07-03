@@ -35,6 +35,8 @@ public partial class Aviso
 
     public string? Revision { get; set; }
 
+    public string Estado { get; set; } = null!;
+
     public virtual ICollection<Acta> Acta { get; set; } = new List<Acta>();
 
     public virtual ICollection<Horario> Horario { get; set; } = new List<Horario>();
