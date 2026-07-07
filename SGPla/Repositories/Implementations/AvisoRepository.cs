@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using SGPla.Commons;
 using SGPla.Data;
 using SGPla.Models;
 using SGPla.Models.DTOs.Aviso;
@@ -86,6 +87,75 @@ namespace SGPla.Repositories.Implementations
                 todos = todos.Where(a => a.FechaInicio)*/
 
             return await query.CountAsync();
+        }
+
+        public async Task CambiarStatusArchivadoAsync(int idAviso, bool archivado)
+        {
+            var aviso = _context.Aviso.FirstOrDefault(a => a.IdAviso == idAviso);
+            if (aviso is not null)
+            {
+                aviso.Archivado = archivado;
+                await _context.SaveChangesAsync();
+            }
+
+        }
+
+        public async Task EnviarARevisionAsync(int idAviso, string comentarios)
+        {
+            var aviso = _context.Aviso.FirstOrDefault(a => a.IdAviso == idAviso);
+            if (aviso is not null)
+            {
+                aviso.Estado = Constantes.EN_REVISION_POR_DGAA;
+                aviso.Comentarios = comentarios;
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task FirmarAsync(int idAviso, int idArchivoFirmado)
+        {
+            var aviso = _context.Aviso.FirstOrDefault(a => a.IdAviso == idAviso);
+            if (aviso is not null)
+            {
+                aviso.Estado = Constantes.FIRMADO;
+                aviso.IdArchivoFirmado = idArchivoFirmado;
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task<string> VerComentariosAsync(int idAviso)
+        {
+            var comentarios = "";
+            var aviso = _context.Aviso.FirstOrDefault(a => a.IdAviso == idAviso);
+            if (aviso is not null)
+                comentarios = aviso.Comentarios ?? "";
+
+            return comentarios;
+        }
+
+        public async Task PublicarAsync(int idAviso, string url)
+        {
+            var aviso = _context.Aviso.FirstOrDefault(a => a.IdAviso == idAviso);
+            if (aviso is not null)
+            {
+                aviso.Estado = Constantes.PUBLICADO;
+                aviso.UrlPublicacion = url;
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task<bool> VerificarEstadoAsync(int idAviso, string estado)
+        {
+            var aviso = _context.Aviso.FirstOrDefault(a => a.IdAviso == idAviso);
+            if (aviso is not null)
+                return aviso.Estado == estado;
+
+            return false;
+        }
+
+        public async Task<bool> ExistePorId(int idAviso)
+        {
+            var aviso = _context.Aviso.FirstOrDefault(a => a.IdAviso == idAviso);
+            return aviso is not null;
         }
     }
 }

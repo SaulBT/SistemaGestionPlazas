@@ -18,6 +18,10 @@
         public const string SESSION_RUTA = "Ruta";
         public const string SESSION_NOMBRE_ARCHIVO = "NombreArchivo";
 
+        public const string CREADO = "Creado";
+        public const string EN_REVISION_POR_DGAA = "En Revisión por DGAA";
+        public const string FIRMADO = "Firmado";
+        public const string PUBLICADO = "Publicado";
 
         // Mensajes tabla
         public const string ERROR_TABLA = "Error al generar la tabla de {0}.";

@@ -191,6 +191,9 @@ public partial class GestionDePlazasDbContext : DbContext
 
             entity.Property(e => e.IdAviso).HasColumnName("idAviso");
             entity.Property(e => e.Archivado).HasColumnName("archivado");
+            entity.Property(e => e.Comentarios)
+                .IsUnicode(false)
+                .HasColumnName("comentarios");
             entity.Property(e => e.Correo)
                 .HasMaxLength(255)
                 .IsUnicode(false)
@@ -224,6 +227,13 @@ public partial class GestionDePlazasDbContext : DbContext
             entity.Property(e => e.Revision)
                 .IsUnicode(false)
                 .HasColumnName("revision");
+            entity.Property(e => e.Sistema)
+                .HasMaxLength(17)
+                .IsUnicode(false)
+                .HasColumnName("sistema");
+            entity.Property(e => e.UrlPublicacion)
+                .IsUnicode(false)
+                .HasColumnName("urlPublicacion");
 
             entity.HasOne(d => d.IdArchivoFirmadoNavigation).WithMany(p => p.AvisoIdArchivoFirmadoNavigation)
                 .HasForeignKey(d => d.IdArchivoFirmado)

@@ -82,6 +82,8 @@ builder.Services.AddScoped<IProgramacionAcademicaService, ProgramacionAcademicaS
 
 builder.Services.AddScoped<IAvisoService, AvisoService>();
 builder.Services.AddScoped<IAvisoRepository, AvisoRepository>();
+builder.Services.AddScoped<IOfertaRepository, OfertaRepository>();
+builder.Services.AddScoped<IHorarioRepository, HorarioRepository>();
 
 var app = builder.Build();
 

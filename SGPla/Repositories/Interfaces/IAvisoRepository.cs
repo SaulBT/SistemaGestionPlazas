@@ -11,5 +11,12 @@ namespace SGPla.Repositories.Interfaces
         Task EliminarAsync(int idAviso);
         Task ActualizarAsync(Aviso aviso);
         Task<int> ContarAsync(FiltroAvisosDTO filtro);
+        Task CambiarStatusArchivadoAsync(int idAviso, bool archivado);
+        Task EnviarARevisionAsync(int idAviso, string comentarios);
+        Task FirmarAsync(int idAviso, int idArchivoFirmado);
+        Task<string> VerComentariosAsync(int idAviso);
+        Task PublicarAsync(int idAviso, string url);
+        Task<bool> VerificarEstadoAsync(int idAviso, string estado);
+        Task<bool> ExistePorId(int idAviso);
     }
 }

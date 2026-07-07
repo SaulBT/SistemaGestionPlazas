@@ -2,7 +2,6 @@
 {
     public class DatosHorarioDTO
     {
-        public int IdHorario { get; set; }
         public int IdAviso { get; set; }
         public List<DiaDTO> Dias { get; set; } = [];
     }
