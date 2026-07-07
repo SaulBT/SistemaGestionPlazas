@@ -1,5 +1,14 @@
 ﻿@page
 @model SGPla.Models.ViewModels.Avisos.TabAvisosViewModel
 @{
-
+	@await Component.InvokeAsync("AvisoTarjeta", new AvisoTarjetaModel
+	{
+		IdAviso = 1,
+		EntidadAcademica = "Facultad de Estadística e Informática",
+		Folio = "001",
+		Periodo = "Febrero - Julio 2026",
+		Articulo = "70",
+		FechaCreacion = "7 de julio de 2026",
+		Estado = "Creado"
+	})
 }
