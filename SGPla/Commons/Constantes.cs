@@ -20,8 +20,11 @@
 
         public const string CREADO = "Creado";
         public const string EN_REVISION_POR_DGAA = "En Revisión por DGAA";
+        public const string AVALADO_POR_DGAA = "Avalado por DGAA";
+        public const string DEVUELTO_POR_DGAA = "Devuelto por DGAA";
         public const string FIRMADO = "Firmado";
         public const string PUBLICADO = "Publicado";
+        public const string ACTA_DE_CT_CREADA = "Acta de CT Creada";
 
         // Mensajes tabla
         public const string ERROR_TABLA = "Error al generar la tabla de {0}.";

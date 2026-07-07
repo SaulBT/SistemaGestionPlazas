@@ -3,7 +3,7 @@
 @model IndexViewModel
 @{
     Layout = "_LayoutEntidadAcademica";
-    ViewData["Title"] = "Personal Académico";
+    ViewData["Title"] = "Avisos";
 }
 
 <div>
@@ -11,13 +11,13 @@
         
         <!-- Filtros -->
         @await Component.InvokeAsync("ExpansionPanel", new ExpansionPanelModel
-                {
-                    Id = "panel-filtros",
-                    Titulo = "Filtros",
-                    PartialView = "_Filtros",
-                    PartialModel = Model,
-                    IconClass = "bi bi-funnel-fill"
-                })
+        {
+            Id = "panel-filtros",
+            Titulo = "Filtros",
+            PartialView = "_Filtros",
+            PartialModel = Model,
+            IconClass = "bi bi-funnel-fill"
+        })
 
 
         <!-- Acciones -->
@@ -55,50 +55,56 @@
                 new()
                 {
                     Titulo = "Todos",
-                    PartialView = "_DatosGenerales",
-                    PartialModel = Model
+                    PartialView = "_TabAvisos",
+                    PartialModel = Model.Todos
                 },
                 new()
                 {
                     Titulo = "Creados",
-                    PartialView = "_DatosGenerales",
-                    PartialModel = Model
+                    PartialView = "_TabAvisos",
+                    PartialModel = Model.Creados
                 },
                 new()
                 {
                     Titulo = "En Revisión",
-                    PartialView = "_DatosGenerales",
-                    PartialModel = Model
+                    PartialView = "_TabAvisos",
+                    PartialModel = Model.EnRevision
                 },
                 new()
                 {
-                    Titulo = "Avalados",
-                    PartialView = "_DatosGenerales",
-                    PartialModel = Model
+                    Titulo = "Avalados por DGAA",
+                    PartialView = "_TabAvisos",
+                    PartialModel = Model.Avalados
                 },
                 new()
                 {
-                    Titulo = "Devueltos",
-                    PartialView = "_DatosGenerales",
-                    PartialModel = Model
+                    Titulo = "Devueltos por DGAA",
+                    PartialView = "_TabAvisos",
+                    PartialModel = Model.Devueltos
                 },
                 new()
                 {
                     Titulo = "Firmados",
-                    PartialView = "_DatosGenerales",
-                    PartialModel = Model
+                    PartialView = "_TabAvisos",
+                    PartialModel = Model.Firmados
                 },
                 new()
                 {
                     Titulo = "Publicados",
-                    PartialView = "_DatosGenerales",
-                    PartialModel = Model
+                    PartialView = "_TabAvisos",
+                    PartialModel = Model.Publicados
                 },
                 new()
                 {
                     Titulo = "Actas de Ct Creadas",
-                    PartialView = "_DatosGenerales",
-                    PartialModel = Model
+                    PartialView = "_TabAvisos",
+                    PartialModel = Model.ConActa
+                },
+                new()
+                {
+                    Titulo = "Archivados",
+                    PartialView = "_TabAvisos",
+                    PartialModel = Model.Archivados
                 }
             ]
         })

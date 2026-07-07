@@ -84,6 +84,7 @@ builder.Services.AddScoped<IAvisoService, AvisoService>();
 builder.Services.AddScoped<IAvisoRepository, AvisoRepository>();
 builder.Services.AddScoped<IOfertaRepository, OfertaRepository>();
 builder.Services.AddScoped<IHorarioRepository, HorarioRepository>();
+builder.Services.AddScoped<IAvisoValidator, AvisoValidator>();
 
 var app = builder.Build();
 
@@ -106,7 +107,7 @@ app.MapStaticAssets();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=ProgramacionesAcademicas}/{action=Index}/{id?}")
+    pattern: "{controller=Avisos}/{action=Index}/{id?}")
 
     .WithStaticAssets();
 

@@ -26,6 +26,8 @@ namespace SGPla.Repositories.Implementations
 
             if (filtro.IdEntidadAcademica > 0)
                 query = query.Where(a => a.IdEntidadAcademica == filtro.IdEntidadAcademica);
+            if (filtro.IdAreaAcademica > 0)
+                query = query.Where(a => a.IdEntidadAcademicaNavigation.IdAreaAcademica == filtro.IdAreaAcademica);
             if (!string.IsNullOrEmpty(filtro.Busqueda))
                 query = query.Where(a => a.Folio.Contains(filtro.Busqueda));
             if (filtro.IdPeriodo > 0)

@@ -1,4 +1,5 @@
-﻿@using SGPla.Models.ViewModels.Avisos
+﻿@using SGPla.Commons
+@using SGPla.Models.ViewModels.Avisos
 @model IndexViewModel
 
 <div id="filtrosContainer" style="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease;">
@@ -8,6 +9,16 @@
             Options = Model.Periodos,
             Name = "periodos"
         })
+    @if (Model.Rol.Contains(Constantes.COORDINADOR_DGAA))
+    {
+        @await Component.InvokeAsync("SelectField", new SelectFieldModel
+        {
+            Label = "Entidad Académica:",
+            Options = Model.Entidades,
+            Name = "idEntidadAcademica",
+            SelectedValue = "" + Model.IdEntidadSeleccionada
+        })
+    }
     @await Component.InvokeAsync("DatePicker", new DatePickerModel
         {
             Label = "Fecha Inicio",

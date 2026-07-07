@@ -12,5 +12,6 @@
         public string Articulo { get; set; } = string.Empty;
         public string FechaCreacion { get; set; } = string.Empty;
         public string Estado { get; set; } = string.Empty;
+        public bool Archivado { get; set; } = false;
     }
 }
