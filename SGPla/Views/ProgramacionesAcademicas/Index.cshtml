@@ -2,190 +2,193 @@
 @model IndexViewModel
 
 @{
-    Layout = "_LayoutSuperUsuario";
-    ViewData["Title"] = "Programaciones Académicas";
+	Layout = "_LayoutSuperUsuario";
+	ViewData["Title"] = "Programaciones Académicas";
 }
 
 <div>
-    <form id="filtrosForm" method="get" action="@Url.Action("Index", "ProgramacionesAcademicas")">
-        <!-- Filtros -->
-        <div style="display: flex; flex-direction: column; gap: 10px;">
-            @await Component.InvokeAsync("Boton", new BotonModel
-            {
-                Accion = "ver",
-                Tipo = "secundario",
-                Texto = "Mostrar Filtros",
-                OnClick = "toggleFilters()",
-                Id = "botonFiltros"
-            })
-            <div id="filtrosContainer" style="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease;">
-                @await Component.InvokeAsync("SelectField", new SelectFieldModel
-                {
-                    Id = "Region",
-                    Label = "Región: ",
-                    Options = Model.Regiones,
-                    Name = "Region",
-                    SelectedValue = Model.Region?.ToString(),
-                    Error = ViewData.ModelState["Region"]?.Errors.FirstOrDefault()?.ErrorMessage
-                })
-              
-                <div id="contenedorEntidad">
-                    @await Component.InvokeAsync("SelectField", new SelectFieldModel
-                    {
-                        Id = "Entidad",
-                        Label = "Entidad Académica: ",
-                        Options = Model.Entidades,
-                        Name = "IdEntidadAcademica",
-                        SelectedValue = Model.IdEntidadAcademica?.ToString(),
-                        Error = ViewData.ModelState["IdEntidadAcademica"]?.Errors.FirstOrDefault()?.ErrorMessage
-                    })
-                </div>
+	<form id="filtrosForm" method="get" action="@Url.Action("Index", "ProgramacionesAcademicas")">
+		<!-- Filtros -->
+		<div style="display: flex; flex-direction: column; gap: 10px;">
+			@await Component.InvokeAsync("Boton", new BotonModel
+			{
+				Accion = "ver",
+				Tipo = "secundario",
+				Texto = "Mostrar Filtros",
+				OnClick = "toggleFilters()",
+				Id = "botonFiltros"
+			})
+			<div id="filtrosContainer" style="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease;">
+				@await Component.InvokeAsync("SelectField", new SelectFieldModel
+				{
+					Id = "Region",
+					Label = "Región: ",
+					Options = Model.Regiones,
+					Name = "Region",
+					SelectedValue = Model.Region?.ToString(),
+					Error = ViewData.ModelState["Region"]?.Errors.FirstOrDefault()?.ErrorMessage
+				})
 
-                <div id="contenedorPrograma">
-                    @await Component.InvokeAsync("SelectField", new SelectFieldModel
-                    {
-                        Id = "Programa",
-                        Label = "Programa Educativo: ",
-                        Options = Model.Programas,
-                        Name = "IdProgramaEducativo",
-                        SelectedValue = Model.IdProgramaEducativo?.ToString(),
-                        Error = ViewData.ModelState["IdProgramaEducativo"]?.Errors.FirstOrDefault()?.ErrorMessage
-                    })
-                </div>
+				<div id="contenedorEntidad">
+					@await Component.InvokeAsync("SelectField", new SelectFieldModel
+					{
+						Id = "Entidad",
+						Label = "Entidad Académica: ",
+						Options = Model.Entidades,
+						Name = "IdEntidadAcademica",
+						SelectedValue = Model.IdEntidadAcademica?.ToString(),
+						Error = ViewData.ModelState["IdEntidadAcademica"]?.Errors.FirstOrDefault()?.ErrorMessage
+					})
+				</div>
 
-                <div>
-                    
-                    @await Component.InvokeAsync("SelectField", new SelectFieldModel
-                    {
-                        Id = "Periodo",
-                        Label = "Periodo: ",
-                        Options = Model.Periodos,
-                        Name = "IdPeriodo",
-                        SelectedValue = Model.IdPeriodo?.ToString(),
-                        Error = ViewData.ModelState["IdPeriodo"]?.Errors.FirstOrDefault()?.ErrorMessage
-                    })
-                </div>
-            </div>
-        </div>
+				<div id="contenedorPrograma">
+					@await Component.InvokeAsync("SelectField", new SelectFieldModel
+					{
+						Id = "Programa",
+						Label = "Programa Educativo: ",
+						Options = Model.Programas,
+						Name = "IdProgramaEducativo",
+						SelectedValue = Model.IdProgramaEducativo?.ToString(),
+						Error = ViewData.ModelState["IdProgramaEducativo"]?.Errors.FirstOrDefault()?.ErrorMessage
+					})
+				</div>
+
+				<div>
+
+					@await Component.InvokeAsync("SelectField", new SelectFieldModel
+					{
+						Id = "Periodo",
+						Label = "Periodo: ",
+						Options = Model.Periodos,
+						Name = "IdPeriodo",
+						SelectedValue = Model.IdPeriodo?.ToString(),
+						Error = ViewData.ModelState["IdPeriodo"]?.Errors.FirstOrDefault()?.ErrorMessage
+					})
+				</div>
+			</div>
+		</div>
+
         
+		<!-- Acciones -->
+		<div style="display:flex; gap:10px; padding-bottom:20px; padding-top:20px; align-items:center; justify-content:space-between">
+			@await Component.InvokeAsync("Buscador", new BuscadorModel
+			{
+				Name = "busqueda",
+				Placeholder = "Buscar programacion academica...",
+				Action = Url.Action("Index", "ProgramacionesAcademicas"),
+				Method = "get",
+				Value = Context.Request.Query["busqueda"]
+			})
+			<a href="@Url.Action("CargarProgramacionAcademicaPaso1", "ProgramacionesAcademicas")" style="display: inline-block; text-decoration: none;">
+				@await Component.InvokeAsync("Boton", new
+				{
+					Accion = "Agregar",
+					Texto = "Cargar Programación Académica"
+				})
+			</a>
+		</div>
 
-        <!-- Acciones -->
-        <div style="display:flex; gap:10px; padding-bottom:20px; padding-top:20px; align-items:center; justify-content:space-between">
-            @await Component.InvokeAsync("Buscador", new BuscadorModel
-            {
-                Name = "busqueda",
-                Placeholder = "Buscar programacion academica...",
-                Action = Url.Action("Index", "ProgramacionesAcademicas"),
-                Method = "get",
-                Value = Context.Request.Query["busqueda"]
-            })
-            <a href="@Url.Action("CargarProgramacionAcademicaPaso1", "ProgramacionesAcademicas")" style="display: inline-block; text-decoration: none;">
-                @await Component.InvokeAsync("Boton", new
-                {
-                    Accion = "Agregar",
-                    Texto = "Cargar Programación Académica"
-                })
-            </a>
-        </div>
+		<!-- Campos ocultos para paginación -->
+		<input type="hidden" name="pagina" id="paginaHidden" value="@Model.PaginaActual" />
+		<input type="hidden" name="cantidad" id="cantidadHidden" value="@Model.CantidadPorPagina" />
 
-        <!-- Campos ocultos para paginación -->
-        <input type="hidden" name="pagina" id="paginaHidden" value="@Model.PaginaActual" />
-        <input type="hidden" name="cantidad" id="cantidadHidden" value="@Model.CantidadPorPagina" />
+	</form>
 
-    </form>
+	<!-- Tabla con Datos -->
+	<div style="display:flex; gap:10px; padding-top:0px;justify-content:left">
+		@await Component.InvokeAsync("Table", Model.Table)
+	</div>
 
-    <!-- Tabla con Datos -->
-     <div style="display:flex; gap:10px; padding-top:0px;justify-content:left">
-        @await Component.InvokeAsync("Table", Model.Table)
-    </div> 
+	
 
+</div>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
+	document.addEventListener("DOMContentLoaded", function () {
 
-        const region = document.querySelector("[name='Region']");
-        const entidad = document.querySelector("[name='IdEntidadAcademica']");
-        const programa = document.querySelector("[name='IdProgramaEducativo']");
-        const periodo = document.querySelector("[name='IdPeriodo']");
-        const form = document.getElementById("filtrosForm");
+		const region = document.querySelector("[name='Region']");
+		const entidad = document.querySelector("[name='IdEntidadAcademica']");
+		const programa = document.querySelector("[name='IdProgramaEducativo']");
+		const periodo = document.querySelector("[name='IdPeriodo']");
+		const form = document.getElementById("filtrosForm");
 
-        programa?.addEventListener("change", () => form.submit());
-        periodo?.addEventListener("change", () => form.submit());
+		programa?.addEventListener("change", () => form.submit());
+		periodo?.addEventListener("change", () => form.submit());
 
-        async function cargarEntidades() {
-            if (!region || !entidad) return;
+		async function cargarEntidades() {
+			if (!region || !entidad) return;
 
-            const reg = region.value;
-            const defaultOption = entidad.options[0];
+			const reg = region.value;
+			const defaultOption = entidad.options[0];
 
-            if (!reg) {
-                entidad.innerHTML = "";
-                entidad.appendChild(defaultOption);
-                entidad.selectedIndex = 0;
-                return;
-            }
+			if (!reg) {
+				entidad.innerHTML = "";
+				entidad.appendChild(defaultOption);
+				entidad.selectedIndex = 0;
+				return;
+			}
 
-            try {
-                const response = await fetch(
-                    `/ProgramacionesAcademicas/ObtenerEntidades?region=${encodeURIComponent(reg)}`
-                );
-                const data = await response.json();
+			try {
+				const response = await fetch(
+					`/ProgramacionesAcademicas/ObtenerEntidades?region=${encodeURIComponent(reg)}`
+				);
+				const data = await response.json();
 
-                entidad.innerHTML = "";
-                entidad.appendChild(defaultOption);
+				entidad.innerHTML = "";
+				entidad.appendChild(defaultOption);
 
-                data.forEach(e => {
-                    const option = document.createElement("option");
-                    option.value = e.value;
-                    option.text = e.text;
-                    entidad.appendChild(option);
-                });
-            } catch (error) {
-                console.error("Error cargando entidades:", error);
-            }
-        }
+				data.forEach(e => {
+					const option = document.createElement("option");
+					option.value = e.value;
+					option.text = e.text;
+					entidad.appendChild(option);
+				});
+			} catch (error) {
+				console.error("Error cargando entidades:", error);
+			}
+		}
 
-        async function cargarProgramas() {
-            if (!entidad || !programa) return;
+		async function cargarProgramas() {
+			if (!entidad || !programa) return;
 
-            const ent = entidad.value;
-            const defaultOption = programa.options[0];
+			const ent = entidad.value;
+			const defaultOption = programa.options[0];
 
-            if (!ent) {
-                programa.innerHTML = "";
-                programa.appendChild(defaultOption);
-                programa.selectedIndex = 0;
-                return;
-            }
+			if (!ent) {
+				programa.innerHTML = "";
+				programa.appendChild(defaultOption);
+				programa.selectedIndex = 0;
+				return;
+			}
 
-            try {
-                const response = await fetch(
-                    `/ProgramacionesAcademicas/ObtenerProgramas?entidad=${encodeURIComponent(ent)}`
-                );
-                const data = await response.json();
+			try {
+				const response = await fetch(
+					`/ProgramacionesAcademicas/ObtenerProgramas?entidad=${encodeURIComponent(ent)}`
+				);
+				const data = await response.json();
 
-                programa.innerHTML = "";
-                programa.appendChild(defaultOption);
+				programa.innerHTML = "";
+				programa.appendChild(defaultOption);
 
-                data.forEach(e => {
-                    const option = document.createElement("option");
-                    option.value = e.value;
-                    option.text = e.text;
-                    programa.appendChild(option);
-                });
-            } catch (error) {
-                console.error("Error cargando programas:", error);
-            }
-        }
+				data.forEach(e => {
+					const option = document.createElement("option");
+					option.value = e.value;
+					option.text = e.text;
+					programa.appendChild(option);
+				});
+			} catch (error) {
+				console.error("Error cargando programas:", error);
+			}
+		}
 
-        region?.addEventListener("change", cargarEntidades);
-        entidad?.addEventListener("change", cargarProgramas);
-    });
+		region?.addEventListener("change", cargarEntidades);
+		entidad?.addEventListener("change", cargarProgramas);
+	});
 </script>
 
 <script>
-    window.configFiltros = {
-        storageKey: 'filtrosVisibles_programacionesAcademicas'
-    };
+	window.configFiltros = {
+		storageKey: 'filtrosVisibles_programacionesAcademicas'
+	};
 </script>
 <script src="js/filtros.js"></script>

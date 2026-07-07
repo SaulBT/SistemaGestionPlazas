@@ -25,6 +25,15 @@
                 <p id="@Model.Id-mensaje">@Model.Mensaje</p>
             }
 
+            @if (Model.SolicitarMotivo)
+            {
+                <div class="modal-motivo" style="margin-top:10px;">
+                    <label for="@Model.Id-motivo">@Model.MotivoLabel</label>
+                    <textarea id="@Model.Id-motivo" class="form-control" rows="3"
+                              placeholder="@Model.MotivoPlaceholder"></textarea>
+                </div>
+            }
+
         </div>
 
         <!-- Footer: solo aparece si es tipo "confirm" -->

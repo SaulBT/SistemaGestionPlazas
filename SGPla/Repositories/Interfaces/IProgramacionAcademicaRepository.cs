@@ -13,6 +13,17 @@ namespace SGPla.Repositories.Interfaces
 
         Task<List<OfertaDTO>> ObtenerOfertasGuardadasAsync(int idEntidadAcademica, int idProgramaEducativo, int idPeriodo);
 
+        Task<OfertaDTO?> ObtenerOfertaPorId(int idOferta);
 
+        Task<bool> EditarOfertaAsync(int idOferta, OfertaDTO ofertaDTO);
+
+        Task<List<Log>> ObtenerLogsPorOfertaAsync(int idOferta);
+
+        Task EliminarOfertaAsync(int idOferta);
+
+        Task CambiarInclusionOfertaAsync(int idOferta, bool incluir);
+
+        Task CambiarAVacanteAsync(int idOferta, string justificacion);
     }
+
 }

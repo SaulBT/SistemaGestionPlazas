@@ -1,5 +1,6 @@
 ﻿namespace SGPla.Commons
 {
+
     public class Constantes
     {
         //Metadatos
@@ -106,5 +107,18 @@
         public const string TECNICO_ACADEMICO = "Técnico Académico";
         public const string DOCENTE_POR_ASIGNATURA = "Docente por Asignatura";
         public static List<string> PUESTOS = [INVESTIGADOR, DOCENTE, TECNICO_ACADEMICO, DOCENTE_POR_ASIGNATURA];
+
+        public const string CONTRATACION_IOD = "IOD";
+        public const string CONTRATACION_IPP = "IPP";
+        public static List<string> TIPOS_CONTRATACION = [CONTRATACION_IOD, CONTRATACION_IPP];
+
+
+ 
+        // Mensajes historial
+
+        public const string HISTORIAL_CREADO_VACANTE = "Se creó la oferta como vacante.";
+        public const string HISTORIAL_CREADO_ASIGNADA = "Se creó la oferta como asignada.";
+        public const string HISTORIAL_MODIFICADO = "Se modificó la oferta.";
+        public const string HISTORIAL_JUSTIFICACION = "Devuelta a Vacante por el motivo: ";
     }
 }

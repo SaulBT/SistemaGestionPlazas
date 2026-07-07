@@ -186,7 +186,6 @@ namespace SGPla.Controllers
             }
         }
 
-        // Buscar (llamado desde EntidadesAcademicas)
         [HttpGet]
         public IActionResult Buscar(BuscarProgramaEducativoDTO filtro)
         {
@@ -199,7 +198,6 @@ namespace SGPla.Controllers
             });
         }
 
-        // Crear
 
         public async Task<IActionResult> CrearProgramaEducativo(string? region, int? idAreaAcademica, int? idEntidadAcademica)
         {

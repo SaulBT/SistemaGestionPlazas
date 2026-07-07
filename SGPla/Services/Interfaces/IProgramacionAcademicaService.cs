@@ -20,6 +20,19 @@ public interface IProgramacionAcademicaService
 
     Task<List<OfertaDTO>> ObtenerOfertasGuardadasAsync(int idEntidadAcademica, int idProgramaEducativo, int idPeriodo);
 
+    Task<OfertaDTO?> ObtenerOfertaPorId(int idOferta);
+
+    Task<bool> EditarOfertaAsync (int idOferta, OfertaDTO ofertaDTO);
+
+
+    Task<List<LogDTO>> ObtenerHistorialPorIdOferta(int idOferta);
+
+    Task<List<Log>> EliminarOfertaAsync(int idOferta);
+
+
+    Task CambiarInclusionOfertaAsync(int idOferta, bool incluir);
+
+    Task CambiarAVacanteAsync(int idOferta, string justificacion);
 
 }
 

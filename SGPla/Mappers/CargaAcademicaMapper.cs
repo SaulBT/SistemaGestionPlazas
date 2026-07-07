@@ -17,7 +17,8 @@ namespace SGPla.Mappers
                 Plaza = NormalizarOpcional(dto.Plaza),
                 TipoContratacion = ExtraerTipoContratacion(dto.TipoContratacion),
                 HorasPago = dto.HorasPago,
-                Imparte = dto.Imparte
+                Imparte = dto.Imparte,
+                
             };
         }
 

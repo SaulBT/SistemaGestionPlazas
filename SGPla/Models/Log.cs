@@ -9,7 +9,9 @@ public partial class Log
 
     public int IdOferta { get; set; }
 
-    public string Mensaje { get; set; } = null!;
+    public string Mensaje { get; set; } = string.Empty;
+
+    public DateTime Fecha { get; set; }
 
     public virtual Oferta IdOfertaNavigation { get; set; } = null!;
 }

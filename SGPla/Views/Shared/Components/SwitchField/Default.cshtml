@@ -2,22 +2,24 @@
 
 <div class="switch-field">
 
-    @if (!string.IsNullOrWhiteSpace(Model.Label))
-    {
-        @if (Model.IsLabelVisible)
-        {
-            <span class="text-wrapper">@Model.Label</span>
-        }
-    }
+	@if (!string.IsNullOrWhiteSpace(Model.Label))
+	{
+		@if (Model.IsLabelVisible)
+		{
+			<span class="text-wrapper">@Model.Label</span>
+		}
+	}
 
-    <label class="switch">
-        <input type="checkbox"
-               id="@Model.Id"
-               name="@Model.Name"
-        @(Model.Checked ? "checked" : null)
-        @(Model.Disabled ? "disabled" : null) />
+	<label class="switch">
+		<input type="checkbox"
+			   id="@Model.Id"
+			   name="@Model.Name"
+			   data-id="@Model.Id"
+		@(Model.Checked ? "checked" : "")
+		@(Model.Disabled ? "disabled" : "")
+			   onchange="@Model.OnChange" />
 
-        <span class="slider"></span>
-    </label>
+		<span class="slider"></span>
+	</label>
 
 </div>

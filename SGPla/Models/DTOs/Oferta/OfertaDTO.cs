@@ -7,6 +7,10 @@
 
         public override string ToString() =>
             $"{Inicio:hh\\:mm}-{Fin:hh\\:mm}";
+
+        public string? Salon { get; set; }
+
+        public string Dia   { get; set; }
     }
 
     public class OfertaDTO
@@ -51,6 +55,8 @@
         public int IdProgramaEducativo { get; set; }
 
         public string? Region { get; set; }
+
+        public string Modalidad { get; set; } 
 
     }
 }

@@ -79,7 +79,6 @@ builder.Services.AddScoped<IDocenteRepository, DocenteRepository>();
 
 builder.Services.AddScoped<IProgramacionAcademicaValidator, ProgramacionAcademicaValidator>();
 builder.Services.AddScoped<IProgramacionAcademicaService, ProgramacionAcademicaService>();
-//builder.Services.AddScoped<IProgramacionAcademicaRepository, ProgramacionAcademicaRepository>();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -92,7 +91,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.AccessDeniedPath = "/Account/AccesoDenegado";
     });
 
-builder.Services.AddAuthorization(); // ← faltaba esto
+builder.Services.AddAuthorization(); 
 
 var app = builder.Build();
 
@@ -114,7 +113,7 @@ app.MapStaticAssets();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
+    pattern: "{controller=DevLogin}/{action=Index}/{id?}")
     .WithStaticAssets();
 
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);

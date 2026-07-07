@@ -1,4 +1,6 @@
-﻿public class TableModel
+﻿using DocumentFormat.OpenXml.Bibliography;
+
+public class TableModel
 {
     public string TableId { get; set; } = "tabla";
     public List<string> Headers { get; set; } = new();
@@ -25,11 +27,16 @@ public class TableCellModel
 
 public class TableActionModel
 {
+    public string Id {  get; set; } = string.Empty;
     public string Accion { get; set; } = ""; // editar, eliminar, etc.
     public string? Url { get; set; } = "";
 
     public Dictionary<string, string>? Data { get; set; }
     public string? OnClick { get; set; } = "";
+
+    public bool Checked { get; set; }
+
+    public string? OnChange { get; set; }   
 }
 
 

@@ -38,7 +38,7 @@ namespace SGPla.Mappers
                 Nrc = dto.NRC,
                 Plaza = dto.Plaza,
                 TipoContratacion = dto.TC,
-                Incluida = false,
+                Incluida = dto.Incluida,
                 Hsm = dto.HorasPago,
                 EstadoSolicitudApertura = "Aceptada",
                 IdArticulo = dto.Articulo,

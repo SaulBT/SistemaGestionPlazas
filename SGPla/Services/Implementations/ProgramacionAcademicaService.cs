@@ -46,12 +46,9 @@ namespace SGPla.Services.Implementations
 
            ofertas.ForEach(o => o.TC = tipoContratacion);
 
-
-
             //await _programacionAcademicaValidator.ValidarProgramas(ofertas);
             //await _programacionAcademicaValidator.ValidarExperiencias(ofertas);
             //await _programacionAcademicaValidator.ValidarDocentes(ofertas);
-
 
             return ofertas;
         }
@@ -258,6 +255,51 @@ namespace SGPla.Services.Implementations
         {
             return await _programacionAcademicaRepository
                 .ObtenerOfertasGuardadasAsync(idEntidadAcademica, idProgramaEducativo, idPeriodo);
+        }
+
+        public async Task<OfertaDTO?> ObtenerOfertaPorId(int idOferta)
+        {
+            return await _programacionAcademicaRepository.ObtenerOfertaPorId(idOferta);
+        }
+
+        public async Task<bool> EditarOfertaAsync(int idOferta, OfertaDTO ofertaDTO)
+        {
+            return await _programacionAcademicaRepository.EditarOfertaAsync(idOferta, ofertaDTO);
+        }
+
+        public async Task<List<LogDTO>> ObtenerHistorialPorIdOferta(int idOferta)
+        {
+            var movimientos = _programacionAcademicaRepository.ObtenerLogsPorOfertaAsync(idOferta);
+
+            List<LogDTO> logs = new List<LogDTO>();
+
+            foreach (var movimiento in await movimientos)
+            {
+                logs.Add(new LogDTO
+                {
+                    Fecha = movimiento.Fecha,
+                    Mensaje = movimiento.Mensaje
+                });
+            }
+            return logs;
+        }
+
+        public async Task<List<Log>> EliminarOfertaAsync(int idOferta)
+        {
+            await _programacionAcademicaRepository.EliminarOfertaAsync(idOferta);
+            return await _programacionAcademicaRepository.ObtenerLogsPorOfertaAsync(idOferta);
+        }
+
+        public async Task CambiarInclusionOfertaAsync(int idOferta, bool incluir)
+        {
+            bool cambio = !incluir;
+
+            await _programacionAcademicaRepository.CambiarInclusionOfertaAsync(idOferta, cambio);
+        }
+
+        public async Task CambiarAVacanteAsync(int idOferta, string justificacion)
+        {
+            await _programacionAcademicaRepository.CambiarAVacanteAsync(idOferta, justificacion);
         }
     }
 }

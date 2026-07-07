@@ -573,6 +573,9 @@ public partial class GestionDePlazasDbContext : DbContext
             entity.HasIndex(e => e.IdOferta, "IX_Log_idOferta");
 
             entity.Property(e => e.IdLog).HasColumnName("idLog");
+            entity.Property(e => e.Fecha)
+                .HasColumnType("datetime")
+                .HasColumnName("fecha");
             entity.Property(e => e.IdOferta).HasColumnName("idOferta");
             entity.Property(e => e.Mensaje)
                 .IsUnicode(false)
