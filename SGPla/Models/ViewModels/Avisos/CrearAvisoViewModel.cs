@@ -40,8 +40,8 @@ namespace SGPla.Models.ViewModels.Avisos
         //Tablas
 
         public TableModel TablaHorario { get; set; }
-
-        public List<TableModel> TablasCarreras { get; set; }
+        public bool ExistenOfertas { get; set; }
+        public List<PlanEstudiosAvisoViewModel> PlanesEstudios { get; set; }
 
         //Combos 
 
@@ -54,4 +54,11 @@ namespace SGPla.Models.ViewModels.Avisos
         [ValidateNever]
         public List<OptionModel> Modalidades { get; set; }
     }
+
+    public class PlanEstudiosAvisoViewModel
+    {
+        public string Nombre {  get; set; }
+        public TableModel Tabla {  get; set; }
+    }
+        
 }

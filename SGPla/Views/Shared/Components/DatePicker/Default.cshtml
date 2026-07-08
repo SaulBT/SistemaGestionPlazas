@@ -1,6 +1,6 @@
 ﻿@model DatePickerModel
 
-<div class="date-field">
+<div class="date-field @(Model.Flexible ? "flexible" : "")">
     @if (!string.IsNullOrWhiteSpace(Model.Label))
     {
         <label class="text-wrapper" for="@Model.Id">

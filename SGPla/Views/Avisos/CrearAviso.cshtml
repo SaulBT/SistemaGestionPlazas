@@ -1,8 +1,9 @@
-﻿@using SGPla.Models.ViewModels.Avisos
+﻿@using SGPla.Commons
+@using SGPla.Models.ViewModels.Avisos
 @model CrearAvisoViewModel
 @{
     Layout = "_LayoutEntidadAcademica";
-    ViewData["Title"] = "Avisos";
+    ViewData["Title"] = "Crear Aviso";
     ViewBag.RegresarUrl = Url.Action("Index", "Avisos");
 }
 
@@ -12,14 +13,15 @@
 
         <!-- Datos Personales -->
         <div class="cabecera-seccion mb-3">
-            <h5>Datos Generales</h5>
-            <div style="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease;">
+            <h4 style="margin-bottom: 25px">Datos Generales</h4>
+            <div style="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease; width: stretch; justify-content: space-evenly">
                 @await Component.InvokeAsync("SelectField", new SelectFieldModel
                 {
                     Label = "Artículo:",
                     Options = Model.Articulos,
                     Name = "IdArticulo",
-                    Error = ViewData.ModelState["IdArticulo"]?.Errors.FirstOrDefault()?.ErrorMessage
+                    Error = ViewData.ModelState["IdArticulo"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                    Flexible = true
                 })
 
                 @await Component.InvokeAsync("SelectField", new SelectFieldModel
@@ -27,13 +29,15 @@
                     Label = "Periodo escolar:",
                     Options = Model.Periodos,
                     Name = "IdPeriodo",
-                    Error = ViewData.ModelState["IdPeriodo"]?.Errors.FirstOrDefault()?.ErrorMessage
+                    Error = ViewData.ModelState["IdPeriodo"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                    Flexible = true
                 })
 
                 @await Component.InvokeAsync("DatePicker", new DatePickerModel
                 {
                     Label = "Fecha a ocupar vacantes:",
                     Name = "FechaVacantes",
+                    Flexible = true
                 })
 
                 
@@ -41,37 +45,92 @@
         </div>
 
         <!-- Recepción de documentos -->
-        <div class="cabecera-seccion mb-3">
-            <h5>Recepción de Documentos</h5>
-            <div style="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease;">
+        <div class="cabecera-seccion mb-3" >
+            <h4 style="margin-bottom: 25px">Recepción de Documentos</h4>
+            <div style="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease; width: stretch; justify-content: space-evenly">
                 @await Component.InvokeAsync("SelectField", new SelectFieldModel
                         {
                             Label = "Modalidad de entrega:",
                             Options = Model.Modalidades,
                             Name = "Modalidad",
-                            Error = ViewData.ModelState["Modalidad"]?.Errors.FirstOrDefault()?.ErrorMessage
+                            Error = ViewData.ModelState["Modalidad"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                            Flexible = true
                         })
 
                 @await Component.InvokeAsync("InputField", new InputFieldModel
                         {
-                            Label = "Lugar:",
-                            Id = "Lugar",
-                            Name = "Lugar",
-                            Error = ViewData.ModelState["Lugar"]?.Errors.FirstOrDefault()?.ErrorMessage
+                            Label = "Correo:",
+                            Id = "Correo",
+                            Name = "Correo",
+                            Error = ViewData.ModelState["Correo"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                            Flexible = true
                         })
+
+                <div id="contenedorLugar" style="flex:1; display:none">
+                    @await Component.InvokeAsync("InputField", new InputFieldModel
+                    {
+                        Label = "Lugar:",
+                        Id = "Lugar",
+                        Name = "Lugar",
+                        Error = ViewData.ModelState["Lugar"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                        Flexible = true
+                    })
+                </div>
+                
+                
+            </div>
+            <div style="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease; width: stretch; justify-content: space-evenly">
                 @await Component.InvokeAsync("DatePicker", new DatePickerModel
                 {
                     Label = "Fecha de Consejo Técnico",
-                    Name = "FechaCT"
+                    Name = "FechaCT",
+                    Flexible = true
                 })
+                <div style="flex: 1"></div> 
+                <div style="flex: 1"></div>
+            </div>
+            
+
+            <div style="display: flex; justify-content: space-between; padding-bottom: 10px; padding-top: 10px">
+                <div class="text-wrapper">Horarios:</div>
+                @await Component.InvokeAsync("Boton", new 
+                        {
+                            Accion = "Agregar",
+                            Texto = "Agregar Horario",
+                            OnClick = "abrirModalCrearHorario",
+                            Tipo = "secundario"
+                        })
             </div>
             @await Component.InvokeAsync("Table", Model.TablaHorario)
+            <br/>
         </div>
 
         <!-- Experiencias educativas -->
         <div class="cabecera-seccion mb-3">
+            <h4 style="margin-bottom: 25px">Experiencias Educativas Vacantes:</h4>
+            <!-- Aqui van las tablas de las carreras -->
+            <div id="contenedorOfertas" style="margin-top:20px; margin-bottom:50px">
+                <div id="IdExistenOfertas" class="text-error-wrapper" style="margin-bottom:20px; margin-left:10px">Seleccione el periodo y el artículo de procedencia para las ofertas.</div>
+            </div>
+            
+
+            @await Component.InvokeAsync("TextAreaField", new TextAreaFieldModel
+                    {
+                        Label = "Requisitos:",
+                        Value = Constantes.REQUISITOS_AVISO,
+                        Rows = 13
+                    })
         </div>
 
 
     </form>
 </div>
+
+
+<script>
+    const UrlActualizarOfertas = '@Url.Action("ActualizarOfertas", "Avisos")';
+</script>
+@section Scripts {
+    <script src="~/js/aviso.js"></script>
+}
+                  

@@ -83,6 +83,8 @@ builder.Services.AddScoped<IProgramacionAcademicaService, ProgramacionAcademicaS
 builder.Services.AddScoped<IAvisoService, AvisoService>();
 builder.Services.AddScoped<IAvisoRepository, AvisoRepository>();
 
+builder.Services.AddScoped<IOfertaRepository, OfertaRepository>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
