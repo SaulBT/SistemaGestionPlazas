@@ -1,5 +1,197 @@
-﻿@model AvisoTarjetaModel
+﻿@using SGPla.Commons
+@model AvisoTarjetaModel
 
-<div>
+<div class="aviso-tarjeta">
+	<div class="aviso-tarjeta-contenido">
+		<div class="aviso-tarjeta-datos">
+			<div>
+				<strong>Folio: </strong>@Model.Folio
+			</div>
 
+			<div>
+				<strong>Periodo: </strong>@Model.Periodo
+			</div>
+
+			<div>
+				<strong>Artículo: </strong>@Model.Articulo
+			</div>
+		</div>
+		@switch (Model.Estado)
+		{
+			case Constantes.CREADO:
+				<div class="aviso-tarjeta-estado-texto-creado">
+					@Model.Estado
+					<span class="estado-dot-creado"></span>
+				</div>
+				break;
+			case Constantes.EN_REVISION_POR_DGAA:
+				<div class="aviso-tarjeta-estado-texto-revision">
+					@Model.Estado
+					<span class="estado-dot-revision"></span>
+				</div>
+				break;
+			case Constantes.AVALADO_POR_DGAA:
+				<div class="aviso-tarjeta-estado-texto-avalado">
+					@Model.Estado
+					<span class="estado-dot-avalado"></span>
+				</div>
+				break;
+			case Constantes.DEVUELTO_POR_DGAA:
+				<div class="aviso-tarjeta-estado-texto-devuelto">
+					@Model.Estado
+					<span class="estado-dot-devuelto"></span>
+				</div>
+				break;
+			case Constantes.FIRMADO:
+				<div class="aviso-tarjeta-estado-texto-firmado">
+					@Model.Estado
+					<span class="estado-dot-firmado"></span>
+				</div>
+				break;
+			case Constantes.PUBLICADO:
+				<div class="aviso-tarjeta-estado-texto-publicado">
+					@Model.Estado
+					<span class="estado-dot-publicado"></span>
+				</div>
+				break;
+			case Constantes.ACTA_DE_CT_CREADA:
+				<div class="aviso-tarjeta-estado-texto-acta">
+					@Model.Estado
+					<span class="estado-dot-acta"></span>
+				</div>
+				break;
+		}
+	</div>
+
+	<div class="aviso-tarjeta-fecha">
+		Fecha de creación: @Model.FechaCreacion
+	</div>
+
+	<div class="aviso-tarjeta-acciones">
+		@switch (Model.Estado)
+		{
+			case Constantes.CREADO:
+				@await Component.InvokeAsync("Boton", new
+				{
+					texto = "Enviar a revisión por DGAA",
+					accion = "enviar",
+					tipo = "secundario"
+				})
+				@await Component.InvokeAsync("Boton", new
+				{
+					texto = "Ver aviso",
+					tipo = "secundario"
+				})
+				@await Component.InvokeAsync("Boton", new
+				{
+					accion = "editar",
+					fondo = false
+				})
+				@await Component.InvokeAsync("Boton", new
+				{
+					accion = "eliminar",
+					fondo = false
+				})
+				break;
+
+			case Constantes.EN_REVISION_POR_DGAA:
+				@await Component.InvokeAsync("Boton", new
+				{
+					texto = "Ver aviso",
+					tipo = "secundario"
+				})
+				break;
+
+			case Constantes.AVALADO_POR_DGAA:
+				@await Component.InvokeAsync("Boton", new
+				{
+					texto = "Firmar",
+					accion = "firmar",
+					tipo = "secundario"
+				})
+				@await Component.InvokeAsync("Boton", new
+				{
+					texto = "Ver comentarios",
+					tipo = "secundario"
+				})
+				@await Component.InvokeAsync("Boton", new
+				{
+					texto = "Ver aviso",
+					tipo = "secundario"
+				})
+				break;
+
+			case Constantes.DEVUELTO_POR_DGAA:
+				@await Component.InvokeAsync("Boton", new
+				{
+					texto = "Enviar a revisión por DGAA",
+					accion = "enviar",
+					tipo = "secundario"
+				})
+				@await Component.InvokeAsync("Boton", new
+				{
+					texto = "Ver comentarios",
+					tipo = "secundario"
+				})
+				@await Component.InvokeAsync("Boton", new
+				{
+					texto = "Ver aviso",
+					tipo = "secundario"
+				})
+				@await Component.InvokeAsync("Boton", new
+				{
+					accion = "editar",
+					fondo = false
+				})
+				break;
+
+			case Constantes.FIRMADO:
+				@await Component.InvokeAsync("Boton", new
+				{
+					texto = "Publicar",
+				})
+				@await Component.InvokeAsync("Boton", new
+				{
+					texto = "Ver aviso",
+					tipo = "secundario"
+				})
+				break;
+
+			case Constantes.PUBLICADO:
+				@await Component.InvokeAsync("Boton", new
+				{
+					texto = "Generar Acta CT",
+					tipo = "secundario"
+				})
+				@await Component.InvokeAsync("Boton", new
+				{
+					texto = "Gestionar solicitantes",
+					tipo = "secundario",
+					accion = "agregar"
+				})
+				@await Component.InvokeAsync("Boton", new
+				{
+					texto = "Ver Aviso",
+					tipo = "secundario"
+				})
+				break;
+			case Constantes.ACTA_DE_CT_CREADA:
+				@await Component.InvokeAsync("Boton", new
+				{
+					texto = "Ver Acta",
+					tipo = "secundario"
+				})
+				@await Component.InvokeAsync("Boton", new
+				{
+					texto = "Ver Aviso",
+					tipo = "secundario"
+				})
+				@await Component.InvokeAsync("Boton", new
+				{
+					accion = "archivar",
+					fondo = false
+				})
+				break;
+		}
+	</div>
 </div>

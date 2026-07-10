@@ -1,0 +1,150 @@
+﻿.aviso-tarjeta {
+    border: 1px solid #d9d9d9;
+    background: #fff;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.aviso-tarjeta-contenido {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1rem 2rem 0 2rem;
+}
+
+.aviso-tarjeta-datos {
+    display: flex;
+    gap: 3rem;
+    flex-wrap: wrap;
+    font-size: 15px;
+}
+
+.aviso-tarjeta-fecha {
+    padding: 0.5rem 2rem 1rem;
+    font-size: 15px;
+}
+/* ======= */
+/* ESTADOS */
+/* ======= */
+
+/* Creado */
+.aviso-tarjeta-estado-texto-creado {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #4e83ff;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.estado-dot-creado {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #c8d9ff;
+}
+
+/* En revisión */
+.aviso-tarjeta-estado-texto-revision {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #C86400;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.estado-dot-revision {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #FFDAB5;
+}
+
+/* Avalado */
+.aviso-tarjeta-estado-texto-avalado {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #A3A151;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.estado-dot-avalado {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #FBF77C;
+}
+
+/* Devuelto */
+.aviso-tarjeta-estado-texto-devuelto {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #A66263;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.estado-dot-devuelto {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #FF9799;
+}
+
+/* Firmado */
+.aviso-tarjeta-estado-texto-firmado {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #4D6BA6;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.estado-dot-firmado {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #76A4FF;
+}
+
+/* Publicado */
+.aviso-tarjeta-estado-texto-publicado {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #6DA351;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.estado-dot-publicado {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #A7FB7C;
+}
+
+/* Acta de CT */
+.aviso-tarjeta-estado-texto-acta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #2A5D4A;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.estado-dot-acta {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #418F72;
+}
+
+.aviso-tarjeta-acciones {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    padding: 0.5rem 0.5rem;
+    background: #f7f7f7;
+    border-top: 1px solid #ececec;
+}
