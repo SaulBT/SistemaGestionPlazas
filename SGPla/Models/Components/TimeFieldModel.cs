@@ -11,5 +11,6 @@
         public string Max { get; set; } = string.Empty;
 
         public bool Disabled { get; set; }
+        public string? Error { get; set; }
     }
 }

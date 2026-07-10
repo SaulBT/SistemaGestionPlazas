@@ -1,6 +1,7 @@
 ﻿@model TimeFieldModel
 
 <div class="time-field">
+
     @if (!string.IsNullOrWhiteSpace(Model.Label))
     {
         <label class="text-wrapper" for="@Model.Id">
@@ -14,6 +15,14 @@
            value="@Model.Value"
            min="@Model.Min"
            max="@Model.Max"
-           class="input time-input"
+           class="input time-input @( !string.IsNullOrEmpty(Model.Error) ? "input-error" : "" )"
            disabled="@(Model.Disabled ? "disabled" : null)" />
+
+    @if (!string.IsNullOrEmpty(Model.Error))
+    {
+        <span id="@Model.Id-Error" class="input-error-text">
+            @Model.Error
+        </span>
+    }
+
 </div>

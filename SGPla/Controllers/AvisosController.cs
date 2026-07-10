@@ -19,6 +19,7 @@ namespace SGPla.Controllers
         private readonly ILogger<AvisosController> _logger;
         private int _paginaActual = 1;
         private const int idEntidadAcademica = 1; //TODO: reemplazar al tener login
+        
 
         public AvisosController(IAvisoService avisoService, IPeriodoEscolarService periodoService, IArticuloService articuloService, ILogger<AvisosController> logger)
         {
@@ -180,7 +181,7 @@ namespace SGPla.Controllers
                 };
             }catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al llenar la tabla de horarios");
+                _logger.LogError(ex, "Error al llenar la tabla de ofertas");
                 TempData["Error"] = ex.Message;
 
                 return new TableModel();
@@ -241,6 +242,63 @@ namespace SGPla.Controllers
         {
             var ofertas = await CargarPlanesEstudios(idPeriodo, idArticulo);
             return PartialView("_TablasOfertas", ofertas);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AgregarHorario([FromBody] List<CrearHorarioAvisoDTO> horarios)
+        {
+            var tabla = await ActualizarHorarios(horarios);
+
+            return PartialView("_Horarios", tabla);
+        }
+
+        public async Task<TableModel> ActualizarHorarios(List<CrearHorarioAvisoDTO> horarios)
+        {
+            try
+            {
+                List<string> headers = new List<string> { "Día", "Horario", "Acciones" };
+                if (horarios.Count == 0)
+                    return TablaFactory.GenerarTablaConMensajeSinPaginacion(headers, "Ingrese como mínimo 1 horario.");
+                return new TableModel
+                {
+                    Headers = headers,
+                    Rows = horarios.Select(h => new TableRowModel
+                    {
+                        Cells = new List<TableCellModel>
+                        {
+                            new() { Value = h.Fecha},
+                            new() { Value = h.HoraInicio +" - "+h.HoraTermino },
+                            new()
+                            {
+                                Actions = new List<TableActionModel>
+                                {
+                                    new TableActionModel
+                                    {
+                                        Accion = "Editar",
+                                        OnClick = $"editarHorario()"
+                                    },
+                                    new TableActionModel
+                                    {
+                                        Accion = "Eliminar",
+                                        OnClick = $"eliminarHorario()"
+                                    }
+                                }
+                            }
+                        }
+                    }).ToList(),
+                    Pagination = new PaginationInfo
+                    {
+                        PaginationMode = "NA"
+                    }
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al llenar la tabla de horarios");
+                TempData["Error"] = ex.Message;
+
+                return new TableModel();
+            }
         }
     }
 }

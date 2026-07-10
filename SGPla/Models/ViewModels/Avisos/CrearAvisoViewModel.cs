@@ -29,7 +29,7 @@ namespace SGPla.Models.ViewModels.Avisos
         public string Lugar { get; set; }
 
         [Required(ErrorMessage = campo_obligatorio)]
-        public List<CrearHorarioDTO> Horarios { get; set; }
+        public List<CrearHorarioAvisoDTO> Horarios { get; set; }
 
         [Required(ErrorMessage = campo_obligatorio)]
         public string FechaCT { get; set; }
@@ -53,6 +53,21 @@ namespace SGPla.Models.ViewModels.Avisos
 
         [ValidateNever]
         public List<OptionModel> Modalidades { get; set; }
+
+        //Datos formularios
+        public FormularioHorarioViewModel Formulario { get; set; }
+    }
+
+    public class FormularioHorarioViewModel
+    {
+        public int IdHorario { get; set; }
+
+        [Required(ErrorMessage = "Campo obligatorio.")]
+        public TimeOnly HoraInicio { get; set; }
+        [Required(ErrorMessage = "Campo obligatorio.")]
+        public TimeOnly HoraTermino { get; set; }
+        [Required(ErrorMessage = "Campo obligatorio.")]
+        public DateOnly Fecha { get; set; }
     }
 
     public class PlanEstudiosAvisoViewModel

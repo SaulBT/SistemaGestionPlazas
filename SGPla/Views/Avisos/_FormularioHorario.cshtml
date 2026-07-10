@@ -1,0 +1,28 @@
+﻿@using SGPla.Models.ViewModels.Avisos
+@model FormularioHorarioViewModel
+
+
+@await Component.InvokeAsync("DatePicker", new DatePickerModel
+    {
+        Id = "Fecha",
+        Label = "Fecha",
+        Flexible = true
+    })
+
+@await Component.InvokeAsync("TimeField", new TimeFieldModel
+    {
+        Id = "HoraInicio",
+        Name = "HoraInicio",
+        Label = "Hora de inicio",
+        
+    })
+
+@await Component.InvokeAsync("TimeField", new TimeFieldModel
+    {
+        Id = "HoraTermino",
+        Name = "HoraTermino",
+        Label = "Hora de término"
+    })
+
+
+

@@ -97,11 +97,14 @@
                         {
                             Accion = "Agregar",
                             Texto = "Agregar Horario",
-                            OnClick = "abrirModalCrearHorario",
+                            OnClick = "abrirModalAgregarHorario()",
                             Tipo = "secundario"
                         })
             </div>
-            @await Component.InvokeAsync("Table", Model.TablaHorario)
+            <div id="contenedorHorarios">
+                @await Component.InvokeAsync("Table", Model.TablaHorario)
+            </div>
+            
             <br/>
         </div>
 
@@ -122,15 +125,38 @@
                     })
         </div>
 
-
     </form>
+
+    <!-- MODALES -->
+    <div>
+
+        <!-- Modal Agregar Horario -->
+        <form id="formHorario">
+            @await Component.InvokeAsync("ModalFormulario", new ModalFormularioModel
+            {
+                Id = "modalAgregarHorario",
+                Titulo = "Agregar horario",
+                PartialView = "_FormularioHorario",
+                PartialModel = Model.Formulario,
+                OnConfirm = "agregarHorario()",
+                OnCancel = "cerrarModal('modalAgregarHorario')"
+            })
+        </form>
+
+
+    </div>
+    
 </div>
 
 
 <script>
     const UrlActualizarOfertas = '@Url.Action("ActualizarOfertas", "Avisos")';
+    const UrlAgregarHorario = '@Url.Action("AgregarHorario", "Avisos")';
 </script>
 @section Scripts {
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
     <script src="~/js/aviso.js"></script>
 }
                   

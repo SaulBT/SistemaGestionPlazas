@@ -4,6 +4,10 @@ const ofertas = document.getElementById("contenedorOfertas");
 const modalidad = document.getElementById("Modalidad");
 const lugar = document.getElementById("Lugar");
 
+const horarios = document.getElementById("contenedorHorarios");
+
+let listaHorarios = [];
+
 periodo.addEventListener("change", actualizarOfertas);
 articulo.addEventListener("change", actualizarOfertas);
 
@@ -23,6 +27,8 @@ async function actualizarOfertas() {
     ofertas.innerHTML = html;
 }
 
+
+
 async function cambiarVisibilidad(idElemento) {
     const elemento = document.getElementById(idElemento);
     if (modalidad.value == 'Presencial') {
@@ -32,5 +38,102 @@ async function cambiarVisibilidad(idElemento) {
         elemento.style.display = "none";
         lugar.value = "";
     }
-    console.error("Error:" + modalidad.value);
+}
+
+function abrirModalAgregarHorario() {
+    limpiarErroresHorario();
+    limpiarCamposHorario();
+    abrirModal("modalAgregarHorario");
+}
+
+function limpiarCamposHorario() {
+    const fecha = document.getElementById("Fecha");
+    const horaInicio = document.getElementById("HoraInicio");
+    const horaTermino = document.getElementById("HoraTermino");
+    fecha.value = "";
+    horaInicio.value = "";
+    horaTermino.value = "";
+}
+
+function agregarHorario() {
+
+    limpiarErroresHorario();
+
+    let valido = true;
+
+    const fecha = document.getElementById("Fecha");
+    const horaInicio = document.getElementById("HoraInicio");
+    const horaTermino = document.getElementById("HoraTermino");
+
+    if (!fecha.value) {
+        mostrarErrorHorario("Fecha", "La fecha es obligatoria");
+        valido = false;
+    }
+
+    if (!horaInicio.value) {
+        mostrarErrorHorario("HoraInicio", "La hora de inicio es obligatoria");
+        valido = false;
+    }
+
+    if (!horaTermino.value) {
+        mostrarErrorHorario("HoraTermino", "La hora de término es obligatoria");
+        valido = false;
+    }
+
+    if (!valido) {
+        return;
+    }
+
+    listaHorarios.push({
+        fecha: fecha.value,
+        horaInicio: horaInicio.value,
+        horaTermino: horaTermino.value
+    });
+
+    actualizarHorarios();
+    cerrarModal("modalAgregarHorario");
+
+}
+
+async function actualizarHorarios() {
+
+    const response = await fetch(UrlAgregarHorario, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(listaHorarios)
+    });
+
+    horarios.innerHTML = await response.text();
+}
+ 
+function mostrarErrorHorario(id, mensaje) {
+
+    const input = document.getElementById(id);
+
+    input.classList.add("input-error");
+
+    let error = document.getElementById(`${id}-Error`);
+
+    if (!error) {
+        error = document.createElement("span");
+        error.id = `${id}-Error`;
+        error.className = "input-error-text";
+        input.parentNode.appendChild(error);
+    }
+
+    error.textContent = mensaje;
+}
+
+
+function limpiarErroresHorario() {
+
+    document
+        .querySelectorAll("#formHorario .input-error")
+        .forEach(x => x.classList.remove("input-error"));
+
+    document
+        .querySelectorAll("#formHorario .input-error-text")
+        .forEach(x => x.remove());
 }
