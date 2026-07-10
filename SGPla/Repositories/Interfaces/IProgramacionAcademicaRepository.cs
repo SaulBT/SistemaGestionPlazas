@@ -24,6 +24,8 @@ namespace SGPla.Repositories.Interfaces
         Task CambiarInclusionOfertaAsync(int idOferta, bool incluir);
 
         Task CambiarAVacanteAsync(int idOferta, string justificacion);
+
+        Task AsignarDocenteAsync(int idOferta, int idDocente);
     }
 
 }

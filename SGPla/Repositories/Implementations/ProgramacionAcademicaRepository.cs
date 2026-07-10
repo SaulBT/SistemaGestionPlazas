@@ -328,11 +328,40 @@ namespace SGPla.Repositories.Implementations
 
 
             oferta.IdDocente = null;
+            oferta.Incluida = true;
 
             var log = new Log
             {
                 IdOfertaNavigation = oferta,
                 Mensaje = Constantes.HISTORIAL_JUSTIFICACION + justificacion,
+                Fecha = DateTime.UtcNow
+            };
+
+            _context.Log.Add(log);
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task AsignarDocenteAsync(int idOferta, int idDocente)
+        {
+            var oferta = await _context.Oferta.FindAsync(idOferta);
+
+            var docente = await _context.Docente.FindAsync(idDocente);
+
+            if (oferta == null)
+                throw new Exception("La oferta no existe.");
+
+            if (docente == null)
+                throw new Exception("El docente no existe.");
+
+
+            oferta.IdDocente = idDocente;
+            oferta.Incluida = false;
+
+            var log = new Log
+            {
+                IdOfertaNavigation = oferta,
+                Mensaje = Constantes.HISTORIAL_ASIGNACION_DOCENTE + docente.Nombre,
                 Fecha = DateTime.UtcNow
             };
 

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DocumentFormat.OpenXml.InkML;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SGPla.Commons;
@@ -11,6 +12,7 @@ using SGPla.Models.DTOs.Oferta;
 using SGPla.Models.DTOs.ProgramacionAcademica;
 using SGPla.Models.ViewModels.ProgramacionesAcademicas;
 using SGPla.Services.Interfaces;
+using static SGPla.Services.Implementations.ClavesEstado.ProgramacionAcademica;
 using System.Text;
 using System.Text.Json;
 
@@ -28,28 +30,26 @@ public class ProgramacionesAcademicasController : Controller
     private readonly IProgramacionAcademicaService _programacionAcademicaService;
     private readonly IPeriodoEscolarService _periodoEscolarService;
     private readonly IArticuloService _articuloService;
+    private readonly IEstadoNavegacion _estado;
     private int _paginaActual = 1;
     private static List<string> HEADERS_TABLA_ASIGNADAS = ["Experiencia educativa", "NRC", "H/S/M", "Tipo contratación", "Horario", "Docente"];
     private static List<string> HEADERS_TABLA_VACANTES = ["Experiencia educativa", "NRC", "H/S/M", "Tipo contratación", "Horario", "Artículo"];
     private static List<string> HEADERS_TABLA_RESUMEN_OFERTA = ["Entidad Academica", "Programa Educativo", "Periodo", "EE Asignadas", "EE Vacantes", "Acciones"];
     private static List<string> HEADERS_TABLA_CARGAS = ["NP", "Docente", "Plaza", "NRC", "Experiencia Educativa", "Hrs Contacto", "Hrs Pago", "Imparte"];
     private static List<string> HEADERS_TABLA_HORARIOS = ["Dîa", "Horario", "Salon", "Acciones"];
-    private const string SESSION_REGION = "Region";
-    private const string SESSION_ID_PERIODO = "IdPeriodo";
-    private const string SESSION_ID_ENTIDAD = "IdEntidad";
-    private const string SESSION_NOMBRE_PERIODO = "NombrePeriodo";
-    private const string SESSION_NOMBRE_ENTIDAD = "NombreEntidadAcademica";
 
     public ProgramacionesAcademicasController(
         ILogger<ProgramacionesAcademicasController> logger,
         IProgramacionAcademicaService programacionAcademicaService,
         IPeriodoEscolarService periodoEscolarService,
-        IArticuloService articuloService)
+        IArticuloService articuloService,
+        IEstadoNavegacion estado)
     {
         _logger = logger;
         _programacionAcademicaService = programacionAcademicaService;
         _periodoEscolarService = periodoEscolarService;
         _articuloService = articuloService;
+        _estado = estado;
     }
 
     [HttpGet]
@@ -130,7 +130,7 @@ public class ProgramacionesAcademicasController : Controller
         modelo.ResumenesProgramacionesAcademicas = resumen;
         modelo.Table = LlenarTablaResumen(resumen);
 
-        HttpContext.Session.SetString("ResumenOferta", JsonSerializer.Serialize(resumen));
+        _estado.Guardar(ResumenOferta, resumen);
 
         return View("Index", modelo);
     }
@@ -195,8 +195,8 @@ public class ProgramacionesAcademicasController : Controller
     [HttpGet]
     public async Task<IActionResult> CargarProgramacionAcademicaPaso1()
     {
-        HttpContext.Session.Remove("Ofertas");
-        HttpContext.Session.Remove("Cargas");
+        _estado.Eliminar(Ofertas);
+        _estado.Eliminar(Cargas);
 
         CargarProgramacionAcademica1ViewModel modelo = new CargarProgramacionAcademica1ViewModel();
         await CargarCombos(modelo);
@@ -282,24 +282,9 @@ public class ProgramacionesAcademicasController : Controller
         return View("Index", vm);
     }
 
-    private List<OfertaDTO> ObtenerOfertasSesion()
-    {
-        var json = HttpContext.Session.GetString("Ofertas");
+    private List<OfertaDTO> ObtenerOfertasSesion() => _estado.Obtener<List<OfertaDTO>>(Ofertas) ?? [];
 
-        return string.IsNullOrEmpty(json)
-            ? []
-            : JsonSerializer.Deserialize<List<OfertaDTO>>(json)!;
-    }
-
-
-    private List<CargaConOfertaDTO> ObtenerCargasSesion()
-    {
-        var json = HttpContext.Session.GetString("Cargas");
-
-        return string.IsNullOrEmpty(json)
-            ? []
-            : JsonSerializer.Deserialize<List<CargaConOfertaDTO>>(json)!;
-    }
+    private List<CargaConOfertaDTO> ObtenerCargasSesion() => _estado.Obtener<List<CargaConOfertaDTO>>(Cargas) ?? [];
 
     [HttpGet]
     public async Task<IActionResult> FiltrarPrograma(string? programa)
@@ -312,10 +297,10 @@ public class ProgramacionesAcademicasController : Controller
     {
         var vm = await ObtenerViewModelDesdeSesion(programa);
 
-        vm.Region = HttpContext.Session.GetString(SESSION_REGION);
-        vm.IdEntidadAcademica = HttpContext.Session.GetInt32(SESSION_ID_ENTIDAD)!.Value;
-        vm.NombrePeriodo = HttpContext.Session.GetString(SESSION_NOMBRE_PERIODO);
-        vm.NombreEntidadAcademica = HttpContext.Session.GetString(SESSION_NOMBRE_ENTIDAD);
+        vm.Region = _estado.Obtener<string>(Region);
+        vm.IdEntidadAcademica = _estado.Obtener<int?>(IdEntidadAcademica)!.Value;
+        vm.NombrePeriodo = _estado.Obtener<string>(NombrePeriodo);
+        vm.NombreEntidadAcademica = _estado.Obtener<string>(NombreEntidadAcademica);
         vm.ProgramaSeleccionado = programa;
 
         return vm;
@@ -337,9 +322,7 @@ public class ProgramacionesAcademicasController : Controller
          })
          .ToList();
 
-        HttpContext.Session.SetString(
-            "Ofertas",
-            JsonSerializer.Serialize(ofertas));
+        _estado.Guardar(Ofertas, ofertas);
 
         var ofertasFiltradas = programa == null ? ofertas : ofertas.Where(o => o.Programa == programa);
 
@@ -416,7 +399,7 @@ public class ProgramacionesAcademicasController : Controller
                     Accion = "historial",
                     Url = Url.Action(nameof(VerHistorialExperienciaEducativa), "ProgramacionesAcademicas",
                     new { idOferta = oferta.IdOferta, oferta.ExperienciaEducativa })
-                            });
+                });
 
             if (permisos.Puede(Acciones.ProgramacionAcademica.Editar))
                 acciones.Add(new TableActionModel
@@ -449,7 +432,13 @@ public class ProgramacionesAcademicasController : Controller
                     acciones.Add(new TableActionModel
                     {
                         Accion = "izquierda",
-                        OnClick = $"abrirModalConfirmacion('Se abrirá la pantalla para asignar un docente.', function() {{ abrirAsignacionDocente({oferta.IdOferta}); }})"
+                        OnClick = $"location.href='{Url.Action("AsignarDocente", "ProgramacionesAcademicas", new
+                        {
+                            idOferta = oferta.IdOferta,
+                            idEntidadAcademica,
+                            idProgramaEducativo,
+                            idPeriodo
+                        })}'"
                     });
                 }
             }
@@ -598,19 +587,19 @@ public class ProgramacionesAcademicasController : Controller
                 oferta.IdPeriodo = modelo.IdPeriodo.Value;
             }
 
-            HttpContext.Session.SetString("Ofertas", JsonSerializer.Serialize(todas));
-            HttpContext.Session.SetString("Cargas", JsonSerializer.Serialize(cargas));
+            _estado.Guardar(Ofertas, todas);
+            _estado.Guardar(Cargas, cargas);
 
             var periodoSeleccionado = (await _periodoEscolarService.ObtenerTodosAsync())
                 .FirstOrDefault(p => p.IdPeriodoEscolar == modelo.IdPeriodo!.Value);
             var entidadSeleccionada = (await _programacionAcademicaService.ObtenerOpcionesEntidadAcademicaAsync(modelo.Region))
                 .FirstOrDefault(e => e.IdEntidadAcademica == modelo.IdEntidadAcademica!.Value);
 
-            HttpContext.Session.SetString(SESSION_REGION, modelo.Region);
-            HttpContext.Session.SetInt32(SESSION_ID_PERIODO, modelo.IdPeriodo.Value);
-            HttpContext.Session.SetString(SESSION_NOMBRE_PERIODO, periodoSeleccionado?.PeriodoMostrar ?? "");
-            HttpContext.Session.SetInt32(SESSION_ID_ENTIDAD, modelo.IdEntidadAcademica.Value);
-            HttpContext.Session.SetString(SESSION_NOMBRE_ENTIDAD, entidadSeleccionada?.Nombre ?? "");
+            _estado.Guardar(Region, modelo.Region);
+            _estado.Guardar(IdPeriodo, modelo.IdPeriodo!.Value);
+            _estado.Guardar(NombrePeriodo, periodoSeleccionado?.PeriodoMostrar ?? "");
+            _estado.Guardar(IdEntidadAcademica, modelo.IdEntidadAcademica!.Value);
+            _estado.Guardar(NombreEntidadAcademica, entidadSeleccionada?.Nombre ?? "");
         }
         catch (Exception ex)
         {
@@ -624,9 +613,9 @@ public class ProgramacionesAcademicasController : Controller
     [HttpGet]
     public async Task<IActionResult> CargarProgramacionAcademicaPaso2()
     {
-        var region = HttpContext.Session.GetString(SESSION_REGION);
-        var idPeriodo = HttpContext.Session.GetInt32(SESSION_ID_PERIODO);
-        var idEntidadAcademica = HttpContext.Session.GetInt32(SESSION_ID_ENTIDAD);
+        var region = _estado.Obtener<string>(Region);
+        var idPeriodo = _estado.Obtener<int?>(IdPeriodo);
+        var idEntidadAcademica = _estado.Obtener<int?>(IdEntidadAcademica);
 
         if (string.IsNullOrEmpty(region) || idPeriodo is null || idEntidadAcademica is null)
         {
@@ -646,7 +635,7 @@ public class ProgramacionesAcademicasController : Controller
         foreach (var oferta in ofertas)
             oferta.Articulo = idArticulo;
 
-        HttpContext.Session.SetString("Ofertas", JsonSerializer.Serialize(ofertas));
+        _estado.Guardar(Ofertas, ofertas);
 
         var vm = await ObtenerViewModelCompletoAsync();
         vm.IdArticulo = idArticulo;
@@ -676,10 +665,7 @@ public class ProgramacionesAcademicasController : Controller
     {
         var permisos = MatrizPermisos.Para(User);
 
-        var json = HttpContext.Session.GetString("ResumenOferta");
-        var resumenGuardado = string.IsNullOrEmpty(json)
-            ? []
-            : JsonSerializer.Deserialize<List<ResumenOfertaProgramacionAcademicaDTO>>(json)!;
+        var resumenGuardado = _estado.Obtener<List<ResumenOfertaProgramacionAcademicaDTO>>(ResumenOferta) ?? [];
 
         var resumenActual = resumenGuardado.FirstOrDefault(r =>
             r.IdEntidadAcademica == idEntidadAcademica &&
@@ -929,10 +915,15 @@ public class ProgramacionesAcademicasController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> AsignarDocente(int idOferta)
+    public IActionResult AsignarDocente(int idOferta, int idEntidadAcademica, int idProgramaEducativo, int idPeriodo)
     {
-        // Obtener la información necesaria
-        // Crear el ViewModel
-        return RedirectToAction("Index", "Docentes");
+        _estado.Guardar(IdOfertaAsignar, idOferta);
+
+        var urlActual = Url.Action("Ver", "ProgramacionesAcademicas",
+            new { idEntidadAcademica, idProgramaEducativo, idPeriodo })!;
+
+        _estado.PushRetorno(urlActual);
+
+        return RedirectToAction("AsignarDocente", "Docentes", new { idOferta });
     }
 }

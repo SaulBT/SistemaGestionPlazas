@@ -301,5 +301,10 @@ namespace SGPla.Services.Implementations
         {
             await _programacionAcademicaRepository.CambiarAVacanteAsync(idOferta, justificacion);
         }
+
+        public async Task AsignarDocenteAsync(int idOferta, int idDocente)
+        {
+            await _programacionAcademicaRepository.AsignarDocenteAsync(idOferta, idDocente);
+        }
     }
 }

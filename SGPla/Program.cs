@@ -80,6 +80,9 @@ builder.Services.AddScoped<IDocenteRepository, DocenteRepository>();
 builder.Services.AddScoped<IProgramacionAcademicaValidator, ProgramacionAcademicaValidator>();
 builder.Services.AddScoped<IProgramacionAcademicaService, ProgramacionAcademicaService>();
 
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IEstadoNavegacion, EstadoNavegacion>();
+
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -92,6 +95,9 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 
 builder.Services.AddAuthorization(); 
+
+builder.Services.AddScoped<IAvisoService, AvisoService>();
+builder.Services.AddScoped<IAvisoRepository, AvisoRepository>();
 
 var app = builder.Build();
 

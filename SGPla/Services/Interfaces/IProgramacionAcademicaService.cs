@@ -34,5 +34,7 @@ public interface IProgramacionAcademicaService
 
     Task CambiarAVacanteAsync(int idOferta, string justificacion);
 
+    Task AsignarDocenteAsync(int idOferta, int idDocente);
+
 }
 

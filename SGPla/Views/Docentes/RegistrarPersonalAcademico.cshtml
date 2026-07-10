@@ -6,6 +6,7 @@
 }
 
 <form method="post" action="@Url.Action("GuardarDocente", "Docentes")" enctype="multipart/form-data">
+    <input name="Recarga" type="hidden" value="@Model.Recarga.ToString().ToLower()" />
     <div class="d-flex row gap-3">
         <!-- Nombre -->
         @await Component.InvokeAsync("InputField", new InputFieldModel
@@ -14,7 +15,9 @@
             Name = "Nombre",
             Label = "Nombre:",
             Valor = Model.Nombre,
-            Flexible = true
+            Flexible = true,
+            Error = ViewData.ModelState["Nombre"]?.Errors.FirstOrDefault()?.ErrorMessage,
+            MaximoCaracteres = 255,
         })
 
         <!-- Descripción -->
@@ -24,7 +27,8 @@
             Name = "DescripcionPerfil",
             Label = "Descripción",
             Value = Model.DescripcionPerfil,
-            Rows = 5
+            Rows = 5,
+            Error = ViewData.ModelState["DescripcionPerfil"]?.Errors.FirstOrDefault()?.ErrorMessage
         })
 
         <!-- Botón de Documentos generales -->
@@ -57,21 +61,26 @@
         </div>
 
         <div class="d-flex gap-2">
+            <!-- Numero personal -->
             @await Component.InvokeAsync("InputField", new InputFieldModel
             {
                 Id = "ifNumeroPersonal",
                 Name = "NumeroPersonal",
                 Label = "Numero personal:",
                 Valor = Model.NumeroPersonal,
-                Flexible = true
+                Flexible = true,
+                Error = ViewData.ModelState["NumeroPersonal"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                MaximoCaracteres = 10,
             })
 
+            <!-- Puesto -->
             @await Component.InvokeAsync("SelectField", new SelectFieldModel
             {
                 Label = "Puesto:",
                 Name = "Puesto",
                 Options = Model.OpcionesPuesto,
-                Flexible = true
+                Flexible = true,
+                Error = ViewData.ModelState["Puesto"]?.Errors.FirstOrDefault()?.ErrorMessage
             })
         </div>
 
@@ -105,7 +114,7 @@
     Id = "modalAgregarGrado",
     Titulo = "Agregar Grado",
     PartialView = "_FormularioAgregarGrado",
-    PartialModel = Model.Formluario,
+    PartialModel = Model.Formulario,
     OnConfirm = "agregarGrado(false)",
     OnCancel = "cerrarModal('modalAgregarGrado')"
 })
@@ -115,7 +124,7 @@
     Id = "modalEditarGrado",
     Titulo = "Editar Grado",
     PartialView = "_FormularioEditarGrado",
-    PartialModel = Model.Formluario,
+    PartialModel = Model.Formulario,
     OnConfirm = "editarGrado()",
     OnCancel = "cerrarModal('modalEditarGrado')"
 })
@@ -135,10 +144,8 @@
     const UrlEditarGrado = '@Url.Action("EditarGradoRegistro", "Docentes")';
     const UrlEliminarGrado = '@Url.Action("EliminarGradoRegistro", "Docentes")';
     
-    async function cancelarAccion(){
-        const response = await fetch('@Url.Action("CancelarAccion", "Docentes")');
-        const data = await response.json();
-        window.location.href = data.url;
+     function cancelarAccion(){
+        window.location.href = '@ViewBag.UrlRetorno';
     }
 
     function abrirModalArchivo() {
