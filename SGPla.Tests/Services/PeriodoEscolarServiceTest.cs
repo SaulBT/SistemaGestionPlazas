@@ -31,7 +31,7 @@ namespace SGPla.Tests.Services
         {
             var dto = new CrearPeriodoEscolarDTO
             {
-                Anio = 2024,
+                Anio = "2024",
                 Periodo = "Febrero-Julio"
             };
 
@@ -49,7 +49,7 @@ namespace SGPla.Tests.Services
             var periodoEscolar = await _periodoEscolarService.CrearAsync(dto);
 
             Assert.NotNull(periodoEscolar);
-            Assert.Equal(dto.Anio, periodoEscolar.Anio);
+            Assert.Equal(dto.Anio + "", periodoEscolar.Anio + "");
             Assert.Equal(dto.Periodo, periodoEscolar.Periodo);
             Assert.Equal(result.Codigo, periodoEscolar.Codigo);
         }
@@ -62,7 +62,7 @@ namespace SGPla.Tests.Services
             var dto = new EditarPeriodoEscolarDTO
             {
                 Codigo = "202551",
-                Anio = 2024,
+                Anio = "2024",
                 Periodo = "Febrero-Julio"
             };
             var result = new Periodo
@@ -77,7 +77,7 @@ namespace SGPla.Tests.Services
             var periodoEscolar = await _periodoEscolarService.EditarAsync(dto);
             Assert.NotNull(periodoEscolar);
             Assert.Equal(dto.Codigo, periodoEscolar.Codigo);
-            Assert.Equal(dto.Anio, periodoEscolar.Anio);
+            Assert.Equal(dto.Anio + "", periodoEscolar.Anio + "");
             Assert.Equal(dto.Periodo, periodoEscolar.Periodo);
         }
 
@@ -116,7 +116,7 @@ namespace SGPla.Tests.Services
         {
             var filtro = new BuscarPeriodoEscolarDTO
             {
-                Anio = 2024,
+                Anio = "2024",
                 Periodo = "Febrero-Julio"
             };
             var result = new List<Periodo>

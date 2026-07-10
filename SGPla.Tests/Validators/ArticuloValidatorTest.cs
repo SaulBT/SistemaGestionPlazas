@@ -55,7 +55,7 @@ public class ArticuloValidatorTests
         };
 
         _articuloRepositoryMock
-            .Setup(r => r.ExisteNumeroAsync(dto.Numero))
+            .Setup(r => r.ExisteAsync(dto.Numero))
             .ReturnsAsync(articuloPrevio);
 
 
@@ -146,7 +146,7 @@ public class ArticuloValidatorTests
             });
 
         _articuloRepositoryMock
-           .Setup(r => r.ExisteNumeroAsync(dto.Numero))
+           .Setup(r => r.ExisteAsync(dto.Numero))
            .ReturnsAsync(articulo);
 
         var ex = await Record.ExceptionAsync(() => _articuloValidator.ValidarEdicionAsync(dto));

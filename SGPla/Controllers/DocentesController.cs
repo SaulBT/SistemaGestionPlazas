@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using SGPla.Commons;
 using SGPla.Commons.Factories;
 using SGPla.Models;
@@ -18,6 +19,8 @@ namespace SGPla.Controllers
         private readonly IAspiranteService _aspiranteService;
         private readonly IArchivoService _archivoService;
         private readonly ILogger<DocentesController> _logger;
+        private readonly IEstadoNavegacion _estado;
+        private readonly IProgramacionAcademicaService _programacionAcademicaService;
 
         private int paginaActual = 1;
 
@@ -47,12 +50,16 @@ namespace SGPla.Controllers
             IDocenteService docenteService,
             IAspiranteService aspiranteService,
             IArchivoService archivoService,
-            ILogger<DocentesController> logger)
+            ILogger<DocentesController> logger,
+            IEstadoNavegacion estado,
+            IProgramacionAcademicaService programacionAcademicaService)
         {
             _docenteService = docenteService;
             _aspiranteService = aspiranteService;
             _archivoService = archivoService;
             _logger = logger;
+            _estado = estado;
+            _programacionAcademicaService = programacionAcademicaService;
         }
 
         // ==========
@@ -74,7 +81,7 @@ namespace SGPla.Controllers
                 var tabAspirante = new TabIndexViewModel
                 {
                     Tabla = await generarTablaAspirantesAsync(busqueda, pagina, cantidad),
-                    AccionBoton = Url.Action("RegistrarPersonalExterno" , "Docentes")
+                    AccionBoton = Url.Action("RegistrarPersonalExterno", "Docentes")
                 };
 
                 modelo.TabAspirantes = tabAspirante;
@@ -89,6 +96,57 @@ namespace SGPla.Controllers
                 modelo.TabDocentes.Tabla = TablaFactory.GenerarTablaConMensaje(HEADERS_TABLA_DOCENTE, string.Format(Constantes.ERROR_TABLA, Constantes.PERSONALES_ACADEMICOS));
                 return View(modelo);
             }
+        }
+
+        // ==========
+        // Asignar docente a experiencia educativa
+        // ==========
+
+        [HttpGet]
+        public async Task<IActionResult> AsignarDocenteAsync(int idOferta, string? busqueda, int pagina = 1, int cantidad = 10)
+        {
+            ViewBag.RegresarUrl = _estado.PeekRetorno(Url.Action("Index", "Docentes")!);
+            var modelo = new AsignarDocenteViewModel
+            {
+                TabDocentes = new TabIndexViewModel()
+            };
+
+            try
+            {
+                ViewBag.UrlRetorno = Url.Action("Regresar", "Navegacion",
+                    new { fallback = Url.Action("Index", "Docentes") });
+
+                modelo.TabDocentes = new TabIndexViewModel
+                {
+                    Tabla = await generarTablaAsignarDocentesAsync(busqueda, pagina, cantidad, idOferta),
+                    AccionBoton = Url.Action("IrARegistrarPersonalAcademico", "Docentes")
+                };
+
+                return View(modelo);
+            }
+            catch (Exception ex)
+            {
+                this.LanzarError(_logger, ex, NOMBRE_LOGGER, INDEX, Constantes.LOG_ERROR_INESPERADO);
+                modelo.TabDocentes.Tabla = TablaFactory.GenerarTablaConMensaje(
+                    HEADERS_TABLA_DOCENTE,
+                    string.Format(Constantes.ERROR_TABLA, Constantes.PERSONALES_ACADEMICOS));
+                return View(modelo);
+            }
+        }
+
+        [HttpGet]
+        public IActionResult IrARegistrarPersonalAcademico()
+        {
+            _estado.PushRetorno(Url.Action("AsignarDocente", "Docentes")!);
+            return RedirectToAction("RegistrarPersonalAcademico");
+        }
+        [HttpPost]
+        public async Task<IActionResult> AsignarDocenteAExperienciaAsync(int idOferta, int idDocente)
+        {
+            await _programacionAcademicaService.AsignarDocenteAsync(idOferta, idDocente);
+            var urlRegreso = _estado.PopRetorno(Url.Action("Ver", "ProgramacionesAcademicas")!);
+            TempData["Success"] = "Docente asignado correctamente a la experiencia educativa.";
+            return Ok(new { url = urlRegreso });
         }
 
         private async Task<TableModel> generarTablaDocentesAsync(string? busqueda, int pagina, int cantidad)
@@ -137,6 +195,68 @@ namespace SGPla.Controllers
                                         Accion = "eliminar",
                                         OnClick = $"abrirModalEliminarDocente({docente.IdDocente})"
                                     }
+                                }
+                            }
+                        }
+                    }).ToList(),
+                    Pagination = new PaginationInfo
+                    {
+                        CurrentPage = paginaActual,
+                        PageSize = cantidad,
+                        TotalItems = total,
+                        OnPageChange = "cambiarPagina"
+                    }
+                };
+            }
+            catch (ValidacionExcepction vx)
+            {
+                this.LanzarError(_logger, vx, NOMBRE_LOGGER, INDEX, "No se pudo cargar la lista de Docente");
+                return TablaFactory.GenerarTablaConMensaje(HEADERS_TABLA_DOCENTE, string.Format(Constantes.ERROR_TABLA, Constantes.PERSONALES_ACADEMICOS));
+            }
+        }
+
+        private async Task<TableModel> generarTablaAsignarDocentesAsync(string? busqueda, int pagina, int cantidad, int idOferta)
+        {
+            try
+            {
+                var datos = await _docenteService.ObtenerTodosDocentesAsync(busqueda, pagina, cantidad);
+                var items = datos.items;
+                var total = datos.total;
+
+                if (items.Count == 0)
+                {
+                    datos = await _docenteService.ObtenerTodosDocentesAsync(busqueda, paginaActual, cantidad);
+                    items = datos.items;
+                    total = datos.total;
+                }
+                if (items.Count == 0)
+                    return TablaFactory.GenerarTablaConMensaje(HEADERS_TABLA_DOCENTE, string.Format(Constantes.TABLA_VACIA, Constantes.PERSONALES_ACADEMICOS));
+
+                return new TableModel()
+                {
+                    Headers = HEADERS_TABLA_DOCENTE,
+                    Rows = items.Select(docente => new TableRowModel
+                    {
+                        Cells = new List<TableCellModel>
+                        {
+                            new() { Value = docente.Nombre },
+                            new() { Value = docente.NumeroPersonal },
+                            new() { Value = docente.Puesto },
+                            new()
+                            {
+                                Actions = new List<TableActionModel>
+                                {
+                                    new()
+                                    {
+                                        Accion = "ver", //Cambiar por documentos
+                                        Url = Url.Action("VerDocumentosPersonal", "Docentes", new { id = docente.IdDocente, esDocente = true })
+                                    },
+                                    new()
+                                    {
+                                        Accion = "agregar",
+                                        OnClick = $"asignarDocenteAExperiencia({idOferta}, {docente.IdDocente})"
+                                    }
+
                                 }
                             }
                         }
@@ -279,6 +399,9 @@ namespace SGPla.Controllers
         {
             try
             {
+                ViewBag.UrlRetorno = Url.Action("Regresar", "Navegacion",
+                    new { fallback = Url.Action("Index", "Docentes") });
+
                 var vista = new RegistrarDocenteViewModel();
                 var error = false;
 
@@ -321,7 +444,7 @@ namespace SGPla.Controllers
             };
 
             guardarEnSession<List<AgregarGradoDTO>>(SESSION_GRADOS_AGREGADOS, new List<AgregarGradoDTO>());
-            
+
 
             return modelo;
         }
@@ -1655,7 +1778,7 @@ namespace SGPla.Controllers
             }
         }
 
-        private (List<int> gradosEliminados, List<DatosGradoDTO> gradosEditados, List<AgregarGradoDTO> gradosAgregados, List<DatosGradoDTO> grados) procesarEliminadoGradoEdicion (int idGrado, bool temporal, List<int> gradosEliminados, List<DatosGradoDTO> gradosEditados, List<AgregarGradoDTO> gradosAgregados, List<DatosGradoDTO> grados)
+        private (List<int> gradosEliminados, List<DatosGradoDTO> gradosEditados, List<AgregarGradoDTO> gradosAgregados, List<DatosGradoDTO> grados) procesarEliminadoGradoEdicion(int idGrado, bool temporal, List<int> gradosEliminados, List<DatosGradoDTO> gradosEditados, List<AgregarGradoDTO> gradosAgregados, List<DatosGradoDTO> grados)
         {
             if (temporal)
             {
@@ -1682,7 +1805,7 @@ namespace SGPla.Controllers
 
             return (gradosEliminados, gradosEditados, gradosAgregados, grados);
         }
-    
+
         private T? obtenerDeSession<T>(string llave)
         {
             var json = HttpContext.Session.GetString(llave);

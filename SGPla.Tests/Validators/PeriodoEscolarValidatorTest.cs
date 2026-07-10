@@ -21,7 +21,7 @@ namespace SGPla.Tests.Validators
         [Fact]
         public async Task CrearPeriodoEscolarConAnioInvalido()
         {
-            var dto = new CrearPeriodoEscolarDTO { Anio = 0, Periodo = "Febrero-Julio" };
+            var dto = new CrearPeriodoEscolarDTO { Anio = "0", Periodo = "Febrero-Julio" };
 
             var ex = await Record.ExceptionAsync(() => _periodoEscolarValidator.ValidarCreacionAsync(dto));
 
@@ -34,7 +34,7 @@ namespace SGPla.Tests.Validators
         [Fact]
         public async Task CrearPeriodoEscolarConPeriodoVacio()
         {
-            var dto = new CrearPeriodoEscolarDTO { Anio = 2024, Periodo = "" };
+            var dto = new CrearPeriodoEscolarDTO { Anio = "2024", Periodo = "" };
 
             var ex = await Record.ExceptionAsync(() => _periodoEscolarValidator.ValidarCreacionAsync(dto));
 
@@ -47,7 +47,7 @@ namespace SGPla.Tests.Validators
         [Fact]
         public async Task CrearPeriodoEscolarConPeriodoInvalido()
         {
-            var dto = new CrearPeriodoEscolarDTO { Anio = 2024, Periodo = "Enero-Junio" };
+            var dto = new CrearPeriodoEscolarDTO { Anio = "2024", Periodo = "Enero-Junio" };
 
             var ex = await Record.ExceptionAsync(() => _periodoEscolarValidator.ValidarCreacionAsync(dto));
 
@@ -60,7 +60,7 @@ namespace SGPla.Tests.Validators
         [Fact]
         public async Task CrearPeriodoEscolarDuplicado()
         {
-            var dto = new CrearPeriodoEscolarDTO { Anio = 2024, Periodo = "Febrero-Julio" };
+            var dto = new CrearPeriodoEscolarDTO { Anio = "2024", Periodo = "Febrero-Julio" };
 
             _periodoEscolarRepositoryMock
                 .Setup(r => r.ExisteAsync(It.IsAny<Periodo>()))
@@ -77,7 +77,7 @@ namespace SGPla.Tests.Validators
         [Fact]
         public async Task EditarPeriodoEscolarConAnioInvalido()
         {
-            var dto = new EditarPeriodoEscolarDTO { IdPeriodoEscolar = 1, Anio = -1, Periodo = "Agosto-Enero" };
+            var dto = new EditarPeriodoEscolarDTO { IdPeriodoEscolar = 1, Anio = "-1", Periodo = "Agosto-Enero" };
 
             var ex = await Record.ExceptionAsync(() => _periodoEscolarValidator.ValidarEdicionAsync(dto));
 
@@ -90,7 +90,7 @@ namespace SGPla.Tests.Validators
         [Fact]
         public async Task EditarPeriodoEscolarConPeriodoNulo()
         {
-            var dto = new EditarPeriodoEscolarDTO { IdPeriodoEscolar = 1, Anio = 2024, Periodo = null! };
+            var dto = new EditarPeriodoEscolarDTO { IdPeriodoEscolar = 1, Anio = "2024", Periodo = null! };
 
             var ex = await Record.ExceptionAsync(() => _periodoEscolarValidator.ValidarEdicionAsync(dto));
 
@@ -103,7 +103,7 @@ namespace SGPla.Tests.Validators
         [Fact]
         public async Task EditarPeriodoEscolarInexistente()
         {
-            var dto = new EditarPeriodoEscolarDTO { IdPeriodoEscolar = 99, Anio = 2024, Periodo = "Febrero-Julio" };
+            var dto = new EditarPeriodoEscolarDTO { IdPeriodoEscolar = 99, Anio = "2024", Periodo = "Febrero-Julio" };
 
             _periodoEscolarRepositoryMock
                 .Setup(r => r.ObtenerPorIdAsync(dto.IdPeriodoEscolar))
@@ -120,7 +120,7 @@ namespace SGPla.Tests.Validators
         [Fact]
         public async Task EditarPeriodoEscolarConDatosDuplicados()
         {
-            var dto = new EditarPeriodoEscolarDTO { IdPeriodoEscolar = 1, Anio = 2024, Periodo = "Agosto-Enero" };
+            var dto = new EditarPeriodoEscolarDTO { IdPeriodoEscolar = 1, Anio = "2024", Periodo = "Agosto-Enero" };
 
             _periodoEscolarRepositoryMock
                 .Setup(r => r.ObtenerPorIdAsync(dto.IdPeriodoEscolar))

@@ -149,6 +149,7 @@ namespace SGPla.Parsers
                 NombreDocente = Nullify(Get(colMap, vals, "NOMBRE")),
                 TipoIngreso = Nullify(Get(colMap, vals, "TIPODEINGRESO")),
                 TC = Nullify(Get(colMap, vals, "TC")),
+                Incluida = true
             };
         }
 

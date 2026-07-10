@@ -1,8 +1,7 @@
 ﻿.switch-field {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    justify-content: space-between;
-    width: var(--width-fields);
+    gap: .5rem;
 }
 
     .switch-field .text-wrapper {

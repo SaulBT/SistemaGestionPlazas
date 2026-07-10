@@ -17,6 +17,8 @@ public partial class Docente
 
     public string? Puesto { get; set; }
 
+    public virtual ICollection<CargaAcademica> CargaAcademica { get; set; } = new List<CargaAcademica>();
+
     public virtual ICollection<Dictamen> Dictamen { get; set; } = new List<Dictamen>();
 
     public virtual ICollection<Grado> Grado { get; set; } = new List<Grado>();

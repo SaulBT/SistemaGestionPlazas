@@ -79,6 +79,18 @@
 				</div>
 			</div>
 
+			<div style="display:inline-flex; gap:10px">
+				@await Component.InvokeAsync("Boton", new
+				{
+					Accion = "cargar",
+					Texto = "Subir Archivo Cargas",
+					OnClick = "abrirModalArchivo3()"
+				})
+
+				<div id="banderaArchivo3" class="text-wrapper" style="display:inline-flex; align-content:center">
+					<i class="bi bi-file-earmark-x-fill" style="font-size:20px;color:var(--negativo-rojo-letra)"></i>
+				</div>
+			</div>
 		</div>
 
 	</div>
@@ -119,6 +131,16 @@
 			FormatosAceptados = ".xlsx, .xls",
 			TamanioMaximo = 20
 		})
+
+		@await Component.InvokeAsync("ModalArchivo",
+		new ModalArchivoModel
+		{
+			Id = "modalArchivo3",
+			IdBandera = "banderaArchivo3",
+			NombreArchivo = "ArchivoCargas",
+			FormatosAceptados = ".xlsx, .xls",
+			TamanioMaximo = 20
+		})
 	</div>
 
 </form>
@@ -129,6 +151,10 @@
 	}
 	function abrirModalArchivo2() {
 		abrirModal("modalArchivo2");
+	}
+
+	function abrirModalArchivo3() {
+		abrirModal("modalArchivo3");
 	}
 
 

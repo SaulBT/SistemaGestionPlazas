@@ -1,0 +1,189 @@
+﻿@using SGPla.Models.ViewModels.ProgramacionesAcademicas
+
+@model FormularioExperienciaEducativaViewModel
+
+@{
+	ViewData["Title"] = "Editar Experiencia Educativa";
+}
+
+<!-- Campos -->
+<form method="post" action="@Url.Action("EditarExperienciaEducativa", "ProgramacionesAcademicas")">
+
+	@Html.AntiForgeryToken()
+	<input type="hidden" name="IdExperienciaEducativa" value="@Model.IdExperienciaEducativa" />
+
+	<input type="hidden" name="IdEntidadAcademica" value="@Model.IdEntidadAcademica" />
+	<input type="hidden" name="IdProgramaEducativo" value="@Model.IdProgramaEducativo" />
+	<input type="hidden" name="IdPeriodo" value="@Model.IdPeriodo" />
+
+	<div style="padding-bottom:var(--padding-end); ">
+		<h4> @Model.NombreProgramaEducativo</h4>
+	</div>
+
+
+	<div style="padding-bottom:var(--padding-end); ">
+		<div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:center; justify-content:space-between;">
+			<div id="contenedorNombreEE" style="flex:1; min-width:0;">
+				@await Component.InvokeAsync("InputField", new InputFieldModel
+				{
+					Id = "nombreExperienciaEducativa",
+					Name = "NombreExperienciaEducativa",
+					Label = "Nombre:",
+					Valor = Model.NombreExperienciaEducativa,
+					Flexible = true,
+					Error = ViewData.ModelState["NombreExperienciaEducativa"]?.Errors.FirstOrDefault()?.ErrorMessage,
+					MaximoCaracteres = 150,
+					Disabled = true
+				})
+			</div>
+
+			<div id="contenedorModalidad" style="flex:1 ; min-width:0;">
+				@await Component.InvokeAsync("InputField", new InputFieldModel
+				{
+					Id = "modalidad",
+					Name = "Modalidad",
+					Label = "Modalidad:",
+					Valor = Model.Modalidad,
+					Flexible = true,
+					Error = ViewData.ModelState["Modalidad"]?.Errors.FirstOrDefault()?.ErrorMessage,
+					MaximoCaracteres = 150,
+					Disabled = true
+
+				})
+			</div>
+
+			<div id="contenedorHoras" style="flex:1; min-width:0;">
+				@await Component.InvokeAsync("InputField", new InputFieldModel
+				{
+					Id = "horas",
+					Name = "Horas",
+					Label = "Horas:",
+					Valor = Model.Horas.ToString(),
+					Flexible = true,
+					Error = ViewData.ModelState["Horas"]?.Errors.FirstOrDefault()?.ErrorMessage,
+					Disabled = true
+
+				})
+			</div>
+
+			
+		</div>
+
+		<div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:flex-start; justify-content:space-evenly;">
+
+			<div id="contenedorNrc" style="flex:1; min-width:0;">
+				@await Component.InvokeAsync("InputField", new InputFieldModel
+				{
+					Id = "nrc",
+					Name = "Nrc",
+					Label = "NRC:",
+					Valor = Model.Nrc,
+					Flexible = true,
+					Error = ViewData.ModelState["Nrc"]?.Errors.FirstOrDefault()?.ErrorMessage,
+					MaximoCaracteres = 5
+				})
+			</div>
+
+			<div id="contenedoTC" style="flex:1 0; min-width:0;">
+				@await Component.InvokeAsync("SelectField", new SelectFieldModel
+				{
+					Label = "Tipo de Contratación:",
+					Options = Model.TiposContratacion,
+					Name = "TipoContratacion",
+					SelectedValue = Model.TipoContratacion?.ToString(),
+					Flexible = true,
+					Error = ViewData.ModelState["TipoContratacion"]?.Errors.FirstOrDefault()?.ErrorMessage
+				})
+			</div>
+
+		</div>
+	</div>
+
+
+		<div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:center; justify-content:space-between;">
+			<div style="flex:1; min-width:0;">
+				<h4> Horario: </h4>
+			</div>
+
+			<div style="display: inline-block; text-decoration: none;">
+				@await Component.InvokeAsync("Boton", new
+				{
+					accion = "agregar",
+					tipo = "secundario"
+				})
+			</div>
+
+		
+	</div>
+
+	<!-- Tabla con Datos -->
+	<div style="display:flex; gap:10px; padding-top:0px;justify-content:left">
+		@await Component.InvokeAsync("Table", Model.Horarios)
+	</div>
+
+	<div style="display:flex; justify-content:flex-end; gap:var(--button-gap)">
+		@await Component.InvokeAsync("Boton", new
+		{
+			Accion = "Cancelar"
+		})
+		@await Component.InvokeAsync("Boton", new
+		{
+			Accion = "Guardar",
+			ButtonType = "submit"
+		})
+	</div>
+</form>
+
+
+<script>
+	document.addEventListener("DOMContentLoaded", function () {
+
+		const area = document.querySelector("[name='IdAreaAcademica']");
+		const region = document.querySelector("[name='Region']");
+		const entidad = document.querySelector("[name='IdEntidadAcademica']");
+
+			async function cargarEntidades() {
+		if (!area || !region || !entidad) return;
+
+		const idArea = area.value;
+		const reg = region.value;
+
+		// mantener opción default
+		const defaultOption = entidad.options[0];
+
+		if (!idArea || !reg) {
+			entidad.innerHTML = "";
+			entidad.appendChild(defaultOption);
+			entidad.selectedIndex = 0;
+			return;
+		}
+
+		try {
+			const response = await fetch(`/ProgramasEducativos/ObtenerEntidades?region=${encodeURIComponent(reg)}&idArea=${idArea}`);
+			const data = await response.json();
+
+			entidad.innerHTML = "";
+			entidad.appendChild(defaultOption);
+
+			data.forEach(e => {
+				const option = document.createElement("option");
+				option.value = e.value;
+				option.text = e.text;
+				entidad.appendChild(option);
+			});
+
+		} catch (error) {
+			console.error("Error cargando entidades:", error);
+		}
+	}
+
+		if (area) {
+			area.addEventListener("change", cargarEntidades);
+		}
+
+		if (region) {
+			region.addEventListener("change", cargarEntidades);
+		}
+
+	});
+</script>

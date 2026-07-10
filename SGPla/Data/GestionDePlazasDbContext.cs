@@ -24,6 +24,8 @@ public partial class GestionDePlazasDbContext : DbContext
 
     public virtual DbSet<Aviso> Aviso { get; set; }
 
+    public virtual DbSet<CargaAcademica> CargaAcademica { get; set; }
+
     public virtual DbSet<CoordinadorDgaa> CoordinadorDgaa { get; set; }
 
     public virtual DbSet<CoordinadorEa> CoordinadorEa { get; set; }
@@ -257,6 +259,44 @@ public partial class GestionDePlazasDbContext : DbContext
                 .HasForeignKey(d => d.IdPeriodo)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Aviso_Periodo");
+        });
+
+        modelBuilder.Entity<CargaAcademica>(entity =>
+        {
+            entity.HasKey(e => e.IdCargaAcademica);
+
+            entity.Property(e => e.IdCargaAcademica).HasColumnName("idCargaAcademica");
+            entity.Property(e => e.HorasPago).HasColumnName("horasPago");
+            entity.Property(e => e.IdDocente).HasColumnName("idDocente");
+            entity.Property(e => e.IdExperienciaEducativa).HasColumnName("idExperienciaEducativa");
+            entity.Property(e => e.IdPeriodo).HasColumnName("idPeriodo");
+            entity.Property(e => e.Imparte).HasColumnName("imparte");
+            entity.Property(e => e.Nrc)
+                .HasMaxLength(5)
+                .IsUnicode(false)
+                .HasColumnName("nrc");
+            entity.Property(e => e.Plaza)
+                .HasMaxLength(5)
+                .IsUnicode(false)
+                .HasColumnName("plaza");
+            entity.Property(e => e.TipoContratacion)
+                .HasMaxLength(2)
+                .IsUnicode(false)
+                .HasColumnName("tipoContratacion");
+
+            entity.HasOne(d => d.IdDocenteNavigation).WithMany(p => p.CargaAcademica)
+                .HasForeignKey(d => d.IdDocente)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_CargaAcademica_Docente");
+
+            entity.HasOne(d => d.IdExperienciaEducativaNavigation).WithMany(p => p.CargaAcademica)
+                .HasForeignKey(d => d.IdExperienciaEducativa)
+                .HasConstraintName("FK_CargaAcademica_ExperienciaEducativa");
+
+            entity.HasOne(d => d.IdPeriodoNavigation).WithMany(p => p.CargaAcademica)
+                .HasForeignKey(d => d.IdPeriodo)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_CargaAcademica_Periodo");
         });
 
         modelBuilder.Entity<CoordinadorDgaa>(entity =>
@@ -546,6 +586,9 @@ public partial class GestionDePlazasDbContext : DbContext
             entity.HasIndex(e => e.IdOferta, "IX_Log_idOferta");
 
             entity.Property(e => e.IdLog).HasColumnName("idLog");
+            entity.Property(e => e.Fecha)
+                .HasColumnType("datetime")
+                .HasColumnName("fecha");
             entity.Property(e => e.IdOferta).HasColumnName("idOferta");
             entity.Property(e => e.Mensaje)
                 .IsUnicode(false)

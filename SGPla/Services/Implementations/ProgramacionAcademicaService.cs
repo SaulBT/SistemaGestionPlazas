@@ -46,24 +46,21 @@ namespace SGPla.Services.Implementations
 
            ofertas.ForEach(o => o.TC = tipoContratacion);
 
-
-
             //await _programacionAcademicaValidator.ValidarProgramas(ofertas);
             //await _programacionAcademicaValidator.ValidarExperiencias(ofertas);
             //await _programacionAcademicaValidator.ValidarDocentes(ofertas);
 
-
             return ofertas;
         }
 
-        public async Task<bool> GuardarOfertasAsync(List<OfertaDTO> ofertas)
+        public async Task<bool> GuardarOfertasyCargasAsync(List<OfertaDTO> ofertas, List<CargaConOfertaDTO> cargas)
         {
             await _programacionAcademicaValidator.ValidarProgramas(ofertas);
             await _programacionAcademicaValidator.ValidarExperiencias(ofertas);
             await _programacionAcademicaValidator.ValidarDocentes(ofertas);
             await _programacionAcademicaValidator.ValidarArticulo(ofertas);
 
-            var numerosPersonal = ofertas
+            var numerosPersonalOfertas = ofertas
                 .Select(o => o.NP)
                 .Where(np => !string.IsNullOrWhiteSpace(np))
                 .Distinct()
@@ -75,8 +72,8 @@ namespace SGPla.Services.Implementations
                 .Distinct()
                 .ToList();
 
-            var docentes = await _docenteRepository
-                .ObtenerIdsPorNumeroPersonalAsync(numerosPersonal);
+            var docentesOfertas = await _docenteRepository
+                .ObtenerIdsPorNumeroPersonalAsync(numerosPersonalOfertas);
 
             var experiencias = await _experienciaRepository
                 .ObtenerIdsPorNombreAsync(nombresExperiencia);
@@ -91,6 +88,18 @@ namespace SGPla.Services.Implementations
                 .ObtenerIdsProgramasAsync(nombresProgramas);
 
             var ofertasModel = new List<Oferta>();
+
+
+            var numerosPersonalCargas = cargas
+                .Select(c => c.NumeroPersonal)
+                .Where(np => !string.IsNullOrWhiteSpace(np))
+                .Distinct()
+                .ToList();
+
+            var docentesCargas = await _docenteRepository
+                .ObtenerIdsPorNumeroPersonalAsync(numerosPersonalCargas);
+
+            var cargasModel = new List<CargaAcademica>();
 
             foreach (var dto in ofertas)
             {
@@ -108,7 +117,7 @@ namespace SGPla.Services.Implementations
 
                 if (!string.IsNullOrWhiteSpace(dto.NP))
                 {
-                    if (docentes.TryGetValue(dto.NP, out var idDocente))
+                    if (docentesOfertas.TryGetValue(dto.NP, out var idDocente))
                     {
                         oferta.IdDocente = idDocente;
                     }
@@ -132,8 +141,44 @@ namespace SGPla.Services.Implementations
                 ofertasModel.Add(oferta);
             }
 
+            foreach (var carga in cargas)
+            {
+                if (!string.IsNullOrWhiteSpace(carga.Programa))
+                {
+                    var clavePrograma = ObtenerClavePrograma(carga.Programa);
+                    if (!idsProgramas.TryGetValue(clavePrograma, out var idPrograma))
+                    {
+                        throw new ArgumentException(
+                            $"No existe un programa con clave '{clavePrograma}'.");
+                    }
+
+                    if (!docentesCargas.TryGetValue(carga.NumeroPersonal, out var idDocente))
+                    {
+                        throw new ArgumentException(
+                            $"No existe un docente con NP '{carga.NumeroPersonal}'.");
+                    }
+                    carga.idDocente = idDocente;
+
+                    bool encontrada = experiencias.TryGetValue(carga.ExperienciaEducativa, out var idExperiencia);
+
+                    if (!encontrada && !string.IsNullOrWhiteSpace(carga.Nrc))
+                    {
+                        throw new ArgumentException(
+                            $"No existe una experiencia con nombre '{carga.ExperienciaEducativa}'.");
+                    }
+
+                    carga.idExperienciaEducativa = encontrada ? idExperiencia : null;
+
+                    carga.idPeriodo = ofertasModel
+                        .FirstOrDefault(o => o.IdProgramaEducativo == idPrograma)?.IdPeriodo ?? 0;
+                }
+
+                var cargaModel = CargaAcademicaMapper.ToModel(carga);
+                cargasModel.Add(cargaModel);
+            }
+
             await _programacionAcademicaRepository
-                .GuardarOfertas(ofertasModel);
+                .GuardarOfertasYCargas(ofertasModel, cargasModel);
 
             return true;
         }
@@ -144,16 +189,12 @@ namespace SGPla.Services.Implementations
         }
 
         public async Task<List<CargaConOfertaDTO>> ProcesarCargasAsync(
-            IFormFile archivoCarga,
-            List<OfertaDTO> ofertasEnSesion)
+            IFormFile archivoCarga)
         {
             using var stream = archivoCarga.OpenReadStream();
             var cargas = CargasParser.Parse(stream);
 
-            var ofertasPorNrc = ofertasEnSesion
-                .GroupBy(o => o.NRC?.Trim() ?? string.Empty)
-                .ToDictionary(g => g.Key, g => g.First(),
-                              StringComparer.OrdinalIgnoreCase);
+           
 
             var resultado = new List<CargaConOfertaDTO>();
 
@@ -161,26 +202,19 @@ namespace SGPla.Services.Implementations
             {
                 foreach (var experiencia in docente.Experiencias)
                 {
-                    ofertasPorNrc.TryGetValue(experiencia.Nrc, out var oferta);
 
                     resultado.Add(new CargaConOfertaDTO
                     {
                         NumeroPersonal = docente.NumeroPersonal,
                         NombreDocente = docente.Nombre,
-                        Plaza = experiencia.Plaza,
-                        Categoria = experiencia.Categoria,
-                        TipoContratacion = experiencia.TipoContratacion,
-                        Nrc = experiencia.Nrc,
+                        Plaza = string.IsNullOrWhiteSpace(experiencia.Plaza) ? null : experiencia.Plaza,
+                        TipoContratacion = string.IsNullOrWhiteSpace(experiencia.TipoContratacion) ? null : experiencia.TipoContratacion,
+                        Nrc = string.IsNullOrWhiteSpace(experiencia.Nrc) ? null : experiencia.Nrc,
                         ExperienciaEducativa = experiencia.ExperienciaEducativa,
                         HorasContacto = experiencia.HorasContacto,
                         HorasPago = experiencia.HorasPago,
-                        MotivoRh = experiencia.MotivoRh,
-                        IndActDocente = experiencia.IndActDocente,
                         Imparte = experiencia.Imparte,
-                        NrcEncontrado = oferta is not null,
-                        Programa = oferta?.Programa,
-                        NpOferta = oferta?.NP,
-                        DocenteOferta = oferta?.NombreDocente,
+                        Programa = experiencia.ClaveProgramatica,
                     });
                 }
             }
@@ -221,6 +255,56 @@ namespace SGPla.Services.Implementations
         {
             return await _programacionAcademicaRepository
                 .ObtenerOfertasGuardadasAsync(idEntidadAcademica, idProgramaEducativo, idPeriodo);
+        }
+
+        public async Task<OfertaDTO?> ObtenerOfertaPorId(int idOferta)
+        {
+            return await _programacionAcademicaRepository.ObtenerOfertaPorId(idOferta);
+        }
+
+        public async Task<bool> EditarOfertaAsync(int idOferta, OfertaDTO ofertaDTO)
+        {
+            return await _programacionAcademicaRepository.EditarOfertaAsync(idOferta, ofertaDTO);
+        }
+
+        public async Task<List<LogDTO>> ObtenerHistorialPorIdOferta(int idOferta)
+        {
+            var movimientos = _programacionAcademicaRepository.ObtenerLogsPorOfertaAsync(idOferta);
+
+            List<LogDTO> logs = new List<LogDTO>();
+
+            foreach (var movimiento in await movimientos)
+            {
+                logs.Add(new LogDTO
+                {
+                    Fecha = movimiento.Fecha,
+                    Mensaje = movimiento.Mensaje
+                });
+            }
+            return logs;
+        }
+
+        public async Task<List<Log>> EliminarOfertaAsync(int idOferta)
+        {
+            await _programacionAcademicaRepository.EliminarOfertaAsync(idOferta);
+            return await _programacionAcademicaRepository.ObtenerLogsPorOfertaAsync(idOferta);
+        }
+
+        public async Task CambiarInclusionOfertaAsync(int idOferta, bool incluir)
+        {
+            bool cambio = !incluir;
+
+            await _programacionAcademicaRepository.CambiarInclusionOfertaAsync(idOferta, cambio);
+        }
+
+        public async Task CambiarAVacanteAsync(int idOferta, string justificacion)
+        {
+            await _programacionAcademicaRepository.CambiarAVacanteAsync(idOferta, justificacion);
+        }
+
+        public async Task AsignarDocenteAsync(int idOferta, int idDocente)
+        {
+            await _programacionAcademicaRepository.AsignarDocenteAsync(idOferta, idDocente);
         }
     }
 }

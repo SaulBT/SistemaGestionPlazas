@@ -24,12 +24,15 @@
 
 <script>
 
-    function mostrarToast(id, duracion = @Model.Duracion) {
-
+       function mostrarToast(id, mensaje = null, duracion = @Model.Duracion) {
         const toast = document.getElementById(id);
-
         if (!toast)
             return;
+
+        if (mensaje) {
+            const body = toast.querySelector(".toast-body");
+            if (body) body.textContent = mensaje;
+        }
 
         toast.classList.add("show");
 

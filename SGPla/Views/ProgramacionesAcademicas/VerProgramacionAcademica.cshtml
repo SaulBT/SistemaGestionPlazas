@@ -1,176 +1,313 @@
-﻿@using SGPla.Models.ViewModels.ProgramacionesAcademicas
+﻿@using SGPla.Models.Componentes
+@using SGPla.Models.ViewModels.ProgramacionesAcademicas
 @model VerProgramacionAcademicaViewModel
 
 @{
-    Layout = "_LayoutSuperUsuario";
-    ViewData["Title"] = "Experiencias Educativas";
+	Layout = "_LayoutSuperUsuario";
+	ViewData["Title"] = "Experiencias Educativas";
+	ViewBag.RegresarUrl = Url.Action("Index", "ProgramacionesAcademicas");
 }
 
 <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:flex-start; justify-content:space-evenly;">
-    <div style="flex:1; min-width:0;">
-        @await Component.InvokeAsync("InputField", new InputFieldModel
-        {
-            Id = "region",
-            Name = "Region",
-            Label = "Región:",
-            Valor = Model.Region,
-            Flexible = true,
-            MaximoCaracteres = 5,
-            Disabled = true
-        })
-    </div>
-    <div style="flex:3; min-width:0;">
-        @await Component.InvokeAsync("InputField", new InputFieldModel
-        {
-            Id = "entidadAcademica",
-            Name = "EntidadAcademica",
-            Label = "Entidad Académica:",
-            Valor = Model.NombreEntidadAcademica,
-            Flexible = true,
-            MaximoCaracteres = 94,
-            Disabled = true
-        })
-    </div>
-    <div style="flex:3; min-width:0;">
-        @await Component.InvokeAsync("InputField", new InputFieldModel
-        {
-            Id = "periodo",
-            Name = "Periodo",
-            Label = "Periodo:",
-            Valor = Model.NombrePeriodo,
-            Flexible = true,
-            MaximoCaracteres = 94,
-            Disabled = true
-        })
-    </div>
-    <div style="flex:3; min-width:0;">
-        @await Component.InvokeAsync("InputField", new InputFieldModel
-        {
-            Id = "programa",
-            Name = "Programa",
-            Label = "Programa Educativo:",
-            Valor = Model.NombrePrograma,
-            Flexible = true,
-            MaximoCaracteres = 94,
-            Disabled = true
-        })
-    </div>
+	<div style="flex:1; min-width:0;">
+		@await Component.InvokeAsync("InputField", new InputFieldModel
+		{
+			Id = "region",
+			Name = "Region",
+			Label = "Región:",
+			Valor = Model.Region,
+			Flexible = true,
+			MaximoCaracteres = 5,
+			Disabled = true
+		})
+	</div>
+	<div style="flex:3; min-width:0;">
+		@await Component.InvokeAsync("InputField", new InputFieldModel
+		{
+			Id = "entidadAcademica",
+			Name = "EntidadAcademica",
+			Label = "Entidad Académica:",
+			Valor = Model.NombreEntidadAcademica,
+			Flexible = true,
+			MaximoCaracteres = 94,
+			Disabled = true
+		})
+	</div>
+	<div style="flex:3; min-width:0;">
+		@await Component.InvokeAsync("InputField", new InputFieldModel
+		{
+			Id = "periodo",
+			Name = "Periodo",
+			Label = "Periodo:",
+			Valor = Model.NombrePeriodo,
+			Flexible = true,
+			MaximoCaracteres = 94,
+			Disabled = true
+		})
+	</div>
+	<div style="flex:3; min-width:0;">
+		@await Component.InvokeAsync("InputField", new InputFieldModel
+		{
+			Id = "programa",
+			Name = "Programa",
+			Label = "Programa Educativo:",
+			Valor = Model.NombrePrograma,
+			Flexible = true,
+			MaximoCaracteres = 94,
+			Disabled = true
+		})
+	</div>
 </div>
 <div class="tabs-container" id="miTabs">
 
-    <div class="tabs-header">
+	<div class="tabs-header">
 
-        <button class="tab-button active" data-tab="0"
-                onclick="seleccionarTab('miTabs', 0)">
-            Asignadas
-        </button>
+		<button class="tab-button active" data-tab="0"
+				onclick="seleccionarTab('miTabs', 0)">
+			Asignadas
+		</button>
 
-        <button class="tab-button"
-                data-tab="1"
-                onclick="seleccionarTab('miTabs', 1)">
-            Vacantes
-        </button>
+		<button class="tab-button"
+				data-tab="1"
+				onclick="seleccionarTab('miTabs', 1)">
+			Vacantes
+		</button>
 
-    </div>
+	</div>
 
-    <div class="tabs-body">
+	<div class="tabs-body">
 
-        <div class="tab-content active" data-tab="0">
-            @await Component.InvokeAsync("Table", Model.TableAsignadas)
-        </div>
+		<div class="tab-content active" data-tab="0">
+			@await Component.InvokeAsync("Table", Model.TableAsignadas)
+		</div>
 
-        <div class="tab-content" data-tab="1">
-            @await Component.InvokeAsync("Table", Model.TableVacantes)
-        </div>
+		<div class="tab-content" data-tab="1">
+			@await Component.InvokeAsync("Table", Model.TableVacantes)
+		</div>
 
-    </div>
+	</div>
 
 </div>
 
-<!-- Botón Regresar -->
-<div>
-    <a href="@Url.Action("Index", "ProgramacionesAcademicas")" style="display: inline-block; text-decoration: none;">
-        @await Component.InvokeAsync("Boton", new
-        {
-            Accion = "Regresar"
-        })
-    </a>
-</div>
+
+
 
 @await Component.InvokeAsync("Modal", new ModalModel
 {
-    Id = "modalHorario",
-    Tipo = "info",
-    Titulo = "Horario"
+	Id = "modalHorario",
+	Tipo = "info",
+	Titulo = "Horario"
+})
+
+@await Component.InvokeAsync("Modal", new ModalModel
+{
+	Id = "modalConfirmacion",
+	Tipo = "confirm",
+	Titulo = "Confirmación",
+	OnConfirm = "confirmarModal()",
+	OnCancel = "cerrarModal('modalConfirmacion')"
+})
+
+@await Component.InvokeAsync("Modal", new ModalModel
+{
+	Id = "modalConfirmacionRetirarDocente",
+	Tipo = "confirm",
+	Titulo = "Retirar docente",
+	SolicitarMotivo = true,
+	MotivoLabel = "Motivo del retiro:",
+	OnConfirm = "confirmarRetirarDocenteModal()",
+	OnCancel = "cerrarModal('modalConfirmacionRetirarDocente')"
 })
 
 	
+@await Component.InvokeAsync("Toast", new ToastModel
+{
+	Id = "toastInclusion",
+	Titulo = "Notificación",
+	Tipo = "success"
+})
 
 <script>
-            function seleccionarTab(containerId, index) {
+			function seleccionarTab(containerId, index) {
 
-        const container = document.getElementById(containerId);
+		const container = document.getElementById(containerId);
 
-        const buttons = container.querySelectorAll(".tab-button");
-        const contents = container.querySelectorAll(".tab-content");
+		const buttons = container.querySelectorAll(".tab-button");
+		const contents = container.querySelectorAll(".tab-content");
 
-        buttons.forEach(b => b.classList.remove("active"));
-        contents.forEach(c => c.classList.remove("active"));
+		buttons.forEach(b => b.classList.remove("active"));
+		contents.forEach(c => c.classList.remove("active"));
 
-        const btn = container.querySelector(`[data-tab="${index}"].tab-button`);
-        const content = container.querySelector(`[data-tab="${index}"].tab-content`);
+		const btn = container.querySelector(`[data-tab="${index}"].tab-button`);
+		const content = container.querySelector(`[data-tab="${index}"].tab-content`);
 
-        if (!btn || !content) return;
+		if (!btn || !content) return;
 
-        btn.classList.add("active");
-        content.classList.add("active");
+		btn.classList.add("active");
+		content.classList.add("active");
 
-        localStorage.setItem(`tabs-${containerId}`, index);
-    }
+		localStorage.setItem(`tabs-${containerId}`, index);
+	}
 </script>
 
 <script>
-    document.addEventListener('shown.bs.tab', function (e) {
-        const target = e.target.getAttribute('data-bs-target');
-        document.querySelector(target)
-            ?.querySelectorAll('table[data-pagination-mode="client"]')
-            .forEach(t => inicializarTablaCliente(t.id));
-    });
+	document.addEventListener('shown.bs.tab', function (e) {
+		const target = e.target.getAttribute('data-bs-target');
+		document.querySelector(target)
+			?.querySelectorAll('table[data-pagination-mode="client"]')
+			.forEach(t => inicializarTablaCliente(t.id));
+	});
 </script>
 
 
 
 <script>
-        function abrirModalHorario(oferta) {
-        const formatear = (h) => {
-            const inicio = h?.Inicio ?? h?.inicio;
-            const fin = h?.Fin ?? h?.fin;
-            return (inicio && fin)
-                ? `${inicio.substring(0,5)} - ${fin.substring(0,5)}`
-                : "—";
-        };
+		function abrirModalHorario(oferta) {
+		const formatear = (h) => {
+			const inicio = h?.Inicio ?? h?.inicio;
+			const fin = h?.Fin ?? h?.fin;
+			return (inicio && fin)
+				? `${inicio.substring(0,5)} - ${fin.substring(0,5)}`
+				: "—";
+		};
 
-        const dias = [
-            { nombre: "Lunes", valor: oferta.Lunes },
-            { nombre: "Martes", valor: oferta.Martes },
-            { nombre: "Miércoles", valor: oferta.Miercoles },
-            { nombre: "Jueves", valor: oferta.Jueves },
-            { nombre: "Viernes", valor: oferta.Viernes },
-            { nombre: "Sábado", valor: oferta.Sabado },
-        ];
+		const dias = [
+			{ nombre: "Lunes", valor: oferta.Lunes },
+			{ nombre: "Martes", valor: oferta.Martes },
+			{ nombre: "Miércoles", valor: oferta.Miercoles },
+			{ nombre: "Jueves", valor: oferta.Jueves },
+			{ nombre: "Viernes", valor: oferta.Viernes },
+			{ nombre: "Sábado", valor: oferta.Sabado },
+		];
 
-        const html = `
-            <table class="table table-bordered text-center">
-                <thead>
-                    <tr>${dias.map(d => `<th>${d.nombre}</th>`).join("")}</tr>
-                </thead>
-                <tbody>
-                    <tr>${dias.map(d => `<td>${formatear(d.valor)}</td>`).join("")}</tr>
-                </tbody>
-            </table>
-        `;
-        document.getElementById("modalHorario-body").innerHTML = html;
-        abrirModal("modalHorario");
-    }
+		const html = `
+			<table class="table table-bordered text-center">
+				<thead>
+					<tr>${dias.map(d => `<th>${d.nombre}</th>`).join("")}</tr>
+				</thead>
+				<tbody>
+					<tr>${dias.map(d => `<td>${formatear(d.valor)}</td>`).join("")}</tr>
+				</tbody>
+			</table>
+		`;
+		document.getElementById("modalHorario-body").innerHTML = html;
+		abrirModal("modalHorario");
+	}
 </script>
 
+<script>
+					function cambiarInclusion(switchControl) {
+		const idOferta = Number(switchControl.dataset.id);
+		const incluir = switchControl.checked;
+
+		fetch('/ProgramacionesAcademicas/CambiarInclusionOferta', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ idOferta: idOferta, incluida: incluir })
+		})
+		.then(response => {
+			if (!response.ok) throw new Error();
+			const mensaje = incluir ? "La oferta será incluida" : "La oferta no será incluida";
+			mostrarToast('toastInclusion', mensaje);
+		})
+		.catch(() => {
+			switchControl.checked = !incluir;
+			mostrarToast('toastInclusion', "No se pudo actualizar la oferta");
+		});
+	}
+</script>
+
+
+<script>
+					function eliminarOferta(idOferta) {
+		fetch('/ProgramacionesAcademicas/EliminarOferta', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(Number(idOferta))
+		})
+		.then(async response => {
+			if (!response.ok) {
+				const data = await response.json().catch(() => null);
+				throw new Error(data?.mensaje || 'Error al eliminar');
+			}
+			mostrarToast('toastInclusion', 'La oferta fue eliminada');
+			location.reload();
+		})
+		.catch((err) => {
+			mostrarToast('toastInclusion', err.message);
+		});
+	}
+</script>
+
+<script>
+				function confirmarModal() {
+		cerrarModal('modalConfirmacion');
+		if (typeof callbackConfirmacion === 'function') {
+			callbackConfirmacion();
+		}
+	}
+</script>
+
+<script>
+	let callbackConfirmacion = null;
+	let callbackConfirmacionRetirarDocente = null;
+
+	function abrirModalConfirmacion(mensaje, callback) {
+		callbackConfirmacion = callback;
+		document.getElementById('modalConfirmacion-mensaje').textContent = mensaje;
+		abrirModal('modalConfirmacion');
+	}
+
+	function confirmarModal() {
+		cerrarModal('modalConfirmacion');
+		if (typeof callbackConfirmacion === 'function') {
+			callbackConfirmacion();
+		}
+		callbackConfirmacion = null;
+	}
+
+	function abrirModalConfirmacionRetirarDocente(mensaje, callback) {
+		console.log("Entró");
+	callbackConfirmacionRetirarDocente = callback;
+	document.getElementById('modalConfirmacionRetirarDocente-mensaje').textContent = mensaje;
+	document.getElementById('modalConfirmacionRetirarDocente-motivo').value = '';
+	abrirModal('modalConfirmacionRetirarDocente');
+	}
+
+	function confirmarRetirarDocenteModal() {
+		const motivo = document.getElementById('modalConfirmacionRetirarDocente-motivo').value.trim();
+		cerrarModal('modalConfirmacionRetirarDocente');
+		if (typeof callbackConfirmacionRetirarDocente === 'function') {
+			callbackConfirmacionRetirarDocente(motivo);
+		}
+		callbackConfirmacionRetirarDocente = null;
+	}
+</script>
+
+<script>
+	function cambiarAVacante(idOferta, motivo) {
+		fetch('/ProgramacionesAcademicas/CambiarAVacante', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ idOferta: Number(idOferta), motivo: motivo })
+		})
+		.then(async response => {
+			if (!response.ok) {
+				const data = await response.json().catch(() => null);
+				throw new Error(data?.mensaje || 'Error al retirar docente');
+			}
+			mostrarToast('toastInclusion', 'La experiencia se pasó a estar vacante');
+			location.reload();
+		})
+		.catch((err) => {
+			mostrarToast('toastInclusion', err.message);
+		});
+	}
+</script>
+
+<script>
+
+		function abrirAsignacionDocente(idOferta) {
+		window.location.href = `/ProgramacionesAcademicas/AsignarDocente?idOferta=${idOferta}`;
+	}
+</script>

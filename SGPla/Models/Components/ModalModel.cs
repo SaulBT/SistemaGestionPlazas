@@ -18,5 +18,10 @@
 
         public string? Body { get; set; }
         public string Accion { get; set; } = "Confirmar";
+
+        // NUEVO — opcional, no afecta modales existentes
+        public bool SolicitarMotivo { get; set; } = false;
+        public string MotivoLabel { get; set; } = "Motivo:";
+        public string MotivoPlaceholder { get; set; } = "Escriba el motivo...";
     }
 }

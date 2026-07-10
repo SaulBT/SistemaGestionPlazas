@@ -11,5 +11,7 @@ public partial class Log
 
     public string Mensaje { get; set; } = null!;
 
+    public DateTime Fecha { get; set; }
+
     public virtual Oferta IdOfertaNavigation { get; set; } = null!;
 }

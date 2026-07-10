@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using SGPla.Models.DTOs.Oferta;
 using SGPla.Models;
 using SGPla.Models.DTOs.ProgramacionAcademica;
+using SGPla.Commons;
 
 
 namespace SGPla.Repositories.Implementations
@@ -17,19 +18,26 @@ namespace SGPla.Repositories.Implementations
             _context = context;
         }
 
-        public async Task GuardarOfertas(List<Oferta> ofertas)
+        public async Task GuardarOfertasYCargas(List<Oferta> ofertas, List<CargaAcademica> cargas)
         {
             await using var transaction = await _context.Database.BeginTransactionAsync();
-
             try
             {
-
                 await _context.Oferta.AddRangeAsync(ofertas);
+                await _context.CargaAcademica.AddRangeAsync(cargas);
+
+                var logs = ofertas.Select(o => new Log
+                {
+                    IdOfertaNavigation = o,
+                    Mensaje = o.IdDocente == null ? Constantes.HISTORIAL_CREADO_VACANTE : Constantes.HISTORIAL_CREADO_ASIGNADA,
+                    Fecha = DateTime.UtcNow
+                }).ToList();
+
+                await _context.Log.AddRangeAsync(logs);
 
                 await _context.SaveChangesAsync();
 
                 await transaction.CommitAsync();
-
             }
             catch (Exception)
             {
@@ -37,8 +45,6 @@ namespace SGPla.Repositories.Implementations
                 throw;
             }
         }
-
-
 
         private static string ObtenerClavePrograma(string nombre)
         {
@@ -137,7 +143,7 @@ namespace SGPla.Repositories.Implementations
                     .ThenInclude(p => p.IdEntidadAcademicaNavigation)
                 .Include(o => o.IdExperienciaEducativaNavigation)
                 .Include(o => o.IdDocenteNavigation)
-                .Include(o => o.Horario) 
+                .Include(o => o.Horario)
                 .Where(o =>
                     o.IdProgramaEducativo == idProgramaEducativo &&
                     o.IdPeriodo == idPeriodo &&
@@ -156,14 +162,54 @@ namespace SGPla.Repositories.Implementations
                 Articulo = o.IdArticulo,
                 IdPeriodo = o.IdPeriodo,
                 Region = o.IdProgramaEducativoNavigation.IdEntidadAcademicaNavigation.Region,
-
+                Incluida = o.Incluida,
                 Lunes = MapHorario(o.Horario, "Lunes"),
                 Martes = MapHorario(o.Horario, "Martes"),
                 Miercoles = MapHorario(o.Horario, "Miercoles"),
                 Jueves = MapHorario(o.Horario, "Jueves"),
                 Viernes = MapHorario(o.Horario, "Viernes"),
                 Sabado = MapHorario(o.Horario, "Sabado"),
+                IdOferta = o.IdOferta,
+                Plaza = o.Plaza
             }).ToList();
+        }
+
+        public async Task<OfertaDTO?> ObtenerOfertaPorId(int idOferta)
+        {
+            var oferta = await _context.Oferta
+                .Include(o => o.IdProgramaEducativoNavigation)
+                    .ThenInclude(p => p.IdEntidadAcademicaNavigation)
+                .Include(o => o.IdExperienciaEducativaNavigation).ThenInclude(ple => ple.IdPlanEstudiosNavigation)
+                .Include(o => o.IdDocenteNavigation)
+                .Include(o => o.Horario)
+                .FirstOrDefaultAsync(o => o.IdOferta == idOferta);
+            if (oferta == null)
+            {
+                return null;
+            }
+            
+            return new OfertaDTO
+            {
+                Programa = oferta.IdProgramaEducativoNavigation.Nombre,
+                ExperienciaEducativa = oferta.IdExperienciaEducativaNavigation.Nombre,
+                NRC = oferta.Nrc,
+                HorasPago = oferta.Hsm,
+                TC = oferta.TipoContratacion,
+                NombreDocente = oferta.IdDocenteNavigation?.Nombre,
+                NP = oferta.IdDocenteNavigation?.NumeroPersonal,
+                Articulo = oferta.IdArticulo,
+                IdPeriodo = oferta.IdPeriodo,
+                Region = oferta.IdProgramaEducativoNavigation.IdEntidadAcademicaNavigation.Region,
+                Lunes = MapHorario(oferta.Horario, "Lunes"),
+                Martes = MapHorario(oferta.Horario, "Martes"),
+                Miercoles = MapHorario(oferta.Horario, "Miercoles"),
+                Jueves = MapHorario(oferta.Horario, "Jueves"),
+                Viernes = MapHorario(oferta.Horario, "Viernes"),
+                Sabado = MapHorario(oferta.Horario, "Sabado"),
+                IdOferta = oferta.IdOferta,
+                Plaza = oferta.Plaza,
+                Modalidad = oferta.IdExperienciaEducativaNavigation.IdPlanEstudiosNavigation.Modalidad
+            };
         }
 
         private static HorarioDia? MapHorario(IEnumerable<Horario> horarios, string dia)
@@ -176,8 +222,152 @@ namespace SGPla.Repositories.Implementations
             return new HorarioDia
             {
                 Inicio = h.HoraInicio.ToTimeSpan(),
-                Fin = h.HoraFin.ToTimeSpan()
+                Fin = h.HoraFin.ToTimeSpan(),
+                Salon = h.Salon,
+                Dia = h.Dia
             };
+        }
+
+        public async Task<bool> EditarOfertaAsync(int idOferta, OfertaDTO ofertaDTO)
+        {
+            var oferta = await _context.Oferta
+                .Include(o => o.Horario)
+                .FirstOrDefaultAsync(o => o.IdOferta == idOferta);
+            if (oferta == null)
+            {
+                return false;
+            }
+            oferta.Nrc = ofertaDTO.NRC;
+            oferta.TipoContratacion = ofertaDTO.TC;   
+
+            _context.Horario.RemoveRange(oferta.Horario);
+            var nuevosHorarios = new List<Horario>();
+            foreach (var (dia, horario) in new[]
+            {
+                ("Lunes", ofertaDTO.Lunes),
+                ("Martes", ofertaDTO.Martes),
+                ("Miercoles", ofertaDTO.Miercoles),
+                ("Jueves", ofertaDTO.Jueves),
+                ("Viernes", ofertaDTO.Viernes),
+                ("Sabado", ofertaDTO.Sabado)
+            })
+            {
+                if (horario != null)
+                {
+                    nuevosHorarios.Add(new Horario
+                    {
+                        Dia = dia,
+                        HoraInicio = TimeOnly.FromTimeSpan(horario.Inicio),
+                        HoraFin = TimeOnly.FromTimeSpan(horario.Fin),
+                        Salon = horario.Salon,
+                        IdOferta = idOferta
+                    });
+                }
+            }
+
+            var log = new Log
+            {
+                IdOferta = ofertaDTO.IdOferta,
+                Mensaje = Constantes.HISTORIAL_MODIFICADO,
+                Fecha = DateTime.UtcNow
+            };
+
+            await _context.Horario.AddRangeAsync(nuevosHorarios);
+            await _context.Log.AddAsync( log );
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<List<Log>> ObtenerLogsPorOfertaAsync(int idOferta)
+        {
+            return await _context.Log
+                .Where(l => l.IdOferta == idOferta)
+                .ToListAsync();
+        }
+
+        public async Task EliminarOfertaAsync(int idOferta)
+        {
+            var oferta = await _context.Oferta
+                .Include(o => o.OfertaAviso)
+                .Include(o => o.Solicitud)
+                .Include(o => o.Log)
+                .Include(o => o.Horario)
+                .FirstOrDefaultAsync(o => o.IdOferta == idOferta);
+
+            if (oferta != null)
+            {
+                if (oferta.OfertaAviso != null) _context.RemoveRange(oferta.OfertaAviso);
+                if (oferta.Solicitud != null) _context.RemoveRange(oferta.Solicitud);
+                if (oferta.Log != null) _context.RemoveRange(oferta.Log);
+                if (oferta.Horario != null) _context.RemoveRange(oferta.Horario);
+
+                _context.Oferta.Remove(oferta);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task CambiarInclusionOfertaAsync(int idOferta, bool incluir)
+        {
+            var oferta = await _context.Oferta.FindAsync(idOferta);
+
+            if (oferta == null)
+                throw new Exception("La oferta no existe.");
+
+           
+            oferta.Incluida = incluir;
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task CambiarAVacanteAsync(int idOferta, string justificacion)
+        {
+            var oferta = await _context.Oferta.FindAsync(idOferta);
+
+            if (oferta == null)
+                throw new Exception("La oferta no existe.");
+
+
+            oferta.IdDocente = null;
+            oferta.Incluida = true;
+
+            var log = new Log
+            {
+                IdOfertaNavigation = oferta,
+                Mensaje = Constantes.HISTORIAL_JUSTIFICACION + justificacion,
+                Fecha = DateTime.UtcNow
+            };
+
+            _context.Log.Add(log);
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task AsignarDocenteAsync(int idOferta, int idDocente)
+        {
+            var oferta = await _context.Oferta.FindAsync(idOferta);
+
+            var docente = await _context.Docente.FindAsync(idDocente);
+
+            if (oferta == null)
+                throw new Exception("La oferta no existe.");
+
+            if (docente == null)
+                throw new Exception("El docente no existe.");
+
+
+            oferta.IdDocente = idDocente;
+            oferta.Incluida = false;
+
+            var log = new Log
+            {
+                IdOfertaNavigation = oferta,
+                Mensaje = Constantes.HISTORIAL_ASIGNACION_DOCENTE + docente.Nombre,
+                Fecha = DateTime.UtcNow
+            };
+
+            _context.Log.Add(log);
+
+            await _context.SaveChangesAsync();
         }
     }
 }

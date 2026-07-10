@@ -8,5 +8,9 @@
 
         public bool Checked { get; set; }
         public bool Disabled { get; set; }
+
+        public bool IsLabelVisible { get; set; } = true;
+
+        public string? OnChange { get; set; }
     }
 }

@@ -144,10 +144,8 @@
     const UrlEditarGrado = '@Url.Action("EditarGradoRegistro", "Docentes")';
     const UrlEliminarGrado = '@Url.Action("EliminarGradoRegistro", "Docentes")';
     
-    async function cancelarAccion(){
-        const response = await fetch('@Url.Action("CancelarAccion", "Docentes")');
-        const data = await response.json();
-        window.location.href = data.url;
+     function cancelarAccion(){
+        window.location.href = '@ViewBag.UrlRetorno';
     }
 
     function abrirModalArchivo() {
@@ -156,11 +154,6 @@
 
     window.configBanderaArchivo = {
         idBandera: 'banderaArchivo'
-    }
-
-    async function cancelarAccion(){
-        const url = '@Url.Action("Index", "Docentes")';
-        window.location.href = url;
     }
 </script>
 

@@ -7,12 +7,25 @@ namespace SGPla.Repositories.Interfaces
     {
         Task<List<string>> ObtenerRelacionesValidasAsync(List<OfertaDTO> ofertas);
 
-        Task GuardarOfertas(List<Oferta> ofertas);
+        Task GuardarOfertasYCargas(List<Oferta> ofertas, List<CargaAcademica> cargas);
 
         Task<List<ResumenOfertaProgramacionAcademicaDTO>> ObtenerResumenPorProgramaPeriodoAsync(BuscarProgramacionAcademicaDTO? filtro);
 
         Task<List<OfertaDTO>> ObtenerOfertasGuardadasAsync(int idEntidadAcademica, int idProgramaEducativo, int idPeriodo);
 
+        Task<OfertaDTO?> ObtenerOfertaPorId(int idOferta);
 
+        Task<bool> EditarOfertaAsync(int idOferta, OfertaDTO ofertaDTO);
+
+        Task<List<Log>> ObtenerLogsPorOfertaAsync(int idOferta);
+
+        Task EliminarOfertaAsync(int idOferta);
+
+        Task CambiarInclusionOfertaAsync(int idOferta, bool incluir);
+
+        Task CambiarAVacanteAsync(int idOferta, string justificacion);
+
+        Task AsignarDocenteAsync(int idOferta, int idDocente);
     }
+
 }
