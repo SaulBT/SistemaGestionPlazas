@@ -398,7 +398,14 @@ public class ProgramacionesAcademicasController : Controller
                 {
                     Accion = "historial",
                     Url = Url.Action(nameof(VerHistorialExperienciaEducativa), "ProgramacionesAcademicas",
-                    new { idOferta = oferta.IdOferta, oferta.ExperienciaEducativa })
+                    new
+                    {
+                        idOferta = oferta.IdOferta,
+                        oferta.ExperienciaEducativa,
+                        idEntidadAcademica,
+                        idProgramaEducativo,
+                        idPeriodo
+                    })
                 });
 
             if (permisos.Puede(Acciones.ProgramacionAcademica.Editar))
@@ -741,6 +748,10 @@ public class ProgramacionesAcademicasController : Controller
             IdPeriodo = idPeriodo
         };
 
+
+        ViewBag.RegresarUrl = Url.Action("Ver", "ProgramacionesAcademicas",
+            new { idEntidadAcademica, idProgramaEducativo, idPeriodo });
+
         return View(model);
     }
 
@@ -811,7 +822,12 @@ public class ProgramacionesAcademicasController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> VerHistorialExperienciaEducativa(int idOferta, string experienciaEducativa)
+    public async Task<IActionResult> VerHistorialExperienciaEducativa(
+     int idOferta,
+     string experienciaEducativa,
+     int idEntidadAcademica,
+     int idProgramaEducativo,
+     int idPeriodo)
     {
         var mensajes = await _programacionAcademicaService.ObtenerHistorialPorIdOferta(idOferta);
 
@@ -834,6 +850,9 @@ public class ProgramacionesAcademicasController : Controller
             var fechaUtc = DateTime.SpecifyKind(movimiento.Fecha, DateTimeKind.Utc);
             movimiento.Fecha = TimeZoneInfo.ConvertTimeFromUtc(fechaUtc, zona);
         }
+
+        ViewBag.RegresarUrl = Url.Action("Ver", "ProgramacionesAcademicas",
+            new { idEntidadAcademica, idProgramaEducativo, idPeriodo });
 
         return View(vm);
     }
