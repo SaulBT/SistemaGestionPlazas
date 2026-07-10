@@ -193,6 +193,9 @@ public partial class GestionDePlazasDbContext : DbContext
 
             entity.Property(e => e.IdAviso).HasColumnName("idAviso");
             entity.Property(e => e.Archivado).HasColumnName("archivado");
+            entity.Property(e => e.Comentarios)
+                .IsUnicode(false)
+                .HasColumnName("comentarios");
             entity.Property(e => e.Correo)
                 .HasMaxLength(255)
                 .IsUnicode(false)
@@ -226,6 +229,13 @@ public partial class GestionDePlazasDbContext : DbContext
             entity.Property(e => e.Revision)
                 .IsUnicode(false)
                 .HasColumnName("revision");
+            entity.Property(e => e.Sistema)
+                .HasMaxLength(17)
+                .IsUnicode(false)
+                .HasColumnName("sistema");
+            entity.Property(e => e.UrlPublicacion)
+                .IsUnicode(false)
+                .HasColumnName("urlPublicacion");
 
             entity.HasOne(d => d.IdArchivoFirmadoNavigation).WithMany(p => p.AvisoIdArchivoFirmadoNavigation)
                 .HasForeignKey(d => d.IdArchivoFirmado)
@@ -495,10 +505,6 @@ public partial class GestionDePlazasDbContext : DbContext
 
             entity.HasIndex(e => e.IdDocente, "IX_Grado_idDocente");
 
-            entity.HasIndex(e => e.IdDocente, "UX_Grado_docente_ultimo")
-                .IsUnique()
-                .HasFilter("([ultimo]=(1))");
-
             entity.Property(e => e.IdGrado).HasColumnName("idGrado");
             entity.Property(e => e.Grado1)
                 .HasMaxLength(15)
@@ -511,8 +517,8 @@ public partial class GestionDePlazasDbContext : DbContext
                 .HasColumnName("titulo");
             entity.Property(e => e.Ultimo).HasColumnName("ultimo");
 
-            entity.HasOne(d => d.IdDocenteNavigation).WithOne(p => p.Grado)
-                .HasForeignKey<Grado>(d => d.IdDocente)
+            entity.HasOne(d => d.IdDocenteNavigation).WithMany(p => p.Grado)
+                .HasForeignKey(d => d.IdDocente)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Grado_Docente");
         });
@@ -527,7 +533,7 @@ public partial class GestionDePlazasDbContext : DbContext
 
             entity.Property(e => e.IdHorario).HasColumnName("idHorario");
             entity.Property(e => e.Dia)
-                .HasMaxLength(10)
+                .HasMaxLength(255)
                 .IsUnicode(false)
                 .HasColumnName("dia");
             entity.Property(e => e.HoraFin).HasColumnName("horaFin");

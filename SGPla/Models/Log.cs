@@ -9,7 +9,7 @@ public partial class Log
 
     public int IdOferta { get; set; }
 
-    public string Mensaje { get; set; } = string.Empty;
+    public string Mensaje { get; set; } = null!;
 
     public DateTime Fecha { get; set; }
 

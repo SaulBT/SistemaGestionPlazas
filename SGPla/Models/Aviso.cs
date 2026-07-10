@@ -37,6 +37,12 @@ public partial class Aviso
 
     public string Estado { get; set; } = null!;
 
+    public string? UrlPublicacion { get; set; }
+
+    public string Sistema { get; set; } = null!;
+
+    public string? Comentarios { get; set; }
+
     public virtual ICollection<Acta> Acta { get; set; } = new List<Acta>();
 
     public virtual ICollection<Horario> Horario { get; set; } = new List<Horario>();
