@@ -72,7 +72,7 @@
     }
 
 .boton-terciario {
-    background-color: var(--gris);
+    background-color: var(--azul--terciario);
 }
 
     .boton-terciario .text-wrapper {
@@ -80,7 +80,7 @@
     }
 
     .boton-terciario:hover {
-        background-color: var(--gris-hover);
+        background-color: var(--azul--terciario-hover);
     }
 
     .boton-terciario i {
