@@ -75,6 +75,8 @@
         public const string GRADOS = "Grados";
         public const string PROGRAMACION_ACADEMICA = "Programación Académica";
         public const string PROGRAMACIONES_ACADEMICAS = "Programaciones Académicas";
+        public const string AVISO = "Aviso";
+        public const string AVISOS = "Avisos";
 
         public const string ARCHIVO = "Archivo";
         public const string RUTA_ARCHIVO = "Ruta del Archivo";

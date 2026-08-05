@@ -139,7 +139,59 @@ namespace SGPla.Controllers
         }
 
         //Eliminar
+        [HttpGet]
+        public async Task EliminarAvisoAsync(int idAviso)
+        {
+            try
+            {
+                await _avisoService.EliminarAvisoPorId(idAviso);
+                TempData["Success"] = string.Format(Constantes.TOAST_ELIMINACION_EL, Constantes.AVISO);
+            }
+            catch (ValidacionExcepction vx)
+            {
+                this.LanzarError(_logger, vx, NOMBRE_LOGGER, INDEX, Constantes.LOG_ERROR_VALIDACION);
+            }
+            catch (Exception ex)
+            {
+                this.LanzarError(_logger, ex, NOMBRE_LOGGER, INDEX, Constantes.LOG_ERROR_INESPERADO);
+            }
+        }
 
+        // =================
+        // Enviar a Revisión
+        // =================
+
+        //Vista
+        [HttpGet]
+        public async Task<IActionResult> EnviarARevisionAsync(int idAviso)
+        {
+            //TO DO
+            return View();
+        }
+
+        [HttpPost]
+        public async Task ConfirmarEnviarARevisionAsync(string comentarios, int idAviso)
+        {
+            try
+            {
+                var revisionDTO = new RevisionDTO
+                {
+                    Comentarios = comentarios,
+                    IdAviso = idAviso
+                };
+
+                await _avisoService.EnviarARevisionAsync(revisionDTO);
+                TempData["Success"] = "El Aviso se ha enviado a revisión por DGAA.";
+            }
+            catch (ValidacionExcepction vx)
+            {
+                this.LanzarError(_logger, vx, NOMBRE_LOGGER, INDEX, Constantes.LOG_ERROR_VALIDACION);
+            }
+            catch (Exception ex)
+            {
+                this.LanzarError(_logger, ex, NOMBRE_LOGGER, INDEX, Constantes.LOG_ERROR_INESPERADO);
+            }
+        }
 
         // ==========
         // UTILS

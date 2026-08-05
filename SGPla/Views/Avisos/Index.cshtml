@@ -109,3 +109,36 @@
             ]
         })
 </div>
+
+@await Component.InvokeAsync("Modal", new ModalModel
+{
+    Id = "modalEliminarAviso",
+    Tipo = "confirm",
+    Titulo = "Eliminar Aviso",
+    Mensaje = "Esta acción es irreversible ¿Está seguro de eliminar el Aviso?",
+    OnConfirm = "eliminarAvisoAsync()",
+    OnCancel = "cerrarModal('modalEliminarAviso')"
+})
+
+<script>
+    //Eliminar
+    const UrlEliminarAviso = '@Url.Action("EliminarAviso", "Avisos")';
+    var idAvisoEliminar = 0;
+
+    function abrirModalEliminar(idAviso){
+        idAvisoEliminar = idAviso;
+        abrirModal("modalEliminarAviso");
+    }
+
+    async function eliminarAvisoAsync() {
+        const response = await fetch(`${UrlEliminarAviso}?idAviso=${idAvisoEliminar}`);
+        if (response.ok) {
+            document.getElementById("filtrosForm").submit();
+            cerrarModal("modalEliminarAviso")
+        } else {
+            //TO DO
+            console.log("Error");
+        }
+    }
+
+</script>

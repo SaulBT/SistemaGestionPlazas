@@ -71,12 +71,14 @@
 		@switch (Model.Estado)
 		{
 			case Constantes.CREADO:
-				@await Component.InvokeAsync("Boton", new
-				{
-					texto = "Enviar a revisión por DGAA",
-					accion = "enviar",
-					tipo = "terciario"
-				})
+				<a href="@Url.Action("EnviarARevision", "Avisos", new { Model.IdAviso })">
+					@await Component.InvokeAsync("Boton", new
+					{
+						texto = "Enviar a revisión por DGAA",
+						accion = "enviar",
+						tipo = "terciario"
+					})
+				</a>
 				@await Component.InvokeAsync("Boton", new
 				{
 					texto = "Ver Aviso",
@@ -90,7 +92,8 @@
 				@await Component.InvokeAsync("Boton", new
 				{
 					accion = "eliminar",
-					fondo = false
+					fondo = false,
+					OnClick = $"abrirModalEliminar({Model.IdAviso})"
 				})
 				break;
 
@@ -107,7 +110,8 @@
 				{
 					texto = "Firmar",
 					accion = "firmar",
-					tipo = "terciario"
+					tipo = "terciario",
+					OnClick = $"abrirModalFirmar({Model.IdAviso})"
 				})
 				@await Component.InvokeAsync("Boton", new
 				{
@@ -122,12 +126,14 @@
 				break;
 
 			case Constantes.DEVUELTO_POR_DGAA:
-				@await Component.InvokeAsync("Boton", new
-				{
-					texto = "Enviar a revisión por DGAA",
-					accion = "enviar",
-					tipo = "terciario"
-				})
+				<a href="@Url.Action("EnviarARevision", "Avisos", new { Model.IdAviso })">
+					@await Component.InvokeAsync("Boton", new
+					{
+						texto = "Enviar a revisión por DGAA",
+						accion = "enviar",
+						tipo = "terciario"
+					})
+				</a>
 				@await Component.InvokeAsync("Boton", new
 				{
 					texto = "Ver comentarios",
