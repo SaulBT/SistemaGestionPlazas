@@ -122,7 +122,7 @@ app.MapStaticAssets();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Docentes}/{action=Index}/{id?}")
+    pattern: "{controller=Avisos}/{action=Index}/{id?}")
     .WithStaticAssets();
 
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
