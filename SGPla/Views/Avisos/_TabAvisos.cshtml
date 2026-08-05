@@ -1,17 +1,23 @@
-﻿@page
-@using SGPla.Commons
+﻿@using SGPla.Commons
 @model SGPla.Models.ViewModels.Avisos.TabAvisosViewModel
 @{
 	<div class="d-flex flex-column row-gap-2">
-		@await Component.InvokeAsync("AvisoTarjeta", new AvisoTarjetaModel
+		@if (Model.Lista.Count > 0)
 		{
-			IdAviso = 1,
-			EntidadAcademica = "Facultad de Estadística e Informática",
-			Folio = "001",
-			Periodo = "Febrero - Julio 2026",
-			Articulo = "70",
-			FechaCreacion = "7 de julio de 2026",
-			Estado = Constantes.CREADO
-		})
+			foreach (var aviso in Model.Lista)
+			{
+				//Console.WriteLine($"===\n- IdAaviso: {aviso.IdAviso}\n- Entidad: {aviso.NombreEntidadAcademica}\n- Folio: {aviso.Folio}\n- Periodo: {aviso.Periodo}\n- Articulo: {aviso.Articulo}\n- Fecha: {aviso.FechaCreacion}\n- Estado: {aviso.Estado}");
+				@await Component.InvokeAsync("AvisoTarjeta", new AvisoTarjetaModel
+				{
+					IdAviso = aviso.IdAviso,
+					EntidadAcademica = aviso.NombreEntidadAcademica,
+					Folio = aviso.Folio,
+					Periodo = aviso.Periodo,
+					Articulo = aviso.Articulo,
+					FechaCreacion = aviso.FechaCreacion,
+					Estado = aviso.Estado
+				});
+			}
+		}
 	</div>
 }

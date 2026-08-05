@@ -61,6 +61,7 @@ namespace SGPla.Controllers
                     return View(new IndexViewModel());
                 }
 
+                //Verificar rol
                 if (rol.Contains(Constantes.COORDINADOR_EA))
                 {
                     idEntidadAcademica = HttpContext.Session.GetInt32(Constantes.ID_ENTIDAD_ACADEMICA);
@@ -91,13 +92,13 @@ namespace SGPla.Controllers
                     Pagina = pagina
                 });
 
-                TabAvisosViewModel todos = new() { Lista = avisos };
-                TabAvisosViewModel creados = new() { Lista = avisos.Where(a => a.Estado.Contains(Constantes.CREADO)).ToList() };
-                TabAvisosViewModel enRevision = new() { Lista = avisos.Where(a => a.Estado.Contains(Constantes.EN_REVISION_POR_DGAA)).ToList() };
-                TabAvisosViewModel avalados = new() { Lista = avisos.Where(a => a.Estado.Contains(Constantes.AVALADO_POR_DGAA)).ToList() };
-                TabAvisosViewModel devueltos = new() { Lista = avisos.Where(a => a.Estado.Contains(Constantes.DEVUELTO_POR_DGAA)).ToList() };
-                TabAvisosViewModel firmados = new() { Lista = avisos.Where(a => a.Estado.Contains(Constantes.FIRMADO)).ToList() };
-                TabAvisosViewModel publicados = new() { Lista = avisos.Where(a => a.Estado.Contains(Constantes.PUBLICADO)).ToList() };
+                TabAvisosViewModel todos = new() { Lista = avisos.Where(a => !a.Archivado).ToList() };
+                TabAvisosViewModel creados = new() { Lista = avisos.Where(a => a.Estado.Contains(Constantes.CREADO) && !a.Archivado).ToList() };
+                TabAvisosViewModel enRevision = new() { Lista = avisos.Where(a => a.Estado.Contains(Constantes.EN_REVISION_POR_DGAA) && !a.Archivado).ToList() };
+                TabAvisosViewModel avalados = new() { Lista = avisos.Where(a => a.Estado.Contains(Constantes.AVALADO_POR_DGAA) && !a.Archivado).ToList() };
+                TabAvisosViewModel devueltos = new() { Lista = avisos.Where(a => a.Estado.Contains(Constantes.DEVUELTO_POR_DGAA) && !a.Archivado).ToList() };
+                TabAvisosViewModel firmados = new() { Lista = avisos.Where(a => a.Estado.Contains(Constantes.FIRMADO) && !a.Archivado).ToList() };
+                TabAvisosViewModel publicados = new() { Lista = avisos.Where(a => a.Estado.Contains(Constantes.PUBLICADO) && !a.Archivado).ToList() };
                 TabAvisosViewModel conActa = new() { Lista = avisos.Where(a => a.Estado.Contains(Constantes.ACTA_DE_CT_CREADA) && !a.Archivado).ToList() };
                 TabAvisosViewModel archivados = new() { Lista = avisos.Where(a => a.Archivado).ToList() };
 
@@ -136,6 +137,9 @@ namespace SGPla.Controllers
                 return View(new IndexViewModel());
             }
         }
+
+        //Eliminar
+
 
         // ==========
         // UTILS
