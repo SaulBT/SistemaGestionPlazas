@@ -198,7 +198,8 @@ namespace SGPla.Services.Implementations
                 Periodo = periodoDTO.PeriodoMostrar,
                 Articulo = aviso.IdArticuloNavigation.Numero,
                 FechaCreacion = aviso.FechaCreacion.ToString("dd/MM/yyyy"),
-                Estado = aviso.Estado
+                Estado = aviso.Estado,
+                Archivado = aviso.Archivado ?? true
             };
 
             return avisoDTO;
