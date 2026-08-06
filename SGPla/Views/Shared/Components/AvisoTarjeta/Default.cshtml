@@ -157,7 +157,8 @@
 				@await Component.InvokeAsync("Boton", new
 				{
 					texto = "Publicar",
-					tipo = "publicar"
+					tipo = "publicar",
+					OnClick = $"abrirModalPublicar({Model.IdAviso})"
 				})
 				@await Component.InvokeAsync("Boton", new
 				{

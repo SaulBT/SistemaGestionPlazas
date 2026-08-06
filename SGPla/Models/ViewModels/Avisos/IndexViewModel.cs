@@ -25,6 +25,7 @@ namespace SGPla.Models.ViewModels.Avisos
         public TabAvisosViewModel ConActa = new();
         public TabAvisosViewModel Archivados = new();
 
+        public ModalPublicarViewModel Modal { get; set; } = new ModalPublicarViewModel();
 
         // Propiedades para paginación
         public int PaginaActual { get; set; } = 1;

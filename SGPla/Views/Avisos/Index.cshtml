@@ -127,6 +127,7 @@
     OnConfirm = "eliminarAvisoAsync()",
     OnCancel = "cerrarModal('modalEliminarAviso')"
 })
+
 @await Component.InvokeAsync("Modal", new ModalModel
 {
     Id = "modalComentarios",
@@ -134,7 +135,16 @@
     Titulo = "Comentarios",
     Mensaje = "",
     OnConfirm = "cerrarModal('modalComentarios')"
+})
 
+@await Component.InvokeAsync("ModalFormulario", new ModalFormularioModel
+{
+    Id = "modalPublicar",
+    Titulo = "Publicar",
+    PartialView = "_ModalPublicar",
+    PartialModel = Model.Modal,
+    OnConfirm = "publicar()",
+    OnCancel = "cerrarModal('modalPublicar')"
 })
 
 <script>
@@ -192,6 +202,29 @@
     function abrirModalComentarios(comentarios) {
         document.getElementById("modalComentarios-mensaje").innerText = comentarios;
         abrirModal("modalComentarios")
+    }
+
+    //Publicar
+    const UrlPublicarAviso = '@Url.Action("PublicarAviso", "Avisos")';
+    var idAvisoPublicar = 0;
+    const url = document.getElementById("urlPublicacion");
+
+    function abrirModalPublicar(idAviso) {
+        idAvisoPublicar = idAviso;
+        abrirModal("modalPublicar");
+    }
+
+    async function publicar() {
+        const response = await fetch(`${UrlPublicarAviso}?idAviso=${idAvisoPublicar}&url=${url.value}`,{
+            method: 'POST'
+        });
+        if (response.ok) {
+            document.getElementById("filtrosForm").submit();
+            cerrarModal("modalPublicar")
+        } else {
+            //TO DO
+            console.log("Error");
+        }
     }
 </script>
 

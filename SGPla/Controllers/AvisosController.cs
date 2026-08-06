@@ -187,6 +187,25 @@ namespace SGPla.Controllers
             }
         }
 
+        //Publicar
+        [HttpPost]
+        public async Task PublicarAvisoAsync(int idAviso, string url)
+        {
+            try
+            {
+                await _avisoService.PublicarAvisoAsync(idAviso, url);
+                TempData["Success"] = "Aviso publicado con éxito.";
+            }
+            catch (ValidacionExcepction vx)
+            {
+                this.LanzarError(_logger, vx, NOMBRE_LOGGER, INDEX, Constantes.LOG_ERROR_VALIDACION);
+            }
+            catch (Exception ex)
+            {
+                this.LanzarError(_logger, ex, NOMBRE_LOGGER, INDEX, Constantes.LOG_ERROR_INESPERADO);
+            }
+        }
+
         // =================
         // Enviar a Revisión
         // =================
