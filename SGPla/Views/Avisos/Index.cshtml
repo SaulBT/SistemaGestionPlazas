@@ -110,6 +110,14 @@
         })
 </div>
 
+@await Component.InvokeAsync("ModalArchivo", new ModalArchivoModel
+{
+    Id = "modalFirmarAviso",
+    FormatosAceptados = ".pdf",
+    TamanioMaximo = 20,
+    OnConfirm = "firmarAviso()"
+})
+
 @await Component.InvokeAsync("Modal", new ModalModel
 {
     Id = "modalEliminarAviso",
@@ -141,4 +149,37 @@
         }
     }
 
+    //Firmar
+    const UrlFirmarAviso = '@Url.Action("FirmarAviso", "Avisos")';
+    var idAvisoFirmar = 0;
+    
+    function abrirModalFirmar(idAviso){
+        idAvisoFirmar = idAviso;
+        abrirModal("modalFirmarAviso");
+    }
+
+    async function firmarAviso() {
+        var inputArchivo = document.getElementById("inputFile-modalFirmarAviso");
+        var avisoFirmado = inputArchivo.files[0];
+        
+        var formData = new FormData();
+        formData.append("idAviso", idAvisoFirmar); 
+        formData.append("archivo", avisoFirmado);
+
+        const response = await fetch(UrlFirmarAviso, {
+            method: 'POST',
+            body: formData
+        });
+        if (response.ok){
+            document.getElementById("filtrosForm").submit();
+            cerrarModal("modalFirmarAviso");
+        } else {
+            //TO DO
+            console.log("Error");
+        }
+    }
 </script>
+
+@section Scripts {
+    <script src="~/js/cargarArchivo.js"></script>
+}

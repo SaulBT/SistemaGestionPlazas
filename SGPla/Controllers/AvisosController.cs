@@ -2,6 +2,7 @@
 using SGPla.Commons;
 using SGPla.Models;
 using SGPla.Models.Components;
+using SGPla.Models.DTOs.Archivo;
 using SGPla.Models.DTOs.Aviso;
 using SGPla.Models.DTOs.EntidadAcademica;
 using SGPla.Models.ViewModels.Avisos;
@@ -14,6 +15,7 @@ namespace SGPla.Controllers
         private readonly IAvisoService _avisoService;
         private readonly IPeriodoEscolarService _periodoService;
         private readonly IEntidadAcademicaService _entidadService;
+        private readonly IArchivoService _archivoService;
         private readonly ILogger<AvisosController> _logger;
         private int _paginaActual = 1;
 
@@ -26,12 +28,14 @@ namespace SGPla.Controllers
             IAvisoService avisoService,
             IPeriodoEscolarService periodoService,
             IEntidadAcademicaService entidadService,
+            IArchivoService archivoService,
             ILogger<AvisosController> logger)
         {
             _avisoService = avisoService;
             _periodoService = periodoService;
             _entidadService = entidadService;
             _logger = logger;
+            _archivoService = archivoService;
         }
 
         // ==========
@@ -146,6 +150,32 @@ namespace SGPla.Controllers
             {
                 await _avisoService.EliminarAvisoPorId(idAviso);
                 TempData["Success"] = string.Format(Constantes.TOAST_ELIMINACION_EL, Constantes.AVISO);
+            }
+            catch (ValidacionExcepction vx)
+            {
+                this.LanzarError(_logger, vx, NOMBRE_LOGGER, INDEX, Constantes.LOG_ERROR_VALIDACION);
+            }
+            catch (Exception ex)
+            {
+                this.LanzarError(_logger, ex, NOMBRE_LOGGER, INDEX, Constantes.LOG_ERROR_INESPERADO);
+            }
+        }
+
+        //Firmar
+        [HttpPost]
+        public async Task FirmarAvisoAsync([FromForm] int idAviso, [FromForm] IFormFile archivo)
+        {
+            try
+            {
+                (var nombre, var ruta) = await _archivoService.GuardarTemporalmenteAsync(archivo);
+                var archivoDTO = new CargarArchivoDTO
+                {
+                    NombreArchivo = nombre,
+                    RutaArchivo = ruta
+                };
+                await _avisoService.FirmarAvisoAsync(idAviso, archivoDTO);
+                TempData["Success"] = "Aviso firmado con éxito.";
+                System.IO.File.Delete(ruta);
             }
             catch (ValidacionExcepction vx)
             {
