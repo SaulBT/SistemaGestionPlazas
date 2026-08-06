@@ -199,7 +199,8 @@ namespace SGPla.Services.Implementations
                 Articulo = aviso.IdArticuloNavigation.Numero,
                 FechaCreacion = aviso.FechaCreacion.ToString("dd/MM/yyyy"),
                 Estado = aviso.Estado,
-                Archivado = aviso.Archivado ?? true
+                Archivado = aviso.Archivado ?? false,
+                Comentarios = aviso.Comentarios ?? ""
             };
 
             return avisoDTO;

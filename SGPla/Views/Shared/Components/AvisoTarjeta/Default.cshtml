@@ -116,7 +116,8 @@
 				@await Component.InvokeAsync("Boton", new
 				{
 					texto = "Ver comentarios",
-					tipo = "secundario"
+					tipo = "secundario",
+					OnClick = $"abrirModalComentarios('{Model.Comentarios}')"
 				})
 				@await Component.InvokeAsync("Boton", new
 				{
@@ -131,13 +132,14 @@
 					{
 						texto = "Enviar a revisión por DGAA",
 						accion = "enviar",
-						tipo = "terciario"
+						tipo = "terciario",
 					})
 				</a>
 				@await Component.InvokeAsync("Boton", new
 				{
 					texto = "Ver comentarios",
-					tipo = "secundario"
+					tipo = "secundario",
+					OnClick = $"abrirModalComentarios('{Model.Comentarios}')"
 				})
 				@await Component.InvokeAsync("Boton", new
 				{

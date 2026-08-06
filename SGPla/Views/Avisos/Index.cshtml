@@ -127,6 +127,15 @@
     OnConfirm = "eliminarAvisoAsync()",
     OnCancel = "cerrarModal('modalEliminarAviso')"
 })
+@await Component.InvokeAsync("Modal", new ModalModel
+{
+    Id = "modalComentarios",
+    Tipo = "info",
+    Titulo = "Comentarios",
+    Mensaje = "",
+    OnConfirm = "cerrarModal('modalComentarios')"
+
+})
 
 <script>
     //Eliminar
@@ -177,6 +186,12 @@
             //TO DO
             console.log("Error");
         }
+    }
+
+    //Comentarios
+    function abrirModalComentarios(comentarios) {
+        document.getElementById("modalComentarios-mensaje").innerText = comentarios;
+        abrirModal("modalComentarios")
     }
 </script>
 
