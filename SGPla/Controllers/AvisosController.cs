@@ -206,6 +206,43 @@ namespace SGPla.Controllers
             }
         }
 
+        //Archivar / Desarchivar
+        [HttpPost]
+        public async Task ArchivarAvisoAsync(int idAviso)
+        {
+            try
+            {
+                await _avisoService.ArchivarAvisoAsync(idAviso);
+                TempData["Success"] = "Aviso archivado.";
+            }
+            catch (ValidacionExcepction vx)
+            {
+                this.LanzarError(_logger, vx, NOMBRE_LOGGER, INDEX, Constantes.LOG_ERROR_VALIDACION);
+            }
+            catch (Exception ex)
+            {
+                this.LanzarError(_logger, ex, NOMBRE_LOGGER, INDEX, Constantes.LOG_ERROR_INESPERADO);
+            }
+        }
+
+        [HttpPost]
+        public async Task DesarchivarAvisoAsync(int idAviso)
+        {
+            try
+            {
+                await _avisoService.DesarchivarAvisoAsync(idAviso);
+                TempData["Success"] = "Aviso desarchivado.";
+            }
+            catch (ValidacionExcepction vx)
+            {
+                this.LanzarError(_logger, vx, NOMBRE_LOGGER, INDEX, Constantes.LOG_ERROR_VALIDACION);
+            }
+            catch (Exception ex)
+            {
+                this.LanzarError(_logger, ex, NOMBRE_LOGGER, INDEX, Constantes.LOG_ERROR_INESPERADO);
+            }
+        }
+
         // =================
         // Enviar a Revisión
         // =================

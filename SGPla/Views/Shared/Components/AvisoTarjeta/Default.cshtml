@@ -199,7 +199,8 @@
 				@await Component.InvokeAsync("Boton", new
 				{
 					accion = "archivar",
-					fondo = false
+					fondo = false,
+					OnClick = $"archivarAsync({Model.IdAviso}, {Model.Archivado.ToString().ToLower()})"
 				})
 				break;
 		}

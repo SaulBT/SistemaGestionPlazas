@@ -226,6 +226,34 @@
             console.log("Error");
         }
     }
+
+    //Archivar
+    const UrlArchivarAviso = '@Url.Action("ArchivarAviso", "Avisos")';
+    const UrlDesarchivarAviso = '@Url.Action("DesarchivarAviso", "Avisos")';
+
+    async function archivarAsync(idAviso, archivado) {
+        if (archivado) {
+            const response = await fetch(`${UrlDesarchivarAviso}?idAviso=${idAviso}`, {
+                method: 'POST'
+            });
+            if (response.ok) {
+                document.getElementById("filtrosForm").submit();
+            } else {
+                //TO DO
+                console.log("Error");
+            }
+        } else {
+            const response = await fetch(`${UrlArchivarAviso}?idAviso=${idAviso}`, {
+                method: 'POST'
+            });
+            if (response.ok) {
+                document.getElementById("filtrosForm").submit();
+            } else {
+                //TO DO
+                console.log("Error");
+            }
+        }
+    }
 </script>
 
 @section Scripts {
