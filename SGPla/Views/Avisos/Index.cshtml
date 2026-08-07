@@ -37,6 +37,12 @@
                     Texto = "Crear Aviso"
                 })
             </a>
+            @await Component.InvokeAsync("Boton", new
+            {
+                Accion = "Test",
+                Texto = "Test",
+                OnClick = "test()"
+            })
         </div>
 
         <!-- Campos ocultos para paginación -->
@@ -252,6 +258,20 @@
                 //TO DO
                 console.log("Error");
             }
+        }
+    }
+
+    //Test
+    async function test() {
+        const UrlTest = '@Url.Action("GenerarDocumento", "Avisos")';
+        const response = await fetch(UrlTest, {
+            method: 'POST'
+        });
+        if (response.ok) {
+            console.log("Todo bien, según.")
+        } else {
+            //TO DO
+            console.log("Error");
         }
     }
 </script>

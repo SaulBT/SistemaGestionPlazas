@@ -17,6 +17,7 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
+		<PackageReference Include="Open-XML-SDK" Version="2.9.1" />
 	</ItemGroup>
 
 	<ItemGroup>

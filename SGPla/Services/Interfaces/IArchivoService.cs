@@ -8,5 +8,7 @@ namespace SGPla.Services.Interfaces
         Task<(string nombre, string ruta)> GuardarTemporalmenteAsync(IFormFile archivo);
         Task<ArchivoDescargadoDTO> DescargarAsync(int idArchivo);
         Task EliminarAsync(string rutaRelativa);
+        Task<byte[]> ObtenerArchivoEnBytesAsync(string rutaArchivo);
+        Task GuardarArchivoBytesAsync(byte[] contenido, string rutaRelativa);
     }
 }

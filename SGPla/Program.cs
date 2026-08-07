@@ -80,6 +80,8 @@ builder.Services.AddScoped<IDocenteRepository, DocenteRepository>();
 builder.Services.AddScoped<IProgramacionAcademicaValidator, ProgramacionAcademicaValidator>();
 builder.Services.AddScoped<IProgramacionAcademicaService, ProgramacionAcademicaService>();
 
+builder.Services.AddScoped<IPlantillaService, PlantillaService>();
+
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IEstadoNavegacion, EstadoNavegacion>();
 

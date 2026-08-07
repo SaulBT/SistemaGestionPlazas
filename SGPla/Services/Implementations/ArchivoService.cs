@@ -113,5 +113,48 @@ namespace SGPla.Services.Implementations
 
             return Task.CompletedTask;
         }
+
+        public async Task<byte[]> ObtenerArchivoEnBytesAsync(string rutaArchivo)
+        {
+            string rutaCompleta = Path.GetFullPath(Path.Combine(_rutaBase, rutaArchivo));
+            Console.WriteLine(rutaCompleta);
+
+            if (!rutaCompleta.StartsWith(_rutaBase, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new UnauthorizedAccessException("Acceso denegado a la ruta del archivo.");
+            }
+
+            if (!File.Exists(rutaCompleta))
+            {
+                throw new FileNotFoundException("No se encontró el archivo.", rutaCompleta);
+            }
+
+            byte[] archivoBytes = await File.ReadAllBytesAsync(rutaCompleta);
+
+            return archivoBytes;
+        }
+
+        public async Task GuardarArchivoBytesAsync(byte[] contenido, string rutaRelativa)
+        {
+            if (contenido == null || contenido.Length == 0)
+            {
+                throw new ArgumentException("El archivo no contiene datos.", nameof(contenido));
+            }
+
+            string rutaCompleta = Path.GetFullPath(Path.Combine(_rutaBase, rutaRelativa));
+
+            if (!rutaCompleta.StartsWith(_rutaBase, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new UnauthorizedAccessException("Acceso denegado: intento de guardar fuera del directorio permitido.");
+            }
+
+            string directorioDestino = Path.GetDirectoryName(rutaCompleta);
+            if (!string.IsNullOrEmpty(directorioDestino) && !Directory.Exists(directorioDestino))
+            {
+                Directory.CreateDirectory(directorioDestino);
+            }
+
+            await File.WriteAllBytesAsync(rutaCompleta, contenido);
+        }
     }
 }

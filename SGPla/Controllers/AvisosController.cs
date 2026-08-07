@@ -5,6 +5,7 @@ using SGPla.Models.Components;
 using SGPla.Models.DTOs.Archivo;
 using SGPla.Models.DTOs.Aviso;
 using SGPla.Models.DTOs.EntidadAcademica;
+using SGPla.Models.DTOs.Plantillas;
 using SGPla.Models.ViewModels.Avisos;
 using SGPla.Services.Interfaces;
 
@@ -17,6 +18,7 @@ namespace SGPla.Controllers
         private readonly IEntidadAcademicaService _entidadService;
         private readonly IArchivoService _archivoService;
         private readonly ILogger<AvisosController> _logger;
+        private readonly IPlantillaService _plantillaService;
         private int _paginaActual = 1;
 
         private const string SESSION_ROL = "Rol";
@@ -29,13 +31,85 @@ namespace SGPla.Controllers
             IPeriodoEscolarService periodoService,
             IEntidadAcademicaService entidadService,
             IArchivoService archivoService,
+            IPlantillaService plantillaService,
             ILogger<AvisosController> logger)
         {
             _avisoService = avisoService;
             _periodoService = periodoService;
             _entidadService = entidadService;
+            _plantillaService = plantillaService;
             _logger = logger;
             _archivoService = archivoService;
+        }
+
+        //TEST
+        [HttpPost]
+        public async Task GenerarDocumentoAsync()
+        {
+            try
+            {
+                var plantillaDTO = new PlantillaAvisoDTO
+                {
+                    NombreEntidadAcademica = "Facultad de Estadística e Informática",
+                    Region = "Xalapa",
+                    Campus = "Xalapa",
+                    NombreAreaAcademica = "Económico-Administrativa",
+                    Sistema = "Escolarizado",
+                    NombreProgramaEducativo = "Ingeniería en Software",
+                    Requisitos = "1. Requisitos 1\n2. Requisitos 2\n3. Requisito 3\n4. Requisito 4",
+                    DiasAceptacion = "1, 2, 3 y 4 de enero de 2026",
+                    FechaConsejoTecnico = "10 de enero de 2026",
+                    FechaPublicacion = "31 de diciembre de 2025",
+                    NombreTitular = "Lic. Saúl Barragán Torres",
+                    Articulo = "70"
+                };
+
+                var ee1 = new PlantillaAvisoExperienciaEducativaDTO
+                {
+                    Horas = "6",
+                    Nombre = "Tecnologías para la Construcción de Software",
+                    NRC = "12345",
+                    Plaza = "0123",
+                    HorarioLunes = "7:00 - 9:00",
+                    HorarioMiercoles = "7:00 - 9:00",
+                    HorarioJueves = "7:00 - 9:00",
+                    TipoContratacion = "TCP",
+                    PerfilDocente = "Licenciado en Ingeniería en software o relacionado a eso blablablablablab blabalblab blaba."
+                };
+                var ee2 = new PlantillaAvisoExperienciaEducativaDTO
+                {
+                    Horas = "4",
+                    Nombre = "Programación Segura",
+                    NRC = "67890",
+                    Plaza = "0456",
+                    HorarioMartes = "17:00 - 19:00",
+                    HorarioViernes = "17:00 - 19:00",
+                    TipoContratacion = "ITP",
+                    PerfilDocente = "Licenciado en Ciberseguridad o relacionado a eso blablablablablab blabalblab blaba."
+                };
+                var ee3 = new PlantillaAvisoExperienciaEducativaDTO
+                {
+                    Horas = "5",
+                    Nombre = "Economía para la toma de decisiones.",
+                    NRC = "24680",
+                    Plaza = "0789",
+                    HorarioLunes = "15:00 - 17:00",
+                    HorarioMiercoles = "15:00 - 17:00",
+                    HorarioViernes = "15:00 - 16:00",
+                    TipoContratacion = "ITP",
+                    PerfilDocente = "Licenciado en alguna cosa chida o relacionado a eso blablablablablab blabalblab blaba."
+                };
+
+                List<PlantillaAvisoExperienciaEducativaDTO> experiencias = [ee1, ee2, ee3];
+
+                plantillaDTO.ListaExperiencias = experiencias;
+
+                await _plantillaService.GenerarAvisoAsync(plantillaDTO);
+            }
+            catch (Exception ex)
+            {
+                this.LanzarError(_logger, ex, NOMBRE_LOGGER, INDEX, "A ver");
+            }
         }
 
         // ==========
