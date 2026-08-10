@@ -61,12 +61,54 @@ namespace SGPla.Services.Implementations
 
                 if (!string.IsNullOrEmpty(tag) && mapeo.ContainsKey(tag))
                 {
-                    var textElement = control.Descendants<Text>().FirstOrDefault();
-                    if (textElement is not null)
+                    if (tag.Contains("Requisitos"))
                     {
-                        textElement.Text = mapeo[tag] ?? string.Empty;
+                        actualizarTextoControlConSaltos(control, mapeo[tag]);
+                    }
+                    else
+                    {
+                        reemplazarEncabezado(wordDoc, tag, mapeo[tag]);
+
+                        var textElements = control.Descendants<Text>().ToList();
+                        if (textElements.Any())
+                        {
+                            textElements.First().Text = mapeo[tag] ?? string.Empty;
+
+                            foreach (var extraText in textElements.Skip(1))
+                            {
+                                extraText.Text = string.Empty;
+                            }
+                        }
                     }
                 }
+            }
+        }
+
+        private void actualizarTextoControlConSaltos(SdtElement control, string nuevoTexto)
+        {
+            var run = control.Descendants<Run>().FirstOrDefault();
+            if (run is null) return;
+
+            run.RemoveAllChildren<Text>();
+            run.RemoveAllChildren<Break>();
+
+            foreach (var extraRun in control.Descendants<Run>().Skip(1).ToList())
+            {
+                extraRun.Remove();
+            }
+
+            if (string.IsNullOrEmpty(nuevoTexto)) return;
+
+            string[] lineas = nuevoTexto.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+
+            for (int i = 0; i < lineas.Length; i++)
+            {
+                if (i > 0)
+                {
+                    run.AppendChild(new Break());
+                }
+
+                run.AppendChild(new Text(lineas[i]));
             }
         }
 
@@ -117,54 +159,120 @@ namespace SGPla.Services.Implementations
                 celda.Append(parrafo);
             }
 
+            RunProperties rPrOriginal = null;
+
+            var rPrExistente = parrafo.Descendants<RunProperties>().FirstOrDefault();
+            if (rPrExistente is not null)
+            {
+                rPrOriginal = (RunProperties)rPrExistente.CloneNode(true);
+            }
+            else if (parrafo.ParagraphProperties?.ParagraphMarkRunProperties is not null)
+            {
+                rPrOriginal = new RunProperties(parrafo.ParagraphProperties.ParagraphMarkRunProperties.OuterXml);
+            }
+
             parrafo.RemoveAllChildren<Run>();
-            parrafo.Append(new Run(new Text(texto ?? string.Empty)));
+
+            var nuevoRun = new Run();
+
+            if (rPrOriginal is not null)
+            {
+                nuevoRun.AppendChild(rPrOriginal);
+            }
+            else
+            {
+                var rPrFallback = new RunProperties(
+                    new RunFonts() { Ascii = "Gill Sans MT", HighAnsi = "Gill Sans MT", ComplexScript = "Gill Sans MT" },
+                    new FontSize() { Val = "18" },
+                    new FontSizeComplexScript() { Val = "18" }
+                );
+                nuevoRun.AppendChild(rPrFallback);
+            }
+
+            nuevoRun.AppendChild(new Text(texto ?? string.Empty));
+
+            parrafo.AppendChild(nuevoRun);
         }
 
         private void generarListaPerfiles(WordprocessingDocument wordDoc, List<PlantillaAvisoExperienciaEducativaDTO> experiencias)
         {
             var body = wordDoc.MainDocumentPart.Document.Body;
 
-            var sdtContenedor = body.Descendants<SdtElement>().FirstOrDefault(sdt => sdt.SdtProperties?.GetFirstChild<Tag>().Val?.Value == "ListaPerfiles");
+            var sdtContenedor = body.Descendants<SdtElement>()
+                .FirstOrDefault(sdt => sdt.SdtProperties?.GetFirstChild<Tag>().Val?.Value == "ListaPerfiles");
 
-            if (sdtContenedor == null) return;
+            if (sdtContenedor is null) return;
 
-            var parrafosMolde = sdtContenedor.Descendants<Paragraph>().ToList();
-            if (parrafosMolde.Count < 2) return;
+            var sdtNombreMolde = sdtContenedor.Descendants<SdtElement>()
+                .FirstOrDefault(sdt => sdt.SdtProperties?.GetFirstChild<Tag>()?.Val?.Value == "NombreExperiencia");
+            var sdtPerfilMolde = sdtContenedor.Descendants<SdtElement>()
+                .FirstOrDefault(sdt => sdt.SdtProperties?.GetFirstChild<Tag>()?.Val?.Value == "PerfilDocente");
+
+            if (sdtNombreMolde is null || sdtPerfilMolde is null) return;
 
             foreach (var ee in experiencias)
             {
-                var pTitulo = (Paragraph)parrafosMolde[0].CloneNode(true);
-                reemplazarEtiquetaOTexto(pTitulo, "NombreExperiencia", ee.Nombre);
-                var pPerfil = (Paragraph)parrafosMolde[1].CloneNode(true);
-                reemplazarEtiquetaOTexto(pPerfil, "PerfilDocente", ee.PerfilDocente);
+                var nuevoSdtNombre = (SdtElement)sdtNombreMolde.CloneNode(true);
+                var nuevoSdtPerfil = (SdtElement)sdtPerfilMolde.CloneNode(true);
 
-                sdtContenedor.InsertBeforeSelf(pTitulo);
-                sdtContenedor.InsertBeforeSelf(pPerfil);
+                actualizarTextoControl(nuevoSdtNombre, ee.Nombre);
+                actualizarTextoControl(nuevoSdtPerfil, ee.PerfilDocente);
+
+                sdtContenedor.InsertBeforeSelf(nuevoSdtNombre);
+                sdtContenedor.InsertBeforeSelf(nuevoSdtPerfil);
             }
 
             sdtContenedor.Remove();
         }
 
-        private void reemplazarEtiquetaOTexto(Paragraph parrafo, string etiqueta, string nuevoTexto)
+        private void actualizarTextoControl(SdtElement control, string nuevoTexto)
         {
-            var control = parrafo.Descendants<SdtElement>().FirstOrDefault(sdt => sdt.SdtProperties?.GetFirstChild<Tag>()?.Val?.Value == etiqueta);
-
-            if (control is not null)
+            var textElements = control.Descendants<Text>().ToList();
+            if (textElements.Any())
             {
-                var textElement = control.Descendants<Text>().FirstOrDefault();
-                if (textElement != null) textElement.Text = nuevoTexto ?? string.Empty;
-            }
-            else
-            {
-                string textoBuscado = $"[{etiqueta}]";
-                foreach (var textNode in parrafo.Descendants<Text>())
+                textElements.First().Text = nuevoTexto ?? string.Empty;
+                foreach (var extraText in textElements.Skip(1))
                 {
-                    if (textNode.Text.Contains(textoBuscado))
+                    extraText.Text = string.Empty;
+                }
+            }
+        }
+
+        private void reemplazarEncabezado(WordprocessingDocument wordDoc, string etiqueta, string nuevoTexto)
+        {
+            foreach (var headerPart in wordDoc.MainDocumentPart.HeaderParts)
+            {
+                var header = headerPart.Header;
+                if (header is null) continue;
+
+                var control = header.Descendants<SdtElement>()
+                    .FirstOrDefault(sdt => sdt.SdtProperties?.GetFirstChild<Tag>()?.Val?.Value == etiqueta);
+
+                if (control is not null)
+                {
+                    var textElements = control.Descendants<Text>().ToList();
+                    if (textElements.Any())
                     {
-                        textNode.Text = textNode.Text.Replace(textoBuscado, nuevoTexto ?? string.Empty);
+                        textElements.First().Text = nuevoTexto ?? string.Empty;
+                        foreach (var extraText in textElements.Skip(1))
+                        {
+                            extraText.Text = string.Empty;
+                        }
                     }
                 }
+                else
+                {
+                    string textoBuscado = $"[{etiqueta}]";
+                    foreach (var textNode in header.Descendants<Text>())
+                    {
+                        if (textNode.Text.Contains(textoBuscado))
+                        {
+                            textNode.Text = textNode.Text.Replace(textoBuscado, nuevoTexto ?? string.Empty);
+                        }
+                    }
+                }
+
+                header.Save();
             }
         }
     }
