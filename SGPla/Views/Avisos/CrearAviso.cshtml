@@ -15,30 +15,46 @@
         <div class="cabecera-seccion mb-3">
             <h4 style="margin-bottom: 25px">Datos Generales</h4>
             <div style="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease; width: stretch; justify-content: space-evenly">
-                @await Component.InvokeAsync("SelectField", new SelectFieldModel
-                {
-                    Label = "Artículo:",
-                    Options = Model.Articulos,
-                    Name = "IdArticulo",
-                    Error = ViewData.ModelState["IdArticulo"]?.Errors.FirstOrDefault()?.ErrorMessage,
-                    Flexible = true
-                })
+                <div style ="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease; width: stretch; justify-content: space-evenly; flex: 4">
+                    @await Component.InvokeAsync("InputField", new InputFieldModel
+                    {
+                        Label = "Folio:",
+                        Name = "Folio",
+                        Valor = Model.Folio,
+                        Error = ViewData.ModelState["Folio"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                        Flexible = true
+                    })
 
-                @await Component.InvokeAsync("SelectField", new SelectFieldModel
-                {
-                    Label = "Periodo escolar:",
-                    Options = Model.Periodos,
-                    Name = "IdPeriodo",
-                    Error = ViewData.ModelState["IdPeriodo"]?.Errors.FirstOrDefault()?.ErrorMessage,
-                    Flexible = true
-                })
+                    
+                </div>
+                <div style="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease; width: stretch; justify-content: space-evenly; flex: 6">
+                    @await Component.InvokeAsync("SelectField", new SelectFieldModel
+                    {
+                        Label = "Periodo escolar:",
+                        Options = Model.Periodos,
+                        Name = "IdPeriodo",
+                        Error = ViewData.ModelState["IdPeriodo"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                        Flexible = true
+                    })
 
-                @await Component.InvokeAsync("DatePicker", new DatePickerModel
-                {
-                    Label = "Fecha a ocupar vacantes:",
-                    Name = "FechaVacantes",
-                    Flexible = true
-                })
+                    @await Component.InvokeAsync("SelectField", new SelectFieldModel
+                    {
+                        Label = "Artículo:",
+                        Options = Model.Articulos,
+                        Name = "IdArticulo",
+                        Error = ViewData.ModelState["IdArticulo"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                        Flexible = true
+                    })
+
+                    @await Component.InvokeAsync("DatePicker", new DatePickerModel
+                    {
+                        Label = "Fecha a ocupar vacantes:",
+                        Name = "FechaVacantes",
+                        Value = Model.FechaVacantes,
+                        Flexible = true
+                    })
+                </div>
+                
 
                 
             </div>
@@ -62,6 +78,7 @@
                             Label = "Correo:",
                             Id = "Correo",
                             Name = "Correo",
+                            Valor = Model.Correo,
                             Error = ViewData.ModelState["Correo"]?.Errors.FirstOrDefault()?.ErrorMessage,
                             Flexible = true
                         })
@@ -72,6 +89,7 @@
                         Label = "Lugar:",
                         Id = "Lugar",
                         Name = "Lugar",
+                        Valor = Model.Lugar,
                         Error = ViewData.ModelState["Lugar"]?.Errors.FirstOrDefault()?.ErrorMessage,
                         Flexible = true
                     })
@@ -84,6 +102,7 @@
                 {
                     Label = "Fecha de Consejo Técnico",
                     Name = "FechaCT",
+                    Value = Model.FechaCT,
                     Flexible = true
                 })
                 <div style="flex: 1"></div> 
@@ -120,6 +139,7 @@
             @await Component.InvokeAsync("TextAreaField", new TextAreaFieldModel
                     {
                         Label = "Requisitos:",
+                        Name = "Requisitos",
                         Value = Constantes.REQUISITOS_AVISO,
                         Rows = 13
                     })
@@ -166,6 +186,8 @@
 <script>
     const UrlActualizarOfertas = '@Url.Action("ActualizarOfertas", "Avisos")';
     const UrlAgregarHorario = '@Url.Action("AgregarHorario", "Avisos")';
+    const UrlObtenerHorarios = '@Url.Action("ObtenerHorarios","Avisos")';
+    const UrlObtenerTablaHorarios = '@Url.Action("ObtenerTablaHorarios", "Avisos")';
 </script>
 @section Scripts {
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

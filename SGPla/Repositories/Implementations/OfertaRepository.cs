@@ -19,6 +19,10 @@ namespace SGPla.Repositories.Implementations
 
         public async Task<List<OfertaPlanEstudiosAvisoDTO>> ObtenerPlanesEstudioCrearAviso(int idEntidadAcademica, int idPeriodo, int idArticulo)
         {
+            /* 
+             *      Actualmente el método retorna Programas Educativos, no planes de estudio
+             *      Debido a que todavía no hay forma de vincular las ofertas a los planes
+             */
             List<OfertaPlanEstudiosAvisoDTO> planesDTO = new List<OfertaPlanEstudiosAvisoDTO>();
 
             var resultados = await _context.Oferta
@@ -33,8 +37,9 @@ namespace SGPla.Repositories.Implementations
                 {
                     o.IdExperienciaEducativaNavigation.IdPlanEstudios,
                     Nombre = o.IdExperienciaEducativaNavigation.IdPlanEstudiosNavigation.IdProgramaEducativoNavigation.Nombre
-                        + ": " +
-                        o.IdExperienciaEducativaNavigation.IdPlanEstudiosNavigation.Nombre
+                        //+ ": " +
+                        //o.IdExperienciaEducativaNavigation.IdPlanEstudiosNavigation.Nombre
+                        //Comentado para no mostrar el plan de estudios
                 })
                 .Select(g => new
                 {

@@ -6,7 +6,8 @@ namespace SGPla.Repositories.Interfaces
     {
         Task<List<Aviso>> ObtenerTodos();
         Task<Aviso?> ObtenerPorID(int idAviso);
-        Task CrearAviso(Aviso aviso);
+        Task<Aviso> CrearAviso(Aviso aviso);
+        Task AsociarOfertasPorAviso(List<int> idsOfertas, int idAviso);
         Task EliminarAvisoPorId(int idAviso);
         Task ActualizarAvisoPorId(Aviso aviso);
     }

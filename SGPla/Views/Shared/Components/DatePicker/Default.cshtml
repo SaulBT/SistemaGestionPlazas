@@ -16,4 +16,9 @@
            max="@Model.Max"
            class="input date-input"
            disabled="@(Model.Disabled ? "disabled" : null)" />
+
+    @if (!string.IsNullOrEmpty(Model.Error))
+    {
+        <span id="@Model.Id-Error" class="select-error-text">@Model.Error</span>
+    }
 </div>

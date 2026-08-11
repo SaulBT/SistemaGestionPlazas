@@ -14,21 +14,21 @@ namespace SGPla.Models.ViewModels.Avisos
         //Datos del formulario
 
         [Required(ErrorMessage = campo_obligatorio)]
-        public int IdArticulo { get; set; }
+        public int? IdArticulo { get; set; }
 
         [Required(ErrorMessage = campo_obligatorio)]
-        public string Fecha { get; set; }
+        public string FechaVacantes { get; set; }
 
         [Required(ErrorMessage = campo_obligatorio)]
-        public int IdPeriodo { get; set; }
+        public int? IdPeriodo { get; set; }
 
         [Required(ErrorMessage = campo_obligatorio)]
         public string Modalidad { get; set; }
 
-        [Required(ErrorMessage = campo_obligatorio)]
-        public string Lugar { get; set; }
+        
+        public string? Lugar { get; set; }
 
-        [Required(ErrorMessage = campo_obligatorio)]
+        [ValidateNever]
         public List<CrearHorarioAvisoDTO> Horarios { get; set; }
 
         [Required(ErrorMessage = campo_obligatorio)]
@@ -37,10 +37,16 @@ namespace SGPla.Models.ViewModels.Avisos
         [Required(ErrorMessage = campo_obligatorio)]
         public string Requisitos { get; set; }
 
-        //Tablas
+        [Required(ErrorMessage = campo_obligatorio)]
+        public string Correo { get; set; }
+        [Required(ErrorMessage = campo_obligatorio)]
+        public string Folio { get; set; }
 
+        //Tablas
+        [ValidateNever]
         public TableModel TablaHorario { get; set; }
         public bool ExistenOfertas { get; set; }
+        [ValidateNever]
         public List<PlanEstudiosAvisoViewModel> PlanesEstudios { get; set; }
 
         //Combos 
@@ -55,6 +61,7 @@ namespace SGPla.Models.ViewModels.Avisos
         public List<OptionModel> Modalidades { get; set; }
 
         //Datos formularios
+        [ValidateNever]
         public FormularioHorarioViewModel Formulario { get; set; }
     }
 

@@ -28,11 +28,26 @@ namespace SGPla.Repositories.Implementations
                 .FirstOrDefaultAsync(aviso => aviso.IdAviso == idAviso);
         }
 
-        public async Task CrearAviso(Aviso aviso)
+        public async Task<Aviso> CrearAviso(Aviso aviso)
         {
             if (aviso == null)
-                return;
+                return null;
             await _context.Aviso.AddAsync(aviso);
+            await _context.SaveChangesAsync();
+            return aviso;
+        }
+
+        public async Task AsociarOfertasPorAviso(List<int> idsOfertas, int idAviso)
+        {
+            foreach (int id in idsOfertas)
+            {
+                await _context.OfertaAviso.AddAsync(new OfertaAviso
+                {
+                    IdAviso = idAviso,
+                    IdOferta = id
+                });
+
+            }
             await _context.SaveChangesAsync();
         }
 

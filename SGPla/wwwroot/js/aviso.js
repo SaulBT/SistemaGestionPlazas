@@ -10,8 +10,17 @@ let listaHorarios = [];
 
 periodo.addEventListener("change", actualizarOfertas);
 articulo.addEventListener("change", actualizarOfertas);
-
 modalidad.addEventListener("change", () => cambiarVisibilidad("contenedorLugar"));
+
+
+document.addEventListener("DOMContentLoaded", cargarFormulario);
+
+async function cargarFormulario() {
+    await actualizarOfertas();
+    cambiarVisibilidad("contenedorLugar");
+    await cargarHorarios();
+    
+}
 
 async function actualizarOfertas() {
 
@@ -27,7 +36,25 @@ async function actualizarOfertas() {
     ofertas.innerHTML = html;
 }
 
+async function cargarHorarios() {
+        const response = await fetch(`${UrlObtenerHorarios}`);
 
+    if (!response.ok) {
+        console.error("No se pudieron obtener los horarios.");
+        return;
+    }
+
+    listaHorarios = await response.json();
+
+    const responseTabla = await fetch(`${UrlObtenerTablaHorarios}`);
+
+    if (!responseTabla.ok) {
+        console.error("No se pudo cargar la tabla de horarios.");
+        return;
+    }
+
+    horarios.innerHTML = await responseTabla.text();
+}
 
 async function cambiarVisibilidad(idElemento) {
     const elemento = document.getElementById(idElemento);
@@ -84,11 +111,15 @@ function agregarHorario() {
         return;
     }
 
-    listaHorarios.push({
-        fecha: fecha.value,
-        horaInicio: horaInicio.value,
-        horaTermino: horaTermino.value
-    });
+    var datosHorario = {}
+    datosHorario = {
+        "Fecha": fecha.value,
+        "HoraInicio": horaInicio.value,
+        "HoraTermino": horaTermino.value
+    }
+
+
+    listaHorarios.push(datosHorario);
 
     actualizarHorarios();
     cerrarModal("modalAgregarHorario");
@@ -125,7 +156,6 @@ function mostrarErrorHorario(id, mensaje) {
 
     error.textContent = mensaje;
 }
-
 
 function limpiarErroresHorario() {
 
