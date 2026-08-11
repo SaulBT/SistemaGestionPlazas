@@ -1,0 +1,198 @@
+﻿@using SGPla.Commons
+@using SGPla.Models.ViewModels.Avisos
+@model CrearAvisoViewModel
+@{
+    Layout = "_LayoutEntidadAcademica";
+    ViewData["Title"] = "Crear Aviso";
+    ViewBag.RegresarUrl = Url.Action("Index", "Avisos");
+}
+
+<div>
+    <form method="post" action="@Url.Action("CrearAviso", "Avisos")" >
+        @Html.AntiForgeryToken()
+
+        <!-- Datos Personales -->
+        <div class="cabecera-seccion mb-3">
+            <h4 style="margin-bottom: 25px">Datos Generales</h4>
+            <div style="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease; width: stretch; justify-content: space-evenly">
+                <div style ="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease; width: stretch; justify-content: space-evenly; flex: 4">
+                    @await Component.InvokeAsync("InputField", new InputFieldModel
+                    {
+                        Label = "Folio:",
+                        Name = "Folio",
+                        Valor = Model.Folio,
+                        Error = ViewData.ModelState["Folio"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                        Flexible = true
+                    })
+
+                    
+                </div>
+                <div style="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease; width: stretch; justify-content: space-evenly; flex: 6">
+                    @await Component.InvokeAsync("SelectField", new SelectFieldModel
+                    {
+                        Label = "Periodo escolar:",
+                        Options = Model.Periodos,
+                        Name = "IdPeriodo",
+                        Error = ViewData.ModelState["IdPeriodo"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                        Flexible = true
+                    })
+
+                    @await Component.InvokeAsync("SelectField", new SelectFieldModel
+                    {
+                        Label = "Artículo:",
+                        Options = Model.Articulos,
+                        Name = "IdArticulo",
+                        Error = ViewData.ModelState["IdArticulo"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                        Flexible = true
+                    })
+
+                    @await Component.InvokeAsync("DatePicker", new DatePickerModel
+                    {
+                        Label = "Fecha a ocupar vacantes:",
+                        Name = "FechaVacantes",
+                        Value = Model.FechaVacantes,
+                        Flexible = true
+                    })
+                </div>
+                
+
+                
+            </div>
+        </div>
+
+        <!-- Recepción de documentos -->
+        <div class="cabecera-seccion mb-3" >
+            <h4 style="margin-bottom: 25px">Recepción de Documentos</h4>
+            <div style="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease; width: stretch; justify-content: space-evenly">
+                @await Component.InvokeAsync("SelectField", new SelectFieldModel
+                        {
+                            Label = "Modalidad de entrega:",
+                            Options = Model.Modalidades,
+                            Name = "Modalidad",
+                            Error = ViewData.ModelState["Modalidad"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                            Flexible = true
+                        })
+
+                @await Component.InvokeAsync("InputField", new InputFieldModel
+                        {
+                            Label = "Correo:",
+                            Id = "Correo",
+                            Name = "Correo",
+                            Valor = Model.Correo,
+                            Error = ViewData.ModelState["Correo"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                            Flexible = true
+                        })
+
+                <div id="contenedorLugar" style="flex:1; display:none">
+                    @await Component.InvokeAsync("InputField", new InputFieldModel
+                    {
+                        Label = "Lugar:",
+                        Id = "Lugar",
+                        Name = "Lugar",
+                        Valor = Model.Lugar,
+                        Error = ViewData.ModelState["Lugar"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                        Flexible = true
+                    })
+                </div>
+                
+                
+            </div>
+            <div style="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease; width: stretch; justify-content: space-evenly">
+                @await Component.InvokeAsync("DatePicker", new DatePickerModel
+                {
+                    Label = "Fecha de Consejo Técnico",
+                    Name = "FechaCT",
+                    Value = Model.FechaCT,
+                    Flexible = true
+                })
+                <div style="flex: 1"></div> 
+                <div style="flex: 1"></div>
+            </div>
+            
+
+            <div style="display: flex; justify-content: space-between; padding-bottom: 10px; padding-top: 10px">
+                <div class="text-wrapper">Horarios:</div>
+                @await Component.InvokeAsync("Boton", new 
+                        {
+                            Accion = "Agregar",
+                            Texto = "Agregar Horario",
+                            OnClick = "abrirModalAgregarHorario()",
+                            Tipo = "secundario"
+                        })
+            </div>
+            <div id="contenedorHorarios">
+                @await Component.InvokeAsync("Table", Model.TablaHorario)
+            </div>
+            
+            <br/>
+        </div>
+
+        <!-- Experiencias educativas -->
+        <div class="cabecera-seccion mb-3">
+            <h4 style="margin-bottom: 25px">Experiencias Educativas Vacantes:</h4>
+            <!-- Aqui van las tablas de las carreras -->
+            <div id="contenedorOfertas" style="margin-top:20px; margin-bottom:50px">
+                <div id="IdExistenOfertas" class="text-error-wrapper" style="margin-bottom:20px; margin-left:10px">Seleccione el periodo y el artículo de procedencia para las ofertas.</div>
+            </div>
+            
+
+            @await Component.InvokeAsync("TextAreaField", new TextAreaFieldModel
+                    {
+                        Label = "Requisitos:",
+                        Name = "Requisitos",
+                        Value = Constantes.REQUISITOS_AVISO,
+                        Rows = 13
+                    })
+        </div>
+
+        <!-- Botones -->
+        <div style="display:flex; justify-content:flex-end; gap:var(--button-gap)">
+            <a href="@Url.Action("Index", "Avisos")" style="display: inline-block; text-decoration: none;">
+                @await Component.InvokeAsync("Boton", new
+                {
+                    Accion = "Cancelar"
+                })
+            </a>
+            @await Component.InvokeAsync("Boton", new
+            {
+                Accion = "Guardar",
+                ButtonType = "submit"
+            })
+        </div>
+    </form>
+
+    <!-- MODALES -->
+    <div>
+
+        <!-- Modal Agregar Horario -->
+        <form id="formHorario">
+            @await Component.InvokeAsync("ModalFormulario", new ModalFormularioModel
+            {
+                Id = "modalAgregarHorario",
+                Titulo = "Agregar horario",
+                PartialView = "_FormularioHorario",
+                PartialModel = Model.Formulario,
+                OnConfirm = "agregarHorario()",
+                OnCancel = "cerrarModal('modalAgregarHorario')"
+            })
+        </form>
+
+
+    </div>
+    
+</div>
+
+
+<script>
+    const UrlActualizarOfertas = '@Url.Action("ActualizarOfertas", "Avisos")';
+    const UrlAgregarHorario = '@Url.Action("AgregarHorario", "Avisos")';
+    const UrlObtenerHorarios = '@Url.Action("ObtenerHorarios","Avisos")';
+    const UrlObtenerTablaHorarios = '@Url.Action("ObtenerTablaHorarios", "Avisos")';
+</script>
+@section Scripts {
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
+    <script src="~/js/aviso.js"></script>
+}
+                  

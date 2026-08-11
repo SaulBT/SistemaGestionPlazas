@@ -6,11 +6,11 @@
     gap: var(--border-gap);
 }
 
-    .input-field.flexible {
-        flex: 1 1 0;
-        width: auto; 
-        min-width: 0;
-    }
+        .input-field.flexible {
+            flex: 1 1 ;
+            width: auto; 
+            min-width: 0;
+        }
 
     .input-field .text-wrapper {
         font-weight: bold;

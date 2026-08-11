@@ -25,5 +25,6 @@ namespace SGPla.Models.DTOs.Aviso
         public string Lugar { get; set; } = string.Empty;
         public DatosHorarioDTO Horario { get; set; } = new DatosHorarioDTO();
         public string UrlPublicacion { get; set; } = string.Empty;
+        public List<DatosHorarioDTO> Horarios { get; set; } = new List<DatosHorarioDTO>();
     }
 }

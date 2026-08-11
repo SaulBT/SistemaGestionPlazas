@@ -15,9 +15,11 @@ public partial class Aviso
 
     public string Folio { get; set; } = null!;
 
-    public DateOnly FechaInicio { get; set; }
-
     public DateOnly FechaCreacion { get; set; }
+
+    public DateOnly FechaCt { get; set; }
+
+    public DateOnly FechaVacantes { get; set; }
 
     public string Requisitos { get; set; } = null!;
 

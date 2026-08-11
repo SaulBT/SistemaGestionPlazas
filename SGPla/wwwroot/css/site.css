@@ -356,3 +356,18 @@ body {
     ::-webkit-scrollbar-thumb:hover {
         background: var(--scrollbar-thumb-hover);
     }
+
+
+.text-wrapper {
+    font-weight: bold;
+    font-family: var(--labels-font-family);
+    font-size: var(--labels-font-size);
+    color: var(--color-text-default-default);
+}
+
+.text-error-wrapper {
+    font-weight: bold;
+    font-family: var(--labels-font-family);
+    font-size: var(--labels-font-size);
+    color: var(--negativo-rojo-letra);
+}

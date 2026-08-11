@@ -102,6 +102,10 @@
         public const string MODALIDAD_DISTANCIA = "A distancia";
         public static List<string> MODALIDADES = new List<string> { MODALIDAD_ESCOLARIZADA, MODALIDAD_ABIERTA, MODALIDAD_VIRTUAL, MODALIDAD_MIXTA, MODALIDAD_SEMIESCOLARIZADA, MODALIDAD_DISTANCIA };
 
+        public const string MODALIDAD_AVISO_PRESENCIAL = "Presencial";
+        public const string MODALIDAD_AVISO_VIRTUAL = "Virtual";
+        public static List<string> MODALIDADES_AVISO = new List<string> { MODALIDAD_AVISO_PRESENCIAL, MODALIDAD_AVISO_VIRTUAL };
+
         public const string DR = "Dr.";
         public const string DRA = "Dra.";
         public const string MTRO = "Mtro.";
@@ -134,5 +138,9 @@
         public const string HISTORIAL_MODIFICADO = "Se modificó la oferta.";
         public const string HISTORIAL_JUSTIFICACION = "Devuelta a Vacante por el motivo: ";
         public const string HISTORIAL_ASIGNACION_DOCENTE = "Se asignó el docente: ";
+        public const string CAMPO_OBLIGATORIO = "Campo obligatorio";
+
+        //Avisos
+        public const string REQUISITOS_AVISO = "1. El personal académico que tenga horas de asignatura (HA) en caso de ser designado en alguna experiencia  educativa, será reubicado en la misma y formará parte de su carga de manera temporal. aplica únicamente  para personal UV.  \r\n2. No rebasar las horas de contratación con la Universidad Veracruzana en cualquier modalidad de acuerdo con el  Estatuto del Personal Académico (EPA);  \r\n3. Cumplir con el Perfil Académico(PA) señalado para la EE en la que solicite su participación;  \r\n4. Solicitud de participación dirigida a la persona Titular de la Entidad Académica indicando la EE; \r\n5. Título profesional de licenciatura;\r\n6. Título profesional de licenciatura;\r\n7. Constancia(s) que acrediten la experiencia laboral considerada en el PA;\r\n8. Constancia(s) que acrediten la experiencia docente considerada en el PA;\r\n9. Anexar documentos probatorios de último año, en los rubros de formación y actualización académica,\r\n10. Identificación: Credencial de elector, Pasaporte vigente o documento migratorio; y\r\n11. Último talón de cheque, aplica únicamente para personal UV\r\n12. Oficio de manifiesto de horario de servicios profesionales del solicitante.";
     }
 }

@@ -9,5 +9,6 @@ namespace SGPla.Validations.Interfaces
         Task ValidarEnviarARevisionAsync(RevisionDTO revisionDTO);
         Task ValidarArchivoAsync(CargarArchivoDTO cargarArchivoDTO);
         Task ValidarPublicacionAsync(int idAaviso, string url);
+        Task ValidarCrearAviso(CrearAvisoDTO dto);
     }
 }
