@@ -6,6 +6,7 @@ using SGPla.Models.DTOs.Horario;
 using SGPla.Models.DTOs.Oferta;
 using SGPla.Models.DTOs.PeriodoEscolar;
 using SGPla.Models.DTOs.PlanEstudios;
+using SGPla.Models.DTOs.Plantillas;
 using SGPla.Repositories.Interfaces;
 using SGPla.Services.Interfaces;
 using SGPla.Validations.Interfaces;
@@ -22,6 +23,9 @@ namespace SGPla.Services.Implementations
         private readonly IHorarioRepository _horarioRepository;
         private readonly IAvisoValidator _avisoValidator;
         private readonly IPeriodoEscolarRepository _periodoEscolarRepository;
+        private readonly IEntidadAcademicaRepository _entidadAcademicaRepository;
+        private readonly IArticuloRepository _articuloRepository;
+        private readonly IPlantillaService _plantillaService;
 
         public AvisoService(
             IAvisoRepository avisoRepository, 
@@ -31,7 +35,10 @@ namespace SGPla.Services.Implementations
             IArchivoService archivoService,
             IHorarioRepository horarioRepository,
             IAvisoValidator avisoValidator,
-            IPeriodoEscolarRepository periodoEscolarRepository)
+            IPeriodoEscolarRepository periodoEscolarRepository,
+            IEntidadAcademicaRepository entidadAcademicaRepository,
+            IArticuloRepository articuloRepository,
+            IPlantillaService plantillaService)
         {
             _avisoRepository = avisoRepository;
             _programacionAcademicaRepository = programacionAcademicaRepository;
@@ -41,6 +48,9 @@ namespace SGPla.Services.Implementations
             _horarioRepository = horarioRepository;
             _avisoValidator = avisoValidator;
             _periodoEscolarRepository = periodoEscolarRepository;
+            _entidadAcademicaRepository = entidadAcademicaRepository;
+            _archivoRepository = archivoRepository;
+            _plantillaService = plantillaService;
         }
 
         public async Task<(List<ListaAvisosDTO> items, int total)> ObtenerTodosAvisosAsync(FiltroAvisosDTO filtroDTO)
@@ -156,6 +166,8 @@ namespace SGPla.Services.Implementations
                     //IdArchivoOriginal = archivoRegistrado.IdArchivo
                 };
 
+                avisoRegistrado.IdArchivoOriginal = await generarArchivoAvisoAsync(avisoRegistrado);
+
                 avisoRegistrado = await _avisoRepository.CrearAsync(avisoRegistrado);
                 List<Horario> horarios = new List<Horario>();
                 foreach (var h in aviso.Horarios)
@@ -182,6 +194,33 @@ namespace SGPla.Services.Implementations
                     await _archivoService.EliminarAsync(archivoGuardado.Ruta);
                 throw ex;
             }
+        }
+
+        private async Task<int> generarArchivoAvisoAsync(Aviso aviso)
+        {
+            var entidad = await _entidadAcademicaRepository.ObtenerPorIdAsync(aviso.IdEntidadAcademica);
+            var articulo = await _articuloRepository.ObtenerArticuloPorIdAsync(aviso.IdArticulo);
+            var periodo = await _periodoEscolarRepository.ObtenerPorIdAsync(aviso.IdPeriodo);
+
+            var plantillaDTO = new PlantillaAvisoDTO
+            {
+                Folio = aviso.Folio ?? "0",
+                AreaAcademica = entidad?.IdAreaAcademicaNavigation.Nombre ?? "Nombre del Área Académica",
+                EntidadAcademica = entidad?.Nombre ?? "Nombre de la Entidad Académica",
+                Articulo = articulo?.Numero ?? "Número del Artículo",
+                Region = "Región",
+                Periodo = "Periodo",
+                Campus = "Campus",
+                Sistema = aviso.Sistema ?? "Sistema",
+                ProgramaEducativo = "Programa Educativo",
+                Requisitos = aviso.Requisitos ?? "Requisitos",
+                DiasAceptacion = "Días de Aceptación",
+                FechaConsejoTecnico = aviso.FechaCt.ToString(),
+                FechaPublicacion = "Fecha de publicación",
+                Titular = "Titular"
+            };
+
+            return await _plantillaService.GenerarAvisoAsync(plantillaDTO);
         }
 
         public async Task EliminarAvisoPorId(int idAviso)
