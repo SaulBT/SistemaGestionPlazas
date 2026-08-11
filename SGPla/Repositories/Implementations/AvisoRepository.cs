@@ -50,27 +50,13 @@ namespace SGPla.Repositories.Implementations
                 .FirstOrDefaultAsync(aviso => aviso.IdAviso == idAviso);
         }
 
-        public async Task<Aviso> CrearAviso(Aviso aviso)
+        public async Task<Aviso> CrearAsync(Aviso aviso)
         {
             if (aviso == null)
                 return null;
             await _context.Aviso.AddAsync(aviso);
             await _context.SaveChangesAsync();
             return aviso;
-        }
-
-        public async Task AsociarOfertasPorAviso(List<int> idsOfertas, int idAviso)
-        {
-            foreach (int id in idsOfertas)
-            {
-                await _context.OfertaAviso.AddAsync(new OfertaAviso
-                {
-                    IdAviso = idAviso,
-                    IdOferta = id
-                });
-
-            }
-            await _context.SaveChangesAsync();
         }
 
         public async Task EliminarAsync(int idAviso)
@@ -173,6 +159,20 @@ namespace SGPla.Repositories.Implementations
         {
             var aviso = _context.Aviso.FirstOrDefault(a => a.IdAviso == idAviso);
             return aviso is not null;
+        }
+
+        public async Task AsociarOfertasPorAviso(List<int> idsOfertas, int idAviso)
+        {
+            foreach (int id in idsOfertas)
+            {
+                await _context.OfertaAviso.AddAsync(new OfertaAviso
+                {
+                    IdAviso = idAviso,
+                    IdOferta = id
+                });
+
+            }
+            await _context.SaveChangesAsync();
         }
     }
 }

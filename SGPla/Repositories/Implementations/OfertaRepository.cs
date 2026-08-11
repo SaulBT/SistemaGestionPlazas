@@ -1,6 +1,6 @@
-﻿using DocumentFormat.OpenXml.InkML;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using SGPla.Data;
+using SGPla.Models;
 using SGPla.Models.DTOs.Horario;
 using SGPla.Models.DTOs.Oferta;
 using SGPla.Models.DTOs.PlanEstudios;
@@ -39,6 +39,7 @@ namespace SGPla.Repositories.Implementations
             }
 
             return ofertas;
+        }
         public async Task<List<OfertaPlanEstudiosAvisoDTO>> ObtenerPlanesEstudioCrearAviso(int idEntidadAcademica, int idPeriodo, int idArticulo)
         {
             /* 

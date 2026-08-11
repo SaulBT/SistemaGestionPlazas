@@ -1,4 +1,6 @@
-﻿namespace SGPla.Models.DTOs.Horario
+﻿using SGPla.Services.Implementations;
+
+namespace SGPla.Models.DTOs.Horario
 {
     public class DatosHorarioDTO
     {

@@ -1,4 +1,4 @@
-﻿using SGPla.Models.DTOs.Oferta;
+﻿using SGPla.Models;
 using SGPla.Models.DTOs.PlanEstudios;
 
 namespace SGPla.Repositories.Interfaces

@@ -5,7 +5,6 @@ using SGPla.Models.DTOs.Aviso;
 using SGPla.Models.DTOs.Horario;
 using SGPla.Models.DTOs.Oferta;
 using SGPla.Models.DTOs.PeriodoEscolar;
-﻿using SGPla.Models;
 using SGPla.Models.DTOs.PlanEstudios;
 using SGPla.Repositories.Interfaces;
 using SGPla.Services.Interfaces;
@@ -22,6 +21,7 @@ namespace SGPla.Services.Implementations
         private readonly IArchivoService _archivoService;
         private readonly IHorarioRepository _horarioRepository;
         private readonly IAvisoValidator _avisoValidator;
+        private readonly IPeriodoEscolarRepository _periodoEscolarRepository;
 
         public AvisoService(
             IAvisoRepository avisoRepository, 
@@ -30,7 +30,8 @@ namespace SGPla.Services.Implementations
             IArchivoRepository archivoRepository,
             IArchivoService archivoService,
             IHorarioRepository horarioRepository,
-            IAvisoValidator avisoValidator)
+            IAvisoValidator avisoValidator,
+            IPeriodoEscolarRepository periodoEscolarRepository)
         {
             _avisoRepository = avisoRepository;
             _programacionAcademicaRepository = programacionAcademicaRepository;
@@ -39,6 +40,7 @@ namespace SGPla.Services.Implementations
             _archivoService = archivoService;
             _horarioRepository = horarioRepository;
             _avisoValidator = avisoValidator;
+            _periodoEscolarRepository = periodoEscolarRepository;
         }
 
         public async Task<(List<ListaAvisosDTO> items, int total)> ObtenerTodosAvisosAsync(FiltroAvisosDTO filtroDTO)
@@ -70,7 +72,7 @@ namespace SGPla.Services.Implementations
                 IdArchivoFirmado = aviso.IdArchivoFirmado ?? 0,
                 Articulo = aviso.IdArticuloNavigation.Numero,
                 FechaCreacion = aviso.FechaCreacion.ToString("dd/MM/yyyy"),
-                FechaVacantes = aviso.FechaInicio.ToString("dd/MM/yyyy"),
+                FechaVacantes = aviso.FechaVacantes.ToString("dd/MM/yyyy"),
                 Region = aviso.IdEntidadAcademicaNavigation.Region,
                 NombreEntidadAcademica = aviso.IdEntidadAcademicaNavigation.Nombre,
                 Periodo = periodoDTO.PeriodoMostrar,
@@ -121,7 +123,7 @@ namespace SGPla.Services.Implementations
         }
 
         //EA
-        public Task CrearAviso(CrearAvisoDTO aviso)
+        public async Task CrearAviso(CrearAvisoDTO aviso)
         {
             //await _avisoValidator.ValidarCrearAviso(aviso);
 
@@ -154,7 +156,7 @@ namespace SGPla.Services.Implementations
                     //IdArchivoOriginal = archivoRegistrado.IdArchivo
                 };
 
-                avisoRegistrado = await _avisoRepository.CrearAviso(avisoRegistrado);
+                avisoRegistrado = await _avisoRepository.CrearAsync(avisoRegistrado);
                 List<Horario> horarios = new List<Horario>();
                 foreach (var h in aviso.Horarios)
                 {
@@ -342,6 +344,7 @@ namespace SGPla.Services.Implementations
             }
 
             return horarioDTO;
+        }
         //Datos necesarios
         public async Task<List<OfertaPlanEstudiosAvisoDTO>> ObtenerPlanesConOfertasAviso(int idEntidadAcademica, int idPeriodo, int idArticulo)
         {
