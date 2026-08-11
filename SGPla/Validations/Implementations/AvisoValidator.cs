@@ -1,6 +1,9 @@
 ﻿using Microsoft.IdentityModel.Tokens;
+using SGPla.Commons;
+using SGPla.Models.DTOs.Archivo;
 using SGPla.Models.DTOs.Aviso;
 using SGPla.Models.DTOs.Horario;
+using SGPla.Repositories.Interfaces;
 using SGPla.Validations.Interfaces;
 
 namespace SGPla.Validations.Implementations
@@ -52,6 +55,8 @@ namespace SGPla.Validations.Implementations
             await ValidarIdAsync(idAaviso);
             if (string.IsNullOrEmpty(url))
                 throw new ValidacionExcepction("La URL de la publicación es obligatoria", "400");
+        }
+
         public Task ValidarCrearAviso(CrearAvisoDTO dto)
         {
             throw new NotImplementedException();
