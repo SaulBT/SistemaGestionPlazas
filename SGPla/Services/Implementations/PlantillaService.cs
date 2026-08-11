@@ -1,4 +1,5 @@
-﻿using DocumentFormat.OpenXml.Packaging;
+﻿using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using SGPla.Models.DTOs.Plantillas;
 using SGPla.Services.Interfaces;
@@ -8,52 +9,100 @@ namespace SGPla.Services.Implementations
     public class PlantillaService : IPlantillaService
     {
         private readonly IArchivoService _archivoService;
+        private readonly IArticuloService _articuloService;
 
-        public PlantillaService(IArchivoService archivoService)
+        public PlantillaService(
+            IArchivoService archivoService,
+            IArticuloService articuloService)
         {
             _archivoService = archivoService;
+            _articuloService = articuloService;
         }
 
-        public async Task GenerarAvisoAsync(PlantillaAvisoDTO plantillaAvisoDTO)
+        // ==========
+        // AVISOS
+        // ==========
+
+        public async Task<int> GenerarAvisoAsync(PlantillaAvisoDTO plantillaAvisoDTO)
         {
-            var plantilla = await _archivoService.ObtenerArchivoEnBytesAsync("plantillas/aviso70temporal.docx");
+            var plantilla = await _archivoService.ObtenerArchivoEnBytesAsync("plantillas/aviso.docx");
+
+            if (plantilla is null || plantilla.Length == 0)
+            {
+                throw new ArgumentException("El arreglo de bytes 'plantilla' está vacío o es nulo.");
+            }
 
             using (var stream =  new MemoryStream())
             {
                 stream.Write(plantilla, 0, plantilla.Length);
+                stream.Position = 0;
 
-                using(var wordDoc = WordprocessingDocument.Open(stream, true))
+                using (var wordDoc = WordprocessingDocument.Open(stream, true))
                 {
-                    reemplazarEtiquetasGenerales(wordDoc, plantillaAvisoDTO);
+                    if (wordDoc.MainDocumentPart is null)
+                    {
+                        throw new InvalidDataException(
+                            $"El stream se creó con {plantilla.Length} bytes, pero Open XML no reconoció un 'MainDocumentPart'. " +
+                            "Verifica que la plantilla sea un archivo .docx válido y no un .doc reetiquetado.");
+                    }
+
+                    await reemplazarEtiquetasGeneralesAsync(wordDoc, plantillaAvisoDTO);
                     llenarTablaExperiencias(wordDoc, plantillaAvisoDTO.ListaExperiencias);
                     generarListaPerfiles(wordDoc, plantillaAvisoDTO.ListaExperiencias);
 
                     wordDoc.MainDocumentPart.Document.Save();
                 }
 
-                var nombreGuardado = $"{Guid.NewGuid()}.docx";
-                await _archivoService.GuardarArchivoBytesAsync(stream.ToArray(), $"aviso-original/{nombreGuardado}");
+                var nombreGuardado = $"{plantillaAvisoDTO.Folio}.docx";
+                var id = await _archivoService.GuardarArchivoBytesAsync(stream.ToArray(), "aviso-original", nombreGuardado);
+
+                return id;
             }
         }
 
-        private void reemplazarEtiquetasGenerales(WordprocessingDocument wordDoc, PlantillaAvisoDTO plantillaAvisoDTO)
+        private async Task reemplazarEtiquetasGeneralesAsync(WordprocessingDocument wordDoc, PlantillaAvisoDTO plantillaAvisoDTO)
         {
             var mapeo = new Dictionary<string, string>
             {
-                { "NombreFacultad", plantillaAvisoDTO.NombreEntidadAcademica },
+                { "AreaAcademica", plantillaAvisoDTO.AreaAcademica },
+                { "EntidadAcademica", plantillaAvisoDTO.EntidadAcademica },
+                { "Articulo", plantillaAvisoDTO.Articulo },
                 { "Region", plantillaAvisoDTO.Region },
+                { "PerfilArticulo", await determinarPerfilArticuloAsync(plantillaAvisoDTO.Articulo) },
+                { "Periodo", plantillaAvisoDTO.Periodo },
                 { "Campus", plantillaAvisoDTO.Campus },
-                { "NombreArea", plantillaAvisoDTO.NombreAreaAcademica },
+                { "NombreArea", determinarNombreArea(plantillaAvisoDTO.AreaAcademica) },
                 { "Sistema", plantillaAvisoDTO.Sistema },
-                { "NombrePrograma", plantillaAvisoDTO.NombreProgramaEducativo },
+                { "ProgramaEducativo", plantillaAvisoDTO.ProgramaEducativo },
                 { "Requisitos", plantillaAvisoDTO.Requisitos },
                 { "DiasAceptacion", plantillaAvisoDTO.DiasAceptacion },
                 { "FechaConsejoTecnico", plantillaAvisoDTO.FechaConsejoTecnico },
                 { "FechaPublicacion", plantillaAvisoDTO.FechaPublicacion },
-                { "NombreTitular", plantillaAvisoDTO.NombreTitular }
+                { "NombreTitular", plantillaAvisoDTO.Titular }
             };
 
-            var controles = wordDoc.MainDocumentPart.Document.Body.Descendants<SdtElement>().ToList();
+            foreach (var kvp in mapeo)
+            {
+                reemplazarEncabezado(wordDoc, kvp.Key, kvp.Value);
+            }
+
+            // ===
+            var mainPart = wordDoc.MainDocumentPart;
+            if (mainPart is null) return;
+
+            if (!mainPart.IsRootElementLoaded)
+            {
+                _ = mainPart.Document;
+            }
+
+            var document = mainPart.Document;
+            var body = document?.Body;
+
+            if (body is null) return;
+
+            var controles = body.Descendants<SdtElement>().ToList();
+
+            // ===
 
             foreach (var control in controles)
             {
@@ -63,12 +112,10 @@ namespace SGPla.Services.Implementations
                 {
                     if (tag.Contains("Requisitos"))
                     {
-                        actualizarTextoControlConSaltos(control, mapeo[tag]);
+                        escribirRequisitos(control, mapeo[tag]);
                     }
                     else
                     {
-                        reemplazarEncabezado(wordDoc, tag, mapeo[tag]);
-
                         var textElements = control.Descendants<Text>().ToList();
                         if (textElements.Any())
                         {
@@ -84,7 +131,29 @@ namespace SGPla.Services.Implementations
             }
         }
 
-        private void actualizarTextoControlConSaltos(SdtElement control, string nuevoTexto)
+        private string determinarNombreArea(string areaAcademica)
+        {
+            if (areaAcademica.Contains("Artes")) return "Artes";
+            if (areaAcademica.Contains("Biologicas y Agropecuarias")) return "Biologicas y Agropecuarias";
+            if (areaAcademica.Contains("Ciencias de la Salud")) return "Ciencias de la Salud";
+            if (areaAcademica.Contains("Económico-Administrativa")) return "Económico-Administrativa";
+            if (areaAcademica.Contains("Técnica")) return "Técnica";
+            if (areaAcademica.Contains("Humanidades")) return "Humanidades";
+            if (areaAcademica.Contains("Investigaciones")) return "Investigaciones";
+            if (areaAcademica.Contains("Relaciones Internacionales")) return "Relaciones Internacionales";
+
+            return areaAcademica;
+        }
+
+        private async Task<string> determinarPerfilArticuloAsync(string articulo)
+        {
+            var articulos = await _articuloService.ObtenerTodosAsync();
+            var articuloDTO = articulos.FirstOrDefault(a => a.Numero == articulo);
+
+            return articuloDTO?.Descripcion ?? "";
+        }
+
+        private void escribirRequisitos(SdtElement control, string nuevoTexto)
         {
             var run = control.Descendants<Run>().FirstOrDefault();
             if (run is null) return;
@@ -199,7 +268,7 @@ namespace SGPla.Services.Implementations
             var body = wordDoc.MainDocumentPart.Document.Body;
 
             var sdtContenedor = body.Descendants<SdtElement>()
-                .FirstOrDefault(sdt => sdt.SdtProperties?.GetFirstChild<Tag>().Val?.Value == "ListaPerfiles");
+                .FirstOrDefault(sdt => sdt.SdtProperties?.GetFirstChild<Tag>()?.Val?.Value == "ListaPerfiles");
 
             if (sdtContenedor is null) return;
 
@@ -223,19 +292,6 @@ namespace SGPla.Services.Implementations
             }
 
             sdtContenedor.Remove();
-        }
-
-        private void actualizarTextoControl(SdtElement control, string nuevoTexto)
-        {
-            var textElements = control.Descendants<Text>().ToList();
-            if (textElements.Any())
-            {
-                textElements.First().Text = nuevoTexto ?? string.Empty;
-                foreach (var extraText in textElements.Skip(1))
-                {
-                    extraText.Text = string.Empty;
-                }
-            }
         }
 
         private void reemplazarEncabezado(WordprocessingDocument wordDoc, string etiqueta, string nuevoTexto)
@@ -273,6 +329,23 @@ namespace SGPla.Services.Implementations
                 }
 
                 header.Save();
+            }
+        }
+
+        // ==========
+        // UTILS
+        // ==========
+
+        private void actualizarTextoControl(SdtElement control, string nuevoTexto)
+        {
+            var textElements = control.Descendants<Text>().ToList();
+            if (textElements.Any())
+            {
+                textElements.First().Text = nuevoTexto ?? string.Empty;
+                foreach (var extraText in textElements.Skip(1))
+                {
+                    extraText.Text = string.Empty;
+                }
             }
         }
     }

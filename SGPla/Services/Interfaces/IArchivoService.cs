@@ -9,6 +9,6 @@ namespace SGPla.Services.Interfaces
         Task<ArchivoDescargadoDTO> DescargarAsync(int idArchivo);
         Task EliminarAsync(string rutaRelativa);
         Task<byte[]> ObtenerArchivoEnBytesAsync(string rutaArchivo);
-        Task GuardarArchivoBytesAsync(byte[] contenido, string rutaRelativa);
+        Task<int> GuardarArchivoBytesAsync(byte[] contenido, string carpeta, string nombre);
     }
 }

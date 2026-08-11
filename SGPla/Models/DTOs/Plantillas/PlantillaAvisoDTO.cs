@@ -2,19 +2,21 @@
 {
     public class PlantillaAvisoDTO
     {
-        public string NombreEntidadAcademica { get; set; } = string.Empty;
+        public string Folio { get; set; } = "0";
+        public string AreaAcademica { get; set; } = string.Empty;
+        public string EntidadAcademica { get; set; } = string.Empty;
+        public string Articulo { get; set; } = string.Empty;
         public string Region { get; set; } = string.Empty;
+        public string Periodo { get; set; } = string.Empty;
         public string Campus { get; set; } = string.Empty;
-        public string NombreAreaAcademica { get; set; } = string.Empty;
         public string Sistema { get; set; } = string.Empty;
-        public string NombreProgramaEducativo { get; set; } = string.Empty;
+        public string ProgramaEducativo { get; set; } = string.Empty;
         public List<PlantillaAvisoExperienciaEducativaDTO> ListaExperiencias { get; set; } = [];
         public string Requisitos { get; set; } = string.Empty;
         public string DiasAceptacion { get; set; } = string.Empty;
         public string FechaConsejoTecnico { get; set; } = string.Empty;
         public string FechaPublicacion { get; set; } = string.Empty;
-        public string NombreTitular { get; set; } = string.Empty;
-        public string Articulo { get; set; } = string.Empty;
+        public string Titular { get; set; } = "Nombre del Titular";
     }
 
     public class PlantillaAvisoExperienciaEducativaDTO

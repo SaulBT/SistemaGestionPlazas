@@ -117,7 +117,6 @@ namespace SGPla.Services.Implementations
         public async Task<byte[]> ObtenerArchivoEnBytesAsync(string rutaArchivo)
         {
             string rutaCompleta = Path.GetFullPath(Path.Combine(_rutaBase, rutaArchivo));
-            Console.WriteLine(rutaCompleta);
 
             if (!rutaCompleta.StartsWith(_rutaBase, StringComparison.OrdinalIgnoreCase))
             {
@@ -134,13 +133,15 @@ namespace SGPla.Services.Implementations
             return archivoBytes;
         }
 
-        public async Task GuardarArchivoBytesAsync(byte[] contenido, string rutaRelativa)
+        public async Task<int> GuardarArchivoBytesAsync(byte[] contenido, string carpeta, string nombre)
         {
             if (contenido == null || contenido.Length == 0)
             {
                 throw new ArgumentException("El archivo no contiene datos.", nameof(contenido));
             }
 
+            var nombreGuardado = $"{Guid.NewGuid()}.docx";
+            string rutaRelativa = $"{carpeta}/{nombreGuardado}";
             string rutaCompleta = Path.GetFullPath(Path.Combine(_rutaBase, rutaRelativa));
 
             if (!rutaCompleta.StartsWith(_rutaBase, StringComparison.OrdinalIgnoreCase))
@@ -155,6 +156,22 @@ namespace SGPla.Services.Implementations
             }
 
             await File.WriteAllBytesAsync(rutaCompleta, contenido);
+
+            if (!_contentTypeProvider.TryGetContentType(nombreGuardado, out var tipo))
+                tipo = "application/octet-stream";
+            var tamanio = new FileInfo(rutaCompleta).Length;
+
+
+            var archivo = new Archivo
+            {
+                Nombre = nombre,
+                Tipo = tipo,
+                Ruta = rutaRelativa,
+                Tamanio = tamanio
+            };
+
+            archivo = await _archivoRepository.CrearAsync(archivo);
+            return archivo.IdArchivo;
         }
     }
 }

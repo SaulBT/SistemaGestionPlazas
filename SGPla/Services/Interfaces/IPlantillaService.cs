@@ -4,6 +4,6 @@ namespace SGPla.Services.Interfaces
 {
     public interface IPlantillaService
     {
-        Task GenerarAvisoAsync(PlantillaAvisoDTO plantillaAvisoDTO);
+        Task<int> GenerarAvisoAsync(PlantillaAvisoDTO plantillaAvisoDTO);
     }
 }
