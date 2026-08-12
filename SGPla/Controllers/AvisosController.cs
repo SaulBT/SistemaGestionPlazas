@@ -49,10 +49,11 @@ namespace SGPla.Controllers
         {
             _avisoService = avisoService;
             _periodoService = periodoService;
-            articuloService = articuloService;
+            _articuloService = articuloService;
             _entidadService = entidadService;
             _plantillaService = plantillaService;
             _archivoService = archivoService;
+            _logger = logger;
         }
 
         // ==========

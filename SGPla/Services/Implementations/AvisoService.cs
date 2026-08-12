@@ -51,6 +51,7 @@ namespace SGPla.Services.Implementations
             _entidadAcademicaRepository = entidadAcademicaRepository;
             _archivoRepository = archivoRepository;
             _plantillaService = plantillaService;
+            _articuloRepository = articuloRepository;
         }
 
         public async Task<(List<ListaAvisosDTO> items, int total)> ObtenerTodosAvisosAsync(FiltroAvisosDTO filtroDTO)
@@ -163,6 +164,8 @@ namespace SGPla.Services.Implementations
                     Lugar = aviso.Lugar,
                     Correo = aviso.Correo,
                     Modalidad = aviso.Modalidad,
+                    Estado = "Creado",
+                    Sistema = "Escolarizado"
                     //IdArchivoOriginal = archivoRegistrado.IdArchivo
                 };
 

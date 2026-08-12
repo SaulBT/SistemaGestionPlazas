@@ -15,11 +15,9 @@ public partial class Aviso
 
     public string Folio { get; set; } = null!;
 
-    public DateOnly FechaCreacion { get; set; }
-
     public DateOnly FechaCt { get; set; }
 
-    public DateOnly FechaVacantes { get; set; }
+    public DateOnly FechaCreacion { get; set; }
 
     public string Requisitos { get; set; } = null!;
 
@@ -44,6 +42,8 @@ public partial class Aviso
     public string Sistema { get; set; } = null!;
 
     public string? Comentarios { get; set; }
+
+    public DateOnly FechaVacantes { get; set; }
 
     public virtual ICollection<Acta> Acta { get; set; } = new List<Acta>();
 
