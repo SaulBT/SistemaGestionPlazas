@@ -17,6 +17,8 @@ public partial class Aviso
 
     public DateOnly FechaCt { get; set; }
 
+    public DateOnly FechaVacantes { get; set; }
+
     public DateOnly FechaCreacion { get; set; }
 
     public string Requisitos { get; set; } = null!;
