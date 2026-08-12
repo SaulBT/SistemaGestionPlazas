@@ -1,7 +1,6 @@
 @using SGPla.Models.ViewModels.Docentes
 @model VerDocumentosPersonalViewModel
 @{
-    Layout = "_LayoutEntidadAcademica";
     ViewData["Title"] = "Documentos de " + Model.NombrePersonal;
     ViewData["RegresarUrl"] = Url.Action("Index", "Docentes");
 }

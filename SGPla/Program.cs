@@ -17,7 +17,7 @@ builder.Services.AddDistributedMemoryCache();
 
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.IdleTimeout = TimeSpan.FromHours(8); // antes: FromMinutes(30)
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
@@ -86,15 +86,17 @@ builder.Services.AddScoped<IEstadoNavegacion, EstadoNavegacion>();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-#if DEBUG
-        options.LoginPath = "/DevLogin";
-#else
-        options.LoginPath = "/Account/Login";
-#endif
-        options.AccessDeniedPath = "/Account/AccesoDenegado";
+        options.LoginPath = "/Login";
+        options.ExpireTimeSpan = TimeSpan.FromHours(8);
+        options.SlidingExpiration = true;
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
     });
 
-builder.Services.AddAuthorization(); 
+builder.Services.AddAuthorization();
+
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ILdapAuthService, LdapAuthService>();
 
 builder.Services.AddScoped<IAvisoService, AvisoService>();
 builder.Services.AddScoped<IAvisoRepository, AvisoRepository>();
@@ -119,7 +121,7 @@ app.MapStaticAssets();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=DevLogin}/{action=Index}/{id?}")
+    pattern: "{controller=Login}/{action=Index}/{id?}")
     .WithStaticAssets();
 
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);

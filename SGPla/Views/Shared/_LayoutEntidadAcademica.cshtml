@@ -23,23 +23,7 @@
     <!-- HEADER SUPERIOR (fijo en la parte de arriba) -->
     <!-- ========================================== -->
     <header class="header-superior">
-        <div class="header-contenido">
-
-            <!-- Logo o título -->
-            <div class="logo">
-                <!--<i class="fas fa-code"></i> -->
-                <span>Sistema de Gestión de Plazas Vacantes</span>
-            </div>
-
-            <!-- Información del usuario -->
-            <div class="info-usuario">
-                <i class="fas fa-user-circle"></i>
-                <div>
-                    <span>Usuario Demo</span>
-                    <span>Coordinador de entidad académica</span>
-                </div>
-            </div>
-        </div>
+        @await Component.InvokeAsync("HeaderUsuario")
     </header>
 
     <!-- ========================================== -->

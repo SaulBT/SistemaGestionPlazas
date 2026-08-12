@@ -13,6 +13,9 @@ namespace SGPla.Models.ViewModels.ProgramacionesAcademicas
         public TableModel TableAsignadas { get; set; } = new();
         public TableModel TableVacantes { get; set; } = new();
 
+        //public TableModel TableCargas { get; set; }
+
+
         public AccionesDisponibles AccionesDisponibles { get; }
 
         public VerProgramacionAcademicaViewModel(ClaimsPrincipal usuario)
@@ -26,6 +29,14 @@ namespace SGPla.Models.ViewModels.ProgramacionesAcademicas
         public bool PuedeAsignarDocente => AccionesDisponibles.Puede(Acciones.ProgramacionAcademica.AsignarDocente);
         public bool PuedeEliminar => AccionesDisponibles.Puede(Acciones.ProgramacionAcademica.Eliminar);
         public bool PuedeOfertar => AccionesDisponibles.Puede(Acciones.ProgramacionAcademica.Ofertar);
+
+
+
+        public int IdEntidadAcademica { get; set; }
+
+        public int IdProgramaEducativo { get; set; }
+
+        public int IdPeriodo { get; set; }
 
     }
 }

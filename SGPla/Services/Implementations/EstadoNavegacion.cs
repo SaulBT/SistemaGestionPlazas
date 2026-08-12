@@ -16,6 +16,8 @@ namespace SGPla.Services.Implementations
             public const string Ofertas = "ProgAcademica.Ofertas";
             public const string Cargas = "ProgAcademica.Cargas";
             public const string ResumenOferta = "ProgAcademica.ResumenOferta";
+            public const string FiltroOfertaActual = "FiltroOfertaActual";
+            public const string FiltroCargaActual = "FiltroCargaActual";
         }
     }
 

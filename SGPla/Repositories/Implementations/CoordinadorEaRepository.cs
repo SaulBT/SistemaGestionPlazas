@@ -37,6 +37,13 @@ namespace SGPla.Repositories.Implementations
                 .ThenInclude(e => e.IdAreaAcademicaNavigation)
                 .FirstOrDefaultAsync(c => c.IdCoordinadorEa == idCoordinadorEa);
         }
+        public async Task<CoordinadorEa?> ObtenerPorCorreoAsync(string correo)
+        {
+            return await _context.CoordinadorEa
+                .Include(c => c.IdEntidadAcademicaNavigation)
+                .ThenInclude(e => e.IdAreaAcademicaNavigation)
+                .FirstOrDefaultAsync(c => c.Correo == correo);
+        }
 
         public async Task<List<CoordinadorEa>> ObtenerTodosAsync()
         {

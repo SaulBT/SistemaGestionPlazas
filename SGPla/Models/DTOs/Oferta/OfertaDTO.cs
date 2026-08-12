@@ -58,5 +58,7 @@
 
         public string Modalidad { get; set; } 
 
+        public int IdArticulo { get; set; }
+
     }
 }

@@ -23,9 +23,12 @@ namespace SGPla.Services.Implementations
         public readonly IExperienciaEducativaRepository _experienciaRepository; 
         public readonly IEntidadAcademicaRepository _entidadAcademicaRepository;
         public readonly IProgramaEducativoRepository _programaEducativoRepository;
+        public readonly IArticuloRepository _articuloRepository;
+
+        public const int ARTICULO_INICIAL = 70;
 
 
-        public ProgramacionAcademicaService(IProgramacionAcademicaValidator programacionAcademicaValidator, IProgramacionAcademicaRepository programacionAcademicaRepository, IDocenteRepository docenteRepository, IExperienciaEducativaRepository experienciaRepository, IEntidadAcademicaRepository entidadAcademicaRepository, IProgramaEducativoRepository programaEducativoRepository )
+        public ProgramacionAcademicaService(IProgramacionAcademicaValidator programacionAcademicaValidator, IProgramacionAcademicaRepository programacionAcademicaRepository, IDocenteRepository docenteRepository, IExperienciaEducativaRepository experienciaRepository, IEntidadAcademicaRepository entidadAcademicaRepository, IProgramaEducativoRepository programaEducativoRepository, IArticuloRepository articuloRepository)
         {
             _programacionAcademicaValidator = programacionAcademicaValidator;
             _programacionAcademicaRepository = programacionAcademicaRepository;
@@ -33,10 +36,13 @@ namespace SGPla.Services.Implementations
             _experienciaRepository = experienciaRepository;
             _entidadAcademicaRepository = entidadAcademicaRepository;
             _programaEducativoRepository = programaEducativoRepository;
+            _articuloRepository = articuloRepository;
         }
 
         public async Task<List<OfertaDTO>> ProcesarArchivoOfertasAsync(IFormFile archivo, TipoArchivoOferta tipoArchivo)
         {
+            await _programacionAcademicaValidator.ValidarArticulo();
+
             using var ms = new MemoryStream();
             await archivo.CopyToAsync(ms);
             ms.Position = 0;
@@ -44,7 +50,13 @@ namespace SGPla.Services.Implementations
 
             var ofertas = DescargasParser.Parse(ms, archivo.FileName);
 
-           ofertas.ForEach(o => o.TC = tipoContratacion);
+            var articuloPublicacion = await _articuloRepository.ObtenerArticuloPorNumero(ARTICULO_INICIAL);
+
+            ofertas.ForEach(o => o.TC = tipoContratacion);
+
+            ofertas.ForEach(o => o.Articulo = int.Parse(articuloPublicacion.Numero));
+            ofertas.ForEach(o => o.IdArticulo = articuloPublicacion.IdArticulo);
+
 
             //await _programacionAcademicaValidator.ValidarProgramas(ofertas);
             //await _programacionAcademicaValidator.ValidarExperiencias(ofertas);
@@ -58,7 +70,7 @@ namespace SGPla.Services.Implementations
             await _programacionAcademicaValidator.ValidarProgramas(ofertas);
             await _programacionAcademicaValidator.ValidarExperiencias(ofertas);
             await _programacionAcademicaValidator.ValidarDocentes(ofertas);
-            await _programacionAcademicaValidator.ValidarArticulo(ofertas);
+
 
             var numerosPersonalOfertas = ofertas
                 .Select(o => o.NP)
@@ -112,6 +124,7 @@ namespace SGPla.Services.Implementations
                 }
 
                 dto.IdProgramaEducativo = idPrograma;
+               
 
                 var oferta = OfertaMapper.ToModel(dto);
 
@@ -250,11 +263,11 @@ namespace SGPla.Services.Implementations
             return await _programaEducativoRepository.ObtenerPorFiltroAsync(new BuscarProgramaEducativoDTO { IdEntidadAcademica = idEntidadAcademica });
         }
 
-        public async Task<List<OfertaDTO>> ObtenerOfertasGuardadasAsync(
-    int idEntidadAcademica, int idProgramaEducativo, int idPeriodo)
+        public async Task<List<OfertaDTO>> ObtenerOfertasExperienciasEducativasAsync(
+    int idEntidadAcademica, int idProgramaEducativo, int idPeriodo, string? busqueda)
         {
             return await _programacionAcademicaRepository
-                .ObtenerOfertasGuardadasAsync(idEntidadAcademica, idProgramaEducativo, idPeriodo);
+                .ObtenerOfertasExperienciasEducativasAsync(idEntidadAcademica, idProgramaEducativo, idPeriodo, busqueda);
         }
 
         public async Task<OfertaDTO?> ObtenerOfertaPorId(int idOferta)

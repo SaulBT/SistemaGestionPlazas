@@ -107,3 +107,14 @@ function confirmarModal() {
 
     });
 
+function togglePassword(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const icon = btn.querySelector('i');
+
+    const esVisible = input.type === 'text';
+
+    input.type = esVisible ? 'password' : 'text';
+    icon.classList.toggle('bi-eye', !esVisible);
+    icon.classList.toggle('bi-eye-slash', esVisible);
+    btn.setAttribute('aria-label', esVisible ? 'Mostrar contraseña' : 'Ocultar contraseña');
+}

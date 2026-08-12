@@ -1,6 +1,7 @@
-﻿using SGPla.Data;
-using SGPla.Models;
+﻿using DocumentFormat.OpenXml.Office2010.Excel;
 using Microsoft.EntityFrameworkCore;
+using SGPla.Data;
+using SGPla.Models;
 using SGPla.Repositories.Interfaces;
 
 
@@ -81,6 +82,11 @@ namespace SGPla.Repositories.Implementations
             var resultados = await query.ToListAsync();
 
             return resultados;
+        }
+
+        public async Task<Articulo?> ObtenerArticuloPorNumero(int numero)
+        {
+            return await _context.Articulo.FirstOrDefaultAsync(a => a.Numero == numero.ToString());
         }
     }
 }

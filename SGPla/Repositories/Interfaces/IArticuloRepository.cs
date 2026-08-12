@@ -17,5 +17,9 @@ namespace SGPla.Repositories.Interfaces
         Task<Articulo?> ExisteAsync(string numero);
 
         Task<IEnumerable<Articulo>> BuscarPorTerminoAsync(string busqueda);
+
+
+        Task<Articulo?> ObtenerArticuloPorNumero(int numero);
+
     }
 }

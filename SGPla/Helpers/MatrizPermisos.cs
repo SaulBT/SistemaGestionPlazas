@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using SGPla.Commons;
+using System.Security.Claims;
 
 namespace SGPla.Helpers
 {
@@ -8,7 +9,7 @@ namespace SGPla.Helpers
     {
         private static readonly Dictionary<string, HashSet<string>> _permisos = new()
         {
-            ["Entidad Academica"] =
+            [Constantes.COORDINADOR_EA] =
             [
             Acciones.ProgramacionAcademica.Ver,
             Acciones.ProgramacionAcademica.VerHistorial,
@@ -18,7 +19,7 @@ namespace SGPla.Helpers
             Acciones.ProgramacionAcademica.Eliminar,
             Acciones.ProgramacionAcademica.Ofertar,
         ],
-            ["Coordinador DGAA"] =
+            [Constantes.COORDINADOR_DGAA] =
             [
 
             Acciones.ProgramacionAcademica.Ver,

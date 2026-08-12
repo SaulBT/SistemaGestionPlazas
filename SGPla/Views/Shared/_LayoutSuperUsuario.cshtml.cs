@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace SGPla.Views.Shared
 {
-    public class _LayoutSGPlaModel : PageModel
+    public class _LayoutSuperUsuarioModel : PageModel
     {
         public void OnGet()
         {
