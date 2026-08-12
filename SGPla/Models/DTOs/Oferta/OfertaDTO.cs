@@ -55,6 +55,10 @@
         public int IdProgramaEducativo { get; set; }
 
         public string? Region { get; set; }
-        public string Modalidad { get; set; } = string.Empty;
+
+        public string Modalidad { get; set; } 
+
+        public int IdArticulo { get; set; }
+
     }
 }

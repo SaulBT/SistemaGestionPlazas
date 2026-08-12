@@ -2,71 +2,21 @@
 @model IndexViewModel
 
 @{
-	Layout = "_LayoutSuperUsuario";
 	ViewData["Title"] = "Programaciones Académicas";
 }
 
 <div>
 	<form id="filtrosForm" method="get" action="@Url.Action("Index", "ProgramacionesAcademicas")">
 		<!-- Filtros -->
-		<div style="display: flex; flex-direction: column; gap: 10px;">
-			@await Component.InvokeAsync("Boton", new BotonModel
-			{
-				Accion = "ver",
-				Tipo = "secundario",
-				Texto = "Mostrar Filtros",
-				OnClick = "toggleFilters()",
-				Id = "botonFiltros"
-			})
-			<div id="filtrosContainer" style="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease;">
-				@await Component.InvokeAsync("SelectField", new SelectFieldModel
-				{
-					Id = "Region",
-					Label = "Región: ",
-					Options = Model.Regiones,
-					Name = "Region",
-					SelectedValue = Model.Region?.ToString(),
-					Error = ViewData.ModelState["Region"]?.Errors.FirstOrDefault()?.ErrorMessage
-				})
-
-				<div id="contenedorEntidad">
-					@await Component.InvokeAsync("SelectField", new SelectFieldModel
-					{
-						Id = "Entidad",
-						Label = "Entidad Académica: ",
-						Options = Model.Entidades,
-						Name = "IdEntidadAcademica",
-						SelectedValue = Model.IdEntidadAcademica?.ToString(),
-						Error = ViewData.ModelState["IdEntidadAcademica"]?.Errors.FirstOrDefault()?.ErrorMessage
-					})
-				</div>
-
-				<div id="contenedorPrograma">
-					@await Component.InvokeAsync("SelectField", new SelectFieldModel
-					{
-						Id = "Programa",
-						Label = "Programa Educativo: ",
-						Options = Model.Programas,
-						Name = "IdProgramaEducativo",
-						SelectedValue = Model.IdProgramaEducativo?.ToString(),
-						Error = ViewData.ModelState["IdProgramaEducativo"]?.Errors.FirstOrDefault()?.ErrorMessage
-					})
-				</div>
-
-				<div>
-
-					@await Component.InvokeAsync("SelectField", new SelectFieldModel
-					{
-						Id = "Periodo",
-						Label = "Periodo: ",
-						Options = Model.Periodos,
-						Name = "IdPeriodo",
-						SelectedValue = Model.IdPeriodo?.ToString(),
-						Error = ViewData.ModelState["IdPeriodo"]?.Errors.FirstOrDefault()?.ErrorMessage
-					})
-				</div>
-			</div>
-		</div>
+		@await Component.InvokeAsync("ExpansionPanel",
+		new ExpansionPanelModel
+		{
+			Id = "panel-filtros",
+			Titulo = "Filtros",
+			PartialView = "_Filtros",
+			PartialModel = Model,
+			IconClass = "bi bi-funnel-fill"
+		})
 
         
 		<!-- Acciones -->
@@ -188,7 +138,7 @@
 
 <script>
 	window.configFiltros = {
-		storageKey: 'filtrosVisibles_programacionesAcademicas'
+		storageKey: 'filtrosVisibles_programacionesAcademia'
 	};
 </script>
 <script src="js/filtros.js"></script>

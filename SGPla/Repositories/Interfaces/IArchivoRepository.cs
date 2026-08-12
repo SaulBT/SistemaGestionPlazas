@@ -8,5 +8,6 @@ namespace SGPla.Repositories.Interfaces
         Task<Archivo?> ObtenerPorIdAsync(int idArchivo);
         Task ActualizarAsync(Archivo archivo);
         Task EliminarAsync(Archivo archivo);
+
     }
 }

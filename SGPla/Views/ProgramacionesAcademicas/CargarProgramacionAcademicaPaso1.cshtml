@@ -12,10 +12,10 @@
 {
 	PasoActual = 1,
 	Paso1Texto = "Subir Archivo",
-	Paso2Texto = "Experiencias Educativas"
+	Paso2Texto = "Programación Académica"
 })
 
-<form id="form" method="post" action="@Url.Action("ValidarPaso1", "ProgramacionesAcademicas")" enctype="multipart/form-data">
+<form id="form" method="post" action="@Url.Action("RevisarListaDeExperienciasEducativas", "ProgramacionesAcademicas")" enctype="multipart/form-data">
 	@Html.AntiForgeryToken()
 
 	<div class="d-flex flex-column gap-3">

@@ -1,0 +1,25 @@
+﻿@model InputPasswordModel
+
+<div class="input-field @(Model.Flexible ? "flexible" : "")">
+    @if (!string.IsNullOrWhiteSpace(Model.Label))
+    {
+        <div class="text-wrapper">
+            @Model.Label
+        </div>
+    }
+
+    <input class="input @( !string.IsNullOrEmpty(Model.Error) ? "input-error" : "" )"
+           id="@Model.Id"
+           name="@Model.Name"
+           value="@Model.Valor"
+           placeholder="@Model.Placeholder"
+           type="password"
+           autocomplete="current-password"
+    @(Model.Disabled ? "disabled" : null)
+           maxlength="@Model.MaximoCaracteres" />
+
+    @if (!string.IsNullOrEmpty(Model.Error))
+    {
+        <span id="@Model.Id-Error" class="input-error-text">@Model.Error</span>
+    }
+</div>

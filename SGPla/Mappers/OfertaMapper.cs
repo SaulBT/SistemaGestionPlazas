@@ -41,7 +41,7 @@ namespace SGPla.Mappers
                 Incluida = dto.Incluida,
                 Hsm = dto.HorasPago,
                 EstadoSolicitudApertura = "Aceptada",
-                IdArticulo = dto.Articulo,
+                IdArticulo = dto.IdArticulo,
                 IdPeriodo = dto.IdPeriodo,
                 IdProgramaEducativo = dto.IdProgramaEducativo
             };

@@ -122,10 +122,12 @@
 	</div>
 
 	<div style="display:flex; justify-content:flex-end; gap:var(--button-gap)">
-		@await Component.InvokeAsync("Boton", new
-		{
-			Accion = "Cancelar"
-		})
+		<a href="@ViewBag.RegresarUrl" style="display: inline-block; text-decoration: none;">
+			@await Component.InvokeAsync("Boton", new
+			{
+				Accion = "Cancelar"
+			})
+		</a>
 		@await Component.InvokeAsync("Boton", new
 		{
 			Accion = "Guardar",

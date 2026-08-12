@@ -1,0 +1,42 @@
+﻿@using SGPla.Models.ViewModels.Login
+@model LoginViewModel
+
+@{
+    ViewData["Title"] = "Inicio de sesión";
+}
+
+
+
+<form method="post" asp-action="Index">
+
+    @await Component.InvokeAsync("InputField", new InputFieldModel
+    {
+        Id = "correo",
+        Name = "Correo",
+        Label = "Correo:",
+        Flexible = true,
+        Valor = Model.Correo,
+        Error = ViewData.ModelState["Correo"]?.Errors.FirstOrDefault()?.ErrorMessage,
+    })
+
+     
+
+    @await Component.InvokeAsync("InputPassword", new InputPasswordModel
+    {
+        Id = "contrasena",
+        Name = "Contrasena",
+        Label = "Contraseña: ",
+        Flexible = true,   
+        Error = ViewData.ModelState["Password"]?.Errors.FirstOrDefault()?.ErrorMessage
+    })
+
+    <div style="display: flex; justify-content: flex-end; margin-top: 15px;">
+        @await Component.InvokeAsync("Boton", new
+        {
+            texto = "Iniciar sesión",
+            tipo = "primario",
+            ButtonType = "submit"
+        })
+    </div>
+
+</form>

@@ -37,6 +37,13 @@ namespace SGPla.Repositories.Implementations
                 .FirstOrDefaultAsync(c => c.IdCoordinadorDgaa == idCoordinadorDgaa);
         }
 
+        public async Task<CoordinadorDgaa?> ObtenerPorCorreoAsync(string correo)
+        {
+            return await _context.CoordinadorDgaa
+                .Include(c => c.IdAreaAcademicaNavigation)
+                .FirstOrDefaultAsync(c => c.Correo == correo);
+        }
+
         public async Task<List<CoordinadorDgaa>> ObtenerTodosAsync()
         {
             return await _context.CoordinadorDgaa
@@ -79,6 +86,14 @@ namespace SGPla.Repositories.Implementations
         {
             _context.CoordinadorDgaa.Remove(coordinadorDgaa);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<bool> EsSuperUsuarioAsync(string correo)
+        {
+            var superUsuario = _context.SuperUsuario.FirstOrDefault(u => u.Correo == correo);
+
+
+            return superUsuario != null;
         }
     }
 }

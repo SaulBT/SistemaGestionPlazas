@@ -1,5 +1,6 @@
 ﻿using SGPla.Models.DTOs.Oferta;
 using SGPla.Repositories.Interfaces;
+using SGPla.Services.Interfaces;
 using SGPla.Validations.Interfaces;
 
 namespace SGPla.Validations.Implementations
@@ -9,12 +10,14 @@ namespace SGPla.Validations.Implementations
         private readonly IDocenteRepository _docenteRepository;
         private readonly IProgramaEducativoRepository _programaEducativoRepository;
         private readonly IProgramacionAcademicaRepository _programacionAcademicaRepository;
+        private readonly IArticuloRepository _articuloRepository;
 
-        public ProgramacionAcademicaValidator(IDocenteRepository docenteRepository, IProgramaEducativoRepository programaEducativoRepository, IProgramacionAcademicaRepository programacionAcademicaRepository)
+        public ProgramacionAcademicaValidator(IDocenteRepository docenteRepository, IProgramaEducativoRepository programaEducativoRepository, IProgramacionAcademicaRepository programacionAcademicaRepository, IArticuloRepository articuloRepository)
         {
             _docenteRepository = docenteRepository;
             _programaEducativoRepository = programaEducativoRepository;
             _programacionAcademicaRepository = programacionAcademicaRepository;
+            _articuloRepository = articuloRepository;
         }
 
         public async Task<bool> ValidarDocentes(List<OfertaDTO> ofertas)
@@ -98,7 +101,7 @@ namespace SGPla.Validations.Implementations
 
             if (noRegistradas.Any())
             {
-                throw new Exception(
+                throw new ArgumentException(
                     "Las siguientes experiencias no corresponden al programa educativo:\n" +
                     string.Join("\n", noRegistradas));
             }
@@ -106,15 +109,16 @@ namespace SGPla.Validations.Implementations
             return true;
         }
 
-        public async Task<bool> ValidarArticulo(List<OfertaDTO> ofertas)
+        public async Task<bool> ValidarArticulo()
         {
-            foreach (OfertaDTO oferta in ofertas)
+
+            var existe = await _articuloRepository.ExisteAsync("70");
+
+            if (existe == null) 
             {
-                if (oferta.Articulo <= 0)
-                {
-                    throw new ArgumentException("Asigne un artículo válido a las ofertas");
-                }
+                throw new ArgumentException("No se encontró un artículo 70 con el que puedan ser publicadas");
             }
+
             return true;
         }
 

@@ -85,6 +85,7 @@
         public const string USUARIOS = "Usuarios";
         public const string COORDINADOR_EA = "Coordinador de Entidad Académica";
         public const string COORDINADOR_DGAA = "Coordinador de Área Académica";
+        public const string SUPERUSUARIO = "SuperUsuario";
         public static List<string> ROLES = new List<string> { COORDINADOR_EA, COORDINADOR_DGAA };
 
         public const string REGION_XALAPA = "1-Xalapa";

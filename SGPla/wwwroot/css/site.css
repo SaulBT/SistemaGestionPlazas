@@ -197,7 +197,7 @@ body {
     box-shadow: var(--shadow-sm);
 }
 
-.header-contenido {
+/*.header-contenido {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -205,7 +205,7 @@ body {
     padding: 0 20px;
     max-width: 100%;
     margin: 0 auto;
-}
+}*/
 
 /* Logo */
 .logo {
@@ -336,6 +336,16 @@ body {
     min-height: calc(100vh - 100px);
 }
 
+.contenido-pagina-login {
+    background: var(--bg-white);
+    border-radius: var(--border-radius);
+    padding: 30px;
+    box-shadow: var(--shadow-md);
+    width: 100%;
+    max-width: 600px;
+    margin: 100px auto;
+    
+}
 
 /* ========================================== */
 /* SCROLL PERSONALIZADO */

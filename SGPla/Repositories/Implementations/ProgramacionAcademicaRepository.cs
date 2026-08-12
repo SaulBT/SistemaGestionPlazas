@@ -84,9 +84,7 @@ namespace SGPla.Repositories.Implementations
         {
             IQueryable<Oferta> query = _context.Oferta
     .Include(o => o.IdProgramaEducativoNavigation)
-        .ThenInclude(pe => pe.IdEntidadAcademicaNavigation)
-    .Include(o => o.IdPeriodoNavigation);
-
+        .ThenInclude(pe => pe.IdEntidadAcademicaNavigation);
             if (filtro != null)
             {
                 if (filtro.IdPeriodo.HasValue)
@@ -135,19 +133,22 @@ namespace SGPla.Repositories.Implementations
         }
 
 
-        public async Task<List<OfertaDTO>> ObtenerOfertasGuardadasAsync(
-     int idEntidadAcademica, int idProgramaEducativo, int idPeriodo)
+        public async Task<List<OfertaDTO>> ObtenerOfertasExperienciasEducativasAsync(
+     int idEntidadAcademica, int idProgramaEducativo, int idPeriodo, string? busqueda = null)
         {
             var ofertas = await _context.Oferta
                 .Include(o => o.IdProgramaEducativoNavigation)
                     .ThenInclude(p => p.IdEntidadAcademicaNavigation)
                 .Include(o => o.IdExperienciaEducativaNavigation)
+                    .Include(o => o.IdPeriodoNavigation).Include(o => o.IdArticuloNavigation)
                 .Include(o => o.IdDocenteNavigation)
                 .Include(o => o.Horario)
-                .Where(o =>
-                    o.IdProgramaEducativo == idProgramaEducativo &&
-                    o.IdPeriodo == idPeriodo &&
-                    o.IdProgramaEducativoNavigation.IdEntidadAcademica == idEntidadAcademica)
+               .Where(o =>
+    o.IdProgramaEducativo == idProgramaEducativo &&
+    o.IdPeriodo == idPeriodo &&
+    o.IdProgramaEducativoNavigation.IdEntidadAcademica == idEntidadAcademica &&
+    (string.IsNullOrWhiteSpace(busqueda) ||
+     o.IdExperienciaEducativaNavigation.Nombre.Contains(busqueda)))
                 .ToListAsync();
 
             return ofertas.Select(o => new OfertaDTO
@@ -159,7 +160,7 @@ namespace SGPla.Repositories.Implementations
                 TC = o.TipoContratacion,
                 NombreDocente = o.IdDocenteNavigation?.Nombre,
                 NP = o.IdDocenteNavigation?.NumeroPersonal,
-                Articulo = o.IdArticulo,
+                Articulo = int.Parse(o.IdArticuloNavigation.Numero),
                 IdPeriodo = o.IdPeriodo,
                 Region = o.IdProgramaEducativoNavigation.IdEntidadAcademicaNavigation.Region,
                 Incluida = o.Incluida,
@@ -187,7 +188,7 @@ namespace SGPla.Repositories.Implementations
             {
                 return null;
             }
-            
+
             return new OfertaDTO
             {
                 Programa = oferta.IdProgramaEducativoNavigation.Nombre,
@@ -238,7 +239,7 @@ namespace SGPla.Repositories.Implementations
                 return false;
             }
             oferta.Nrc = ofertaDTO.NRC;
-            oferta.TipoContratacion = ofertaDTO.TC;   
+            oferta.TipoContratacion = ofertaDTO.TC;
 
             _context.Horario.RemoveRange(oferta.Horario);
             var nuevosHorarios = new List<Horario>();
@@ -273,7 +274,7 @@ namespace SGPla.Repositories.Implementations
             };
 
             await _context.Horario.AddRangeAsync(nuevosHorarios);
-            await _context.Log.AddAsync( log );
+            await _context.Log.AddAsync(log);
             await _context.SaveChangesAsync();
             return true;
         }
@@ -313,7 +314,7 @@ namespace SGPla.Repositories.Implementations
             if (oferta == null)
                 throw new Exception("La oferta no existe.");
 
-           
+
             oferta.Incluida = incluir;
 
             await _context.SaveChangesAsync();
@@ -368,6 +369,46 @@ namespace SGPla.Repositories.Implementations
             _context.Log.Add(log);
 
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<List<OfertaDTO>> ObtenerCargasAcademicasAsync(
+   int idEntidadAcademica, int idProgramaEducativo, int idPeriodo)
+        {
+            var ofertas = await _context.Oferta
+                .Include(o => o.IdProgramaEducativoNavigation)
+                    .ThenInclude(p => p.IdEntidadAcademicaNavigation)
+                .Include(o => o.IdExperienciaEducativaNavigation)
+                    .Include(o => o.IdPeriodoNavigation).Include(o => o.IdArticuloNavigation)
+                .Include(o => o.IdDocenteNavigation)
+                .Include(o => o.Horario)
+                .Where(o =>
+                    o.IdProgramaEducativo == idProgramaEducativo &&
+                    o.IdPeriodo == idPeriodo &&
+                    o.IdProgramaEducativoNavigation.IdEntidadAcademica == idEntidadAcademica)
+                .ToListAsync();
+
+            return ofertas.Select(o => new OfertaDTO
+            {
+                Programa = o.IdProgramaEducativoNavigation.Nombre,
+                ExperienciaEducativa = o.IdExperienciaEducativaNavigation.Nombre,
+                NRC = o.Nrc,
+                HorasPago = o.Hsm,
+                TC = o.TipoContratacion,
+                NombreDocente = o.IdDocenteNavigation?.Nombre,
+                NP = o.IdDocenteNavigation?.NumeroPersonal,
+                Articulo = int.Parse(o.IdArticuloNavigation.Numero),
+                IdPeriodo = o.IdPeriodo,
+                Region = o.IdProgramaEducativoNavigation.IdEntidadAcademicaNavigation.Region,
+                Incluida = o.Incluida,
+                Lunes = MapHorario(o.Horario, "Lunes"),
+                Martes = MapHorario(o.Horario, "Martes"),
+                Miercoles = MapHorario(o.Horario, "Miercoles"),
+                Jueves = MapHorario(o.Horario, "Jueves"),
+                Viernes = MapHorario(o.Horario, "Viernes"),
+                Sabado = MapHorario(o.Horario, "Sabado"),
+                IdOferta = o.IdOferta,
+                Plaza = o.Plaza
+            }).ToList();
         }
     }
 }

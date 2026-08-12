@@ -2,41 +2,13 @@
 @model IndexViewModel
 
 @{
-	Layout = "_LayoutSuperUsuario";
 	ViewData["Title"] = "Periodos Escolares";
 }
 
 <div>
 	<form id="filtrosForm" method="get" action="@Url.Action("Index", "PeriodosEscolares")">
 
-		<!-- Filtros -->
-		<div style="display: flex; flex-direction: column; gap: 10px;">
-			@await Component.InvokeAsync("Boton", new BotonModel
-			{
-				Accion = "ver",
-				Tipo = "secundario",
-				Texto = "Mostrar Filtros",
-				OnClick = "toggleFilters()",
-				Id = "botonFiltros"
-			})
-			<div id="filtrosContainer" style="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease;">
-				
-				@await Component.InvokeAsync("SelectField", new SelectFieldModel
-				{
-					Label = "Periodo",
-					Name = "periodoFiltro",
-					Options = new List<OptionModel>
-				{
-					new OptionModel { Value = "Febrero-Julio", Text = "Febrero-Julio" },
-					new OptionModel { Value = "Agosto-Enero", Text = "Agosto-Enero" }
-				},
-					HtmlAttributes = new Dictionary<string, string>
-				{
-					{ "data-autosubmit", "true" }
-				}
-				})
-			</div>
-		</div>
+		
 		@await Component.InvokeAsync("ExpansionPanel",
 		new ExpansionPanelModel
 		{
