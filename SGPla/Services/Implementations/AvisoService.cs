@@ -1,4 +1,5 @@
-﻿using SGPla.Mappers;
+﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using SGPla.Mappers;
 using SGPla.Models;
 using SGPla.Models.DTOs.Archivo;
 using SGPla.Models.DTOs.Aviso;
@@ -10,6 +11,8 @@ using SGPla.Models.DTOs.Plantillas;
 using SGPla.Repositories.Interfaces;
 using SGPla.Services.Interfaces;
 using SGPla.Validations.Interfaces;
+using System.Globalization;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace SGPla.Services.Implementations
 {
@@ -199,31 +202,138 @@ namespace SGPla.Services.Implementations
             }
         }
 
-        private async Task<int> generarArchivoAvisoAsync(Aviso aviso)
+        private async Task<int> generarArchivoAvisoAsync(CrearAvisoDTO aviso)
         {
             var entidad = await _entidadAcademicaRepository.ObtenerPorIdAsync(aviso.IdEntidadAcademica);
             var articulo = await _articuloRepository.ObtenerArticuloPorIdAsync(aviso.IdArticulo);
-            var periodo = await _periodoEscolarRepository.ObtenerPorIdAsync(aviso.IdPeriodo);
+            var periodoDTO = await obtenerPeriodoDTOAsync(aviso.IdPeriodo);
 
             var plantillaDTO = new PlantillaAvisoDTO
             {
                 Folio = aviso.Folio ?? "0",
                 AreaAcademica = entidad?.IdAreaAcademicaNavigation.Nombre ?? "Nombre del Área Académica",
-                EntidadAcademica = entidad?.Nombre ?? "Nombre de la Entidad Académica",
+                EntidadAcademica = entidad?.Nombre.Substring(6) ?? "Nombre de la Entidad Académica",
                 Articulo = articulo?.Numero ?? "Número del Artículo",
-                Region = "Región",
-                Periodo = "Periodo",
-                Campus = "Campus",
-                Sistema = aviso.Sistema ?? "Sistema",
-                ProgramaEducativo = "Programa Educativo",
+                Region = entidad?.Region ?? "Región",
+                PerfilArticulo = articulo?.Descripcion ?? "Perfil del Artículo",
+                Periodo = periodoDTO.PeriodoMostrar ?? "Periodo Escolar",
+                Campus = "Campus", //TODO: El campus depende del Programa Educativo
+                Sistema = aviso.Sistema ?? "Sistema", //TODO: falta obtenerlo del formulario
+                Programas = await generarListaProgramasPlantillaAsync(aviso.OfertasId),
                 Requisitos = aviso.Requisitos ?? "Requisitos",
-                DiasAceptacion = "Días de Aceptación",
-                FechaConsejoTecnico = aviso.FechaCt.ToString(),
-                FechaPublicacion = "Fecha de publicación",
-                Titular = "Titular"
+                HorarioAceptacion = generarHorarioAceptacion(aviso.Horarios) ?? "Horario de Aceptación", //Se puede mejorar para que también detecte cuando un sólo día tiene dos distintos horarios
+                FechaConsejoTecnico = generarFechaNormal(aviso.FechaCT) ?? "Fecha del Consejo Tecnico",
+                FechaPublicacion = generarFechaNormal(DateOnly.FromDateTime(DateTime.Now)) ?? "Fecha de publicación",
+                Titular = "Titular" //TODO: falta obtenerlo del formulario
             };
 
             return await _plantillaService.GenerarAvisoAsync(plantillaDTO);
+        }
+
+        private async Task<List<PlantillaAvisoProgramaEducativoDTO>> generarListaProgramasPlantillaAsync(List<int> ofertasId)
+        {
+            var listaProgramas = new List<PlantillaAvisoProgramaEducativoDTO>();
+            var nombresProgramas = new List<string>();
+
+            foreach (var id in ofertasId)
+            {
+                var oferta = await _ofertaRepository.ObtenerPorIdAsync(id);
+                if (oferta is null) continue;
+
+                var programa = oferta.IdProgramaEducativoNavigation;
+                if (!nombresProgramas.Contains(programa.Nombre))
+                {
+                    var programaPlantilla = new PlantillaAvisoProgramaEducativoDTO
+                    {
+                        ProgramaEducativo = programa.Nombre,
+                        Experiencias = [await crearExperienciaPlantillaAsync(oferta)]
+                    };
+
+                    nombresProgramas.Add(programa.Nombre);
+                }
+                else
+                {
+                    var programaPlantilla = listaProgramas.FirstOrDefault(lp => lp.ProgramaEducativo.Contains(programa.Nombre));
+                    if (programaPlantilla is null) continue;
+
+                    programaPlantilla.Experiencias.Add(await crearExperienciaPlantillaAsync(oferta));
+                }
+            }
+
+            return listaProgramas;
+        }
+
+        private async Task<PlantillaAvisoExperienciaEducativaDTO> crearExperienciaPlantillaAsync(Oferta oferta)
+        {
+            var experiencia = oferta.IdExperienciaEducativaNavigation;
+            var horarios = await _horarioRepository.ObtenerPorIdOferta(oferta.IdOferta);
+
+            return new PlantillaAvisoExperienciaEducativaDTO
+            {
+                Horas = experiencia.Horas,
+                Nombre = experiencia.Nombre,
+                NRC = oferta.Nrc,
+                Plaza = oferta?.Plaza ?? "Plaza",
+                HorarioLunes = generarHorarioExperienciaPlantilla(horarios.FirstOrDefault(h => h.Dia.Contains("Lunes"))),
+                HorarioMartes = generarHorarioExperienciaPlantilla(horarios.FirstOrDefault(h => h.Dia.Contains("Martes"))),
+                HorarioMiercoles = generarHorarioExperienciaPlantilla(horarios.FirstOrDefault(h => h.Dia.Contains("Miercoles"))),
+                HorarioJueves = generarHorarioExperienciaPlantilla(horarios.FirstOrDefault(h => h.Dia.Contains("Jueves"))),
+                HorarioViernes = generarHorarioExperienciaPlantilla(horarios.FirstOrDefault(h => h.Dia.Contains("Viernes"))),
+                HorarioSabado = generarHorarioExperienciaPlantilla(horarios.FirstOrDefault(h => h.Dia.Contains("Sabado"))),
+                TipoContratacion = oferta?.TipoContratacion ?? "Tipo de Contratación",
+                PerfilDocente = experiencia.PerfilDocente ?? "Perfil del docente"
+            };
+        }
+
+        private string generarHorarioExperienciaPlantilla(Horario? horario)
+        {
+            if (horario is null) return "";
+
+            return $"{horario.HoraInicio} - {horario.HoraFin}";
+        }
+
+        private string generarHorarioAceptacion(List<CrearHorarioAvisoDTO> horariosDTO)
+        {
+            var cadena = "";
+            var listaMeses = new List<int>();
+            var listaDates = new List<DateTime>();
+
+            foreach (var horario in horariosDTO)
+            {
+                if (DateTime.TryParse(horario.Fecha, out DateTime fecha))
+                {
+                    listaDates.Add(fecha);
+                    var mes = fecha.Month;
+                    if (!listaMeses.Contains(mes)) listaMeses.Add(mes);
+                }
+            }
+
+            foreach (var mes in listaMeses)
+            {
+                var cadenaActual = "";
+
+                foreach (var horario in horariosDTO)
+                {
+                    if (DateTime.TryParse(horario.Fecha, out DateTime fecha))
+                    {
+                        if (fecha.Month == mes)
+                        {
+                            var horarioDia = $"{fecha.Day} de {horario.HoraInicio} a {horario.HoraTermino}, ";
+                            cadenaActual = $"{cadenaActual}{horarioDia}";
+                        }
+                    }
+                }
+
+                var nombreMes = CultureInfo.GetCultureInfo("es-ES").DateTimeFormat.GetMonthName(mes);
+                cadena = $"{cadenaActual}de {nombreMes}, ";
+            }
+
+            return cadena;
+        }
+
+        private string generarFechaNormal(DateOnly fecha)
+        {
+            return fecha.ToString("d 'de' MMM 'de' yyyy", new CultureInfo("es-ES"));
         }
 
         public async Task EliminarAvisoPorId(int idAviso)

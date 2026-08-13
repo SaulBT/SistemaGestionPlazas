@@ -39,6 +39,7 @@ namespace SGPla.Services.Implementations
 
                 using (var wordDoc = WordprocessingDocument.Open(stream, true))
                 {
+                    // ===
                     if (wordDoc.MainDocumentPart is null)
                     {
                         throw new InvalidDataException(
@@ -46,9 +47,23 @@ namespace SGPla.Services.Implementations
                             "Verifica que la plantilla sea un archivo .docx válido y no un .doc reetiquetado.");
                     }
 
-                    await reemplazarEtiquetasGeneralesAsync(wordDoc, plantillaAvisoDTO);
-                    llenarTablaExperiencias(wordDoc, plantillaAvisoDTO.ListaExperiencias);
-                    generarListaPerfiles(wordDoc, plantillaAvisoDTO.ListaExperiencias);
+                    var mainPart = wordDoc.MainDocumentPart;
+                    if (mainPart is null) throw new InvalidDataException();
+
+                    if (!mainPart.IsRootElementLoaded)
+                    {
+                        _ = mainPart.Document;
+                    }
+
+                    var document = mainPart.Document;
+                    var body = document?.Body;
+
+                    if (body is null) throw new InvalidDataException();
+
+                    // ===
+
+                    reemplazarEtiquetasGenerales(wordDoc, body, plantillaAvisoDTO);
+                    generarSeccionProgramas(body, plantillaAvisoDTO.Programas);
 
                     wordDoc.MainDocumentPart.Document.Save();
                 }
@@ -60,7 +75,7 @@ namespace SGPla.Services.Implementations
             }
         }
 
-        private async Task reemplazarEtiquetasGeneralesAsync(WordprocessingDocument wordDoc, PlantillaAvisoDTO plantillaAvisoDTO)
+        private void reemplazarEtiquetasGenerales(WordprocessingDocument wordDoc, Body body, PlantillaAvisoDTO plantillaAvisoDTO)
         {
             var mapeo = new Dictionary<string, string>
             {
@@ -68,14 +83,13 @@ namespace SGPla.Services.Implementations
                 { "EntidadAcademica", plantillaAvisoDTO.EntidadAcademica },
                 { "Articulo", plantillaAvisoDTO.Articulo },
                 { "Region", plantillaAvisoDTO.Region },
-                { "PerfilArticulo", await determinarPerfilArticuloAsync(plantillaAvisoDTO.Articulo) },
+                { "PerfilArticulo", plantillaAvisoDTO.PerfilArticulo },
                 { "Periodo", plantillaAvisoDTO.Periodo },
                 { "Campus", plantillaAvisoDTO.Campus },
-                { "NombreArea", determinarNombreArea(plantillaAvisoDTO.AreaAcademica) },
+                { "NombreArea", plantillaAvisoDTO.AreaAcademica },
                 { "Sistema", plantillaAvisoDTO.Sistema },
-                { "ProgramaEducativo", plantillaAvisoDTO.ProgramaEducativo },
                 { "Requisitos", plantillaAvisoDTO.Requisitos },
-                { "DiasAceptacion", plantillaAvisoDTO.DiasAceptacion },
+                { "DiasAceptacion", plantillaAvisoDTO.HorarioAceptacion },
                 { "FechaConsejoTecnico", plantillaAvisoDTO.FechaConsejoTecnico },
                 { "FechaPublicacion", plantillaAvisoDTO.FechaPublicacion },
                 { "NombreTitular", plantillaAvisoDTO.Titular }
@@ -86,23 +100,7 @@ namespace SGPla.Services.Implementations
                 reemplazarEncabezado(wordDoc, kvp.Key, kvp.Value);
             }
 
-            // ===
-            var mainPart = wordDoc.MainDocumentPart;
-            if (mainPart is null) return;
-
-            if (!mainPart.IsRootElementLoaded)
-            {
-                _ = mainPart.Document;
-            }
-
-            var document = mainPart.Document;
-            var body = document?.Body;
-
-            if (body is null) return;
-
             var controles = body.Descendants<SdtElement>().ToList();
-
-            // ===
 
             foreach (var control in controles)
             {
@@ -131,63 +129,80 @@ namespace SGPla.Services.Implementations
             }
         }
 
-        private string determinarNombreArea(string areaAcademica)
+        private void reemplazarEncabezado(WordprocessingDocument wordDoc, string etiqueta, string nuevoTexto)
         {
-            if (areaAcademica.Contains("Artes")) return "Artes";
-            if (areaAcademica.Contains("Biologicas y Agropecuarias")) return "Biologicas y Agropecuarias";
-            if (areaAcademica.Contains("Ciencias de la Salud")) return "Ciencias de la Salud";
-            if (areaAcademica.Contains("Económico-Administrativa")) return "Económico-Administrativa";
-            if (areaAcademica.Contains("Técnica")) return "Técnica";
-            if (areaAcademica.Contains("Humanidades")) return "Humanidades";
-            if (areaAcademica.Contains("Investigaciones")) return "Investigaciones";
-            if (areaAcademica.Contains("Relaciones Internacionales")) return "Relaciones Internacionales";
-
-            return areaAcademica;
-        }
-
-        private async Task<string> determinarPerfilArticuloAsync(string articulo)
-        {
-            var articulos = await _articuloService.ObtenerTodosAsync();
-            var articuloDTO = articulos.FirstOrDefault(a => a.Numero == articulo);
-
-            return articuloDTO?.Descripcion ?? "";
-        }
-
-        private void escribirRequisitos(SdtElement control, string nuevoTexto)
-        {
-            var run = control.Descendants<Run>().FirstOrDefault();
-            if (run is null) return;
-
-            run.RemoveAllChildren<Text>();
-            run.RemoveAllChildren<Break>();
-
-            foreach (var extraRun in control.Descendants<Run>().Skip(1).ToList())
+            foreach (var headerPart in wordDoc.MainDocumentPart.HeaderParts)
             {
-                extraRun.Remove();
-            }
+                var header = headerPart.Header;
+                if (header is null) continue;
 
-            if (string.IsNullOrEmpty(nuevoTexto)) return;
+                var control = header.Descendants<SdtElement>()
+                    .FirstOrDefault(sdt => sdt.SdtProperties?.GetFirstChild<Tag>()?.Val?.Value == etiqueta);
 
-            string[] lineas = nuevoTexto.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
-
-            for (int i = 0; i < lineas.Length; i++)
-            {
-                if (i > 0)
+                if (control is not null)
                 {
-                    run.AppendChild(new Break());
+                    var textElements = control.Descendants<Text>().ToList();
+                    if (textElements.Any())
+                    {
+                        textElements.First().Text = nuevoTexto ?? string.Empty;
+                        foreach (var extraText in textElements.Skip(1))
+                        {
+                            extraText.Text = string.Empty;
+                        }
+                    }
+                }
+                else
+                {
+                    string textoBuscado = $"[{etiqueta}]";
+                    foreach (var textNode in header.Descendants<Text>())
+                    {
+                        if (textNode.Text.Contains(textoBuscado))
+                        {
+                            textNode.Text = textNode.Text.Replace(textoBuscado, nuevoTexto ?? string.Empty);
+                        }
+                    }
                 }
 
-                run.AppendChild(new Text(lineas[i]));
+                header.Save();
             }
         }
 
-        private void llenarTablaExperiencias(WordprocessingDocument wordDoc, List<PlantillaAvisoExperienciaEducativaDTO> experiencias)
+        private void generarSeccionProgramas(Body body, List<PlantillaAvisoProgramaEducativoDTO> programas)
         {
-            var body = wordDoc.MainDocumentPart.Document.Body;
-            var tabla = body.Elements<Table>().FirstOrDefault();
+            var sdtProgramaMolde = body.Descendants<SdtElement>()
+                .FirstOrDefault(sdt => sdt.SdtProperties?.GetFirstChild<Tag>()?.Val?.Value == "BloquePrograma");
 
-            if (tabla == null) return;
+            if (sdtProgramaMolde is null) return;
 
+            foreach (var programa in programas)
+            {
+                var nuevoBloque = (SdtElement)sdtProgramaMolde.CloneNode(true);
+
+                //ProgramaEducativo
+                var controlPrograma = nuevoBloque.Descendants<SdtElement>()
+                    .FirstOrDefault(sdt => sdt.SdtProperties?.GetFirstChild<Tag>()?.Val?.Value == "ProgramaEducativo");
+                if (controlPrograma is not null)
+                    actualizarTextoControl(controlPrograma, programa.ProgramaEducativo);
+
+                //Tabla
+                var tabla = nuevoBloque.Descendants<Table>().FirstOrDefault();
+                if (tabla is not null)
+                    llenarTablaExperienciasAviso(tabla, programa.Experiencias);
+
+                //Perfiles
+                var sdtPerfiles = nuevoBloque.Descendants<SdtElement>()
+                    .FirstOrDefault(sdt => sdt.SdtProperties?.GetFirstChild<Tag>()?.Val?.Value == "ListaPerfiles");
+                if (sdtPerfiles is not null)
+                    generarListaPerfilesContenedor(sdtPerfiles, programa.Experiencias);
+
+                sdtProgramaMolde.InsertBeforeSelf(nuevoBloque);
+            }
+
+            sdtProgramaMolde.Remove();
+        }
+
+        private void llenarTablaExperienciasAviso(Table tabla, List<PlantillaAvisoExperienciaEducativaDTO> experiencias)
+        {
             var filas = tabla.Elements<TableRow>().ToList();
             if (filas.Count < 3) return;
 
@@ -199,18 +214,18 @@ namespace SGPla.Services.Implementations
                 var nuevaFila = (TableRow)filaMolde.CloneNode(true);
                 var celdas = nuevaFila.Elements<TableCell>().ToArray();
 
-                llenarCelda(celdas[0], ee.Horas);
-                llenarCelda(celdas[1], ee.Nombre);
-                llenarCelda(celdas[2], ee.NRC);
-                llenarCelda(celdas[3], ee.Plaza);
-                llenarCelda(celdas[4], ee.HorarioLunes);
-                llenarCelda(celdas[5], ee.HorarioMartes);
-                llenarCelda(celdas[6], ee.HorarioMiercoles);
-                llenarCelda(celdas[7], ee.HorarioJueves);
-                llenarCelda(celdas[8], ee.HorarioViernes);
-                llenarCelda(celdas[9], ee.HorarioSabado);
-                llenarCelda(celdas[10], ee.TipoContratacion);
-                llenarCelda(celdas[11], pa.ToString());
+                llenarCeldaExperienciasAviso(celdas[0], ee.Horas);
+                llenarCeldaExperienciasAviso(celdas[1], ee.Nombre);
+                llenarCeldaExperienciasAviso(celdas[2], ee.NRC);
+                llenarCeldaExperienciasAviso(celdas[3], ee.Plaza);
+                llenarCeldaExperienciasAviso(celdas[4], ee.HorarioLunes);
+                llenarCeldaExperienciasAviso(celdas[5], ee.HorarioMartes);
+                llenarCeldaExperienciasAviso(celdas[6], ee.HorarioMiercoles);
+                llenarCeldaExperienciasAviso(celdas[7], ee.HorarioJueves);
+                llenarCeldaExperienciasAviso(celdas[8], ee.HorarioViernes);
+                llenarCeldaExperienciasAviso(celdas[9], ee.HorarioSabado);
+                llenarCeldaExperienciasAviso(celdas[10], ee.TipoContratacion);
+                llenarCeldaExperienciasAviso(celdas[11], pa.ToString());
 
                 tabla.AppendChild(nuevaFila); ;
                 pa++;
@@ -219,7 +234,7 @@ namespace SGPla.Services.Implementations
             filaMolde.Remove();
         }
 
-        private void llenarCelda(TableCell celda, string texto)
+        private void llenarCeldaExperienciasAviso(TableCell celda, string texto)
         {
             var parrafo = celda.Elements<Paragraph>().FirstOrDefault();
             if (parrafo is null)
@@ -263,15 +278,8 @@ namespace SGPla.Services.Implementations
             parrafo.AppendChild(nuevoRun);
         }
 
-        private void generarListaPerfiles(WordprocessingDocument wordDoc, List<PlantillaAvisoExperienciaEducativaDTO> experiencias)
+        private void generarListaPerfilesContenedor(SdtElement sdtContenedor, List<PlantillaAvisoExperienciaEducativaDTO> experiencias)
         {
-            var body = wordDoc.MainDocumentPart.Document.Body;
-
-            var sdtContenedor = body.Descendants<SdtElement>()
-                .FirstOrDefault(sdt => sdt.SdtProperties?.GetFirstChild<Tag>()?.Val?.Value == "ListaPerfiles");
-
-            if (sdtContenedor is null) return;
-
             var sdtNombreMolde = sdtContenedor.Descendants<SdtElement>()
                 .FirstOrDefault(sdt => sdt.SdtProperties?.GetFirstChild<Tag>()?.Val?.Value == "NombreExperiencia");
             var sdtPerfilMolde = sdtContenedor.Descendants<SdtElement>()
@@ -294,41 +302,31 @@ namespace SGPla.Services.Implementations
             sdtContenedor.Remove();
         }
 
-        private void reemplazarEncabezado(WordprocessingDocument wordDoc, string etiqueta, string nuevoTexto)
+        private void escribirRequisitos(SdtElement control, string nuevoTexto)
         {
-            foreach (var headerPart in wordDoc.MainDocumentPart.HeaderParts)
+            var run = control.Descendants<Run>().FirstOrDefault();
+            if (run is null) return;
+
+            run.RemoveAllChildren<Text>();
+            run.RemoveAllChildren<Break>();
+
+            foreach (var extraRun in control.Descendants<Run>().Skip(1).ToList())
             {
-                var header = headerPart.Header;
-                if (header is null) continue;
+                extraRun.Remove();
+            }
 
-                var control = header.Descendants<SdtElement>()
-                    .FirstOrDefault(sdt => sdt.SdtProperties?.GetFirstChild<Tag>()?.Val?.Value == etiqueta);
+            if (string.IsNullOrEmpty(nuevoTexto)) return;
 
-                if (control is not null)
+            string[] lineas = nuevoTexto.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+
+            for (int i = 0; i < lineas.Length; i++)
+            {
+                if (i > 0)
                 {
-                    var textElements = control.Descendants<Text>().ToList();
-                    if (textElements.Any())
-                    {
-                        textElements.First().Text = nuevoTexto ?? string.Empty;
-                        foreach (var extraText in textElements.Skip(1))
-                        {
-                            extraText.Text = string.Empty;
-                        }
-                    }
-                }
-                else
-                {
-                    string textoBuscado = $"[{etiqueta}]";
-                    foreach (var textNode in header.Descendants<Text>())
-                    {
-                        if (textNode.Text.Contains(textoBuscado))
-                        {
-                            textNode.Text = textNode.Text.Replace(textoBuscado, nuevoTexto ?? string.Empty);
-                        }
-                    }
+                    run.AppendChild(new Break());
                 }
 
-                header.Save();
+                run.AppendChild(new Text(lineas[i]));
             }
         }
 
