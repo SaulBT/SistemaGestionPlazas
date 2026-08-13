@@ -7,16 +7,22 @@
         public string EntidadAcademica { get; set; } = string.Empty;
         public string Articulo { get; set; } = string.Empty;
         public string Region { get; set; } = string.Empty;
+        public string PerfilArticulo { get; set; } = string.Empty;
         public string Periodo { get; set; } = string.Empty;
         public string Campus { get; set; } = string.Empty;
         public string Sistema { get; set; } = string.Empty;
-        public string ProgramaEducativo { get; set; } = string.Empty;
-        public List<PlantillaAvisoExperienciaEducativaDTO> ListaExperiencias { get; set; } = [];
+        public List<PlantillaAvisoProgramaEducativoDTO> Programas { get; set; } = [];
         public string Requisitos { get; set; } = string.Empty;
-        public string DiasAceptacion { get; set; } = string.Empty;
+        public string HorarioAceptacion { get; set; } = string.Empty;
         public string FechaConsejoTecnico { get; set; } = string.Empty;
         public string FechaPublicacion { get; set; } = string.Empty;
         public string Titular { get; set; } = "Nombre del Titular";
+    }
+
+    public class PlantillaAvisoProgramaEducativoDTO
+    {
+        public string ProgramaEducativo { get; set; } = string.Empty;
+        public List<PlantillaAvisoExperienciaEducativaDTO> Experiencias { get; set; } = [];
     }
 
     public class PlantillaAvisoExperienciaEducativaDTO
