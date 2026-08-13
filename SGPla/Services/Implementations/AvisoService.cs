@@ -172,7 +172,7 @@ namespace SGPla.Services.Implementations
                     //IdArchivoOriginal = archivoRegistrado.IdArchivo
                 };
 
-                avisoRegistrado.IdArchivoOriginal = await generarArchivoAvisoAsync(avisoRegistrado);
+                avisoRegistrado.IdArchivoOriginal = await generarArchivoAvisoAsync(aviso);
 
                 avisoRegistrado = await _avisoRepository.CrearAsync(avisoRegistrado);
                 List<Horario> horarios = new List<Horario>();
