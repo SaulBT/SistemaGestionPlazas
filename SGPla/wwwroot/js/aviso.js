@@ -73,6 +73,53 @@ function abrirModalAgregarHorario() {
     abrirModal("modalAgregarHorario");
 }
 
+function verPerfilDocenteOferta(perfilDocente) {
+    document.getElementById("modalVerPerfilDocente-mensaje").textContent = perfilDocente;
+    abrirModal("modalVerPerfilDocente");
+}
+
+function abrirModalHorario(oferta) {
+    const formatear = (h) => {
+        const inicio = h?.Inicio ?? h?.inicio;
+        const fin = h?.Fin ?? h?.fin;
+        return (inicio && fin)
+            ? `${inicio.substring(0, 5)} - ${fin.substring(0, 5)}`
+            : "—";
+    };
+
+    const nombresDias = [
+        "Lunes",
+        "Martes",
+        "Miércoles",
+        "Jueves",
+        "Viernes",
+        "Sábado"
+    ];
+
+    const dias = nombresDias.map(nombre => ({
+        nombre: nombre,
+        valor: oferta.Horarios?.find(horario => horario.Dia === nombre) ?? null
+    }));
+
+
+    const html = `
+    <table class="table table-bordered text-center">
+        <thead>
+            <tr>
+                ${dias.map(d => `<th>${d.nombre}</th>`).join("")}
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                ${dias.map(d => `<td>${d.valor?.Hora ? d.valor.Hora : "N/A"}</td>`).join("")}
+            </tr>
+        </tbody>
+    </table>
+`;
+    document.getElementById("modalVerHorarioOferta-body").innerHTML = html;
+    abrirModal("modalVerHorarioOferta");
+}
+
 function limpiarCamposHorario() {
     const fecha = document.getElementById("Fecha");
     const horaInicio = document.getElementById("HoraInicio");
@@ -166,4 +213,23 @@ function limpiarErroresHorario() {
     document
         .querySelectorAll("#formHorario .input-error-text")
         .forEach(x => x.remove());
+}
+
+async function eliminarHorario(fecha, horaInicio, horaTermino) {
+    console.log(listaHorarios);
+    console.log(fecha + " | " + horaInicio + " | " + horaTermino);
+    const index = listaHorarios.findIndex(h =>
+        h.Fecha === fecha &&
+        h.HoraInicio === horaInicio &&
+        h.HoraTermino === horaTermino
+    );
+
+    if (index === -1) {
+        console.error("No se encontró el horario.");
+        return;
+    }
+
+    listaHorarios.splice(index, 1);
+
+    await actualizarHorarios();
 }

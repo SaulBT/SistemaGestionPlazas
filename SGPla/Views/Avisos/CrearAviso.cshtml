@@ -111,7 +111,7 @@
             
 
             <div style="display: flex; justify-content: space-between; padding-bottom: 10px; padding-top: 10px">
-                <div class="text-wrapper">Horarios:</div>
+                <div class="text-wrapper">Horarios de recepción:</div>
                 @await Component.InvokeAsync("Boton", new 
                         {
                             Accion = "Agregar",
@@ -177,7 +177,22 @@
             })
         </form>
 
+        <!-- Modal Ver Horarios -->
+        @await Component.InvokeAsync("Modal", new ModalModel
+            {
+                Id = "modalVerHorarioOferta",
+                Titulo = "Ver Horario",
+                OnCancel = "cerrarModal('modalVerHorarioOferta')"
+            })
 
+        <!-- Modal Ver perfil docente -->
+        @await Component.InvokeAsync("Modal", new ModalModel
+        {
+            Id = "modalVerPerfilDocente",
+            Titulo = "Ver Perfil Docente",
+            Mensaje = "prueba",
+            OnCancel = "cerrarModal('modalVerPerfilDocente')"
+        })
     </div>
     
 </div>

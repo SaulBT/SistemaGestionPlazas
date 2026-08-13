@@ -527,7 +527,7 @@ namespace SGPla.Controllers
                                     new TableActionModel()
                                     {
                                         Accion = "Info",
-                                        OnClick = $"verHorarioOferta()"
+                                        OnClick = $"abrirModalHorario({JsonSerializer.Serialize(o)})"
                                     }
                                 }
                             },
@@ -539,7 +539,7 @@ namespace SGPla.Controllers
                                     new TableActionModel()
                                     {
                                         Accion = "Info",
-                                        OnClick = $"verPerfilDocenteOferta()"
+                                        OnClick = $"verPerfilDocenteOferta('{o.PerfilDocente}')"
                                     }
                                 }
                             },
@@ -638,7 +638,7 @@ namespace SGPla.Controllers
                                     new TableActionModel()
                                     {
                                         Accion = "eliminar",
-                                        OnClick = $"abrirModalConfirmacion('¿Desea eliminar este horario?', function() {{ eliminarHorario(); }} )"
+                                        OnClick = $"eliminarHorario({h.Dia}, {h.HoraInicio}, {h.HoraFin})"
                                     }
                                 }
                             }
@@ -721,7 +721,7 @@ namespace SGPla.Controllers
                                     new TableActionModel
                                     {
                                         Accion = "Eliminar",
-                                        OnClick = $"eliminarHorario()"
+                                        OnClick = $"eliminarHorario({JsonSerializer.Serialize(h.Fecha)}, {JsonSerializer.Serialize(h.HoraInicio)}, {JsonSerializer.Serialize(h.HoraTermino)})"
                                     }
                                 }
                             }
