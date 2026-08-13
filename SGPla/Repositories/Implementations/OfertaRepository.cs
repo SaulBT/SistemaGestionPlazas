@@ -17,6 +17,14 @@ namespace SGPla.Repositories.Implementations
             _context = context;
         }
 
+        public async Task<Oferta?> ObtenerPorIdAsync(int id)
+        {
+            return _context.Oferta
+                .Include(o => o.IdProgramaEducativoNavigation)
+                .Include(o => o.IdExperienciaEducativa)
+                .FirstOrDefault(o => o.IdOferta == id);
+        }
+
         public async Task<List<Oferta>> ObtenerPorAvisoAsync(int idAviso)
         {
             var idsOferta = await _context.OfertaAviso
