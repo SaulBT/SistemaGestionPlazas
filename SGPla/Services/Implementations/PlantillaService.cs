@@ -89,7 +89,7 @@ namespace SGPla.Services.Implementations
                 { "NombreArea", plantillaAvisoDTO.AreaAcademica },
                 { "Sistema", plantillaAvisoDTO.Sistema },
                 { "Requisitos", plantillaAvisoDTO.Requisitos },
-                { "DiasAceptacion", plantillaAvisoDTO.HorarioAceptacion },
+                { "HorarioAceptacion", plantillaAvisoDTO.HorarioAceptacion },
                 { "FechaConsejoTecnico", plantillaAvisoDTO.FechaConsejoTecnico },
                 { "FechaPublicacion", plantillaAvisoDTO.FechaPublicacion },
                 { "NombreTitular", plantillaAvisoDTO.Titular }

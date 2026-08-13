@@ -21,7 +21,7 @@ namespace SGPla.Repositories.Implementations
         {
             return _context.Oferta
                 .Include(o => o.IdProgramaEducativoNavigation)
-                .Include(o => o.IdExperienciaEducativa)
+                .Include(o => o.IdExperienciaEducativaNavigation)
                 .FirstOrDefault(o => o.IdOferta == id);
         }
 

@@ -214,11 +214,11 @@ namespace SGPla.Services.Implementations
                 AreaAcademica = entidad?.IdAreaAcademicaNavigation.Nombre ?? "Nombre del Área Académica",
                 EntidadAcademica = entidad?.Nombre.Substring(6) ?? "Nombre de la Entidad Académica",
                 Articulo = articulo?.Numero ?? "Número del Artículo",
-                Region = entidad?.Region ?? "Región",
+                Region = entidad?.Region.Substring(2) ?? "Región",
                 PerfilArticulo = articulo?.Descripcion ?? "Perfil del Artículo",
                 Periodo = periodoDTO.PeriodoMostrar ?? "Periodo Escolar",
                 Campus = "Campus", //TODO: El campus depende del Programa Educativo
-                Sistema = aviso.Sistema ?? "Sistema", //TODO: falta obtenerlo del formulario
+                Sistema = "Sistema", //TODO: falta obtenerlo del formulario
                 Programas = await generarListaProgramasPlantillaAsync(aviso.OfertasId),
                 Requisitos = aviso.Requisitos ?? "Requisitos",
                 HorarioAceptacion = generarHorarioAceptacion(aviso.Horarios) ?? "Horario de Aceptación", //Se puede mejorar para que también detecte cuando un sólo día tiene dos distintos horarios
@@ -250,6 +250,7 @@ namespace SGPla.Services.Implementations
                     };
 
                     nombresProgramas.Add(programa.Nombre);
+                    listaProgramas.Add(programaPlantilla);
                 }
                 else
                 {
