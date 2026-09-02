@@ -51,7 +51,7 @@ const navigation: DashboardItem[] = [
   },
   {
     label: "Programas educativos",
-    href: "/programas-educativos",
+    href: "/ProgramasEducativos",
     icon: GraduationCap,
   },
   { label: "Planes de estudio", href: "/planes-estudios", icon: BookOpen },
