@@ -1,0 +1,55 @@
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:-SgplaDev_2026!Password}
+    ports:
+      - "1433:1433"
+    volumes:
+      - sgpla-sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/usr/bin/timeout 2 /bin/bash -c ': > /dev/tcp/127.0.0.1/1433'"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 15s
+
+  db-init:
+    image: mcr.microsoft.com/mssql-tools:latest
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:-SgplaDev_2026!Password}
+    volumes:
+      - ./GestionDePlazasBD.sql:/scripts/GestionDePlazasBD.sql:ro
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - >-
+        for i in $$(seq 1 30); do
+          /opt/mssql-tools/bin/sqlcmd -S db,1433 -U sa -P "$${MSSQL_SA_PASSWORD}" -C -Q "SELECT 1" >/dev/null 2>&1 && break;
+          sleep 2;
+        done;
+        /opt/mssql-tools/bin/sqlcmd -S db,1433 -U sa -P "$${MSSQL_SA_PASSWORD}" -C -b -i /scripts/GestionDePlazasBD.sql
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: >-
+        Server=db,1433;Database=GestionDePlazasBD;User Id=sa;Password=${MSSQL_SA_PASSWORD:-SgplaDev_2026!Password};TrustServerCertificate=True;Encrypt=False;
+      Archivos__RutaBase: /app/Archivos
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./SGPla/Archivos:/app/Archivos
+
+volumes:
+  sgpla-sqlserver-data:
