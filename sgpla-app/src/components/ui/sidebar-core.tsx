@@ -27,7 +27,6 @@ import { cn } from "@/lib/utils";
 import { spring, exitFallbackMs } from "@/lib/springs";
 import { fontWeights } from "@/lib/font-weight";
 import { useShape } from "@/lib/shape-context";
-import { useSize, useSizeVariant } from "@/lib/size-context";
 import { useSurface, SurfaceProvider } from "@/lib/surface-context";
 import { surfaceClasses } from "@/lib/surface-classes";
 import { Button, type ButtonProps } from "@/components/ui/button";
@@ -895,7 +894,6 @@ const SidebarTrigger = forwardRef<HTMLButtonElement, SidebarTriggerProps>(
     const PanelLeftIcon = PanelLeft;
     const PanelRightIcon = PanelRight;
     const TriggerIcon = side === "right" ? PanelRightIcon : PanelLeftIcon;
-    const iconSize = useSizeVariant() === "compact" ? ("icon-compact" as const) : ("icon" as const);
     const collapsed = isMobile ? !openMobile : !open;
 
     return (
@@ -916,7 +914,7 @@ const SidebarTrigger = forwardRef<HTMLButtonElement, SidebarTriggerProps>(
         <Button
           ref={ref}
           variant="ghost"
-          size={size ?? iconSize}
+          size={size ?? "icon"}
           data-sidebar="trigger"
           aria-label="Toggle Sidebar"
           onClick={(event) => {
@@ -1134,7 +1132,6 @@ export type SidebarInputProps = React.InputHTMLAttributes<HTMLInputElement>;
 const SidebarInput = forwardRef<HTMLInputElement, SidebarInputProps>(
   ({ className, ...props }, ref) => {
     const shape = useShape();
-    const size = useSize();
     return (
       <input
         ref={ref}
@@ -1147,8 +1144,7 @@ const SidebarInput = forwardRef<HTMLInputElement, SidebarInputProps>(
           "hover:bg-muted/50 hover:ring-border",
           "focus:bg-card focus:ring-border",
           "focus-visible:ring-[color:var(--focus-ring,#6B97FF)]",
-          size.variant === "compact" ? "h-7" : "h-8",
-          size.text,
+          "h-8 text-[13px]",
           shape.input,
           className
         )}
@@ -1392,8 +1388,7 @@ export interface SidebarGroupLabelProps extends HTMLAttributes<HTMLDivElement> {
 
 const SidebarGroupLabel = forwardRef<HTMLDivElement, SidebarGroupLabelProps>(
   ({ className, render, asChild, children, ...props }, ref) => {
-    const sizeVariant = useSizeVariant();
-    const sizeClasses = useSize();
+    const sizeClasses = { icon: 16 };
     const group = useContext(SidebarGroupContext);
     const shape = useShape();
     const ChevronRightIcon = ChevronRight;
@@ -1451,7 +1446,7 @@ const SidebarGroupLabel = forwardRef<HTMLDivElement, SidebarGroupLabelProps>(
             group.actionsCount > 0 && "pr-[var(--group-actions-pad)]",
             "focus-visible:ring-1 focus-visible:ring-[color:var(--focus-ring,#6B97FF)]",
             shape.item,
-            sizeVariant === "compact" ? "text-[11px]" : "text-[12px]",
+            "text-[13px]",
             className
           ),
           ...props,
@@ -1502,7 +1497,7 @@ const SidebarGroupLabel = forwardRef<HTMLDivElement, SidebarGroupLabelProps>(
         "data-sidebar": "group-label",
         className: cn(
           "flex h-8 shrink-0 items-center gap-2 px-2 text-muted-foreground/70 outline-none",
-          sizeVariant === "compact" ? "text-[11px]" : "text-[12px]",
+            "text-[13px]",
           className
         ),
         ...props,
@@ -1525,7 +1520,7 @@ const GroupActionsContext = createContext(false);
 const SidebarGroupAction = forwardRef<HTMLButtonElement, SidebarGroupActionProps>(
   ({ className, render, asChild, children, ...props }, ref) => {
     const shape = useShape();
-    const sizeClasses = useSize();
+    const sizeClasses = { icon: 16 };
     const inCluster = useContext(GroupActionsContext);
     const { template, content } = resolveSlotTemplate(render, asChild, children);
     return slotElement(

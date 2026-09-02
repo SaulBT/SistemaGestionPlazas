@@ -29,9 +29,13 @@ import { cn } from "@/lib/utils";
 import { spring } from "@/lib/springs";
 import { fontWeights } from "@/lib/font-weight";
 import { useShape } from "@/lib/shape-context";
-import { useSize, SizeProvider, type SizeVariant } from "@/lib/size-context";
 import { useProximityHover, type ItemRect } from "@/hooks/use-proximity-hover";
 import { resolveSlotTemplate, slotElement } from "@/components/ui/sidebar-core";
+
+const buttonSizeDefaults = {
+  text: "text-[13px]",
+  icon: 16,
+};
 
 // SSR-safe layout effect (client components still server-render in Next).
 const useIsoLayoutEffect =
@@ -523,14 +527,10 @@ function useMenuScope(containerRef: RefObject<HTMLElement | null>): MenuScope {
 
 // ─── SidebarMenu ─────────────────────────────────────────────────────────────
 
-export interface SidebarMenuProps extends HTMLAttributes<HTMLUListElement> {
-  /** Pins the menu's rows to one step of the size ladder. Omitted, they
-   *  follow the surrounding SizeProvider. */
-  size?: SizeVariant;
-}
+export type SidebarMenuProps = HTMLAttributes<HTMLUListElement>;
 
 const SidebarMenu = forwardRef<HTMLUListElement, SidebarMenuProps>(
-  ({ className, size, children, ...props }, ref) => {
+  ({ className, children, ...props }, ref) => {
     const containerRef = useRef<HTMLUListElement>(null);
     const { value, containerProps, overlays } = useMenuScope(containerRef);
 
@@ -553,7 +553,7 @@ const SidebarMenu = forwardRef<HTMLUListElement, SidebarMenuProps>(
       </MenuScopeContext.Provider>
     );
 
-    return size ? <SizeProvider size={size}>{content}</SizeProvider> : content;
+    return content;
   }
 );
 SidebarMenu.displayName = "SidebarMenu";
@@ -885,7 +885,7 @@ const SidebarMenuButton = forwardRef<HTMLButtonElement, SidebarMenuButtonProps>(
     const scope = useContext(MenuScopeContext);
     const item = useContext(MenuItemContext);
     const shape = useShape();
-    const sizeClasses = useSize();
+    const sizeClasses = buttonSizeDefaults;
     const buttonRef = useRef<HTMLElement | null>(null);
 
     // status="active" implies the row-active treatment; an explicit dot
@@ -911,9 +911,7 @@ const SidebarMenuButton = forwardRef<HTMLButtonElement, SidebarMenuButtonProps>(
         ? "h-7"
         : size === "lg"
           ? "h-12"
-          : sizeClasses.variant === "compact"
-            ? "h-7"
-            : "h-8";
+          : "h-9";
     const textClass = size === "sm" ? "text-[12px]" : sizeClasses.text;
 
     // Roving tabindex: the active rows' buttons are the menu's tab stops; with
@@ -1019,7 +1017,7 @@ export interface SidebarMenuActionProps extends ButtonHTMLAttributes<HTMLButtonE
 const SidebarMenuAction = forwardRef<HTMLButtonElement, SidebarMenuActionProps>(
   ({ className, showOnHover = false, render, asChild, children, onClick, ...props }, ref) => {
     const shape = useShape();
-    const sizeClasses = useSize();
+    const sizeClasses = buttonSizeDefaults;
     const item = useContext(MenuItemContext);
     const inCluster = useContext(MenuActionsClusterContext);
     const { template, content } = resolveSlotTemplate(render, asChild, children);
@@ -1054,7 +1052,7 @@ const SidebarMenuAction = forwardRef<HTMLButtonElement, SidebarMenuActionProps>(
               ? "group-has-[>[data-sidebar=menu-badge]]/menu-sub-item:right-8.5"
               : "group-has-[>[data-sidebar=menu-badge]]/menu-item:right-8.5"),
           !inCluster &&
-            (item?.isSubRow || sizeClasses.variant === "compact" ? "top-0.5" : "top-1"),
+            (item?.isSubRow ? "top-0.5" : "top-1"),
           "hover:bg-hover hover:text-foreground transition-[color,background-color,opacity] duration-80",
           "focus-visible:ring-1 focus-visible:ring-[color:var(--focus-ring,#6B97FF)]",
           // One icon size across the sidebar: row actions match the leading
@@ -1104,7 +1102,6 @@ export interface SidebarMenuActionsProps extends HTMLAttributes<HTMLDivElement> 
 const SidebarMenuActions = forwardRef<HTMLDivElement, SidebarMenuActionsProps>(
   ({ className, showOnHover = false, children, ...props }, ref) => {
     const item = useContext(MenuItemContext);
-    const sizeClasses = useSize();
     const count = Children.count(children);
 
     const setActions = item?.setActions;
@@ -1123,7 +1120,7 @@ const SidebarMenuActions = forwardRef<HTMLDivElement, SidebarMenuActionsProps>(
           item?.isSubRow
             ? "group-has-[>[data-sidebar=menu-badge]]/menu-sub-item:right-8.5"
             : "group-has-[>[data-sidebar=menu-badge]]/menu-item:right-8.5",
-          item?.isSubRow || sizeClasses.variant === "compact" ? "top-0.5" : "top-1",
+          item?.isSubRow ? "top-0.5" : "top-1",
           showOnHover &&
             (item?.isSubRow
               ? "opacity-0 transition-opacity duration-80 group-hover/menu-sub-item:opacity-100 group-focus-within/menu-sub-item:opacity-100 has-data-[state=open]:opacity-100 has-data-popup-open:opacity-100"
@@ -1150,7 +1147,6 @@ export type SidebarMenuBadgeProps = HTMLAttributes<HTMLDivElement>;
 const SidebarMenuBadge = forwardRef<HTMLDivElement, SidebarMenuBadgeProps>(
   ({ className, ...props }, ref) => {
     const item = useContext(MenuItemContext);
-    const sizeClasses = useSize();
     const lit = item?.isActiveRow ?? false;
 
     const setHasBadge = item?.setHasBadge;
@@ -1164,7 +1160,7 @@ const SidebarMenuBadge = forwardRef<HTMLDivElement, SidebarMenuBadgeProps>(
         data-sidebar="menu-badge"
         className={cn(
           "pointer-events-none absolute right-2 z-10 flex h-5 min-w-5 items-center justify-center px-1 tabular-nums",
-          sizeClasses.variant === "compact" ? "top-1 text-[10px]" : "top-1.5 text-[11px]",
+          "top-1.5 text-[11px]",
           "transition-[color,font-variation-settings] duration-80",
           lit ? "text-foreground" : "text-muted-foreground",
           className
@@ -1191,7 +1187,6 @@ const SKELETON_WIDTHS = ["62%", "74%", "55%", "82%", "68%"];
 
 const SidebarMenuSkeleton = forwardRef<HTMLDivElement, SidebarMenuSkeletonProps>(
   ({ className, showIcon = false, ...props }, ref) => {
-    const sizeClasses = useSize();
     const id = useId();
     let sum = 0;
     for (let i = 0; i < id.length; i++) sum += id.charCodeAt(i);
@@ -1201,8 +1196,7 @@ const SidebarMenuSkeleton = forwardRef<HTMLDivElement, SidebarMenuSkeletonProps>
         ref={ref}
         data-sidebar="menu-skeleton"
         className={cn(
-          "flex items-center gap-2 px-2",
-          sizeClasses.variant === "compact" ? "h-7" : "h-8",
+          "flex h-9 items-center gap-2 px-2",
           className
         )}
         {...props}
@@ -1341,7 +1335,7 @@ const SidebarMenuSubButton = forwardRef<HTMLAnchorElement, SidebarMenuSubButtonP
   ({ isActive = false, size = "md", icon: Icon, render, asChild, className, children, ...props }, ref) => {
     const item = useContext(MenuItemContext);
     const shape = useShape();
-    const sizeClasses = useSize();
+    const sizeClasses = buttonSizeDefaults;
     const buttonRef = useRef<HTMLElement | null>(null);
 
     const setActive = item?.setActive;
@@ -1387,7 +1381,7 @@ const SidebarMenuSubButton = forwardRef<HTMLAnchorElement, SidebarMenuSubButtonP
         className: cn(
           "relative z-10 flex w-full cursor-pointer select-none items-center gap-2 pl-2 text-left outline-none",
           "transition-[padding] duration-80 pr-[var(--row-gutter)] group-hover/menu-sub-item:pr-[var(--row-gutter-hover)] group-focus-within/menu-sub-item:pr-[var(--row-gutter-hover)] group-has-[[data-sidebar=menu-action]:is([data-state=open],[data-popup-open],[aria-expanded=true])]/menu-sub-item:pr-[var(--row-gutter-hover)]",
-          size === "sm" ? "h-6" : sizeClasses.variant === "compact" ? "h-6" : "h-7",
+          size === "sm" ? "h-8" : "h-9",
           shape.item,
           className
         ),

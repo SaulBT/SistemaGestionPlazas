@@ -12,6 +12,7 @@ import {
   Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { DashboardTopBar } from "@/components/dashboard-top-bar";
 import {
@@ -36,7 +37,7 @@ type DashboardItem = {
 };
 
 const navigation: DashboardItem[] = [
-  { label: "Usuarios", href: "/usuarios", icon: Users },
+  { label: "Usuarios", href: "/Usuarios", icon: Users },
   { label: "Artículos", href: "/articulos", icon: FileText },
   {
     label: "Direcciones de área",
@@ -81,7 +82,13 @@ function NavigationItem({
   );
 }
 
-export function Dashboard() {
+export function Dashboard({
+  children,
+  activeHref,
+}: {
+  children?: ReactNode;
+  activeHref?: string;
+}) {
   return (
     <SidebarProvider>
       <Sidebar>
@@ -107,7 +114,11 @@ export function Dashboard() {
             <SidebarGroupLabel>Administración</SidebarGroupLabel>
             <SidebarMenu>
               {navigation.map((item) => (
-                <NavigationItem key={item.href} item={item} />
+                <NavigationItem
+                  key={item.href}
+                  item={item}
+                  active={item.href === activeHref}
+                />
               ))}
             </SidebarMenu>
           </SidebarGroup>
@@ -129,33 +140,35 @@ export function Dashboard() {
         <DashboardTopBar />
 
         <main className="flex-1 bg-background p-6 pt-20 md:p-8 md:pt-20">
-          <div className="mx-auto max-w-6xl">
-            <div className="mb-8">
-              <p className="text-sm text-muted-foreground">SuperUsuario</p>
-              <h1 className="mt-1 text-3xl font-semibold tracking-tight">
-                Panel principal
-              </h1>
-              <p className="mt-2 text-muted-foreground">
-                Selecciona una opción para comenzar a gestionar el sistema.
-              </p>
-            </div>
+          {children ?? (
+            <div className="mx-auto max-w-6xl">
+              <div className="mb-8">
+                <p className="text-sm text-muted-foreground">SuperUsuario</p>
+                <h1 className="mt-1 text-3xl font-semibold tracking-tight">
+                  Panel principal
+                </h1>
+                <p className="mt-2 text-muted-foreground">
+                  Selecciona una opción para comenzar a gestionar el sistema.
+                </p>
+              </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {navigation.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="group flex min-h-32 flex-col justify-between rounded-xl border border-border bg-background p-5 transition-colors hover:bg-accent"
-                  >
-                    <Icon className="size-5 text-muted-foreground transition-colors group-hover:text-foreground" />
-                    <span className="font-medium">{item.label}</span>
-                  </Link>
-                );
-              })}
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {navigation.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="group flex min-h-32 flex-col justify-between rounded-xl border border-border bg-background p-5 transition-colors hover:bg-accent"
+                    >
+                      <Icon className="size-5 text-muted-foreground transition-colors group-hover:text-foreground" />
+                      <span className="font-medium">{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
         </main>
       </SidebarInset>
     </SidebarProvider>
