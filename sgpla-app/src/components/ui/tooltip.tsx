@@ -82,6 +82,16 @@ function TooltipProvider({
 
 type TooltipSide = "top" | "right" | "bottom" | "left";
 
+type MotionSafeDivProps = Omit<
+  React.HTMLAttributes<HTMLDivElement>,
+  | "onDrag"
+  | "onDragStart"
+  | "onDragEnd"
+  | "onAnimationStart"
+  | "onAnimationEnd"
+  | "onAnimationIteration"
+>;
+
 interface TooltipProps {
   content: ReactNode;
   children: React.ReactElement;
@@ -188,24 +198,25 @@ function Tooltip({
             render={(props, state) => {
               const exiting = state.transitionStatus === "ending";
               const contentChildren = content;
-              const {
-                style: baseStyle,
-                // motion.div has incompatible drag/animation event signatures —
-                // strip the React-DOM versions so they don't fight motion's own.
-                onDrag: _onDrag,
-                onDragStart: _onDragStart,
-                onDragEnd: _onDragEnd,
-                onAnimationStart: _onAnimationStart,
-                onAnimationEnd: _onAnimationEnd,
-                onAnimationIteration: _onAnimationIteration,
-                ...rest
-              } = props as React.HTMLAttributes<HTMLDivElement>;
+              // motion.div has incompatible drag/animation event signatures —
+              // strip the React-DOM versions so they don't fight motion's own.
+              const popupProps = {
+                ...(props as React.HTMLAttributes<HTMLDivElement>),
+              };
+              const baseStyle = popupProps.style;
+              delete popupProps.style;
+              delete popupProps.onDrag;
+              delete popupProps.onDragStart;
+              delete popupProps.onDragEnd;
+              delete popupProps.onAnimationStart;
+              delete popupProps.onAnimationEnd;
+              delete popupProps.onAnimationIteration;
               return (
                 // Outer wrapper carries Base UI's popup props plus the
                 // cursor-follow motion value; the inner box keeps the
                 // enter/exit slide so the two transforms don't fight.
                 <motion.div
-                  {...rest}
+                  {...(popupProps as MotionSafeDivProps)}
                   style={{
                     ...(baseStyle as React.CSSProperties | undefined),
                     ...(followCursor === "y"

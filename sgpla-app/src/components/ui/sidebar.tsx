@@ -109,8 +109,10 @@ function SidebarSheet({ side, open, onClose, children }: SidebarSheetProps) {
             boosted to /80 in explicit dark mode. */}
         <DialogPrimitive.Backdrop
           render={(backdropProps) => {
-            const { style: _style, ...rest } =
-              backdropProps as React.HTMLAttributes<HTMLDivElement>;
+            const rest = {
+              ...(backdropProps as React.HTMLAttributes<HTMLDivElement>),
+            };
+            delete rest.style;
             return (
               <motion.div
                 {...(rest as MotionSafeDivProps)}

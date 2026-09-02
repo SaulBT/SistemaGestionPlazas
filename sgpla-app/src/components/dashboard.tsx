@@ -38,15 +38,15 @@ type DashboardItem = {
 
 const navigation: DashboardItem[] = [
   { label: "Usuarios", href: "/Usuarios", icon: Users },
-  { label: "Artículos", href: "/articulos", icon: FileText },
+  { label: "Artículos", href: "/Articulos", icon: FileText },
   {
     label: "Direcciones de área",
-    href: "/direcciones-area-academica",
+    href: "/DireccionesAreaAcademica",
     icon: Building2,
   },
   {
     label: "Entidades académicas",
-    href: "/entidades-academicas",
+    href: "/EntidadesAcademicas",
     icon: Library,
   },
   {
