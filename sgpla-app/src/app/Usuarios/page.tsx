@@ -1,4 +1,3 @@
-import { Dashboard } from "@/components/dashboard";
 import { UsersListView } from "@/modules/users";
 
 export const metadata = {
@@ -6,9 +5,5 @@ export const metadata = {
 };
 
 export default function UsersPage() {
-  return (
-    <Dashboard activeHref="/Usuarios">
-      <UsersListView />
-    </Dashboard>
-  );
+  return <UsersListView />;
 }

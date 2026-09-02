@@ -20,7 +20,7 @@
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.97 0.014 254.604);
   --border: #e4e4e7;
-  --input: oklch(0.922 0 0);
+  --input: #f1f1f3;
   --ring: oklch(0.708 0 0);
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
