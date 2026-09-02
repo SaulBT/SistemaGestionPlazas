@@ -22,6 +22,7 @@ import {
   type Ref,
   type RefObject,
 } from "react";
+import type { LucideIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
@@ -30,7 +31,6 @@ import { fontWeights } from "@/lib/font-weight";
 import { useShape } from "@/lib/shape-context";
 import { useSize, SizeProvider, type SizeVariant } from "@/lib/size-context";
 import { useProximityHover, type ItemRect } from "@/hooks/use-proximity-hover";
-import type { IconComponent } from "@/lib/icon-context";
 import { resolveSlotTemplate, slotElement } from "@/components/ui/sidebar-core";
 
 // SSR-safe layout effect (client components still server-render in Next).
@@ -483,7 +483,7 @@ function useMenuScope(containerRef: RefObject<HTMLElement | null>): MenuScope {
       <AnimatePresence>
         {focusRect && (
           <motion.div
-            className={`absolute ${shape.focusRing} pointer-events-none z-20 border border-[color:var(--focus-ring,#6B97FF)]`}
+            className={`absolute ${shape.focusRing} pointer-events-none z-20 border border-(--focus-ring,#6B97FF)`}
             initial={false}
             animate={{
               left: focusRect.left - 2,
@@ -803,7 +803,7 @@ function MenuRowLabel({
             descenders — symmetric padding extends the clip box past both
             and the negative margins cancel it out of the row's height. */}
         <span
-          className="col-start-1 row-start-1 invisible truncate pt-[0.25em] -mt-[0.25em] pb-[0.25em] -mb-[0.25em] [text-box:trim-both_cap_alphabetic]"
+          className="col-start-1 row-start-1 invisible truncate pt-[0.25em] mt-[-0.25em] pb-[0.25em] mb-[-0.25em] [text-box:trim-both_cap_alphabetic]"
           style={{ fontVariationSettings: fontWeights.semibold }}
           aria-hidden="true"
         >
@@ -812,7 +812,7 @@ function MenuRowLabel({
         {/* Visible: animates between weights in the same cell */}
         <span
           className={cn(
-            "col-start-1 row-start-1 truncate pt-[0.25em] -mt-[0.25em] pb-[0.25em] -mb-[0.25em] transition-[color,font-variation-settings] duration-80 [text-box:trim-both_cap_alphabetic]",
+            "col-start-1 row-start-1 truncate pt-[0.25em] mt-[-0.25em] pb-[0.25em] mb-[-0.25em] transition-[color,font-variation-settings] duration-80 [text-box:trim-both_cap_alphabetic]",
             lit ? "text-foreground" : "text-muted-foreground"
           )}
           style={{
@@ -851,7 +851,7 @@ export interface SidebarMenuButtonProps
     VariantProps<typeof sidebarMenuButtonVariants> {
   isActive?: boolean;
   size?: "default" | "sm" | "lg";
-  icon?: IconComponent;
+  icon?: LucideIcon;
   /** Semantic thread state for status-dot navigation. Drives the dot
    *  visuals (`active`/`unread` → filled, `idle` → ring), stamps
    *  `data-status` on the button, appends visually-hidden "unread" text for
@@ -1126,10 +1126,10 @@ const SidebarMenuActions = forwardRef<HTMLDivElement, SidebarMenuActionsProps>(
           item?.isSubRow || sizeClasses.variant === "compact" ? "top-0.5" : "top-1",
           showOnHover &&
             (item?.isSubRow
-              ? "opacity-0 transition-opacity duration-80 group-hover/menu-sub-item:opacity-100 group-focus-within/menu-sub-item:opacity-100 has-[[data-state=open]]:opacity-100 has-[[data-popup-open]]:opacity-100"
+              ? "opacity-0 transition-opacity duration-80 group-hover/menu-sub-item:opacity-100 group-focus-within/menu-sub-item:opacity-100 has-data-[state=open]:opacity-100 has-data-popup-open:opacity-100"
               // Peer-scoped for the same reason as a lone action: the row's
               // <li> also wraps its sub-menu.
-              : "opacity-0 transition-opacity duration-80 peer-hover/menu-button:opacity-100 peer-focus-visible/menu-button:opacity-100 hover:opacity-100 focus-within:opacity-100 has-[[data-state=open]]:opacity-100 has-[[data-popup-open]]:opacity-100"),
+              : "opacity-0 transition-opacity duration-80 peer-hover/menu-button:opacity-100 peer-focus-visible/menu-button:opacity-100 hover:opacity-100 focus-within:opacity-100 has-data-[state=open]:opacity-100 has-data-popup-open:opacity-100"),
           className
         )}
         {...props}
@@ -1314,7 +1314,7 @@ const SidebarMenuSub = forwardRef<HTMLUListElement, SidebarMenuSubProps>(
             // rects include it) + 1px border + pl-2 lands the sub-row label
             // (+ the row's own pl-2 = 32px) exactly on the parent label's x
             // (px-2 + 16px icon + gap-2 = 32px).
-            "relative ml-[15px] flex min-w-0 flex-col gap-0.5 border-l border-border pl-2 select-none",
+            "relative ml-3.75 flex min-w-0 flex-col gap-0.5 border-l border-border pl-2 select-none",
             className
           )}
           {...props}
@@ -1332,7 +1332,7 @@ SidebarMenuSub.displayName = "SidebarMenuSub";
 export interface SidebarMenuSubButtonProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
   isActive?: boolean;
   size?: "sm" | "md";
-  icon?: IconComponent;
+  icon?: LucideIcon;
   render?: ReactElement;
   asChild?: boolean;
 }

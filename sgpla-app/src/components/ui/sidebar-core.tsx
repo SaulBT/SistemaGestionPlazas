@@ -21,13 +21,13 @@ import {
   type HTMLAttributes,
   type Ref,
 } from "react";
+import { ChevronRight, PanelLeft, PanelRight } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { spring, exitFallbackMs } from "@/lib/springs";
 import { fontWeights } from "@/lib/font-weight";
 import { useShape } from "@/lib/shape-context";
 import { useSize, useSizeVariant } from "@/lib/size-context";
-import { useIcon } from "@/lib/icon-context";
 import { useSurface, SurfaceProvider } from "@/lib/surface-context";
 import { surfaceClasses } from "@/lib/surface-classes";
 import { Button, type ButtonProps } from "@/components/ui/button";
@@ -376,6 +376,7 @@ const SidebarProvider = forwardRef<HTMLDivElement, SidebarProviderProps>(
             {
               "--sidebar-width": width,
               "--sidebar-width-mobile": widthMobile,
+              "--sidebar-offset": isMobile ? (openMobile ? widthMobile : "0rem") : open ? width : "0rem",
               ...style,
             } as CSSProperties
           }
@@ -664,7 +665,7 @@ const SidebarShell = forwardRef<HTMLDivElement, SidebarShellProps>(
           // No bare `group` here: an unnamed group on the whole rail would
           // fire every descendant's group-hover (Button fills, icon strokes)
           // on rail hover. Named groups (menu-item etc.) handle row states.
-          "peer shrink-0 sticky top-0 h-svh",
+          "peer fixed inset-y-0 left-0 z-30 shrink-0 h-svh",
           // While peek is armed the 0-width shell must not clip the edge
           // strip or the overlay card — and the shell must rise above the
           // inset (a later sibling) so the card paints over it. Pinning from
@@ -891,8 +892,8 @@ const SidebarTrigger = forwardRef<HTMLButtonElement, SidebarTriggerProps>(
     // same shared intent timer, so moving from the trigger into the peeked
     // card (or back) cancels the pending dismissal.
     const hoverPeek = peek === "hover" && !isMobile && !open;
-    const PanelLeftIcon = useIcon("panel-left");
-    const PanelRightIcon = useIcon("panel-right");
+    const PanelLeftIcon = PanelLeft;
+    const PanelRightIcon = PanelRight;
     const TriggerIcon = side === "right" ? PanelRightIcon : PanelLeftIcon;
     const iconSize = useSizeVariant() === "compact" ? ("icon-compact" as const) : ("icon" as const);
     const collapsed = isMobile ? !openMobile : !open;
@@ -1104,6 +1105,8 @@ const SidebarInset = forwardRef<HTMLElement, SidebarInsetProps>(
         data-slot="sidebar-inset"
         className={cn(
           "relative flex min-h-0 w-full min-w-0 flex-1 flex-col bg-background",
+          "peer-data-[side=left]:md:ml-0 peer-data-[side=right]:md:mr-0",
+          "peer-data-[state=expanded]:peer-data-[side=left]:md:ml-[var(--sidebar-width)] peer-data-[state=expanded]:peer-data-[side=right]:md:mr-[var(--sidebar-width)]",
           "peer-data-[variant=inset]:m-2 peer-data-[variant=inset]:peer-data-[side=left]:ml-0 peer-data-[variant=inset]:peer-data-[side=right]:mr-0",
           // With the rail collapsed away, restore the sidebar-side margin so
           // the card keeps symmetric insets.
@@ -1393,7 +1396,7 @@ const SidebarGroupLabel = forwardRef<HTMLDivElement, SidebarGroupLabelProps>(
     const sizeClasses = useSize();
     const group = useContext(SidebarGroupContext);
     const shape = useShape();
-    const ChevronRightIcon = useIcon("chevron-right");
+    const ChevronRightIcon = ChevronRight;
     const { template, content } = resolveSlotTemplate(render, asChild, children);
 
     // Truncate only the leading text; element children (count badges,

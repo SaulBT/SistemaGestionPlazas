@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
+import { DashboardTopBar } from "@/components/dashboard-top-bar";
 import {
   Sidebar,
   SidebarContent,
@@ -26,7 +27,6 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarSeparator,
-  SidebarTrigger,
 } from "@/components/ui/sidebar";
 
 type DashboardItem = {
@@ -38,14 +38,36 @@ type DashboardItem = {
 const navigation: DashboardItem[] = [
   { label: "Usuarios", href: "/usuarios", icon: Users },
   { label: "Artículos", href: "/articulos", icon: FileText },
-  { label: "Direcciones de área", href: "/direcciones-area-academica", icon: Building2 },
-  { label: "Entidades académicas", href: "/entidades-academicas", icon: Library },
-  { label: "Programas educativos", href: "/programas-educativos", icon: GraduationCap },
+  {
+    label: "Direcciones de área",
+    href: "/direcciones-area-academica",
+    icon: Building2,
+  },
+  {
+    label: "Entidades académicas",
+    href: "/entidades-academicas",
+    icon: Library,
+  },
+  {
+    label: "Programas educativos",
+    href: "/programas-educativos",
+    icon: GraduationCap,
+  },
   { label: "Planes de estudio", href: "/planes-estudios", icon: BookOpen },
-  { label: "Periodos escolares", href: "/periodos-escolares", icon: CalendarDays },
+  {
+    label: "Periodos escolares",
+    href: "/periodos-escolares",
+    icon: CalendarDays,
+  },
 ];
 
-function NavigationItem({ item, active = false }: { item: DashboardItem; active?: boolean }) {
+function NavigationItem({
+  item,
+  active = false,
+}: {
+  item: DashboardItem;
+  active?: boolean;
+}) {
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
@@ -66,7 +88,12 @@ export function Dashboard() {
         <SidebarHeader>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton render={<Link href="/" />} icon={LayoutDashboard} size="lg" isActive>
+              <SidebarMenuButton
+                render={<Link href="/" />}
+                icon={LayoutDashboard}
+                size="lg"
+                isActive
+              >
                 SGPla
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -79,7 +106,9 @@ export function Dashboard() {
           <SidebarGroup>
             <SidebarGroupLabel>Administración</SidebarGroupLabel>
             <SidebarMenu>
-              {navigation.map((item) => <NavigationItem key={item.href} item={item} />)}
+              {navigation.map((item) => (
+                <NavigationItem key={item.href} item={item} />
+              ))}
             </SidebarMenu>
           </SidebarGroup>
         </SidebarContent>
@@ -97,19 +126,15 @@ export function Dashboard() {
       </Sidebar>
 
       <SidebarInset>
-        <header className="flex h-14 items-center gap-3 border-b border-border px-4">
-          <SidebarTrigger />
-          <div>
-            <p className="text-sm font-medium">Sistema de Gestión de Plazas Vacantes</p>
-            <p className="text-xs text-muted-foreground">Panel de administración</p>
-          </div>
-        </header>
+        <DashboardTopBar />
 
-        <main className="flex-1 bg-[#f5f5f5] p-6 md:p-8">
+        <main className="flex-1 bg-background p-6 pt-20 md:p-8 md:pt-20">
           <div className="mx-auto max-w-6xl">
             <div className="mb-8">
               <p className="text-sm text-muted-foreground">SuperUsuario</p>
-              <h1 className="mt-1 text-3xl font-semibold tracking-tight">Panel principal</h1>
+              <h1 className="mt-1 text-3xl font-semibold tracking-tight">
+                Panel principal
+              </h1>
               <p className="mt-2 text-muted-foreground">
                 Selecciona una opción para comenzar a gestionar el sistema.
               </p>

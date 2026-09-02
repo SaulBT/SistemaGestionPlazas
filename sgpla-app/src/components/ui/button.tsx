@@ -10,7 +10,7 @@ import {
 } from "react";
 import { Button as ButtonPrimitive } from "@base-ui/react/button";
 import { cva, type VariantProps } from "class-variance-authority";
-import type { IconComponent } from "@/lib/icon-context";
+import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useShape } from "@/lib/shape-context";
 import { useSizeVariant } from "@/lib/size-context";
@@ -51,7 +51,7 @@ const buttonVariants = cva(
       variant: "primary",
       size: "default",
     },
-  }
+  },
 );
 
 type ButtonSizeCanonical = "default" | "compact" | "icon" | "icon-compact";
@@ -76,7 +76,8 @@ const legacySizeAliases: Partial<Record<ButtonSize, ButtonSizeCanonical>> = {
 };
 
 interface ButtonProps
-  extends ButtonHTMLAttributes<HTMLButtonElement>,
+  extends
+    ButtonHTMLAttributes<HTMLButtonElement>,
     Omit<VariantProps<typeof buttonVariants>, "size"> {
   /** Omitted, the button follows the surrounding SizeProvider (default 36px,
    *  compact 28px). Legacy sm/md/lg values still resolve. */
@@ -84,8 +85,8 @@ interface ButtonProps
   /** When true, the given single React-element child becomes the rendered element (slot-style). */
   asChild?: boolean;
   loading?: boolean;
-  leadingIcon?: IconComponent;
-  trailingIcon?: IconComponent;
+  leadingIcon?: LucideIcon;
+  trailingIcon?: LucideIcon;
   /** Force the visual pressed/held state. Useful when the button drives an
    *  external open piece of UI (a popover, dropdown, etc.) so it reads as
    *  engaged while the menu is showing. */
@@ -144,7 +145,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       style,
       ...props
     },
-    ref
+    ref,
   ) => {
     // asChild: the user's element becomes the root while the button's internal
     // structure (bg layer, content wrapper, spinner, icons) survives as its
@@ -166,11 +167,12 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     // canonical ladder) > surrounding SizeProvider > default.
     const contextSize = useSizeVariant();
     const resolvedSize: ButtonSizeCanonical = size
-      ? legacySizeAliases[size] ?? (size as ButtonSizeCanonical)
+      ? (legacySizeAliases[size] ?? (size as ButtonSizeCanonical))
       : contextSize === "compact"
         ? "compact"
         : "default";
-    const isIconOnly = resolvedSize === "icon" || resolvedSize === "icon-compact";
+    const isIconOnly =
+      resolvedSize === "icon" || resolvedSize === "icon-compact";
     const isCompact =
       resolvedSize === "compact" || resolvedSize === "icon-compact";
     const iconSize = isCompact ? 14 : 16;
@@ -187,8 +189,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         <span
           aria-hidden
           className={cn(
-            "absolute inset-px rounded-[inherit] transition-[box-shadow,background-color] [transition-duration:180ms,80ms] [transition-timing-function:cubic-bezier(0.23,1,0.32,1),ease] group-active:[transition-duration:80ms,80ms]",
-            bgClass
+            "absolute inset-px rounded-[inherit] transition-[box-shadow,background-color] duration-[180ms,80ms] ease-[cubic-bezier(0.23,1,0.32,1),ease] group-active:duration-[80ms,80ms]",
+            bgClass,
           )}
         />
         <span className="relative inline-flex items-center justify-center gap-[inherit]">
@@ -217,14 +219,15 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
                     pathLength="100"
                     style={{
                       strokeDasharray: "15 85",
-                      animation: "spinner-move 2s linear infinite, spinner-dash 4s ease-in-out infinite",
+                      animation:
+                        "spinner-move 2s linear infinite, spinner-dash 4s ease-in-out infinite",
                     }}
                   />
                 </svg>
               </span>
             </>
           ) : isIconOnly ? (
-            <span className="[&_svg]:stroke-[1.5] [&_svg]:transition-[stroke-width] [&_svg]:duration-80 group-hover:[&_svg]:stroke-[2]">
+            <span className="[&_svg]:stroke-[1.5] [&_svg]:transition-[stroke-width] [&_svg]:duration-80 group-hover:[&_svg]:stroke-2">
               {label}
             </span>
           ) : (
@@ -233,19 +236,21 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
                 <LeadingIcon
                   size={iconSize}
                   strokeWidth={1.5}
-                  className="transition-[stroke-width] duration-80 group-hover:stroke-[2]"
+                  className="transition-[stroke-width] duration-80 group-hover:stroke-2"
                 />
               )}
               {/* text-box only applies to block containers, so the trim lives
                   on the label span (a blockified flex item), not the flex root.
                   The button's height is fixed (h-*), so this doesn't change
                   layout — it just centers the cap-to-baseline box optically. */}
-              <span className="[text-box:trim-both_cap_alphabetic]">{label}</span>
+              <span className="[text-box:trim-both_cap_alphabetic]">
+                {label}
+              </span>
               {TrailingIcon && (
                 <TrailingIcon
                   size={iconSize}
                   strokeWidth={1.5}
-                  className="transition-[stroke-width] duration-80 group-hover:stroke-[2]"
+                  className="transition-[stroke-width] duration-80 group-hover:stroke-2"
                 />
               )}
             </>
@@ -262,7 +267,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         iconRight: !isIconOnly && !!TrailingIcon,
       }),
       shape.button,
-      className
+      className,
     );
 
     if (asChildElement) {
@@ -275,7 +280,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           className: cn(rootClassName, childProps.className),
           style: { ...style, ...childProps.style },
         },
-        internals
+        internals,
       );
     }
 
@@ -292,7 +297,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {internals}
       </ButtonPrimitive>
     );
-  }
+  },
 );
 
 Button.displayName = "Button";
