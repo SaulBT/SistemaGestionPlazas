@@ -1,0 +1,25 @@
+﻿@model BuscadorModel
+
+<div method="@Model.Method" action="@Model.Action" class="search-field">
+    
+    
+
+    <div class="input-field">
+
+        <input type="text"
+               name="@Model.Name"
+               value="@Model.Value"
+               placeholder="@Model.Placeholder"
+               class="input" />
+
+    </div>
+
+    @await Component.InvokeAsync("Boton", new
+    {
+        Id = Model.IdButton,
+        accion = "buscar",
+        OnClick = Model.ButtonAction,
+        ButtonType = Model.ButtonType
+    })
+
+</div>

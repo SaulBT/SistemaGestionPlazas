@@ -1,0 +1,19 @@
+﻿@using SGPla.Models.ViewModels.PeriodosEscolares
+@model IndexViewModel
+
+<div id="filtrosContainer" style="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease;">
+	@await Component.InvokeAsync("SelectField", new SelectFieldModel
+	{
+		Label = "Periodo",
+		Name = "periodo",
+		Options = new List<OptionModel>
+				{
+					new OptionModel { Value = "Febrero-Julio", Text = "Febrero-Julio" },
+					new OptionModel { Value = "Agosto-Enero", Text = "Agosto-Enero" }
+				},
+		HtmlAttributes = new Dictionary<string, string>
+				{
+					{ "data-autosubmit", "true" }
+				}
+	})
+</div>

@@ -1,0 +1,29 @@
+﻿@using SGPla.Models.ViewModels.Docentes
+@model TabIndexViewModel
+
+<form id="form" method="get" action="@Url.Action("Index", "Docentes")">
+    <div style="display:flex; gap:10px; padding-bottom:20px; padding-top:20px; align-items:center; justify-content:space-between">
+        <!-- Barra de búsqueda -->
+        @await Component.InvokeAsync("Buscador", new BuscadorModel
+        {
+            Name = "busqueda",
+            Placeholder = "Buscar al Personal",
+            Action = Url.Action("Docentes", "Index"),
+            Method = "get",
+            Value = Context.Request.Query["busqueda"]
+        })
+        <!-- Botón -->
+        <a href="@Model.AccionBoton" style="display: inline-block; text-decoration: none;">
+            @await Component.InvokeAsync("Boton", new
+            {
+                Accion = "Agregar",
+                Texto = "Nuevo Personal"
+            })
+        </a>
+    </div>
+</form>
+
+<!-- Tabla -->
+<div>
+    @await Component.InvokeAsync("Table", Model.Tabla)
+</div>

@@ -1,0 +1,29 @@
+﻿@model StepperModel
+
+<div class="stepper-container">
+	<div class="step">
+		@if (Model.PasoActual == 1)
+		{
+			<div class="step-circle-selected">1</div>
+		}
+		else
+		{
+			<div class="step-circle-unselected">1</div>
+		}
+		<span class="step-title">@Model.Paso1Texto</span>
+	</div>
+
+	<div class="step-line"></div>
+
+	<div class="step">
+		@if (Model.PasoActual == 2)
+		{
+			<div class="step-circle-selected">2</div>
+		}
+		else
+		{
+			<div class="step-circle-unselected">2</div>
+		}
+		<span class="step-title">@Model.Paso2Texto</span>
+	</div>
+</div>

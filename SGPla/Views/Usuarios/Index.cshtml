@@ -1,0 +1,150 @@
+﻿@using SGPla.Models.Componentes
+@using SGPla.Models.ViewModels.Usuarios
+@model IndexViewModel
+
+@{
+    ViewData["Title"] = "Usuarios";
+}
+<div> 
+    <form id="filtrosForm" method="get" action="@Url.Action("Index", "Usuarios")">
+
+        <!-- Filtros -->
+        @await Component.InvokeAsync("ExpansionPanel",
+        new ExpansionPanelModel
+        {
+            Id = "panel-filtros",
+            Titulo = "Filtros",
+            PartialView = "_Filtros",
+            PartialModel = Model,
+            IconClass ="bi bi-funnel-fill"
+        })
+        
+        <!-- Acciones -->
+        <div style="display:flex; gap:10px; padding-bottom:20px; padding-top:20px; align-items:center; justify-content:space-between">
+            <!--Barra de Búsqueda-->
+            @await Component.InvokeAsync("Buscador", new BuscadorModel
+            {
+                Name = "busqueda",
+                Placeholder = "Buscar usuario...",
+                Action = Url.Action("Index", "Usuarios"),
+                Method = "get",
+                Value = Context.Request.Query["busqueda"]
+            })
+            
+            <!-- Campos ocultos para paginación -->
+            <input type="hidden" name="pagina" id="paginaHidden" value="@Model.PaginaActual" />
+            <input type="hidden" name="cantidad" id="cantidadHidden" value="@Model.CantidadPorPagina" />
+
+            <!--Botón Crear Usuario-->
+            <a href="@Url.Action("CrearUsuario", "Usuarios")" style="display: inline-block; text-decoration: none;">
+                @await Component.InvokeAsync("Boton", new
+                {
+                    Accion = "Agregar",
+                    Texto = "Crear Usuario"
+                })
+            </a>
+        </div>
+
+    </form>
+
+
+    <!-- Tabla con Datos -->
+    <div style="display:flex; gap:10px; padding-top:0px;justify-content:left">
+        @await Component.InvokeAsync("Table", Model.Table)
+        
+        
+    </div>
+
+
+    <!-- Ventanas Modales-->
+    <div>
+        <!-- Ventana de Confirmación eliminación de usuario -->
+        <form id="formEliminarUsuario" method="post" action="@Url.Action("EliminarUsuario", "Usuarios")">
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" name="id" id="deleteUserId" />
+            <input type="hidden" name="rol" id="deleteUserRol" />
+            @await Component.InvokeAsync("Modal", new ModalModel
+            {
+                Id = "modalConfirmacion",
+                Tipo = "confirm",
+                Titulo = "Confirmación",
+                Mensaje = "holaaa",
+                OnConfirm = "confirmarModal()",
+                OnCancel = "cerrarModal('modalConfirmacion')"
+            })
+        </form>
+
+    </div>
+</div>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const form = document.querySelector("form");
+
+        const region = document.getElementById("region");
+        const area = document.getElementById("idAreaAcademica");
+        const entidad = document.getElementById("idEntidadAcademica");
+        const contenedorEntidad = document.getElementById("contenedorEntidad");
+
+        function toggleEntidad() {
+            if (!area || !contenedorEntidad) return;
+
+            if (!area.value) {
+                contenedorEntidad.style.display = "none";
+            } else {
+                contenedorEntidad.style.display = "inline-flex";
+            }
+        }
+
+        // Estado inicial
+        toggleEntidad();
+
+        // Región cambia
+        if (region) {
+            region.addEventListener("change", function () {
+                
+                if (entidad) entidad.value = "";
+                form.submit();
+            });
+        }
+
+        // Área cambia
+        if (area) {
+            area.addEventListener("change", function () {
+                if (entidad) entidad.value = "";
+                toggleEntidad();
+                form.submit();
+            });
+        }
+
+        // Entidad cambia
+        if (entidad) {
+            entidad.addEventListener("change", function () {
+                form.submit();
+            });
+        }
+
+    });
+</script>
+
+<!-- Eliminar Usuario -->
+<script>
+        function eliminarUsuario(id, rol) {
+
+        document.getElementById("deleteUserId").value = id;
+        document.getElementById("deleteUserRol").value = rol;
+
+        document.getElementById("formEliminarUsuario").submit();
+    }
+</script>
+
+<!-- Mostrar/Ocultar Filtros -->
+<script>
+    window.configFiltros = {
+        storageKey: 'filtrosVisibles_usuarios'
+    };
+</script>
+<script src="js/filtros.js"></script>

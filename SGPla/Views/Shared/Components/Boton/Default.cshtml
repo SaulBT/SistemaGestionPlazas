@@ -1,0 +1,18 @@
+﻿@model BotonModel
+
+<button id="@Model.Id"
+        type="@Model.ButtonType"
+        class="boton-primario @(Model.Fondo ? $"boton-{Model.Tipo}" : "boton-icono")"
+        disabled="@(Model.Disabled ? "disabled" : null)"
+        onclick="@Model.OnClick"
+    @( (Model.Accion == "siguiente" || Model.Accion == "ver mas") ? "style=\"flex-direction: row-reverse\"" : "" )>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Icono))
+    {
+        <i class="@Model.Icono"></i>
+    }
+
+    <span class="text-wrapper">
+        @Model.Texto
+    </span>
+</button>

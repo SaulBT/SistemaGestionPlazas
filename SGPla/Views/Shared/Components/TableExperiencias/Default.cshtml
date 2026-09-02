@@ -1,0 +1,488 @@
+﻿@model TableExperienciasModel
+
+<div class="table-container">
+    <table class="custom-table" id="@Model.TableId" data-pagination-mode="@Model.Pagination.PaginationMode" data-page-size="@Model.Pagination.PageSize">
+        <thead>
+            <tr>
+                @foreach (var header in Model.Headers)
+                {
+                    <th>@header</th>
+                }
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var row in Model.Rows)
+            {
+                var claseFila =
+                    row.EsInvalida ? "ee-invalida" :
+                    row.EsNueva ? "ee-nueva" :
+                    row.EsEditada ? "ee-editada" :
+                    "";
+
+                <tr id="@row.RowId" class="@claseFila">
+                    @foreach (var cell in row.Cells)
+                    {
+                        <td>
+                            @if (cell.Actions != null && cell.Actions.Any())
+                            {
+                                <div class="table-actions">
+                                    @foreach (var action in cell.Actions)
+                                    {
+                                        @if (!string.IsNullOrWhiteSpace(action.OnClick))
+                                        {
+                                            @await Component.InvokeAsync("Boton", new
+                                            {
+                                                accion = action.Accion,
+                                                fondo = false,
+                                                onClick = action.OnClick
+                                            })
+                                        }
+                                        else
+                                        {
+                                            <a href="@action.Url">
+                                                @await Component.InvokeAsync("Boton", new
+                                                {
+                                                    accion = action.Accion,
+                                                    fondo = false
+                                                })
+                                            </a>
+                                        }
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                @cell.Value
+                            }
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @if (Model.Rows.Any())
+    {
+        @if (Model.Pagination.PaginationMode.ToLower() == "server")
+        {
+            <div class="pagination-container">
+                <div class="pagination-info">
+                    Mostrando @((Model.Pagination.CurrentPage - 1) * Model.Pagination.PageSize + 1) a
+                    @Math.Min(Model.Pagination.CurrentPage * Model.Pagination.PageSize, Model.Pagination.TotalItems) de
+                    @Model.Pagination.TotalItems registros
+                </div>
+            
+                <div class="pagination-controls">
+                    @if (Model.Pagination.HasPreviousPage)
+                    {
+                        <button type="button" class="pagination-btn" onclick="@GetPageChangeFunction(Model.Pagination.CurrentPage - 1)">
+                            Anterior
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="button" class="pagination-btn disabled" disabled>Anterior</button>
+                    }
+                
+                    <div class="pagination-pages">
+                        @for (int i = 1; i <= Model.Pagination.TotalPages; i++)
+                        {
+                            if (i == Model.Pagination.CurrentPage)
+                            {
+                                <button type="button" class="pagination-btn active" disabled>@i</button>
+                            }
+                            else if (ShouldShowPage(i, Model.Pagination.CurrentPage, Model.Pagination.TotalPages))
+                            {
+                                <button type="button" class="pagination-btn" onclick="@GetPageChangeFunction(i)">
+                                    @i
+                                </button>
+                            }
+                            else if (ShouldShowEllipsis(i, Model.Pagination.CurrentPage, Model.Pagination.TotalPages))
+                            {
+                                <span class="pagination-ellipsis">...</span>
+                            }
+                        }
+                    </div>
+                
+                    @if (Model.Pagination.HasNextPage)
+                    {
+                        <button type="button" class="pagination-btn" onclick="@GetPageChangeFunction(Model.Pagination.CurrentPage + 1)">
+                            Siguiente
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="button" class="pagination-btn disabled" disabled>Siguiente</button>
+                    }
+                </div>
+            
+                <div class="pagination-page-size">
+                    <label>
+                        Mostrar:
+                        <select onchange="@GetPageSizeChangeFunction()" class="page-size-select">
+                            <option value="5" selected="@(Model.Pagination.PageSize == 5)">5</option>
+                            <option value="10" selected="@(Model.Pagination.PageSize == 10)">10</option>
+                            <option value="20" selected="@(Model.Pagination.PageSize == 20)">20</option>
+                            <option value="50" selected="@(Model.Pagination.PageSize == 50)">50</option>
+                        </select>
+                    </label>
+                </div>
+            </div>
+        }
+        else if (Model.Pagination.PaginationMode.ToLower() == "client")
+        {
+            <div class="pagination-container"
+                 id="@(Model.TableId)_pagination">
+
+                <div class="pagination-info"
+                     id="@(Model.TableId)_info">
+                </div>
+
+                <div class="pagination-controls">
+
+                    <button type="button"
+                            class="pagination-btn btn-prev"
+                            onclick="paginaAnterior('@Model.TableId')">
+                        Anterior
+                    </button>
+
+                    <div class="pagination-pages"
+                         id="@(Model.TableId)_pages">
+                    </div>
+
+                    <button type="button"
+                            class="pagination-btn btn-next"
+                            onclick="paginaSiguiente('@Model.TableId')">
+                        Siguiente
+                    </button>
+
+                </div>
+
+                <div class="pagination-page-size">
+
+                    <label>
+                        Mostrar:
+
+                        <select class="page-size-select"
+                                onchange="cambiarTamanoPagina('@Model.TableId', this.value)">
+
+                            <option value="5">5</option>
+                            <option value="10" selected>10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+
+                        </select>
+
+                    </label>
+
+                </div>
+
+            </div>
+        }
+        else
+        {
+            
+        }
+
+    }
+</div>
+
+@functions {
+    private string GetPageChangeFunction(int page)
+    {
+        if (!string.IsNullOrWhiteSpace(Model.Pagination.OnPageChange))
+        {
+            return $"{Model.Pagination.OnPageChange}({page})";
+        }
+        return $"changePage({page})";
+    }
+    
+    private string GetPageSizeChangeFunction()
+    {
+        if (!string.IsNullOrWhiteSpace(Model.Pagination.OnPageChange))
+        {
+            return $"{Model.Pagination.OnPageChange}(this.value, true)";
+        }
+        return "changePageSize(this.value)";
+    }
+    
+    private bool ShouldShowPage(int page, int currentPage, int totalPages)
+    {
+        // Muestra las primeras 2 páginas, últimas 2 páginas, y páginas alrededor de la actual
+        return page <= 2 || page >= totalPages - 1 || Math.Abs(page - currentPage) <= 1;
+    }
+    
+    private bool ShouldShowEllipsis(int page, int currentPage, int totalPages)
+    {
+        // Muestra elipsis después de las primeras 2 páginas y antes de las últimas 2 páginas
+        return page == 3 && currentPage > 3 || page == totalPages - 2 && currentPage < totalPages - 2;
+    }
+}
+
+<script>
+
+    window.tablasCliente = window.tablasCliente || {};
+
+    function inicializarTablaCliente(tableId) {
+
+        const table = document.getElementById(tableId);
+
+        if (!table)
+            return;
+
+        const mode = table.dataset.paginationMode;
+
+        if (mode !== 'client')
+            return;
+
+        const pageSize = parseInt(table.dataset.pageSize) || 10;
+
+        const tbody = table.querySelector('tbody');
+
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+
+        window.tablasCliente[tableId] = {
+            currentPage: 1,
+            pageSize: pageSize,
+            rows: rows
+        };
+
+        renderizarPaginaCliente(tableId);
+    }
+
+        function renderizarPaginaCliente(tableId) {
+
+        const tabla = window.tablasCliente[tableId];
+
+        if (!tabla)
+            return;
+
+        const inicio =
+            (tabla.currentPage - 1) * tabla.pageSize;
+
+        const fin =
+            inicio + tabla.pageSize;
+
+        tabla.rows.forEach(row => {
+            row.style.display = 'none';
+        });
+
+        tabla.rows
+            .slice(inicio, fin)
+            .forEach(row => {
+                row.style.display = '';
+            });
+
+        const totalPaginas =
+            Math.ceil(tabla.rows.length / tabla.pageSize);
+
+        // INFO
+        const info =
+            document.getElementById(`${tableId}_info`);
+
+        if (info) {
+
+            const inicioReal =
+                tabla.rows.length === 0
+                    ? 0
+                    : inicio + 1;
+
+            const finReal =
+                Math.min(fin, tabla.rows.length);
+
+            info.textContent =
+                `Mostrando ${inicioReal} a ${finReal} de ${tabla.rows.length} registros`;
+        }
+
+        // BOTONES NUMERADOS
+        const pagesContainer =
+            document.getElementById(`${tableId}_pages`);
+
+        if (pagesContainer) {
+
+            pagesContainer.innerHTML = '';
+
+                for (let i = 1; i <= totalPaginas; i++) {
+
+        const mostrarPagina =
+            i <= 2 ||
+            i >= totalPaginas - 1 ||
+            Math.abs(i - tabla.currentPage) <= 1;
+
+        const mostrarEllipsis =
+            (i === 3 && tabla.currentPage > 3) ||
+            (i === totalPaginas - 2 &&
+             tabla.currentPage < totalPaginas - 2);
+
+        if (mostrarPagina) {
+
+            const btn =
+                document.createElement('button');
+
+            btn.type = 'button';
+
+            btn.className = 'pagination-btn';
+
+            btn.textContent = i;
+
+            if (i === tabla.currentPage) {
+
+                btn.classList.add('active');
+
+                btn.disabled = true;
+            }
+            else {
+
+                btn.onclick = () => {
+
+                    tabla.currentPage = i;
+
+                    renderizarPaginaCliente(tableId);
+                };
+            }
+
+            pagesContainer.appendChild(btn);
+        }
+        else if (mostrarEllipsis) {
+
+            const span =
+                document.createElement('span');
+
+            span.className =
+                'pagination-ellipsis';
+
+            span.textContent = '...';
+
+            pagesContainer.appendChild(span);
+        }
+    }
+        }
+
+        // BOTONES ANTERIOR/SIGUIENTE
+        const container =
+            document.getElementById(`${tableId}_pagination`);
+
+        if (container) {
+
+            const prevBtn =
+                container.querySelector('.btn-prev');
+
+            const nextBtn =
+                container.querySelector('.btn-next');
+
+            if (prevBtn) {
+
+                prevBtn.disabled =
+                    tabla.currentPage <= 1;
+
+                prevBtn.classList.toggle(
+                    'disabled',
+                    tabla.currentPage <= 1
+                );
+            }
+
+            if (nextBtn) {
+
+                nextBtn.disabled =
+                    tabla.currentPage >= totalPaginas;
+
+                nextBtn.classList.toggle(
+                    'disabled',
+                    tabla.currentPage >= totalPaginas
+                );
+            }
+        }
+    }
+
+    function paginaSiguiente(tableId) {
+
+        const tabla = window.tablasCliente[tableId];
+
+        if (!tabla)
+            return;
+
+        const totalPaginas =
+            Math.ceil(tabla.rows.length / tabla.pageSize);
+
+        if (tabla.currentPage < totalPaginas) {
+
+            tabla.currentPage++;
+
+            renderizarPaginaCliente(tableId);
+        }
+    }
+
+    function paginaAnterior(tableId) {
+
+        const tabla = window.tablasCliente[tableId];
+
+        if (!tabla)
+            return;
+
+        if (tabla.currentPage > 1) {
+
+            tabla.currentPage--;
+
+            renderizarPaginaCliente(tableId);
+        }
+    }
+
+    function cambiarTamanoPagina(tableId, nuevoTamano) {
+
+        const tabla = window.tablasCliente[tableId];
+
+        if (!tabla)
+            return;
+
+        tabla.pageSize = parseInt(nuevoTamano);
+
+        tabla.currentPage = 1;
+
+        renderizarPaginaCliente(tableId);
+    }
+
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+        document.querySelectorAll('table[data-pagination-mode]')
+            .forEach(table => {
+
+                inicializarTablaCliente(table.id);
+            });
+    });
+
+
+        function refrescarTablaCliente(tableId) {
+
+        const tabla =
+            window.tablasCliente[tableId];
+
+        if (!tabla)
+            return;
+
+        const table =
+            document.getElementById(tableId);
+
+        if (!table)
+            return;
+
+        const tbody =
+            table.querySelector('tbody');
+
+        tabla.rows =
+            Array.from(tbody.querySelectorAll('tr'));
+
+        const totalPaginas =
+            Math.ceil(tabla.rows.length / tabla.pageSize);
+
+        // Si la página actual ya no existe
+        if (tabla.currentPage > totalPaginas) {
+
+            tabla.currentPage =
+                Math.max(totalPaginas, 1);
+        }
+
+        renderizarPaginaCliente(tableId);
+    }
+</script>

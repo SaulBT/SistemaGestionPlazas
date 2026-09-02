@@ -1,0 +1,101 @@
+﻿@using SGPla.Models.ViewModels.PlanesEstudios
+@model IndexViewModel
+
+@{
+    ViewData["Title"] = "Planes de Estudios";
+}
+
+<form id="form" method="get" action="@Url.Action("Index", "PlanesEstudios")">
+
+    <!-- Filtros -->
+    @await Component.InvokeAsync("ExpansionPanel",
+    new ExpansionPanelModel
+    {
+        Id = "panel-filtros",
+        Titulo = "Filtros",
+        PartialView = "_Filtros",
+        PartialModel = Model,
+        IconClass = "bi bi-funnel-fill"
+    })
+
+    
+
+    <!-- Acciones -->
+    <div style="display:flex; gap:10px; padding-bottom:20px; padding-top:20px; align-items:center; justify-content:space-between">
+        <!--Barra de Búsqueda-->
+        @await Component.InvokeAsync("Buscador", new BuscadorModel
+        {
+            Name = "busqueda",
+            Placeholder = "Buscar Plan de Estudios",
+            Action = Url.Action("Index", "PlanesEstudios"),
+            Method = "get",
+            Value = Context.Request.Query["busqueda"]
+        })
+
+        <!--Botón Cargar Plan Estudios-->
+        <a href="@Url.Action("CargarPlanPaso1", "PlanesEstudios")" style="display: inline-block; text-decoration: none;">
+            @await Component.InvokeAsync("Boton", new
+            {
+                Accion = "Agregar",
+                Texto = "Cargar Plan de Estudios"
+            })
+        </a>
+    </div>
+
+    <input type="hidden" name="pagina" value="@Model.PaginaActual" />
+    <input type="hidden" name="cantidad" value="@Model.CantidadPorPaginas" />
+</form>
+
+<!-- Tabla con Datos -->
+<div style="display:flex; gap:10px; padding-top:0px;justify-content:left">
+    @await Component.InvokeAsync("Table", Model.Table)
+    
+</div>
+
+<!-- Modal -->
+<div>
+    @await Component.InvokeAsync("Modal", new ModalModel
+    {
+        Id = "modalEliminarPlan",
+        Tipo = "confirm",
+        Titulo = "Eliminar Plan de Estudios",
+        Mensaje = "Esta acción es irreversible ¿Está seguro de eliminar el Plan de Estudios?",
+        OnConfirm = "eliminarPlanEstudios()",
+        OnCancel = "cerrarModal('modalEliminarPlan')"
+    })
+</div>
+
+<script>
+    const UrlObtenerAreas = '@Url.Action("ObtenerAreas", "PlanesEstudios")';
+    const UrlObtenerEntidades = '@Url.Action("ObtenerEntidades", "PlanesEstudios")';
+    const UrlObtenerProgramas = '@Url.Action("ObtenerProgramas", "PlanesEstudios")';
+    const UrlEliminarPlan = '@Url.Action("EliminarPlanEstudios", "PlanesEstudios")';
+
+    const UrlActual = '@Url.Action("Index", "PlanesEstudios")'
+
+    var idPlanEliminar = 0;
+    const form = document.getElementById("form");
+
+    function abrirModalEliminarPlan(idPlanEstudios) {
+        idPlanEliminar = idPlanEstudios;
+        abrirModal("modalEliminarPlan");
+    }
+    async function eliminarPlanEstudios() {
+        const response = await fetch(`${UrlEliminarPlan}?idPlanEstudios=${idPlanEliminar}`);
+        if (response.ok) {
+            form.submit();
+        }
+    
+    }
+</script>
+
+@section Scripts {
+    <script src="~/js/cargarCatalogosPlan.js"></script>
+}
+
+<script>
+    window.configFiltros = {
+        storageKey: 'filtrosVisibles_plandeestudios'
+    };
+</script>
+<script src="js/filtros.js"></script>

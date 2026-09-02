@@ -1,0 +1,174 @@
+﻿@using SGPla.Models.ViewModels.Articulos
+@model IndexViewModel
+
+@{
+    ViewData["Title"] = "Artículos";
+}
+
+<div>
+
+    <!-- Acciones -->
+    <div style="display:flex; gap:10px; padding-bottom:20px; align-items:center; justify-content:space-between">
+        <form>
+            <!-- Barra de búsqueda -->
+            @await Component.InvokeAsync("Buscador", new BuscadorModel
+            {
+                Name = "busqueda",
+                Placeholder = "Buscar artículo...",
+                Action = Url.Action("Index", "Articulos"),
+                Method = "get",
+                Value = Context.Request.Query["busqueda"]
+            })
+        </form>
+        
+
+        <!-- Botón agregar -->
+        @await Component.InvokeAsync("Boton", new
+        {
+            Accion = "Agregar",
+            Texto = "Agregar Artículo",
+            OnClick = "abrirModalCrearArticulo()"
+        })
+    </div>
+
+    <!-- Tabla -->
+    <div style="display:flex; gap:10px; padding-top:0px; justify-content:left">
+        @await Component.InvokeAsync("Table", Model.Table)
+    </div>
+
+    <!-- ========================= -->
+    <!-- MODALES -->
+    <!-- ========================= -->
+    <div>
+
+        <!-- Modal Crear / Editar -->
+        <form id="formArticulo" method="post">
+
+            @Html.AntiForgeryToken()
+            
+            @await Component.InvokeAsync("ModalFormulario", new ModalFormularioModel
+            {
+                Id = "modalArticulo",
+                Titulo = "Artículo",
+                PartialView = "_FormularioArticulo",
+                PartialModel = Model.Formulario,
+                OnConfirm = "submitFormArticulo()",
+                OnCancel = "cerrarModal('modalArticulo')"
+            })
+
+        </form>
+
+
+        <!-- Modal eliminar -->
+        <form id="formEliminarArticulo"
+              method="post"
+              action="@Url.Action("Eliminar", "Articulos")">
+
+            @Html.AntiForgeryToken()
+
+            <input type="hidden"
+                   name="id"
+                   id="deleteArticuloId" />
+
+            @await Component.InvokeAsync("Modal", new ModalModel
+            {
+                Id = "modalConfirmacion",
+                Tipo = "confirm",
+                Titulo = "Confirmación",
+                Mensaje = "¿Deseas eliminar este artículo?",
+                OnConfirm = "confirmarModal()",
+                OnCancel = "cerrarModal('modalConfirmacion')"
+            })
+
+        </form>
+
+
+    </div>
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <script>
+
+                document.addEventListener("DOMContentLoaded", function () {
+
+                    document.getElementById("formArticulo").action =
+                        "@Url.Action("Crear", "Articulos")";
+
+                    abrirModal("modalArticulo");
+
+                    history.replaceState(
+                        null,
+                        "",
+                        "@Url.Action("Index", "Articulos")"
+                    );
+
+                });
+
+        </script>
+    }
+</div>
+
+<script>
+
+    // =========================
+    // CREAR
+    // =========================
+    function abrirModalCrearArticulo() {
+
+        limpiarErroresFormularioArticulo();
+
+        document.getElementById("formArticulo").action =
+            "@Url.Action("Crear", "Articulos")";
+
+        document.getElementById("IdArticulo").value = "";
+        document.getElementById("Numero").value = "";
+        document.getElementById("Descripcion").value = "";
+
+        abrirModal("modalArticulo");
+    }
+
+    // =========================
+    // EDITAR
+    // =========================
+    function abrirModalEditarArticulo(id, numero, descripcion) {
+
+        limpiarErroresFormularioArticulo();
+
+        document.getElementById("formArticulo").action =
+            "@Url.Action("Editar", "Articulos")";
+
+        document.getElementById("IdArticulo").value = id;
+        document.getElementById("Numero").value = numero;
+        document.getElementById("Descripcion").value = descripcion;
+
+        abrirModal("modalArticulo");
+    }
+
+    // =========================
+    // SUBMIT FORM
+    // =========================
+    function submitFormArticulo() {
+        document.getElementById("formArticulo").submit();
+    }
+
+    function limpiarErroresFormularioArticulo() {
+
+        document.querySelectorAll(".input-error-text")
+            .forEach(e => {
+                e.innerText = "";
+            });
+
+    }
+
+</script>
+
+<script>
+    function eliminarArticulo(id) {
+
+        document.getElementById("deleteArticuloId").value = id;
+
+        document.getElementById("formEliminarArticulo").submit();
+    }
+</script>
+
+

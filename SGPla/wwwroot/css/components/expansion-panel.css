@@ -1,0 +1,47 @@
+﻿.expansion-panel {
+    border: 1px solid #dcdcdc;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: white;
+}
+
+.expansion-header {
+    width: 100%;
+    border: none;
+    background: white;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+    .expansion-header:hover {
+        background-color: #f8f8f8;
+    }
+
+.expansion-icon {
+    transition: transform 0.2s ease;
+}
+
+.expansion-content {
+    display: none;
+    padding: 16px;
+    border-top: 1px solid #eee;
+}
+
+    .expansion-content.show {
+        display: block;
+    }
+
+.expansion-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+    .expansion-header-left i {
+        font-size: 1.1rem;
+    }

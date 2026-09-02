@@ -1,0 +1,162 @@
+﻿@using SGPla.Models.ViewModels.Docentes
+@model RegistrarDocenteViewModel
+@{
+    ViewData["Title"] = "Nuevo Personal Academico";
+}
+
+<form method="post" action="@Url.Action("GuardarDocente", "Docentes")" enctype="multipart/form-data">
+    <input name="Recarga" type="hidden" value="@Model.Recarga.ToString().ToLower()" />
+    <div class="d-flex row gap-3">
+        <!-- Nombre -->
+        @await Component.InvokeAsync("InputField", new InputFieldModel
+        {
+            Id = "ifNombre",
+            Name = "Nombre",
+            Label = "Nombre:",
+            Valor = Model.Nombre,
+            Flexible = true,
+            Error = ViewData.ModelState["Nombre"]?.Errors.FirstOrDefault()?.ErrorMessage,
+            MaximoCaracteres = 255,
+        })
+
+        <!-- Descripción -->
+        @await Component.InvokeAsync("TextAreaField", new TextAreaFieldModel
+        {
+            Id = "taDescripcion",
+            Name = "DescripcionPerfil",
+            Label = "Descripción",
+            Value = Model.DescripcionPerfil,
+            Rows = 5,
+            Error = ViewData.ModelState["DescripcionPerfil"]?.Errors.FirstOrDefault()?.ErrorMessage
+        })
+
+        <!-- Botón de Documentos generales -->
+        <label class="fw-bold">Documentos generales:</label>
+        <div class="ms-1">
+            @await Component.InvokeAsync("Boton", new
+            {
+                Accion = "cargar",
+                Texto = "Subir Archivo",
+                OnClick = "abrirModalArchivo()"
+            })
+
+            <div id="banderaArchivo" class="text-wrapper" style="display:inline-flex; align-content:center">
+                <i class="bi bi-file-earmark-x-fill" style="font-size:20px;color:var(--negativo-rojo-letra)"></i>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end">
+            @await Component.InvokeAsync("Boton", new
+            {
+                Accion = "agregar",
+                Texto = "Agregar Grado",
+                OnClick = "abrirModalAgregarGrado()"
+            })
+        </div>
+
+        <!-- Tabla -->
+        <div id="contenedorTabla">
+            @await Component.InvokeAsync("Table", Model.Tabla)
+        </div>
+
+        <div class="d-flex gap-2">
+            <!-- Numero personal -->
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "ifNumeroPersonal",
+                Name = "NumeroPersonal",
+                Label = "Numero personal:",
+                Valor = Model.NumeroPersonal,
+                Flexible = true,
+                Error = ViewData.ModelState["NumeroPersonal"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                MaximoCaracteres = 10,
+            })
+
+            <!-- Puesto -->
+            @await Component.InvokeAsync("SelectField", new SelectFieldModel
+            {
+                Label = "Puesto:",
+                Name = "Puesto",
+                Options = Model.OpcionesPuesto,
+                Flexible = true,
+                Error = ViewData.ModelState["Puesto"]?.Errors.FirstOrDefault()?.ErrorMessage
+            })
+        </div>
+
+        <div class="d-flex column-gap-3 justify-content-end">
+            @await Component.InvokeAsync("Boton", new
+            {
+                Accion = "Cancelar",
+                OnClick = "cancelarAccion()"
+            })
+            @await Component.InvokeAsync("Boton", new
+            {
+                Accion = "Guardar",
+                ButtonType = "submit"
+            })
+        </div>
+    </div>
+
+    <!-- Modal Archivo -->
+    @await Component.InvokeAsync("ModalArchivo", new ModalArchivoModel
+    {
+        Id = "modalArchivo",
+        FormatosAceptados = ".pdf",
+        TamanioMaximo = 20
+    })
+</form>
+
+<!-- MODALES -->
+<!-- Agregar Grado -->
+@await Component.InvokeAsync("ModalFormulario", new ModalFormularioModel
+{
+    Id = "modalAgregarGrado",
+    Titulo = "Agregar Grado",
+    PartialView = "_FormularioAgregarGrado",
+    PartialModel = Model.Formulario,
+    OnConfirm = "agregarGrado(false)",
+    OnCancel = "cerrarModal('modalAgregarGrado')"
+})
+<!-- Editar Grado -->
+@await Component.InvokeAsync("ModalFormulario", new ModalFormularioModel
+{
+    Id = "modalEditarGrado",
+    Titulo = "Editar Grado",
+    PartialView = "_FormularioEditarGrado",
+    PartialModel = Model.Formulario,
+    OnConfirm = "editarGrado()",
+    OnCancel = "cerrarModal('modalEditarGrado')"
+})
+<!-- Eliminar Grado -->
+@await Component.InvokeAsync("Modal", new ModalModel
+{
+    Id = "modalEliminarGrado",
+    Tipo = "confirm",
+    Titulo = "Eliminar Grado",
+    Mensaje = "Esta acción es irreversible ¿Está seguro de eliminar el Grado?",
+    OnConfirm = "eliminarGrado(false)",
+    OnCancel = "cerrarModal('modalEliminarGrado')"
+})
+
+<script>
+    const UrlAgregarGrado = '@Url.Action("AgregarGradoRegistro", "Docentes")';
+    const UrlEditarGrado = '@Url.Action("EditarGradoRegistro", "Docentes")';
+    const UrlEliminarGrado = '@Url.Action("EliminarGradoRegistro", "Docentes")';
+    
+     function cancelarAccion(){
+        window.location.href = '@ViewBag.UrlRetorno';
+    }
+
+    function abrirModalArchivo() {
+        abrirModal("modalArchivo");
+    }
+
+    window.configBanderaArchivo = {
+        idBandera: 'banderaArchivo'
+    }
+</script>
+
+@section Scripts {
+    <script src="~/js/cargarArchivo.js"></script>
+    <script src="~/js/gestionarGrados.js"></script>
+}

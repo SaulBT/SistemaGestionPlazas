@@ -1,0 +1,203 @@
+﻿@using SGPla.Models.ViewModels.PeriodosEscolares
+@model IndexViewModel
+
+@{
+	ViewData["Title"] = "Periodos Escolares";
+}
+
+<div>
+	<form id="filtrosForm" method="get" action="@Url.Action("Index", "PeriodosEscolares")">
+
+		
+		@await Component.InvokeAsync("ExpansionPanel",
+		new ExpansionPanelModel
+		{
+			Id = "panel-filtros",
+			Titulo = "Filtros",
+			PartialView = "_Filtros",
+			PartialModel = Model,
+			IconClass = "bi bi-funnel-fill"
+		})
+		
+
+		<!-- Acciones -->
+		<div style="display:flex; gap:10px; padding-bottom:20px; padding-top:20px; align-items:center; justify-content:space-between">
+
+			<!-- Buscador -->
+			@await Component.InvokeAsync("Buscador", new BuscadorModel
+			{
+				Name = "anioFiltro",
+				Placeholder = "Buscar por año...",
+				
+			})
+
+			<!-- Botón agregar -->
+			<div>
+				@await Component.InvokeAsync("Boton", new
+				{
+					Accion = "Agregar",
+					Texto = "Agregar Periodo Escolar",
+					OnClick = "abrirModalCrearPeriodoEscolar()"
+				})
+			</div>
+		</div>
+
+		<!-- Campos ocultos para paginación -->
+		<input type="hidden" name="pagina" id="paginaHidden" value="@Model.PaginaActual" />
+		<input type="hidden" name="cantidad" id="cantidadHidden" value="@Model.CantidadPorPagina" />
+
+	</form>
+
+	<!-- Tabla -->
+	<div style="display:flex; gap:10px; padding-top:0px; justify-content:left">
+		@await Component.InvokeAsync("Table", Model.Table)
+	</div>
+	<!-- Modales -->
+	<div>
+
+		<!-- Modal Crear / Editar -->
+		<form id="formPeriodoEscolar" method="post">
+
+			@Html.AntiForgeryToken()
+            
+			@await Component.InvokeAsync("ModalFormulario", new ModalFormularioModel
+			{
+				Id = "modalPeriodoEscolar",
+				Titulo = "Periodo Escolar",
+				PartialView = "_FormularioPeriodoEscolar",
+				PartialModel = Model.Formulario,
+				OnConfirm = "submitFormPeriodoEscolar()",
+				OnCancel = "cerrarModal('modalPeriodoEscolar')"
+			})
+
+		</form>
+
+
+		<!-- Modal eliminar -->
+		<form id="formEliminarPeriodoEscolar"
+			  method="post"
+			  action="@Url.Action("Eliminar", "PeriodosEscolares")">
+
+			@Html.AntiForgeryToken()
+
+			<input type="hidden"
+				   name="id"
+				   id="deletePeriodoEscolarId" />
+
+			@await Component.InvokeAsync("Modal", new ModalModel
+			{
+				Id = "modalConfirmacion",
+				Tipo = "confirm",
+				Titulo = "Confirmación",
+				Mensaje = "¿Deseas eliminar este periodo?",
+				OnConfirm = "confirmarModal()",
+				OnCancel = "cerrarModal('modalConfirmacion')"
+			})
+
+		</form>
+
+
+	</div>
+
+
+	@if (!ViewData.ModelState.IsValid)
+
+		@if (ViewData["AbrirModalCrear"] != null)
+		{
+			<script>
+					document.addEventListener("DOMContentLoaded", function () {
+						document.getElementById("formPeriodoEscolar").action =
+							"@Url.Action("Crear", "PeriodosEscolares")";
+						abrirModal("modalPeriodoEscolar");
+						history.replaceState(null, "", "@Url.Action("Index", "PeriodosEscolares")");
+					});
+			</script>
+		}
+</div>
+
+
+                
+<script>
+
+	// =========================
+	// CREAR
+	// =========================
+	function abrirModalCrearPeriodoEscolar() {
+
+		limpiarErroresFormularioPeriodoEscolar();
+
+		document.getElementById("formPeriodoEscolar").action =
+			"@Url.Action("Crear", "PeriodosEscolares")";
+
+		document.getElementById("IdPeriodoEscolar").value = "";
+		document.getElementById("Anio").value = "";
+		document.getElementById("Periodo").value = "";
+
+		abrirModal("modalPeriodoEscolar");
+	}
+
+	// =========================
+	// EDITAR
+	// =========================
+	function abrirModalEditarPeriodoEscolar(id, anio, periodo) {
+
+		limpiarErroresFormularioPeriodoEscolar();
+
+		document.getElementById("formPeriodoEscolar").action =
+			"@Url.Action("Editar", "PeriodosEscolares")";
+
+		document.getElementById("IdPeriodoEscolar").value = id;
+		document.getElementById("Anio").value = anio;
+		document.getElementById("Periodo").value = periodo;
+
+		abrirModal("modalPeriodoEscolar");
+	}
+
+	// =========================
+	// SUBMIT FORM
+	// =========================
+	function submitFormPeriodoEscolar() {
+		document.getElementById("formPeriodoEscolar").submit();
+	}
+
+	function limpiarErroresFormularioPeriodoEscolar() {
+
+		document.querySelectorAll(".input-error-text")
+			.forEach(e => {
+				e.innerText = "";
+			});
+
+	}
+
+</script>
+
+<script>
+	function eliminarPeriodoEscolar(id) {
+
+		document.getElementById("deletePeriodoEscolarId").value = id;
+
+		document.getElementById("formEliminarPeriodoEscolar").submit();
+	}
+</script>
+
+<script>
+	document.addEventListener("DOMContentLoaded", function () {
+
+		const form = document.querySelector("form");
+		const periodo = document.querySelector("select[name='periodoFiltro']");
+
+		if (periodo) {
+			periodo.addEventListener("change", function () {
+				form.submit();
+			});
+		}
+
+	});
+</script>
+
+<script>
+	window.configFiltros = {
+		storageKey: 'filtrosVisibles_periodosescolares'
+	};
+</script>
+<script src="js/filtros.js"></script>

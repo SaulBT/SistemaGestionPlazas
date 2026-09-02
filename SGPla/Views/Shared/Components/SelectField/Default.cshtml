@@ -1,0 +1,49 @@
+﻿@model SelectFieldModel
+
+<div class="select-field @(Model.Flexible ? "flexible" : "")"
+     style="@Model.ContainerStyle">
+    @if (!string.IsNullOrWhiteSpace(Model.Label))
+    {
+        <div class="text-wrapper">
+            @Model.Label
+        </div>
+    }
+
+    <div class="select-wrapper @(Model.Flexible ? "flexible" : "")">
+        <select class="select @( !string.IsNullOrEmpty(Model.Error) ? "select-error" : "" )"
+                id="@Model.Id"
+                name="@Model.Name"
+                disabled="@(Model.Disabled ? "disabled" : null)"
+                @Html.Raw(
+                        Model.HtmlAttributes != null
+                            ? string.Join(" ", Model.HtmlAttributes.Select(a => $"{a.Key}=\"{a.Value}\""))
+                            : ""
+                )
+        >
+
+            @* Placeholder *@
+            @if (!string.IsNullOrWhiteSpace(Model.Placeholder))
+            {
+                <option value=""
+                        selected="@(string.IsNullOrEmpty(Model.SelectedValue) ? "selected" : null)">
+                    @Model.Placeholder
+                </option>
+            }
+
+            @foreach (var option in Model.Options ?? Enumerable.Empty<OptionModel>())
+            {
+                <option value="@option.Value"
+                        selected="@(option.Selected ? "selected" : null)">
+                    @option.Text
+                </option>
+            }
+        </select>
+
+        <i class="bi bi-caret-down-fill select-icon"></i>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.Error))
+    {
+        <span id="@Model.Id-Error" class="select-error-text">@Model.Error</span>
+    }
+</div>

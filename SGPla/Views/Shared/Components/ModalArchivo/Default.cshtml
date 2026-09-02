@@ -1,0 +1,75 @@
+﻿@model ModalArchivoModel
+
+<div class="modal-overlay" id="@Model.Id">
+    <div class="modal-container">
+
+        <!-- Header -->
+        <div class="modal-header">
+            <h3>Subir archivo</h3>
+        </div>
+
+        <!-- Body -->
+        <div class="modal-body">
+            <div id="fileContainer-@Model.Id" class="modal-file-container" style="display:none;">
+
+                <span id="fileName-@Model.Id" class="modal-file-name"></span>
+                <button type="button"
+                        class="modal-file-x"
+                        onclick="quitarArchivo('@Model.Id')">
+                    ×
+                </button>
+            </div>
+
+            <p class="modal-file-details">
+                Formato: @Model.FormatosAceptados,
+                Tamaño máximo: @Model.TamanioMaximo MB
+            </p>
+
+            <input type="file"
+                   id="inputFile-@Model.Id"
+                   name="@Model.NombreArchivo"
+                   accept="@Model.FormatosAceptados"
+                   style="display:none;"
+                   onchange="desplegarArchivo('@Model.Id')" />
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-footer">
+
+            @await Component.InvokeAsync("Boton", new
+            {
+                Accion = "Cancelar",
+                OnClick = $"cancelar('{Model.Id}')"
+            })
+
+            <div id="btnConfirmar-@Model.Id" style="display:none;">
+                @if (!string.IsNullOrEmpty(Model.OnConfirm))
+                {
+                    @await Component.InvokeAsync("Boton", new
+                    {
+                        Accion = "Confirmar",
+                        OnClick = Model.OnConfirm
+                    })
+                }
+                else
+                {
+                    @await Component.InvokeAsync("Boton", new
+                    {
+                        Accion = "Confirmar",
+                        OnClick = $"confirmar('{Model.Id}', '{Model.IdBandera}')"
+                    })
+                }
+            </div>
+
+            <div id="btnCargar-@Model.Id">
+                @await Component.InvokeAsync("Boton", new
+                {
+                    Accion = "Cargar",
+                    OnClick = $"cargarArchivo('{Model.Id}')",
+                    Texto = "Seleccionar archivo"
+                })
+            </div>
+
+        </div>
+    </div>
+</div>

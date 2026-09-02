@@ -1,0 +1,31 @@
+﻿@model RadioGroupFieldModel
+
+<div class="radio-group-field">
+    
+    @if (!string.IsNullOrWhiteSpace(Model.Label))
+    {
+        <div class="text-wrapper">
+            @Model.Label
+        </div>
+    }
+
+    <div class="radio-options">
+        @foreach (var option in Model.Options)
+        {
+            var id = $"{Model.Name}_{option.Value}";
+
+            <label class="radio-option" for="@id">
+                
+                <input type="radio"
+                       id="@id"
+                       name="@Model.Name"
+                       value="@option.Value"
+                @(option.Value == Model.SelectedValue ? "checked" : null)
+                @(Model.Disabled ? "disabled" : null) />
+
+                <span>@option.Text</span>
+            </label>
+        }
+    </div>
+
+</div>

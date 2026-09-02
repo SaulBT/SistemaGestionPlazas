@@ -1,0 +1,144 @@
+﻿@using SGPla.Models.ViewModels.ProgramacionesAcademicas
+@model IndexViewModel
+
+@{
+	ViewData["Title"] = "Programaciones Académicas";
+}
+
+<div>
+	<form id="filtrosForm" method="get" action="@Url.Action("Index", "ProgramacionesAcademicas")">
+		<!-- Filtros -->
+		@await Component.InvokeAsync("ExpansionPanel",
+		new ExpansionPanelModel
+		{
+			Id = "panel-filtros",
+			Titulo = "Filtros",
+			PartialView = "_Filtros",
+			PartialModel = Model,
+			IconClass = "bi bi-funnel-fill"
+		})
+
+        
+		<!-- Acciones -->
+		<div style="display:flex; gap:10px; padding-bottom:20px; padding-top:20px; align-items:center; justify-content:space-between">
+			@await Component.InvokeAsync("Buscador", new BuscadorModel
+			{
+				Name = "busqueda",
+				Placeholder = "Buscar programacion academica...",
+				Action = Url.Action("Index", "ProgramacionesAcademicas"),
+				Method = "get",
+				Value = Context.Request.Query["busqueda"]
+			})
+			<a href="@Url.Action("CargarProgramacionAcademicaPaso1", "ProgramacionesAcademicas")" style="display: inline-block; text-decoration: none;">
+				@await Component.InvokeAsync("Boton", new
+				{
+					Accion = "Agregar",
+					Texto = "Cargar Programación Académica"
+				})
+			</a>
+		</div>
+
+		<!-- Campos ocultos para paginación -->
+		<input type="hidden" name="pagina" id="paginaHidden" value="@Model.PaginaActual" />
+		<input type="hidden" name="cantidad" id="cantidadHidden" value="@Model.CantidadPorPagina" />
+
+	</form>
+
+	<!-- Tabla con Datos -->
+	<div style="display:flex; gap:10px; padding-top:0px;justify-content:left">
+		@await Component.InvokeAsync("Table", Model.Table)
+	</div>
+
+	
+
+</div>
+
+<script>
+	document.addEventListener("DOMContentLoaded", function () {
+
+		const region = document.querySelector("[name='Region']");
+		const entidad = document.querySelector("[name='IdEntidadAcademica']");
+		const programa = document.querySelector("[name='IdProgramaEducativo']");
+		const periodo = document.querySelector("[name='IdPeriodo']");
+		const form = document.getElementById("filtrosForm");
+
+		programa?.addEventListener("change", () => form.submit());
+		periodo?.addEventListener("change", () => form.submit());
+
+		async function cargarEntidades() {
+			if (!region || !entidad) return;
+
+			const reg = region.value;
+			const defaultOption = entidad.options[0];
+
+			if (!reg) {
+				entidad.innerHTML = "";
+				entidad.appendChild(defaultOption);
+				entidad.selectedIndex = 0;
+				return;
+			}
+
+			try {
+				const response = await fetch(
+					`/ProgramacionesAcademicas/ObtenerEntidades?region=${encodeURIComponent(reg)}`
+				);
+				const data = await response.json();
+
+				entidad.innerHTML = "";
+				entidad.appendChild(defaultOption);
+
+				data.forEach(e => {
+					const option = document.createElement("option");
+					option.value = e.value;
+					option.text = e.text;
+					entidad.appendChild(option);
+				});
+			} catch (error) {
+				console.error("Error cargando entidades:", error);
+			}
+		}
+
+		async function cargarProgramas() {
+			if (!entidad || !programa) return;
+
+			const ent = entidad.value;
+			const defaultOption = programa.options[0];
+
+			if (!ent) {
+				programa.innerHTML = "";
+				programa.appendChild(defaultOption);
+				programa.selectedIndex = 0;
+				return;
+			}
+
+			try {
+				const response = await fetch(
+					`/ProgramacionesAcademicas/ObtenerProgramas?entidad=${encodeURIComponent(ent)}`
+				);
+				const data = await response.json();
+
+				programa.innerHTML = "";
+				programa.appendChild(defaultOption);
+
+				data.forEach(e => {
+					const option = document.createElement("option");
+					option.value = e.value;
+					option.text = e.text;
+					programa.appendChild(option);
+				});
+			} catch (error) {
+				console.error("Error cargando programas:", error);
+			}
+		}
+
+		region?.addEventListener("change", cargarEntidades);
+		entidad?.addEventListener("change", cargarProgramas);
+	});
+</script>
+
+<script>
+	window.configFiltros = {
+		storageKey: 'filtrosVisibles_programacionesAcademia'
+	};
+</script>
+<script src="js/filtros.js"></script>

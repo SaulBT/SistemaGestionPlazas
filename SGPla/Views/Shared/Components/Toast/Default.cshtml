@@ -1,0 +1,54 @@
+﻿@model SGPla.Models.Componentes.ToastModel
+
+<div id="@Model.Id"
+     class="toast-container toast-@Model.Tipo">
+
+    <div class="toast-content">
+
+        <div class="toast-header">
+            <span class="toast-title">@Model.Titulo</span>
+
+            <button type="button"
+                    class="toast-close"
+                    onclick="cerrarToast('@Model.Id')">
+                ×
+            </button>
+        </div>
+
+        <div class="toast-body">
+            @Model.Mensaje
+        </div>
+
+    </div>
+</div>
+
+<script>
+
+       function mostrarToast(id, mensaje = null, duracion = @Model.Duracion) {
+        const toast = document.getElementById(id);
+        if (!toast)
+            return;
+
+        if (mensaje) {
+            const body = toast.querySelector(".toast-body");
+            if (body) body.textContent = mensaje;
+        }
+
+        toast.classList.add("show");
+
+        setTimeout(() => {
+            cerrarToast(id);
+        }, duracion);
+    }
+
+    function cerrarToast(id) {
+
+        const toast = document.getElementById(id);
+
+        if (!toast)
+            return;
+
+        toast.classList.remove("show");
+    }
+
+</script>

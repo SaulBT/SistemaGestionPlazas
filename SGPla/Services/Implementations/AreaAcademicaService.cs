@@ -1,0 +1,120 @@
+﻿using SGPla.Mappers;
+using SGPla.Models;
+using SGPla.Models.DTOs.AreaAcademica;
+using SGPla.Repositories.Implementations;
+using SGPla.Repositories.Interfaces;
+using SGPla.Services.Interfaces;
+using SGPla.Validations.Interfaces;
+
+namespace SGPla.Services.Implementations
+{
+    public class AreaAcademicaService : IAreaAcademicaService
+    {
+        private readonly IAreaAcademicaRepository _areaAcademicaRepository;
+        private readonly IAreaAcademicaValidator _areaAcademicaValidator;
+
+        public AreaAcademicaService(
+                IAreaAcademicaRepository areaAcademicaRepository,
+                IAreaAcademicaValidator areaAcademicaValidator
+            )
+        {
+            _areaAcademicaRepository = areaAcademicaRepository;
+            _areaAcademicaValidator = areaAcademicaValidator;
+        }
+
+        public async Task<int> CrearAsync(CrearAreaAcademicaDTO dto)
+        {
+            _areaAcademicaValidator.ValidarCreacion(dto);
+
+            var areaAcademica = new AreaAcademica
+            {
+                Nombre = dto.Nombre,
+                Telefono = dto.Telefono,
+                Extension = dto.Extension,
+            };
+
+            var areaAcademicaCreada = await _areaAcademicaRepository.CrearAsync(areaAcademica);
+            return areaAcademicaCreada.IdAreaAcademica;
+        }
+
+        public async Task<List<ListaAreaAcademicaDTO>> ObtenerTodasAsync()
+        {
+            var listaAreasAcademicas = await _areaAcademicaRepository.ObtenerTodosAsync();
+            var listaDtos = listaAreasAcademicas.Select(generarListaAreaAcademicaDTO);
+
+            return listaDtos.ToList();
+        }
+
+        public async Task<List<ListaAreaAcademicaDTO>> ObtenerPorNombreAsync(string nombre)
+        {
+            var listaAreasAcademicas = await _areaAcademicaRepository.ObtenerPorNombreAsync(nombre);
+            var listaDtos = listaAreasAcademicas.Select(generarListaAreaAcademicaDTO);
+
+            return listaDtos.ToList();
+        }
+
+        public async Task<(List<ListaAreaAcademicaDTO> Items, int TotalCount)> BuscarPorFiltroPaginadoAsync(string busqueda, int pagina, int cantidad)
+        {
+            var totalCount = await _areaAcademicaRepository.ContarPorFiltroAsync(busqueda);
+            var obtenidos = await _areaAcademicaRepository.ObtenerPorFiltroAsync(busqueda, pagina, cantidad) ?? new List<AreaAcademica>();
+
+            var dtos = obtenidos.Select(generarListaAreaAcademicaDTO);// obtenidos.Items.Select(generarListaAreaAcademicaDTO);
+
+            return (dtos.ToList(), totalCount);
+        }
+
+        public async Task<DatosAreaAcademicaDTO> ObtenerPorIdAsync(int id)
+        {
+            await _areaAcademicaValidator.ValidarIdAsync(id);
+
+            var areaAcademica = await _areaAcademicaRepository.ObtenerPorIdAsync(id);
+
+            return new DatosAreaAcademicaDTO
+            {
+                IdAreaAcademica = areaAcademica.IdAreaAcademica,
+                Nombre = areaAcademica.Nombre,
+                Telefono = areaAcademica.Telefono,
+                Extension = areaAcademica.Extension,
+            };
+        }
+
+        public async Task EditarAsync(DatosAreaAcademicaDTO dto)
+        {
+            await _areaAcademicaValidator.ValidarEdicionAsync(dto);
+
+            var areaAcademica = new AreaAcademica
+            {
+                IdAreaAcademica = dto.IdAreaAcademica,
+                Nombre = dto.Nombre,
+                Telefono = dto.Telefono,
+                Extension = dto.Extension,
+            };
+
+            await _areaAcademicaRepository.ActualizarAsync(areaAcademica);
+        }
+
+        public async Task EliminarAsync(int id)
+        {
+            await _areaAcademicaValidator.ValidarIdAsync(id);
+            var areaAcademica = await _areaAcademicaRepository.ObtenerPorIdAsync(id);
+            await _areaAcademicaRepository.EliminarAsync(areaAcademica);
+        }
+
+        private ListaAreaAcademicaDTO generarListaAreaAcademicaDTO(AreaAcademica areaAcademica)
+        {
+            var telefono = string.Concat(
+                    "Teléfono: ",
+                    areaAcademica.Telefono,
+                    " Ext: ",
+                    areaAcademica.Extension
+                );
+
+            return new ListaAreaAcademicaDTO
+            {
+                IdAreaAcademica = areaAcademica.IdAreaAcademica,
+                Nombre = areaAcademica.Nombre,
+                Telefono = telefono
+            };
+        }
+    }
+}

@@ -1,0 +1,125 @@
+﻿@using SGPla.Models.ViewModels.ProgramasEducativos
+@model IndexViewModel
+
+@{
+    ViewData["Title"] = "Programas Educativos";
+}
+
+<div>
+    <form id="filtrosForm" method="get" action="@Url.Action("Index", "ProgramasEducativos")">
+
+        <!-- Filtros -->
+        @await Component.InvokeAsync("ExpansionPanel",
+        new ExpansionPanelModel
+        {
+            Id = "panel-filtros",
+            Titulo = "Filtros",
+            PartialView = "_Filtros",
+            PartialModel = Model,
+            IconClass = "bi bi-funnel-fill"
+        })
+
+        
+
+        <!-- Acciones -->
+        <div style="display:flex; gap:10px; padding-bottom:20px; padding-top:20px; align-items:center; justify-content:space-between">
+            @await Component.InvokeAsync("Buscador", new BuscadorModel
+            {
+                Name = "busqueda",
+                Placeholder = "Buscar programa educativo...",
+                Action = Url.Action("Index", "ProgramasEducativos"),
+                Method = "get",
+                Value = Context.Request.Query["busqueda"]
+            })
+            <a href="@Url.Action("CrearProgramaEducativo", "ProgramasEducativos")" style="display: inline-block; text-decoration: none;">
+                @await Component.InvokeAsync("Boton", new
+                {
+                    Accion = "Agregar",
+                    Texto = "Crear Programa Educativo"
+                })
+            </a>
+        </div>
+
+        <!-- Campos ocultos para paginación -->
+        <input type="hidden" name="pagina" id="paginaHidden" value="@Model.PaginaActual" />
+        <input type="hidden" name="cantidad" id="cantidadHidden" value="@Model.CantidadPorPagina" />
+
+    </form>
+
+    <!-- Tabla con Datos -->
+    <div style="display:flex; gap:10px; padding-top:0px;justify-content:left">
+        @await Component.InvokeAsync("Table", Model.Table)
+    </div>
+
+    <!-- Ventanas Modales -->
+    <div>
+        <!-- Confirmación eliminación -->
+        <form id="formEliminarProgramaEducativo" method="post" action="@Url.Action("EliminarProgramaEducativo", "ProgramasEducativos")">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" id="deleteProgramaEducativoId" />
+            @await Component.InvokeAsync("Modal", new ModalModel
+            {
+                Id = "modalConfirmacion",
+                Tipo = "confirm",
+                Titulo = "Confirmación",
+                Mensaje = "¿Estás seguro de que deseas eliminar este programa educativo?",
+                OnConfirm = "confirmarModal()",
+                OnCancel = "cerrarModal('modalConfirmacion')"
+            })
+        </form>
+
+       
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.getElementById("filtrosForm");
+        const region = document.getElementById("region");
+        const area = document.getElementById("idAreaAcademica");
+        const entidad = document.getElementById("idEntidadAcademica");
+        const contenedorEntidad = document.getElementById("contenedorEntidad");
+
+        function toggleEntidad() {
+            if (!area || !contenedorEntidad) return;
+            contenedorEntidad.style.display = area.value ? "inline-flex" : "none";
+        }
+
+        toggleEntidad();
+
+        if (region) {
+            region.addEventListener("change", function () {
+                if (entidad) entidad.value = "";
+                form.submit();
+            });
+        }
+
+        if (area) {
+            area.addEventListener("change", function () {
+                if (entidad) entidad.value = "";
+                toggleEntidad();
+                form.submit();
+            });
+        }
+
+        if (entidad) {
+            entidad.addEventListener("change", function () {
+                form.submit();
+            });
+        }
+    });
+</script>
+
+<script>
+    function eliminarProgramaEducativo(id) {
+        document.getElementById("deleteProgramaEducativoId").value = id;
+        document.getElementById("formEliminarProgramaEducativo").submit();
+    }
+</script>
+
+<script>
+    window.configFiltros = {
+        storageKey: 'filtrosVisibles_programaseducativos'
+    };
+</script>
+<script src="js/filtros.js"></script>

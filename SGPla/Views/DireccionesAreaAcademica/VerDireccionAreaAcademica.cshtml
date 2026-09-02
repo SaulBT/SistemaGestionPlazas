@@ -1,0 +1,59 @@
+﻿@using SGPla.Models.DTOs.AreaAcademica
+@model DatosAreaAcademicaDTO
+@{
+    ViewData["Title"] = "Dirección de Área Académica";
+    ViewBag.RegresarUrl = Url.Action("Index", "DireccionesAreaAcademica");
+}
+
+<!-- Campos -->
+<div style="padding-bottom:var(--padding-end); ">
+    <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:center; justify-content:space-between; background-color:var(--bg-gris)">
+        @await Component.InvokeAsync("InputField", new InputFieldModel
+        {
+            Id = "nombre",
+            Name = "nombre",
+            Label = "Nombre:",
+            Valor = Model.Nombre,
+            Disabled = true,
+            Flexible = true
+        })
+    </div>
+
+    <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:center; justify-content:space-between; background-color:var(--bg-gris)">
+        <div style="width:100%">
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "telefono",
+                Name = "telefono",
+                Label = "Teléfono:",
+                Valor = Model.Telefono,
+                Disabled = true,
+                Flexible = true
+            })
+        </div>
+        
+        <div style="width:100%">
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "extension",
+                Name = "extension",
+                Label = "Extensión:",
+                Valor = Model.Extension,
+                Disabled = true,
+                Flexible = true
+            })
+        </div>
+    </div>
+</div>
+
+<!-- Botón Regresar -->
+<div>
+    <a href="@Url.Action("Index", "DireccionesAreaAcademica")" style="display: inline-block; text-decoration: none;">
+        @await Component.InvokeAsync("Boton", new
+        {
+            Accion = "Regresar"
+        })
+    </a>
+</div>
+
+

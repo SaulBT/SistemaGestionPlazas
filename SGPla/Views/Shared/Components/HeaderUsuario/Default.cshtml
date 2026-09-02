@@ -1,0 +1,43 @@
+﻿@model SGPla.Models.Components.HeaderUsuarioModel
+
+<div class="header-usuario">
+    <div class="logo">
+        <span>@Model.TituloSistema</span>
+    </div>
+
+    @if (Model.EstaAutenticado)
+    {
+        <div class="info-usuario-wrapper">
+            <div class="info-usuario">
+                <i class="fas fa-user-circle"></i>
+                <div class="info-usuario-texto">
+                    <span class="nombre-usuario">@Model.Nombre</span>
+                    <span class="rol-usuario">@Model.Rol</span>
+                </div>
+            </div>
+
+            @if (Model.TieneSuperUsuario)
+            {
+                <form asp-controller="Login" asp-action="CambiarModo" method="post" class="form-cambiar-modo">
+                    @Html.AntiForgeryToken()
+                    @await Component.InvokeAsync("Boton", new
+                    {
+                        texto = Model.RolActivoEsSuperUsuario ? "Cambiar a DGAA" : "Cambiar a SuperUsuario",
+                        tipo = "secundario",
+                        ButtonType = "submit"
+                    })
+                </form>
+            }
+
+            <form asp-controller="Login" asp-action="Logout" method="post" class="form-cerrar-sesion">
+                @Html.AntiForgeryToken()
+                @await Component.InvokeAsync("Boton", new
+                {
+                    texto = "Cerrar sesión",
+                    tipo = "secundario",
+                    ButtonType = "submit"
+                })
+            </form>
+        </div>
+    }
+</div>

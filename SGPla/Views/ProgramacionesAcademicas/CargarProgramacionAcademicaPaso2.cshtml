@@ -1,0 +1,323 @@
+﻿@using Microsoft.AspNetCore.Components
+@using SGPla.Models.DTOs.Oferta
+@using SGPla.Models.ViewModels.ProgramacionesAcademicas
+@model CargarProgramacionAcademica2ViewModel
+
+@{
+
+    ViewData["Title"] = "Programación Académica";
+
+    string Horario(HorarioDia? h) => h is null ? "—" : $"{h.Inicio:hh\\:mm}-{h.Fin:hh\\:mm}";
+}
+
+
+@{
+    Func<Task> RenderFiltrosOferta = async () =>
+{
+    <div style="display:flex; flex-direction:column; gap:10px; width:100%;">
+        <form method="get" action="@Url.Action("FiltrarOferta", "ProgramacionesAcademicas")" style="display:flex; flex-direction:column; gap:10px; width:100%;">
+
+        <input type="hidden" name="tab" id="tabActivoOferta" value="@Model.TabActivo" />
+            <div style="width:100%;">
+                @await Component.InvokeAsync("ExpansionPanel", new ExpansionPanelModel
+                {
+                    Id = "panel-filtros-oferta",
+                    Titulo = "Filtros",
+                    PartialView = "_FiltrosOferta",
+                    PartialModel = Model,
+                    IconClass = "bi bi-funnel-fill"
+                })
+            </div>
+
+            <div style="width:100%;">
+               @await Component.InvokeAsync("Buscador", new BuscadorModel
+{
+    Name = "Busqueda",
+    Placeholder = "Buscar experiencia educativa...",
+    Value = Model.FiltroOferta.Busqueda
+})
+            </div>
+
+        </form>
+    </div>
+};
+
+}
+
+
+@await Component.InvokeAsync("Stepper", new StepperModel
+{
+    PasoActual = 2,
+    Paso1Texto = "Subir Archivo",
+    Paso2Texto = "Programación Académica"
+})
+
+@{
+    string HorarioRow(string dia, HorarioDia? h)
+    {
+        var texto = h == null
+            ? "—"
+            : $"{h.Inicio:hh\\:mm} - {h.Fin:hh\\:mm}";
+
+        return $"<tr><td>{dia}</td><td>{texto}</td></tr>";
+    }
+
+    string BuildHorarioHtml(OfertaDTO oferta)
+    {
+        var html = "<table class='table table-bordered text-center'>";
+        html += "<thead><tr><th>Día</th><th>Horario</th></tr></thead><tbody>";
+
+        html += HorarioRow("Lunes", oferta.Lunes);
+        html += HorarioRow("Martes", oferta.Martes);
+        html += HorarioRow("Miércoles", oferta.Miercoles);
+        html += HorarioRow("Jueves", oferta.Jueves);
+        html += HorarioRow("Viernes", oferta.Viernes);
+        html += HorarioRow("Sábado", oferta.Sabado);
+
+        html += "</tbody></table>";
+
+        return html;
+    }
+}
+
+<div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:flex-start; justify-content:space-evenly;">
+
+    <div id="contenedorRegion" style="flex:1; min-width:0;">
+        @await Component.InvokeAsync("InputField", new InputFieldModel
+        {
+            Id = "region",
+            Name = "Region",
+            Label = "Región:",
+            Valor = Model.Region,
+            Flexible = true,
+            Error = ViewData.ModelState["Region"]?.Errors.FirstOrDefault()?.ErrorMessage,
+            MaximoCaracteres = 5,
+            Disabled = true
+        })
+    </div>
+
+    <div id="contenedorEntidadAcademica" style="flex:3; min-width:0;">
+        @await Component.InvokeAsync("InputField", new InputFieldModel
+        {
+            Id = "entidadAcademica",
+            Name = "EntidadAcademica",
+            Label = "Entidad Académica:",
+            Valor = Model.NombreEntidadAcademica,
+            Flexible = true,
+            Error = ViewData.ModelState["NombreEntidadAcademica"]?.Errors.FirstOrDefault()?.ErrorMessage,
+            MaximoCaracteres = 94,
+            Disabled = true
+
+        })
+    </div>
+
+    <div id="contenedorPeriodo" style="flex:3; min-width:0;">
+        @await Component.InvokeAsync("InputField", new InputFieldModel
+        {
+            Id = "periodo",
+            Name = "Periodo",
+            Label = "Periodo:",
+            Valor = Model.NombrePeriodo,
+            Flexible = true,
+            Error = ViewData.ModelState["NombrePeriodo"]?.Errors.FirstOrDefault()?.ErrorMessage,
+            MaximoCaracteres = 94,
+            Disabled = true
+        })
+    </div>
+
+</div>
+
+
+
+
+<div class="tabs-container" id="miTabs" style="margin-top:15px;">
+
+    <div class="tabs-header">
+
+        <button class="tab-button active"
+                data-tab="0"
+                onclick="seleccionarTab('miTabs', 0)">
+            Vacantes
+        </button>
+
+        <button class="tab-button"
+                data-tab="1"
+                onclick="seleccionarTab('miTabs', 1)">
+            Asignadas
+        </button>
+
+        <button class="tab-button"
+                data-tab="2"
+                onclick="seleccionarTab('miTabs', 2)">
+            Cargas
+        </button>
+
+    </div>
+
+    <div id="filtrosOferta" style="margin-top:15px;">
+        @{
+            await RenderFiltrosOferta();
+        }
+    </div>
+
+
+    <div class="tabs-body">
+
+        <div class="tab-content active" data-tab="0">
+            @await Component.InvokeAsync("Table", Model.TableVacantes)
+        </div>
+
+        <div class="tab-content" data-tab="1">
+            @await Component.InvokeAsync("Table", Model.TableAsignadas)
+        </div>
+
+        <div class="tab-content" data-tab="2">
+    <div id="filtrosCarga" >
+        <div style="display:flex; flex-direction:column; gap:10px; width:100%;">
+            <form method="get" action="@Url.Action("FiltrarCarga", "ProgramacionesAcademicas")" style="display:flex; flex-direction:column; gap:10px; width:100%;">
+
+                <div style="width:100%;">
+                    @await Component.InvokeAsync("ExpansionPanel", new ExpansionPanelModel
+                    {
+                        Id = "panel-filtros-carga",
+                        Titulo = "Filtros",
+                        PartialView = "_FiltrosCarga",
+                        PartialModel = Model,
+                        IconClass = "bi bi-funnel-fill"
+                    })
+                </div>
+
+                <div style="width:100%;">
+                    @await Component.InvokeAsync("Buscador", new BuscadorModel
+                    {
+                        Name = "Busqueda",
+                        Placeholder = "Buscar carga academica...",
+                        Value = Model.FiltroCarga.Busqueda
+                    })
+                </div>
+
+                <input type="hidden" name="tab" id="tabActivoCarga" value="@Model.TabActivo" />
+            </form>
+        </div>
+    </div>
+
+    <div style="margin-top:15px;">
+        @await Component.InvokeAsync("Table", Model.TableCargas)
+    </div>
+</div>
+
+    </div>
+
+</div>
+
+
+@await Component.InvokeAsync("Modal", new ModalModel
+{
+    Id = "modalHorario",
+    Tipo = "info",
+    Titulo = "Horario"
+})
+
+<form method="post" action="@Url.Action("Guardar", "ProgramacionesAcademicas")">
+    @Html.AntiForgeryToken()
+
+    <!-- Botones -->
+    <div style="display:flex; justify-content:flex-end; gap:var(--button-gap)">
+        <a href="@Url.Action("Index", "ProgramacionesAcademicas")" style="display: inline-block; text-decoration: none;">
+            @await Component.InvokeAsync("Boton", new
+            {
+                Accion = "Cancelar"
+            })
+        </a>
+        @await Component.InvokeAsync("Boton", new
+        {
+            Accion = "Guardar",
+            ButtonType = "submit"
+        })
+    </div>
+</form>
+
+
+<script>
+ function seleccionarTab(containerId, index) {
+    const container = document.getElementById(containerId);
+    const buttons = container.querySelectorAll(".tab-button");
+    const contents = container.querySelectorAll(".tab-content");
+
+    buttons.forEach(b => b.classList.remove("active"));
+    contents.forEach(c => c.classList.remove("active"));
+
+    const btn = container.querySelector(`[data-tab="${index}"].tab-button`);
+    const content = container.querySelector(`[data-tab="${index}"].tab-content`);
+    if (!btn || !content) return;
+
+    btn.classList.add("active");
+    content.classList.add("active");
+
+    localStorage.removeItem("tabs-miTabs");
+
+    document.getElementById("filtrosOferta").style.display = index === 2 ? "none" : "block";
+    document.getElementById("tabActivoOferta")?.setAttribute("value", index);
+    document.getElementById("tabActivoCarga")?.setAttribute("value", index);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    seleccionarTab('miTabs', @Model.TabActivo);
+});
+</script>
+
+<script>
+   document.getElementById("Programa").addEventListener("change", function () {
+    this.form.submit();
+});
+</script>
+
+<script>
+   document.getElementById("Docente").addEventListener("change", function () {
+    this.form.submit();
+});
+</script>
+
+<script>
+    function abrirModalHorario(oferta) {
+        const formatear = (h) => {
+            const inicio = h?.Inicio ?? h?.inicio;
+            const fin = h?.Fin ?? h?.fin;
+            return (inicio && fin)
+                ? `${inicio.substring(0, 5)} - ${fin.substring(0, 5)}`
+                : "—";
+        };
+
+        const dias = [
+            { nombre: "Lunes", valor: oferta.Lunes },
+            { nombre: "Martes", valor: oferta.Martes },
+            { nombre: "Miércoles", valor: oferta.Miercoles },
+            { nombre: "Jueves", valor: oferta.Jueves },
+            { nombre: "Viernes", valor: oferta.Viernes },
+            { nombre: "Sábado", valor: oferta.Sabado },
+        ];
+
+        const html = `
+                                        <table class="table table-bordered text-center">
+                                            <thead>
+                                                <tr>${dias.map(d => `<th>${d.nombre}</th>`).join("")}</tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>${dias.map(d => `<td>${formatear(d.valor)}</td>`).join("")}</tr>
+                                            </tbody>
+                                        </table>
+                                    `;
+        document.getElementById("modalHorario-body").innerHTML = html;
+        abrirModal("modalHorario");
+    }
+</script>
+
+<script>
+    window.configFiltros = {
+        storageKey: 'filtrosVisibles_programacionesacademicas'
+    };
+</script>
+
+<script src="/js/filtros.js"></script>
+<script src="/js/expansion-panel.js"></script>
+

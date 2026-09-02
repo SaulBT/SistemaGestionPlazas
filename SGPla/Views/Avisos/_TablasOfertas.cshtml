@@ -1,0 +1,20 @@
+﻿@using SGPla.Models.ViewModels.Avisos
+@model List<PlanEstudiosAvisoViewModel>
+
+@if(Model.Count == 0)
+{
+    <div id="IdExistenOfertas" class="text-error-wrapper" style="margin-bottom:20px; margin-left:10px">No existen ofertas incluidas en el periodo y artículo seleccionados.</div>
+}
+else
+{
+    @foreach (var carrera in Model)
+    {
+        <div class="mb-4">
+
+            <h5 style="margin-left:10px">@carrera.Nombre</h5>
+
+            @await Component.InvokeAsync("Table", carrera.Tabla)
+
+        </div>
+    }
+}

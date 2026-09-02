@@ -1,0 +1,22 @@
+﻿@model TextAreaFieldModel
+
+<div class="textarea-field">
+    @if (!string.IsNullOrWhiteSpace(Model.Label))
+    {
+        <label class="text-wrapper" for="@Model.Id">
+            @Model.Label
+        </label>
+    }
+
+    <textarea id="@Model.Id"
+              name="@Model.Name"
+              rows="@Model.Rows"
+              placeholder="@Model.Placeholder"
+              class="textarea"
+              disabled="@(Model.Disabled ? "disabled" : null)">@Model.Value</textarea>
+    
+    @if (!string.IsNullOrEmpty(Model.Error))
+    {
+        <span id="@Model.Id-Error" class="input-error-text">@Model.Error</span>
+    }
+</div>

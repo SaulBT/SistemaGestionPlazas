@@ -1,0 +1,97 @@
+﻿using SGPla.Models.DTOs.Articulo;
+using SGPla.Models.InterfacesDTOs;
+using SGPla.Repositories.Interfaces;
+using SGPla.Validations.Interfaces;
+using System.Text.RegularExpressions;
+
+namespace SGPla.Validations.Implementations
+{
+    public class ArticuloValidator : IArticuloValidator
+    {
+        private readonly IArticuloRepository _articuloRepository;
+
+        public ArticuloValidator(IArticuloRepository articuloRepository)
+        {
+            _articuloRepository = articuloRepository;
+        }
+
+        public async Task ValidarCreacionAsync(CrearArticuloDTO crearArticuloDTO)
+        {
+            ArgumentNullException.ThrowIfNull(crearArticuloDTO);
+
+            ValidarCampos(crearArticuloDTO);
+            await ValidarNoRepetidoCreacionAsync(crearArticuloDTO.Numero, crearArticuloDTO.Descripcion);
+        }
+
+        public async Task ValidarEdicionAsync(EditarArticuloDTO editarArticuloDTO)
+        {
+            ArgumentNullException.ThrowIfNull(editarArticuloDTO);
+
+            ValidarCampos(editarArticuloDTO);
+            await ValidarExistencia(editarArticuloDTO.IdArticulo);
+            await ValidarNoRepetidoEdicionAsync(editarArticuloDTO.Numero, editarArticuloDTO.Descripcion, editarArticuloDTO.IdArticulo);
+        }
+
+        private async Task<bool> ValidarExistencia(int idArticulo)
+        {
+            var resultado = await _articuloRepository.ObtenerArticuloPorIdAsync(idArticulo);
+
+            if (resultado is null)
+                throw new ArgumentException($"El artículo con ID {idArticulo} no existe.");
+            return true;
+        }
+
+
+        private static void ValidarCampos(IArticuloDTO articuloDTO)
+        {
+            if (string.IsNullOrWhiteSpace(articuloDTO.Numero))
+                throw new ArgumentException("El número del artículo es obligatorio.");
+
+            if (!Regex.IsMatch(articuloDTO.Numero, @"\d"))
+                throw new ArgumentException("El número del artículo debe contener al menos un número.");
+
+            if (string.IsNullOrWhiteSpace(articuloDTO.Descripcion))
+                throw new ArgumentException("La descripción del artículo es obligatoria.");
+        }
+
+        private async Task ValidarNoRepetidoCreacionAsync(string numero, string descripcion)
+        {
+            var existeNumero = await _articuloRepository.ExisteAsync(numero);
+
+            if (existeNumero is not null)
+            {
+                throw new ArgumentException($"Ya existe un artículo con los mismos datos registrado.");
+            }
+
+        }
+
+        private async Task ValidarNoRepetidoEdicionAsync(string numero, string descripcion, int idArticulo)
+        {
+            var existeNumero = await _articuloRepository.ExisteAsync(numero);
+
+            if (existeNumero is not null && existeNumero.IdArticulo != idArticulo)
+            {
+                throw new ArgumentException($"Ya existe un artículo con los mismos datos registrado.");
+            }
+
+        }
+
+        public async Task ValidarBusquedaPorTerminoAsync(string busqueda)
+        {
+            if (string.IsNullOrWhiteSpace(busqueda))
+                throw new ArgumentException("La cadena de búsqueda no puede estar vacía.");
+        }
+
+        public async Task ValidarObtenerPorIdAsync(int id)
+        {
+            if (id <= 0)
+                throw new ArgumentException("El ID del artículo no es válido.");
+        }
+
+        public async Task ValidarEliminarAsync(int id)
+        {
+            if (id <= 0)
+                throw new ArgumentException("El ID del artículo no es válido.");
+        }
+    }
+}

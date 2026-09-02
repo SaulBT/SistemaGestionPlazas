@@ -1,0 +1,59 @@
+﻿@using SGPla.Models.ViewModels.Docentes
+@model AsignarDocenteViewModel
+@{
+	ViewData["Title"] = "Docentes";
+
+}
+
+<div style="margin-left: 20px;">
+	@await Component.InvokeAsync("Tabs",
+	new TabsModel
+	{
+		Id = "tabs",
+		//TabActivaPorDefecto = Model.TabActivada,
+		Tabs =
+		[
+			new()
+				{
+					Titulo = "Personal Académico",
+					PartialView = "_TabPersonal",
+					PartialModel = Model.TabDocentes
+				}
+
+               
+		]
+	})
+</div>
+
+
+
+
+@await Component.InvokeAsync("Modal", new ModalModel
+{
+	Id = "modalPerfil",
+	Tipo = "info",
+	Titulo = "Descripción del perfil",
+	Mensaje = "",
+	OnConfirm = "cerrarModal('modalPerfil')"
+
+})
+
+<script>
+
+			async function asignarDocenteAExperiencia(idOferta, idDocente) {
+		const response = await fetch(
+			`@Url.Action("AsignarDocenteAExperiencia", "Docentes")?idOferta=${idOferta}&idDocente=${idDocente}`,
+			{ method: 'POST' }
+		);
+
+		const data = await response.json();
+		window.location.href = data.url;
+	}
+
+	
+
+	function abrirModalPerfil(descripcionPerfil){
+		document.getElementById("modalPerfil-mensaje").innerText = descripcionPerfil;
+		abrirModal("modalPerfil");
+	}
+</script>

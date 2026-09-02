@@ -1,0 +1,274 @@
+﻿
+@using SGPla.Models.ViewModels.Avisos
+@model IndexViewModel
+@{
+    ViewData["Title"] = "Personal Académico";
+}
+
+<div>
+    <form id="filtrosForm" method="get" action="@Url.Action("Index", "Avisos")" >
+        
+        <!-- Filtros -->
+        @await Component.InvokeAsync("ExpansionPanel", new ExpansionPanelModel
+        {
+            Id = "panel-filtros",
+            Titulo = "Filtros",
+            PartialView = "_Filtros",
+            PartialModel = Model,
+            IconClass = "bi bi-funnel-fill"
+        })
+
+
+        <!-- Acciones -->
+        <div style="display:flex; gap:10px; padding-bottom:20px; padding-top:20px; align-items:center; justify-content:space-between">
+            @await Component.InvokeAsync("Buscador", new BuscadorModel
+            {
+                Name = "busqueda",
+                Placeholder = "Buscar aviso...",
+                Action = Url.Action("Index", "Avisos"),
+                Method = "get",
+                Value = Context.Request.Query["busqueda"]
+            })
+            <a href="@Url.Action("CrearAviso", "Avisos")" style="display: inline-block; text-decoration: none;">
+                @await Component.InvokeAsync("Boton", new
+                {
+                    Accion = "Agregar",
+                    Texto = "Crear Aviso"
+                })
+            </a>
+        </div>
+
+        <!-- Campos ocultos para paginación -->
+        <input type="hidden" name="pagina" id="paginaHidden" value="@Model.PaginaActual" />
+        <input type="hidden" name="cantidad" id="cantidadHidden" value="@Model.CantidadPorPagina" />
+
+    </form>
+
+    @await Component.InvokeAsync("Tabs",
+        new TabsModel
+        {
+            Id = "tabs-avisos",
+
+            Tabs =
+            [
+                new()
+                {
+                    Titulo = "Todos",
+                    PartialView = "_TabAvisos",
+                    PartialModel = Model.Todos
+                },
+                new()
+                {
+                    Titulo = "Creados",
+                    PartialView = "_TabAvisos",
+                    PartialModel = Model.Creados
+                },
+                new()
+                {
+                    Titulo = "En Revisión",
+                    PartialView = "_TabAvisos",
+                    PartialModel = Model.EnRevision
+                },
+                new()
+                {
+                    Titulo = "Avalados por DGAA",
+                    PartialView = "_TabAvisos",
+                    PartialModel = Model.Avalados
+                },
+                new()
+                {
+                    Titulo = "Devueltos por DGAA",
+                    PartialView = "_TabAvisos",
+                    PartialModel = Model.Devueltos
+                },
+                new()
+                {
+                    Titulo = "Firmados",
+                    PartialView = "_TabAvisos",
+                    PartialModel = Model.Firmados
+                },
+                new()
+                {
+                    Titulo = "Publicados",
+                    PartialView = "_TabAvisos",
+                    PartialModel = Model.Publicados
+                },
+                new()
+                {
+                    Titulo = "Actas de Ct Creadas",
+                    PartialView = "_TabAvisos",
+                    PartialModel = Model.ConActa
+                },
+                new()
+                {
+                    Titulo = "Archivados",
+                    PartialView = "_TabAvisos",
+                    PartialModel = Model.Archivados
+                }
+            ]
+        })
+</div>
+
+@await Component.InvokeAsync("ModalArchivo", new ModalArchivoModel
+{
+    Id = "modalFirmarAviso",
+    FormatosAceptados = ".pdf",
+    TamanioMaximo = 20,
+    OnConfirm = "firmarAviso()"
+})
+
+@await Component.InvokeAsync("Modal", new ModalModel
+{
+    Id = "modalEliminarAviso",
+    Tipo = "confirm",
+    Titulo = "Eliminar Aviso",
+    Mensaje = "Esta acción es irreversible ¿Está seguro de eliminar el Aviso?",
+    OnConfirm = "eliminarAvisoAsync()",
+    OnCancel = "cerrarModal('modalEliminarAviso')"
+})
+
+@await Component.InvokeAsync("Modal", new ModalModel
+{
+    Id = "modalComentarios",
+    Tipo = "info",
+    Titulo = "Comentarios",
+    Mensaje = "",
+    OnConfirm = "cerrarModal('modalComentarios')"
+})
+
+@await Component.InvokeAsync("ModalFormulario", new ModalFormularioModel
+{
+    Id = "modalPublicar",
+    Titulo = "Publicar",
+    PartialView = "_ModalPublicar",
+    PartialModel = Model.Modal,
+    OnConfirm = "publicar()",
+    OnCancel = "cerrarModal('modalPublicar')"
+})
+
+<script>
+    //Eliminar
+    const UrlEliminarAviso = '@Url.Action("EliminarAviso", "Avisos")';
+    var idAvisoEliminar = 0;
+
+    function abrirModalEliminar(idAviso){
+        idAvisoEliminar = idAviso;
+        abrirModal("modalEliminarAviso");
+    }
+
+    async function eliminarAvisoAsync() {
+        const response = await fetch(`${UrlEliminarAviso}?idAviso=${idAvisoEliminar}`);
+        if (response.ok) {
+            document.getElementById("filtrosForm").submit();
+            cerrarModal("modalEliminarAviso")
+        } else {
+            //TO DO
+            console.log("Error");
+        }
+    }
+
+    //Firmar
+    const UrlFirmarAviso = '@Url.Action("FirmarAviso", "Avisos")';
+    var idAvisoFirmar = 0;
+    
+    function abrirModalFirmar(idAviso){
+        idAvisoFirmar = idAviso;
+        abrirModal("modalFirmarAviso");
+    }
+
+    async function firmarAviso() {
+        var inputArchivo = document.getElementById("inputFile-modalFirmarAviso");
+        var avisoFirmado = inputArchivo.files[0];
+        
+        var formData = new FormData();
+        formData.append("idAviso", idAvisoFirmar); 
+        formData.append("archivo", avisoFirmado);
+
+        const response = await fetch(UrlFirmarAviso, {
+            method: 'POST',
+            body: formData
+        });
+        if (response.ok){
+            document.getElementById("filtrosForm").submit();
+            cerrarModal("modalFirmarAviso");
+        } else {
+            //TO DO
+            console.log("Error");
+        }
+    }
+
+    //Comentarios
+    function abrirModalComentarios(comentarios) {
+        document.getElementById("modalComentarios-mensaje").innerText = comentarios;
+        abrirModal("modalComentarios")
+    }
+
+    //Publicar
+    const UrlPublicarAviso = '@Url.Action("PublicarAviso", "Avisos")';
+    var idAvisoPublicar = 0;
+    const url = document.getElementById("urlPublicacion");
+
+    function abrirModalPublicar(idAviso) {
+        idAvisoPublicar = idAviso;
+        abrirModal("modalPublicar");
+    }
+
+    async function publicar() {
+        const response = await fetch(`${UrlPublicarAviso}?idAviso=${idAvisoPublicar}&url=${url.value}`,{
+            method: 'POST'
+        });
+        if (response.ok) {
+            document.getElementById("filtrosForm").submit();
+            cerrarModal("modalPublicar")
+        } else {
+            //TO DO
+            console.log("Error");
+        }
+    }
+
+    //Archivar
+    const UrlArchivarAviso = '@Url.Action("ArchivarAviso", "Avisos")';
+    const UrlDesarchivarAviso = '@Url.Action("DesarchivarAviso", "Avisos")';
+
+    async function archivarAsync(idAviso, archivado) {
+        if (archivado) {
+            const response = await fetch(`${UrlDesarchivarAviso}?idAviso=${idAviso}`, {
+                method: 'POST'
+            });
+            if (response.ok) {
+                document.getElementById("filtrosForm").submit();
+            } else {
+                //TO DO
+                console.log("Error");
+            }
+        } else {
+            const response = await fetch(`${UrlArchivarAviso}?idAviso=${idAviso}`, {
+                method: 'POST'
+            });
+            if (response.ok) {
+                document.getElementById("filtrosForm").submit();
+            } else {
+                //TO DO
+                console.log("Error");
+            }
+        }
+    }
+
+    //Test
+    async function test() {
+        const UrlTest = '@Url.Action("GenerarDocumento", "Avisos")';
+        const response = await fetch(UrlTest, {
+            method: 'POST'
+        });
+        if (response.ok) {
+            console.log("Todo bien, según.")
+        } else {
+            //TO DO
+            console.log("Error");
+        }
+    }
+</script>
+
+@section Scripts {
+    <script src="~/js/cargarArchivo.js"></script>
+}

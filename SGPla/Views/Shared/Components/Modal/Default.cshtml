@@ -1,0 +1,61 @@
+﻿@model SGPla.Models.ModalModel
+
+<div class="modal-overlay" id="@Model.Id">
+
+    <div class="modal-container">
+
+        <!-- Header -->
+        <div class="modal-header">
+            <h3>@Model.Titulo</h3>
+            <button type="button" class="modal-close" aria-label="Cerrar"
+                    onclick="cerrarModal('@Model.Id')">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div class="modal-body" id="@Model.Id-body">
+
+            @if (!string.IsNullOrEmpty(Model.Body))
+            {
+                @Html.Raw(Model.Body)
+            }
+            else
+            {
+                <p id="@Model.Id-mensaje">@Model.Mensaje</p>
+            }
+
+            @if (Model.SolicitarMotivo)
+            {
+                <div class="modal-motivo" style="margin-top:10px;">
+                    <label for="@Model.Id-motivo">@Model.MotivoLabel</label>
+                    <textarea id="@Model.Id-motivo" class="form-control" rows="3"
+                              placeholder="@Model.MotivoPlaceholder"></textarea>
+                </div>
+            }
+
+        </div>
+
+        <!-- Footer: solo aparece si es tipo "confirm" -->
+        @if (Model.Tipo == "confirm")
+        {
+            <div class="modal-footer">
+
+                @await Component.InvokeAsync("Boton", new
+                {
+                    Accion = "Cancelar",
+                    OnClick = $"cerrarModal('{Model.Id}'); {Model.OnCancel}"
+                })
+
+                @await Component.InvokeAsync("Boton", new
+                {
+                    Accion = Model.Accion,
+                    OnClick = Model.OnConfirm
+                })
+
+            </div>
+        }
+
+    </div>
+
+</div>

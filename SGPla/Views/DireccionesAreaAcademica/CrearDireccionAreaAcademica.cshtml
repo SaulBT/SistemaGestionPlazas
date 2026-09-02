@@ -1,0 +1,76 @@
+﻿@using SGPla.Models.DTOs.AreaAcademica
+@model CrearAreaAcademicaDTO
+
+@{
+    ViewData["Title"] = "Agregar Dirección de Área Académica"; 
+    ViewBag.RegresarUrl = Url.Action("Index", "DireccionesAreaAcademica");
+}
+
+<!-- Campos -->
+<form method="post" action="@Url.Action("CrearDireccionAreaAcademica", "DireccionesAreaAcademica")">
+
+    @Html.AntiForgeryToken()
+
+    <div style="padding-bottom:var(--padding-end); ">
+        <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:flex-start; justify-content:space-evenly;">
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "nombre",
+                Name = "nombre",
+                Label = "Nombre:",
+                Valor = Model.Nombre,
+                Flexible = true,
+                Error = ViewData.ModelState["nombre"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                MaximoCaracteres = 100
+            })
+        </div>
+
+        <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:flex-start; justify-content:space-evenly;">
+            <div style="width:100%">
+                @await Component.InvokeAsync("InputField", new InputFieldModel
+                {
+                    Id = "telefono",
+                    Name = "telefono",
+                    Label = "Teléfono:",
+                    Valor = Model.Telefono,
+                    Flexible = true,
+                    Error = ViewData.ModelState["telefono"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                    MaximoCaracteres =10
+                })
+            </div>
+            
+            <div style="width:100%">
+                @await Component.InvokeAsync("InputField", new InputFieldModel
+                {
+                    Id = "extension",
+                    Name = "extension",
+                    Label = "Extensión:",
+                    Valor = Model.Extension,
+                    Flexible = true,
+                    Error = ViewData.ModelState["extension"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                    MaximoCaracteres =5
+                })
+            </div>
+        </div>
+    </div>
+
+    <!-- Botones -->
+    <div style="display:flex; justify-content:flex-end; gap:var(--button-gap)">
+        <a href="@Url.Action("Index", "DireccionesAreaAcademica")" style="display: inline-block; text-decoration: none;">
+            @await Component.InvokeAsync("Boton", new
+            {
+                Accion = "Cancelar"
+            })
+        </a>
+        @await Component.InvokeAsync("Boton", new
+        {
+            Accion = "Guardar",
+            ButtonType = "submit"
+        })
+    </div>
+
+</form>
+
+<script>
+
+</script>

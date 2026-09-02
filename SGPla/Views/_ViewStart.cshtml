@@ -1,0 +1,12 @@
+﻿@{
+    var rolActivo = Context.Session.GetString("RolActivo")
+                    ?? User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+
+    Layout = rolActivo switch
+    {
+        "Coordinador de Entidad Académica" => "_LayoutEntidadAcademica",
+        "Coordinador de Área Académica" => "_LayoutDGAA",
+        "SuperUsuario" => "_LayoutSuperUsuario",
+        _ => "_LayoutDefault"
+    };
+}

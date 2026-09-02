@@ -1,0 +1,163 @@
+﻿/* ===== BOTÓN PRIMARIO ===== */
+/* Un solo selector para el botón en su estado NORMAL */
+.boton-primario {
+    display: inline-flex;
+    vertical-align: middle;
+    height: 30px;
+    width: fit-content;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 8px;
+    position: relative;
+    background-color: var(--azul-primario);
+    border: none; /* ← IMPORTANTE: quita bordes por defecto */
+    cursor: pointer; /* ← IMPORTANTE: mano al pasar */
+    transition: all 0.3s ease; /* ← Suaviza la transición */
+}
+
+    /* El texto dentro del botón (solo un selector) */
+    .boton-primario .text-wrapper {
+        /*position: relative;*/
+        width: fit-content;
+        font-family: var(--buttons-font-family);
+        font-weight: var(--buttons-font-weight);
+        color: #ffffff;
+        font-size: var(--buttons-font-size);
+        text-align: center;
+        letter-spacing: var(--buttons-letter-spacing);
+        line-height: var(--buttons-line-height);
+        font-style: var(--buttons-font-style);
+    }
+
+    /* ===== ESTADO HOVER (CSS nativo) ===== */
+    /* Esto se activa SOLO cuando el mouse está encima */
+    .boton-primario:hover {
+        background-color: var(--verde-secundario);
+    }
+
+    /* Opcional: estado activo (cuando se hace clic) */
+    .boton-primario:active {
+        transform: scale(0.98); /* Efecto de "presionado" */
+    }
+
+    /* Opcional: estado focus (para accesibilidad con teclado) */
+    .boton-primario:focus-visible {
+        outline: 2px solid var(--verde-secundario);
+        outline-offset: 2px;
+    }
+
+    /* icono */
+    .boton-primario i {
+        font-size: 16px;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+    }
+
+/* ===== VARIANTES DE COLOR ===== */
+
+.boton-secundario {
+    background-color: var(--neutral-azul);
+}
+    .boton-secundario .text-wrapper {
+        color: var(--body);
+    }
+
+    .boton-secundario:hover {
+        background-color: var(--neutral-azul-hover);
+    }
+
+    .boton-secundario i {
+        color: var(--body)
+    }
+
+.boton-terciario {
+    background-color: var(--azul--terciario);
+}
+
+    .boton-terciario .text-wrapper {
+        color: var(--body);
+    }
+
+    .boton-terciario:hover {
+        background-color: var(--azul--terciario-hover);
+    }
+
+    .boton-terciario i {
+        color: var(--body)
+    }
+
+.boton-icono {
+    background-color: var(--fondo-iconos);
+    gap: 0px;
+    border-radius: 5px;
+}
+
+    .boton-icono .text-wrapper {
+        visibility: collapse
+    }
+
+    .boton-icono i {
+        color: var(--body)
+    }
+
+    .boton-icono:hover {
+        background-color: var(--fondo-iconos)
+    }
+
+    .boton-icono:hover i{
+        color: var(--verde-secundario)
+    }
+
+.boton-cancelar {
+    background-color: var(--negativo-rojo-fondo);
+}
+
+    .boton-cancelar .text-wrapper {
+        color: var(--negativo-rojo-letra);
+    }
+
+    .boton-cancelar:hover {
+        background-color: var(--negativo-rojo-hover);
+    }
+
+    .boton-cancelar i {
+        color: var(--negativo-rojo-letra)
+    }
+
+.boton-publicar {
+    background-color: var(--verde-secundario);
+}
+
+    .boton-publicar .text-wrapper {
+        color: var(--blanco);
+    }
+
+    .boton-publicar:hover {
+        background-color: var(--publicar);
+    }
+
+/* ===== ESTADO DISABLED ===== */
+.boton-primario:disabled,
+.boton-primario.is-disabled {
+    background-color: var(--body); /* gris */
+    cursor: not-allowed; /* cursor de prohibido */
+    opacity: 0.7; /* se ve "apagado" */
+}
+
+    /* Evita interacciones visuales cuando está deshabilitado */
+    .boton-primario:disabled:hover,
+    .boton-primario.is-disabled:hover {
+        background-color: #cccccc; /* no cambia en hover */
+    }
+
+    /* Quita el efecto de click */
+    .boton-primario:disabled:active,
+    .boton-primario.is-disabled:active {
+        transform: none;
+    }
+
+    /* Opcional: quitar focus visual */
+    .boton-primario:disabled:focus-visible {
+        outline: none;
+    }

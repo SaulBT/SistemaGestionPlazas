@@ -1,0 +1,213 @@
+﻿@using SGPla.Models.ViewModels.Usuarios
+
+@model CrearUsuarioViewModel
+
+@{
+    ViewData["Title"] = "Editar Usuario";
+    ViewBag.RegresarUrl = Url.Action("Index", "Usuarios");
+}
+
+<!-- Campos -->
+<form method="post" action="@Url.Action("EditarUsuario", "Usuarios")">
+
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="IdUsuario" value="@Model.IdUsuario" />
+
+    <div style="padding-bottom:var(--padding-end); ">
+        <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:center; justify-content:space-between;">
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "nombre",
+                Name = "Nombre",
+                Label = "Nombre:",
+                Valor = Model.Nombre,
+                Flexible = true,
+                Error = ViewData.ModelState["Nombre"]?.Errors.FirstOrDefault()?.ErrorMessage,
+            })
+        </div>
+
+        <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:flex-start; justify-content:space-evenly;">
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "cargo",
+                Name = "Cargo",
+                Label = "Cargo:",
+                Flexible = true,
+                Valor = Model.Cargo,
+                Error = ViewData.ModelState["Cargo"]?.Errors.FirstOrDefault()?.ErrorMessage,
+            })
+
+            <div style="display:none">
+                @await Component.InvokeAsync("InputField", new InputFieldModel
+                {
+                    Id = "correo",
+                    Name = "Correo",
+                    Label = "Correo:",
+                    Flexible = true,
+                    Valor = Model.Correo,
+                    Error = ViewData.ModelState["Correo"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                })
+            </div>
+            
+
+            @await Component.InvokeAsync("SelectField", new SelectFieldModel
+            {
+                Label = "Rol:",
+                Options = Model.Roles,
+                Name = "Rol",
+                
+                SelectedValue = Model.Rol?.ToString(),
+                Flexible = true,
+                Error = ViewData.ModelState["Rol"]?.Errors.FirstOrDefault()?.ErrorMessage
+            })
+        </div>
+
+        <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:flex-start; justify-content:space-evenly; width:100%;">
+            <div id="contenedorArea" style="flex:1 1 0; min-width:0;">
+                @await Component.InvokeAsync("SelectField", new SelectFieldModel
+                {
+                    Label = "Área Académica",
+                    Options = Model.Areas,
+                    Name = "IdAreaAcademica",
+                    SelectedValue = Model.IdAreaAcademica?.ToString(),
+                    Flexible = true,
+                    Error = ViewData.ModelState["IdAreaAcademica"]?.Errors.FirstOrDefault()?.ErrorMessage
+                    
+                })
+            </div>
+
+            <div id="contenedorRegion" style="flex:1 1 0; min-width:0;">
+                @await Component.InvokeAsync("SelectField", new SelectFieldModel
+                {
+                    Label = "Región",
+                    Options = Model.Regiones,
+                    Name = "Region",
+                    SelectedValue = Model.Region?.ToString(),
+                    Flexible = true,
+                    Error = ViewData.ModelState["Region"]?.Errors.FirstOrDefault()?.ErrorMessage
+                })
+            </div>
+
+            <div id="contenedorEntidad" style="flex:1 1 0; min-width:0;">
+                @await Component.InvokeAsync("SelectField", new SelectFieldModel
+                {
+                    Label = "Entidad Académica",
+                    Options = Model.Entidades,
+                    Name = "IdEntidadAcademica",
+                    SelectedValue = Model.IdEntidadAcademica?.ToString(),
+                    Flexible = true,
+                    Error = ViewData.ModelState["IdEntidadAcademica"]?.Errors.FirstOrDefault()?.ErrorMessage
+                })
+            </div>
+        </div>
+    </div>
+
+    <!-- Botones -->
+    <div style="display:flex; justify-content:flex-end; gap:var(--button-gap)">
+        <a href="@Url.Action("Index", "Usuarios")" style="display: inline-block; text-decoration: none;">
+            @await Component.InvokeAsync("Boton", new
+            {
+                Accion = "Cancelar"
+            })
+        </a>
+        @await Component.InvokeAsync("Boton", new
+        {
+            Accion = "Guardar",
+            ButtonType = "submit"
+        })
+    </div>
+</form>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const rol = document.getElementById("Rol");
+
+        const contenedorArea = document.getElementById("contenedorArea");
+        const contenedorRegion = document.getElementById("contenedorRegion");
+        const contenedorEntidad = document.getElementById("contenedorEntidad");
+
+        function actualizarVisibilidad() {
+            if (!rol) return;
+
+            const valor = rol.value?.toLowerCase();
+
+            if (valor === "coordinador de entidad académica") {
+                if (contenedorArea) contenedorArea.style.display = "flex";
+                if (contenedorRegion) contenedorRegion.style.display = "flex";
+                if (contenedorEntidad) contenedorEntidad.style.display = "flex";
+            }
+            else if (valor === "coordinador de área académica") {
+                if (contenedorArea) contenedorArea.style.display = "flex";
+                if (contenedorRegion) contenedorRegion.style.display = "none";
+                if (contenedorEntidad) contenedorEntidad.style.display = "none";
+            }
+            else {
+                if (contenedorArea) contenedorArea.style.display = "none";
+                if (contenedorRegion) contenedorRegion.style.display = "none";
+                if (contenedorEntidad) contenedorEntidad.style.display = "none";
+            }
+        }
+
+
+        if (rol) {
+            rol.addEventListener("change", actualizarVisibilidad);
+        }
+
+        actualizarVisibilidad();
+
+    });
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const area = document.querySelector("[name='IdAreaAcademica']");
+        const region = document.querySelector("[name='Region']");
+        const entidad = document.querySelector("[name='IdEntidadAcademica']");
+
+            async function cargarEntidades() {
+        if (!area || !region || !entidad) return;
+
+        const idArea = area.value;
+        const reg = region.value;
+
+        // mantener opción default
+        const defaultOption = entidad.options[0];
+
+        if (!idArea || !reg) {
+            entidad.innerHTML = "";
+            entidad.appendChild(defaultOption);
+            entidad.selectedIndex = 0;
+            return;
+        }
+
+        try {
+            const response = await fetch(`/Usuarios/ObtenerEntidades?idAreaAcademica=${idArea}&region=${encodeURIComponent(reg)}`);
+            const data = await response.json();
+
+            entidad.innerHTML = "";
+            entidad.appendChild(defaultOption);
+
+            data.forEach(e => {
+                const option = document.createElement("option");
+                option.value = e.value;
+                option.text = e.text;
+                entidad.appendChild(option);
+            });
+
+        } catch (error) {
+            console.error("Error cargando entidades:", error);
+        }
+    }
+
+        if (area) {
+            area.addEventListener("change", cargarEntidades);
+        }
+
+        if (region) {
+            region.addEventListener("change", cargarEntidades);
+        }
+
+    });
+</script>
