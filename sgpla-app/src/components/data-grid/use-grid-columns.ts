@@ -65,27 +65,25 @@ export function useGridColumns<ColumnId extends string>({
   } | null>(null)
   const orderBeforeDragRef = React.useRef<ColumnId[]>(columnOrder)
 
-  React.useEffect(() => {
+  const resolvedColumnWidths = React.useMemo(() => {
+    const next = createInitialColumnWidths(columns)
+
+    columns.forEach((column) => {
+      if (typeof columnWidths[column.id] === "number") {
+        next[column.id] = columnWidths[column.id]
+      }
+    })
+
+    return next
+  }, [columns, columnWidths])
+
+  const resolvedVisibleColumnIds = React.useMemo(() => {
     const allowedIds = new Set(columnOrder)
+    const kept = visibleColumnIds.filter((id) => allowedIds.has(id))
+    const missing = columnOrder.filter((id) => !kept.includes(id))
 
-    setColumnWidths((current) => {
-      const next = createInitialColumnWidths(columns)
-      columns.forEach((column) => {
-        if (typeof current[column.id] === "number") {
-          next[column.id] = current[column.id]
-        }
-      })
-      return next
-    })
-
-    setVisibleColumnIds((current) => {
-      const kept = current.filter((id) => allowedIds.has(id))
-      const missing = columnOrder.filter((id) => !kept.includes(id))
-      return [...kept, ...missing]
-    })
-
-    orderBeforeDragRef.current = columnOrder
-  }, [columns, columnOrder])
+    return [...kept, ...missing]
+  }, [columnOrder, visibleColumnIds])
 
   React.useEffect(() => {
     const handlePointerMove = (event: PointerEvent) => {
@@ -125,22 +123,24 @@ export function useGridColumns<ColumnId extends string>({
   }, [columns, minColumnWidth])
 
   const visibleColumns = React.useMemo(() => {
-    return visibleColumnIds
+    return resolvedVisibleColumnIds
       .map((columnId) => columns.find((column) => column.id === columnId))
       .filter((column): column is DataGridColumn<ColumnId> => Boolean(column))
-  }, [columns, visibleColumnIds])
+  }, [columns, resolvedVisibleColumnIds])
 
   const gridMinWidth = React.useMemo(() => {
     const contentWidth = visibleColumns.reduce((sum, column) => {
-      return sum + (columnWidths[column.id] ?? column.defaultWidth)
+      return sum + (resolvedColumnWidths[column.id] ?? column.defaultWidth)
     }, 0)
 
     return controlColumnWidth + contentWidth
-  }, [columnWidths, controlColumnWidth, visibleColumns])
+  }, [controlColumnWidth, resolvedColumnWidths, visibleColumns])
 
   const hiddenColumns = React.useMemo(() => {
-    return columns.filter((column) => !visibleColumnIds.includes(column.id))
-  }, [columns, visibleColumnIds])
+    return columns.filter(
+      (column) => !resolvedVisibleColumnIds.includes(column.id)
+    )
+  }, [columns, resolvedVisibleColumnIds])
 
   const toggleColumnVisibility = React.useCallback(
     (columnId: ColumnId, visible: boolean) => {
@@ -164,7 +164,7 @@ export function useGridColumns<ColumnId extends string>({
     (event: DragStartEvent) => {
       const activeId = String(event.active.id) as ColumnId
       const tableRect = tableRef.current?.getBoundingClientRect()
-      orderBeforeDragRef.current = visibleColumnIds
+      orderBeforeDragRef.current = resolvedVisibleColumnIds
       setDraggingColumnId(activeId)
       setDragOverColumnId(activeId)
       setDragOverlayHeight(tableRect?.height ?? 280)
@@ -172,7 +172,7 @@ export function useGridColumns<ColumnId extends string>({
         setDragTableRect({ top: tableRect.top, height: tableRect.height })
       }
     },
-    [tableRef, visibleColumnIds]
+    [resolvedVisibleColumnIds, tableRef]
   )
 
   const handleColumnDragOver = React.useCallback(
@@ -184,8 +184,8 @@ export function useGridColumns<ColumnId extends string>({
       const overRect = event.over.rect
       setDragOverColumnId(overId)
 
-      const currentIndex = visibleColumnIds.indexOf(activeId)
-      const targetIndex = visibleColumnIds.indexOf(overId)
+      const currentIndex = resolvedVisibleColumnIds.indexOf(activeId)
+      const targetIndex = resolvedVisibleColumnIds.indexOf(overId)
       const indicatorLeft =
         currentIndex > -1 && targetIndex > -1 && currentIndex < targetIndex
           ? overRect.left + overRect.width
@@ -206,7 +206,7 @@ export function useGridColumns<ColumnId extends string>({
         return arrayMove(currentColumns, oldIndex, newIndex)
       })
     },
-    [visibleColumnIds]
+    [resolvedVisibleColumnIds]
   )
 
   const handleColumnDragEnd = React.useCallback((event: DragEndEvent) => {
@@ -254,13 +254,13 @@ export function useGridColumns<ColumnId extends string>({
       resizingRef.current = {
         columnId,
         startX: event.clientX,
-        startWidth: columnWidths[columnId],
+        startWidth: resolvedColumnWidths[columnId],
       }
 
       document.body.style.userSelect = "none"
       document.body.style.cursor = "col-resize"
     },
-    [columnWidths]
+    [resolvedColumnWidths]
   )
 
   const dragOverlayColumn = React.useMemo(() => {
@@ -269,8 +269,8 @@ export function useGridColumns<ColumnId extends string>({
   }, [columns, draggingColumnId])
 
   return {
-    columnWidths,
-    visibleColumnIds,
+    columnWidths: resolvedColumnWidths,
+    visibleColumnIds: resolvedVisibleColumnIds,
     draggingColumnId,
     dragOverColumnId,
     dragOverlayHeight,
@@ -289,5 +289,4 @@ export function useGridColumns<ColumnId extends string>({
     dragOverlayColumn,
   }
 }
-
 

@@ -57,7 +57,7 @@ const navigation: DashboardItem[] = [
   { label: "Planes de estudio", href: "/planes-estudios", icon: BookOpen },
   {
     label: "Periodos escolares",
-    href: "/periodos-escolares",
+    href: "/PeriodosEscolares",
     icon: CalendarDays,
   },
 ];
