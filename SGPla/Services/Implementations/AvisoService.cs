@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using SGPla.Commons;
 using SGPla.Mappers;
 using SGPla.Models;
 using SGPla.Models.DTOs.Archivo;
@@ -86,7 +87,9 @@ namespace SGPla.Services.Implementations
                 IdArchivoFirmado = aviso.IdArchivoFirmado ?? 0,
                 Articulo = aviso.IdArticuloNavigation.Numero,
                 FechaCreacion = aviso.FechaCreacion.ToString("dd/MM/yyyy"),
-                FechaVacantes = aviso.FechaVacantes.ToString("dd/MM/yyyy"),
+                FechaCT = aviso.FechaCt.ToString("yyyy-MM-dd"),
+                // El input HTML de fecha requiere el formato ISO para mostrar el valor.
+                FechaVacantes = aviso.FechaVacantes.ToString("yyyy-MM-dd"),
                 Region = aviso.IdEntidadAcademicaNavigation.Region,
                 NombreEntidadAcademica = aviso.IdEntidadAcademicaNavigation.Nombre,
                 Periodo = periodoDTO.PeriodoMostrar,
@@ -96,7 +99,15 @@ namespace SGPla.Services.Implementations
                 Requisitos = aviso.Requisitos,
                 Modalidad = aviso.Modalidad,
                 Lugar = aviso.Lugar ?? "",
+                Correo = aviso.Correo ?? "",
                 Horario = horario,
+                Horarios = horario.Dias.Select(d => new DatosHorarioDTO
+                {
+                    IdAviso = aviso.IdAviso,
+                    Dia = d.Dia,
+                    HoraInicio = d.HoraInicio,
+                    HoraFin = d.HoraFin
+                }).ToList(),
                 UrlPublicacion = ""
             };
         }
@@ -344,9 +355,65 @@ namespace SGPla.Services.Implementations
             await _avisoRepository.EliminarAsync(idAviso);
         }
 
-        public Task ActualizarAvisoPorId(EditarAvisoDTO aviso)
+        public async Task ActualizarAvisoPorId(EditarAvisoDTO aviso)
         {
-            throw new NotImplementedException();
+            ArgumentNullException.ThrowIfNull(aviso);
+
+            var avisoActual = await _avisoRepository.ObtenerPorIDAsync(aviso.IdAviso)
+                ?? throw new ValidacionExcepction("No existe ese Aviso", "404");
+
+            if (avisoActual.IdEntidadAcademica != aviso.IdEntidadAcademica)
+                throw new ValidacionExcepction("No tiene permisos para editar este Aviso.", "403");
+
+            if (avisoActual.Estado != Constantes.CREADO && avisoActual.Estado != Constantes.DEVUELTO_POR_DGAA)
+                throw new ValidacionExcepction("El Aviso no se encuentra en un estado permitido para edición.", "409");
+
+            validarDatosEdicion(aviso);
+
+            if (!await _ofertaRepository.SonOfertasValidasParaAvisoAsync(
+                aviso.OfertasId, aviso.IdEntidadAcademica, aviso.IdPeriodo, aviso.IdArticulo))
+            {
+                throw new ValidacionExcepction("Las ofertas seleccionadas ya no son válidas para el aviso.", "400");
+            }
+
+            var idArchivoNuevo = await generarArchivoAvisoAsync(aviso);
+            var horarios = aviso.Horarios.Select(h => new Horario
+            {
+                IdAviso = aviso.IdAviso,
+                Dia = h.Fecha,
+                HoraInicio = TimeOnly.Parse(h.HoraInicio),
+                HoraFin = TimeOnly.Parse(h.HoraTermino)
+            }).ToList();
+
+            await _avisoRepository.ActualizarCompletoAsync(aviso, idArchivoNuevo, horarios);
+        }
+
+        private static void validarDatosEdicion(EditarAvisoDTO aviso)
+        {
+            if (aviso.IdAviso <= 0 || aviso.IdEntidadAcademica <= 0 || aviso.IdPeriodo <= 0 || aviso.IdArticulo <= 0 ||
+                string.IsNullOrWhiteSpace(aviso.Folio) || string.IsNullOrWhiteSpace(aviso.Requisitos) ||
+                string.IsNullOrWhiteSpace(aviso.Modalidad) || string.IsNullOrWhiteSpace(aviso.Correo))
+            {
+                throw new ValidacionExcepction("Hay campos obligatorios sin completar.", "400");
+            }
+
+            if (!System.Net.Mail.MailAddress.TryCreate(aviso.Correo, out _))
+                throw new ValidacionExcepction("El correo electrónico no es válido.", "400");
+
+            if (aviso.Modalidad != Constantes.MODALIDAD_AVISO_PRESENCIAL && aviso.Modalidad != Constantes.MODALIDAD_AVISO_VIRTUAL)
+                throw new ValidacionExcepction("La modalidad no es válida.", "400");
+
+            if (aviso.Modalidad == Constantes.MODALIDAD_AVISO_PRESENCIAL && string.IsNullOrWhiteSpace(aviso.Lugar))
+                throw new ValidacionExcepction("El lugar es obligatorio para la modalidad presencial.", "400");
+
+            if (aviso.Horarios is null || aviso.Horarios.Count == 0)
+                throw new ValidacionExcepction("Llena la tabla de Horarios.", "400");
+
+            if (aviso.Horarios.Any(h => string.IsNullOrWhiteSpace(h.Fecha) ||
+                !TimeOnly.TryParse(h.HoraInicio, out var inicio) || !TimeOnly.TryParse(h.HoraTermino, out var fin) || inicio >= fin))
+            {
+                throw new ValidacionExcepction("Cada horario debe tener una fecha y hora de inicio menor a la hora de término.", "400");
+            }
         }
 
         public async Task EnviarARevisionAsync(RevisionDTO revisionDTO)
@@ -434,6 +501,7 @@ namespace SGPla.Services.Implementations
             {
                 var ofertaDTO = new OfertaAvisoDTO
                 {
+                    IdOferta = o.IdOferta,
                     NombrePlanEstudio = o.IdExperienciaEducativaNavigation.IdPlanEstudiosNavigation.Nombre,
                     Horas = "" + o.Hsm,
                     NombreExperienciaEducativa = o.IdExperienciaEducativaNavigation.Nombre,

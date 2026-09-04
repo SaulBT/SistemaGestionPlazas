@@ -27,8 +27,11 @@ async function actualizarOfertas() {
     const idPeriodo = periodo.value;
     const idArticulo = articulo.value;
 
+    const seleccionadas = [...document.querySelectorAll('input[name="OfertasId"]:checked')]
+        .map(input => `ofertasSeleccionadas=${encodeURIComponent(input.value)}`).join("&");
     const response = await fetch(
-        `${UrlActualizarOfertas}?idPeriodo=${idPeriodo}&idArticulo=${idArticulo}`
+        `${UrlActualizarOfertas}?idPeriodo=${idPeriodo}&idArticulo=${idArticulo}&${seleccionadas}&version=${VersionOfertas}`,
+        { cache: "no-store" }
     );
 
     const html = await response.text();
@@ -37,7 +40,8 @@ async function actualizarOfertas() {
 }
 
 async function cargarHorarios() {
-        const response = await fetch(`${UrlObtenerHorarios}`);
+    const parametroAviso = IdAviso ? `?idAviso=${IdAviso}` : "";
+        const response = await fetch(`${UrlObtenerHorarios}${parametroAviso}`);
 
     if (!response.ok) {
         console.error("No se pudieron obtener los horarios.");
@@ -46,7 +50,7 @@ async function cargarHorarios() {
 
     listaHorarios = await response.json();
 
-    const responseTabla = await fetch(`${UrlObtenerTablaHorarios}`);
+    const responseTabla = await fetch(`${UrlObtenerTablaHorarios}${parametroAviso}`);
 
     if (!responseTabla.ok) {
         console.error("No se pudo cargar la tabla de horarios.");
@@ -175,7 +179,8 @@ function agregarHorario() {
 
 async function actualizarHorarios() {
 
-    const response = await fetch(UrlAgregarHorario, {
+    const url = IdAviso ? `${UrlAgregarHorario}?idAviso=${IdAviso}` : UrlAgregarHorario;
+    const response = await fetch(url, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"

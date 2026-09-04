@@ -13,6 +13,7 @@ namespace SGPla.Models.DTOs.Aviso
         public int IdArchivoFirmado { get; set; }
         public string Articulo { get; set; } = string.Empty;
         public string FechaCreacion { get; set; } = string.Empty;
+        public string FechaCT { get; set; } = string.Empty;
         public string FechaVacantes { get; set; } = string.Empty;
         public string Region { get; set; } = string.Empty;
         public string NombreEntidadAcademica { get; set; } = string.Empty;
@@ -23,6 +24,7 @@ namespace SGPla.Models.DTOs.Aviso
         public string Requisitos { get; set; } = string.Empty;
         public string Modalidad { get; set; } = string.Empty;
         public string Lugar { get; set; } = string.Empty;
+        public string Correo { get; set; } = string.Empty;
         public DatosHorarioDTO Horario { get; set; } = new DatosHorarioDTO();
         public string UrlPublicacion { get; set; } = string.Empty;
         public List<DatosHorarioDTO> Horarios { get; set; } = new List<DatosHorarioDTO>();

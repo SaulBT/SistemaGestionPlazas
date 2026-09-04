@@ -174,5 +174,56 @@ namespace SGPla.Repositories.Implementations
             }
             await _context.SaveChangesAsync();
         }
+
+        public async Task ActualizarCompletoAsync(EditarAvisoDTO avisoDTO, int idArchivoOriginal, List<Horario> horarios)
+        {
+            await using var transaccion = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                var aviso = await _context.Aviso
+                    .FirstOrDefaultAsync(a => a.IdAviso == avisoDTO.IdAviso);
+
+                if (aviso is null)
+                    throw new InvalidOperationException("No existe el aviso que se desea actualizar.");
+
+                aviso.IdPeriodo = avisoDTO.IdPeriodo;
+                aviso.IdArticulo = avisoDTO.IdArticulo;
+                aviso.Folio = avisoDTO.Folio;
+                aviso.FechaCt = avisoDTO.FechaCT;
+                aviso.FechaVacantes = avisoDTO.FechaVacantes;
+                aviso.Requisitos = avisoDTO.Requisitos;
+                aviso.Lugar = avisoDTO.Lugar;
+                aviso.Correo = avisoDTO.Correo;
+                aviso.Modalidad = avisoDTO.Modalidad;
+                aviso.Sistema = avisoDTO.Sistema;
+                aviso.IdArchivoOriginal = idArchivoOriginal;
+
+                var relacionesAnteriores = await _context.OfertaAviso
+                    .Where(oa => oa.IdAviso == avisoDTO.IdAviso)
+                    .ToListAsync();
+                _context.OfertaAviso.RemoveRange(relacionesAnteriores);
+
+                var horariosAnteriores = await _context.Horario
+                    .Where(h => h.IdAviso == avisoDTO.IdAviso)
+                    .ToListAsync();
+                _context.Horario.RemoveRange(horariosAnteriores);
+
+                await _context.OfertaAviso.AddRangeAsync(avisoDTO.OfertasId.Distinct().Select(idOferta => new OfertaAviso
+                {
+                    IdAviso = avisoDTO.IdAviso,
+                    IdOferta = idOferta
+                }));
+                await _context.Horario.AddRangeAsync(horarios);
+
+                await _context.SaveChangesAsync();
+                await transaccion.CommitAsync();
+            }
+            catch
+            {
+                await transaccion.RollbackAsync();
+                throw;
+            }
+        }
     }
 }
