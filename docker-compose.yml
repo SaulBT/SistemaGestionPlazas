@@ -16,22 +16,17 @@ services:
       start_period: 15s
 
   db-init:
-    image: mcr.microsoft.com/mssql-tools:latest
+    build:
+      context: .
+      dockerfile: SGPla.DbMigrator/Dockerfile
     depends_on:
       db:
         condition: service_healthy
     environment:
       MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:-SgplaDev_2026!Password}
-    volumes:
-      - ./GestionDePlazasBD.sql:/scripts/GestionDePlazasBD.sql:ro
-    entrypoint: ["/bin/bash", "-c"]
-    command:
-      - >-
-        for i in $$(seq 1 30); do
-          /opt/mssql-tools/bin/sqlcmd -S db,1433 -U sa -P "$${MSSQL_SA_PASSWORD}" -C -Q "SELECT 1" >/dev/null 2>&1 && break;
-          sleep 2;
-        done;
-        /opt/mssql-tools/bin/sqlcmd -S db,1433 -U sa -P "$${MSSQL_SA_PASSWORD}" -C -b -i /scripts/GestionDePlazasBD.sql
+      MIGRATOR_APPLY_DEVELOPMENT_SEED: "true"
+      ConnectionStrings__DefaultConnection: >-
+        Server=db,1433;Database=GestionDePlazasBD;User Id=sa;Password=${MSSQL_SA_PASSWORD:-SgplaDev_2026!Password};TrustServerCertificate=True;Encrypt=False;
 
   backend:
     build:
