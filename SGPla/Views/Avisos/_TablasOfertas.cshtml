@@ -13,7 +13,25 @@ else
 
             <h5 style="margin-left:10px">@carrera.Nombre</h5>
 
-            @await Component.InvokeAsync("Table", carrera.Tabla)
+            <div class="table-container">
+                <table class="custom-table">
+                    <thead>
+                        <tr><th>Seleccionar</th><th>Horas</th><th>EE</th><th>NRC</th><th>Plaza</th><th>Horario</th><th>TC</th><th>Perfil docente</th></tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var oferta in carrera.Ofertas)
+                    {
+                        <tr>
+                            <td><input type="checkbox" name="OfertasId" value="@oferta.IdOferta" @(carrera.OfertasSeleccionadas.Contains(oferta.IdOferta) ? "checked" : null) /></td>
+                            <td>@oferta.Horas</td><td>@oferta.ExperienciaEducativa</td><td>@oferta.NRC</td><td>@oferta.Plaza</td>
+                            <td><button type="button" onclick='abrirModalHorario(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(oferta)))'>Ver</button></td>
+                            <td>@oferta.TipoContratacion</td>
+                            <td><button type="button" onclick='verPerfilDocenteOferta(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(oferta.PerfilDocente)))'>Ver</button></td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
 
         </div>
     }

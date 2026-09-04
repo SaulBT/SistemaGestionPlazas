@@ -3,13 +3,18 @@
 @model CrearAvisoViewModel
 @{
     Layout = "_LayoutEntidadAcademica";
-    ViewData["Title"] = "Crear Aviso";
+    var esEdicion = Model.IdAviso.HasValue;
+    ViewData["Title"] = esEdicion ? "Editar Aviso" : "Crear Aviso";
     ViewBag.RegresarUrl = Url.Action("Index", "Avisos");
 }
 
 <div>
-    <form method="post" action="@Url.Action("CrearAviso", "Avisos")" >
+    <form method="post" action="@Url.Action(esEdicion ? "EditarAviso" : "CrearAviso", "Avisos")" >
         @Html.AntiForgeryToken()
+        @if (esEdicion)
+        {
+            <input type="hidden" name="IdAviso" value="@Model.IdAviso" />
+        }
 
         <!-- Datos Personales -->
         <div class="cabecera-seccion mb-3">
@@ -33,6 +38,7 @@
                         Label = "Periodo escolar:",
                         Options = Model.Periodos,
                         Name = "IdPeriodo",
+                        SelectedValue = Model.IdPeriodo?.ToString(),
                         Error = ViewData.ModelState["IdPeriodo"]?.Errors.FirstOrDefault()?.ErrorMessage,
                         Flexible = true
                     })
@@ -42,6 +48,7 @@
                         Label = "Artículo:",
                         Options = Model.Articulos,
                         Name = "IdArticulo",
+                        SelectedValue = Model.IdArticulo?.ToString(),
                         Error = ViewData.ModelState["IdArticulo"]?.Errors.FirstOrDefault()?.ErrorMessage,
                         Flexible = true
                     })
@@ -69,6 +76,7 @@
                             Label = "Modalidad de entrega:",
                             Options = Model.Modalidades,
                             Name = "Modalidad",
+                            SelectedValue = Model.Modalidad,
                             Error = ViewData.ModelState["Modalidad"]?.Errors.FirstOrDefault()?.ErrorMessage,
                             Flexible = true
                         })
@@ -132,7 +140,14 @@
             <h4 style="margin-bottom: 25px">Experiencias Educativas Vacantes:</h4>
             <!-- Aqui van las tablas de las carreras -->
             <div id="contenedorOfertas" style="margin-top:20px; margin-bottom:50px">
-                <div id="IdExistenOfertas" class="text-error-wrapper" style="margin-bottom:20px; margin-left:10px">Seleccione el periodo y el artículo de procedencia para las ofertas.</div>
+                @if (Model.PlanesEstudios.Any())
+                {
+                    await Html.RenderPartialAsync("_TablasOfertas", Model.PlanesEstudios);
+                }
+                else
+                {
+                    <div id="IdExistenOfertas" class="text-error-wrapper" style="margin-bottom:20px; margin-left:10px">Seleccione el periodo y el artículo de procedencia para las ofertas.</div>
+                }
             </div>
             
 
@@ -140,7 +155,7 @@
                     {
                         Label = "Requisitos:",
                         Name = "Requisitos",
-                        Value = Constantes.REQUISITOS_AVISO,
+                        Value = Model.Requisitos ?? Constantes.REQUISITOS_AVISO,
                         Rows = 13
                     })
         </div>
@@ -199,7 +214,10 @@
 
 
 <script>
+    const IdAviso = @(Model.IdAviso?.ToString() ?? "null");
     const UrlActualizarOfertas = '@Url.Action("ActualizarOfertas", "Avisos")';
+    // Fuerza una consulta nueva del parcial al abrir o editar el aviso.
+    const VersionOfertas = '@DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()';
     const UrlAgregarHorario = '@Url.Action("AgregarHorario", "Avisos")';
     const UrlObtenerHorarios = '@Url.Action("ObtenerHorarios","Avisos")';
     const UrlObtenerTablaHorarios = '@Url.Action("ObtenerTablaHorarios", "Avisos")';
@@ -208,6 +226,5 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
     <script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
-    <script src="~/js/aviso.js"></script>
+    <script src="~/js/aviso.js" asp-append-version="true"></script>
 }
-                  

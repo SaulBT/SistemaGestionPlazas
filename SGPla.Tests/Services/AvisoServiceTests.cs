@@ -1,4 +1,5 @@
 using Moq;
+using SGPla.Commons;
 using SGPla.Models;
 using SGPla.Models.DTOs.Aviso;
 using SGPla.Models.DTOs.Horario;
@@ -567,6 +568,126 @@ namespace SGPla.Tests.Services
             Assert.Single(resultado);
             Assert.Equal("Licenciatura en Ingeniería de Software", resultado[0].Nombre);
             _ofertaRepositoryMock.Verify(r => r.ObtenerPlanesEstudioCrearAviso(idEntidadAcademica, idPeriodo, idArticulo), Times.Once);
+        }
+
+        [Theory]
+        [InlineData("Creado")]
+        [InlineData("Devuelto por DGAA")]
+        public async Task ActualizarAvisoPorId_EstadoPermitido_ActualizaYRegeneraArchivo(string estado)
+        {
+            var dto = CrearEdicionValida();
+            ConfigurarDependenciasEdicion(dto, estado);
+
+            await _avisoService.ActualizarAvisoPorId(dto);
+
+            _plantillaServiceMock.Verify(p => p.GenerarAvisoAsync(It.IsAny<PlantillaAvisoDTO>()), Times.Once);
+            _avisoRepositoryMock.Verify(r => r.ActualizarCompletoAsync(dto, 77,
+                It.Is<List<Horario>>(hs => hs.Count == 1 && hs[0].IdAviso == dto.IdAviso)), Times.Once);
+        }
+
+        [Fact]
+        public async Task ActualizarAvisoPorId_EstadoNoPermitido_RechazaEdicion()
+        {
+            var dto = CrearEdicionValida();
+            _avisoRepositoryMock.Setup(r => r.ObtenerPorIDAsync(dto.IdAviso))
+                .ReturnsAsync(CrearAvisoActual(dto, "Firmado"));
+
+            var ex = await Record.ExceptionAsync(() => _avisoService.ActualizarAvisoPorId(dto));
+
+            Assert.IsType<ValidacionExcepction>(ex);
+            _avisoRepositoryMock.Verify(r => r.ActualizarCompletoAsync(It.IsAny<EditarAvisoDTO>(), It.IsAny<int>(), It.IsAny<List<Horario>>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task ActualizarAvisoPorId_EntidadDistinta_RechazaEdicion()
+        {
+            var dto = CrearEdicionValida();
+            _avisoRepositoryMock.Setup(r => r.ObtenerPorIDAsync(dto.IdAviso))
+                .ReturnsAsync(CrearAvisoActual(dto, "Creado", 2));
+
+            var ex = await Record.ExceptionAsync(() => _avisoService.ActualizarAvisoPorId(dto));
+
+            Assert.IsType<ValidacionExcepction>(ex);
+            Assert.Contains("permisos", ex!.Message);
+        }
+
+        [Fact]
+        public async Task ActualizarAvisoPorId_OfertasInvalidas_RechazaAntesDeGenerarArchivo()
+        {
+            var dto = CrearEdicionValida();
+            _avisoRepositoryMock.Setup(r => r.ObtenerPorIDAsync(dto.IdAviso))
+                .ReturnsAsync(CrearAvisoActual(dto, "Creado"));
+            _ofertaRepositoryMock.Setup(r => r.SonOfertasValidasParaAvisoAsync(dto.OfertasId, dto.IdEntidadAcademica, dto.IdPeriodo, dto.IdArticulo))
+                .ReturnsAsync(false);
+
+            var ex = await Record.ExceptionAsync(() => _avisoService.ActualizarAvisoPorId(dto));
+
+            Assert.IsType<ValidacionExcepction>(ex);
+            _plantillaServiceMock.Verify(p => p.GenerarAvisoAsync(It.IsAny<PlantillaAvisoDTO>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task ActualizarAvisoPorId_SinHorarios_RechazaConMensajeDelCasoDeUso()
+        {
+            var dto = CrearEdicionValida();
+            dto.Horarios = [];
+            _avisoRepositoryMock.Setup(r => r.ObtenerPorIDAsync(dto.IdAviso))
+                .ReturnsAsync(CrearAvisoActual(dto, "Creado"));
+
+            var ex = await Record.ExceptionAsync(() => _avisoService.ActualizarAvisoPorId(dto));
+
+            Assert.IsType<ValidacionExcepction>(ex);
+            Assert.Contains("Llena la tabla de Horarios", ex!.Message);
+        }
+
+        private static EditarAvisoDTO CrearEdicionValida() => new()
+        {
+            IdAviso = 8,
+            IdEntidadAcademica = 1,
+            IdPeriodo = 2,
+            IdArticulo = 3,
+            Folio = "AV-2026-008",
+            FechaCreacion = new DateOnly(2026, 9, 4),
+            FechaCT = new DateOnly(2026, 9, 10),
+            FechaVacantes = new DateOnly(2026, 9, 15),
+            Requisitos = "Requisitos actualizados",
+            Lugar = "Facultad",
+            Correo = "coordinacion@uv.mx",
+            Modalidad = "Presencial",
+            Sistema = "Escolarizado",
+            OfertasId = [40],
+            Horarios = [new CrearHorarioAvisoDTO { Fecha = "2026-09-10", HoraInicio = "09:00", HoraTermino = "12:00" }]
+        };
+
+        private static Aviso CrearAvisoActual(EditarAvisoDTO dto, string estado, int? entidad = null) => new()
+        {
+            IdAviso = dto.IdAviso,
+            IdEntidadAcademica = entidad ?? dto.IdEntidadAcademica,
+            Estado = estado,
+            Folio = dto.Folio,
+            Requisitos = dto.Requisitos,
+            Modalidad = dto.Modalidad,
+            Sistema = dto.Sistema
+        };
+
+        private void ConfigurarDependenciasEdicion(EditarAvisoDTO dto, string estado)
+        {
+            _avisoRepositoryMock.Setup(r => r.ObtenerPorIDAsync(dto.IdAviso)).ReturnsAsync(CrearAvisoActual(dto, estado));
+            _ofertaRepositoryMock.Setup(r => r.SonOfertasValidasParaAvisoAsync(dto.OfertasId, dto.IdEntidadAcademica, dto.IdPeriodo, dto.IdArticulo)).ReturnsAsync(true);
+            _entidadAcademicaRepositoryMock.Setup(r => r.ObtenerPorIdAsync(dto.IdEntidadAcademica)).ReturnsAsync(new EntidadAcademica
+            {
+                Nombre = "Facultad de Prueba", Region = "1-Xalapa", IdAreaAcademicaNavigation = new AreaAcademica { Nombre = "Área" }
+            });
+            _articuloRepositoryMock.Setup(r => r.ObtenerArticuloPorIdAsync(dto.IdArticulo)).ReturnsAsync(new Articulo { Numero = "70", Descripcion = "Perfil" });
+            _periodoEscolarRepositoryMock.Setup(r => r.ObtenerPorIdAsync(dto.IdPeriodo)).ReturnsAsync(new Periodo { Codigo = "202601" });
+            _ofertaRepositoryMock.Setup(r => r.ObtenerPorIdAsync(40)).ReturnsAsync(new Oferta
+            {
+                IdOferta = 40, Nrc = "12345", IdProgramaEducativoNavigation = new ProgramaEducativo { Nombre = "Programa" },
+                IdExperienciaEducativaNavigation = new ExperienciaEducativa { Nombre = "EE", Horas = "4", PerfilDocente = "Perfil" }
+            });
+            _horarioRepositoryMock.Setup(r => r.ObtenerPorIdOferta(40)).ReturnsAsync([]);
+            _plantillaServiceMock.Setup(p => p.GenerarAvisoAsync(It.IsAny<PlantillaAvisoDTO>())).ReturnsAsync(77);
+            _avisoRepositoryMock.Setup(r => r.ActualizarCompletoAsync(dto, 77, It.IsAny<List<Horario>>())).Returns(Task.CompletedTask);
         }
     }
 }

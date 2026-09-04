@@ -84,11 +84,13 @@
 					texto = "Ver Aviso",
 					tipo = "secundario"
 				})
-				@await Component.InvokeAsync("Boton", new
-				{
-					accion = "editar",
-					fondo = false
-				})
+                <a href="@Url.Action("EditarAviso", "Avisos", new { idAviso = Model.IdAviso })">
+                    @await Component.InvokeAsync("Boton", new
+                    {
+                        accion = "editar",
+                        fondo = false
+                    })
+                </a>
 				@await Component.InvokeAsync("Boton", new
 				{
 					accion = "eliminar",
@@ -146,11 +148,13 @@
 					texto = "Ver Aviso",
 					tipo = "secundario"
 				})
-				@await Component.InvokeAsync("Boton", new
-				{
-					accion = "editar",
-					fondo = false
-				})
+                <a href="@Url.Action("EditarAviso", "Avisos", new { idAviso = Model.IdAviso })">
+                    @await Component.InvokeAsync("Boton", new
+                    {
+                        accion = "editar",
+                        fondo = false
+                    })
+                </a>
 				break;
 
 			case Constantes.FIRMADO:

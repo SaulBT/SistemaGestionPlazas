@@ -2,6 +2,7 @@
 {
     public class OfertaAvisoDTO
     {
+        public int IdOferta { get; set; }
         public string NombrePlanEstudio = string.Empty;
         public string Horas { get; set; } = string.Empty;
         public string NombreExperienciaEducativa { get; set; } = string.Empty;
