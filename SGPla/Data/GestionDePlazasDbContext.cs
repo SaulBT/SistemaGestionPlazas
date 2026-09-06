@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using SGPla.Models;
+using SGPla.Modules.SolicitudesApertura.Domain;
 
 namespace SGPla.Data;
 
@@ -59,6 +60,10 @@ public partial class GestionDePlazasDbContext : DbContext
     public virtual DbSet<ProgramaEducativo> ProgramaEducativo { get; set; }
 
     public virtual DbSet<Solicitud> Solicitud { get; set; }
+
+    public virtual DbSet<Modalidad> Modalidad { get; set; }
+
+    public virtual DbSet<SolicitudApertura> SolicitudApertura { get; set; }
 
     public virtual DbSet<SuperUsuario> SuperUsuario { get; set; }
 
@@ -848,8 +853,117 @@ public partial class GestionDePlazasDbContext : DbContext
                 .HasColumnName("nombre");
         });
 
-        OnModelCreatingPartial(modelBuilder);
-    }
+        modelBuilder.Entity<ExperienciaEducativa>(entity =>
+        {
+            entity.Property(e => e.CantidadMinimaSolicitantes)
+                .HasColumnName("cantidadMinimaSolicitantes");
+            entity.Property(e => e.CantidadMaximaSolicitantes)
+                .HasColumnName("cantidadMaximaSolicitantes");
+        });
 
-    partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
+        modelBuilder.Entity<Periodo>(entity =>
+        {
+            entity.Property(e => e.FechaInicio)
+                .HasColumnName("fechaInicio");
+            entity.Property(e => e.FechaFin)
+                .HasColumnName("fechaFin");
+        });
+
+        modelBuilder.Entity<Modalidad>(entity =>
+        {
+            entity.HasKey(e => e.IdModalidad);
+
+            entity.HasIndex(e => e.Nombre)
+                .IsUnique()
+                .HasDatabaseName("UQ_Modalidad_Nombre");
+
+            entity.Property(e => e.IdModalidad)
+                .HasColumnName("idModalidad");
+            entity.Property(e => e.Nombre)
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .HasColumnName("nombre");
+            entity.Property(e => e.Activa)
+                .HasColumnName("activa")
+                .HasDefaultValue(true);
+
+            entity.ToTable("Modalidad");
+        });
+
+        modelBuilder.Entity<SolicitudApertura>(entity =>
+        {
+            entity.HasKey(e => e.IdSolicitudApertura);
+
+            entity.HasIndex(
+                    e => new
+                    {
+                        e.IdExperienciaEducativa,
+                        e.Seccion,
+                        e.IdPeriodo,
+                        e.IdEntidadAcademica,
+                        e.IdProgramaEducativo,
+                        e.IdPlanEstudios
+                    },
+                    "UX_SolicitudApertura_ContextoActivo")
+                .IsUnique()
+                .HasFilter("[estado] <> 'Rechazada'");
+
+            entity.Property(e => e.IdSolicitudApertura).HasColumnName("idSolicitudApertura");
+            entity.Property(e => e.IdExperienciaEducativa).HasColumnName("idExperienciaEducativa");
+            entity.Property(e => e.IdPeriodo).HasColumnName("idPeriodo");
+            entity.Property(e => e.IdEntidadAcademica).HasColumnName("idEntidadAcademica");
+            entity.Property(e => e.IdProgramaEducativo).HasColumnName("idProgramaEducativo");
+            entity.Property(e => e.IdPlanEstudios).HasColumnName("idPlanEstudios");
+            entity.Property(e => e.IdModalidad).HasColumnName("idModalidad");
+            entity.Property(e => e.Seccion)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("seccion");
+            entity.Property(e => e.CantidadSolicitantes).HasColumnName("cantidadSolicitantes");
+            entity.Property(e => e.Justificacion)
+                .IsUnicode(false)
+                .HasColumnName("justificacion");
+            entity.Property(e => e.IdArchivoOficio).HasColumnName("idArchivoOficio");
+            entity.Property(e => e.Estado)
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasColumnName("estado")
+                .HasDefaultValue(SolicitudAperturaConstantes.ESTADO_PENDIENTE);
+            entity.Property(e => e.FechaCreacion)
+                .HasColumnType("datetime2(0)")
+                .HasColumnName("fechaCreacion")
+                .HasDefaultValueSql("SYSUTCDATETIME()");
+
+            entity.HasOne(d => d.IdArchivoOficioNavigation).WithMany()
+                .HasForeignKey(d => d.IdArchivoOficio)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_SolicitudApertura_ArchivoOficio");
+            entity.HasOne(d => d.IdEntidadAcademicaNavigation).WithMany()
+                .HasForeignKey(d => d.IdEntidadAcademica)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_SolicitudApertura_EntidadAcademica");
+            entity.HasOne(d => d.IdExperienciaEducativaNavigation).WithMany()
+                .HasForeignKey(d => d.IdExperienciaEducativa)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_SolicitudApertura_ExperienciaEducativa");
+            entity.HasOne(d => d.IdModalidadNavigation).WithMany()
+                .HasForeignKey(d => d.IdModalidad)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_SolicitudApertura_Modalidad");
+            entity.HasOne(d => d.IdPeriodoNavigation).WithMany()
+                .HasForeignKey(d => d.IdPeriodo)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_SolicitudApertura_Periodo");
+            entity.HasOne(d => d.IdPlanEstudiosNavigation).WithMany()
+                .HasForeignKey(d => d.IdPlanEstudios)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_SolicitudApertura_PlanEstudios");
+            entity.HasOne(d => d.IdProgramaEducativoNavigation).WithMany()
+                .HasForeignKey(d => d.IdProgramaEducativo)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_SolicitudApertura_ProgramaEducativo");
+
+            entity.ToTable("SolicitudApertura");
+        });
+    }
 }
