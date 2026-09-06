@@ -799,6 +799,9 @@ public partial class GestionDePlazasDbContext : DbContext
                 .HasMaxLength(100)
                 .IsUnicode(false)
                 .HasColumnName("campus");
+            entity.Property(e => e.FechaEliminacion)
+                .HasColumnType("datetime2")
+                .HasColumnName("fechaEliminacion");
             entity.Property(e => e.IdEntidadAcademica).HasColumnName("idEntidadAcademica");
             entity.Property(e => e.Nombre)
                 .HasMaxLength(100)
