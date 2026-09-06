@@ -1,0 +1,3 @@
+namespace SGPla.Modules.EntidadesAcademicas.Application.EliminarEntidadAcademica.Contracts;
+
+public sealed record EliminarEntidadAcademicaCommand(int IdEntidadAcademica);

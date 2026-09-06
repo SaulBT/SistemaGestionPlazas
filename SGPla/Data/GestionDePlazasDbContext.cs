@@ -436,6 +436,10 @@ public partial class GestionDePlazasDbContext : DbContext
             entity.HasIndex(e => e.IdAreaAcademica, "IX_EntidadAcademica_idAreaAcademica");
 
             entity.Property(e => e.IdEntidadAcademica).HasColumnName("idEntidadAcademica");
+            entity.Property(e => e.Clave)
+                .HasMaxLength(5)
+                .IsUnicode(false)
+                .HasColumnName("clave");
             entity.Property(e => e.CalleNumero)
                 .HasMaxLength(150)
                 .IsUnicode(false)
@@ -465,6 +469,9 @@ public partial class GestionDePlazasDbContext : DbContext
                 .HasMaxLength(30)
                 .IsUnicode(false)
                 .HasColumnName("region");
+            entity.Property(e => e.FechaEliminacion)
+                .HasColumnType("datetime2")
+                .HasColumnName("fechaEliminacion");
             entity.Property(e => e.Telefono)
                 .HasMaxLength(30)
                 .IsUnicode(false)

@@ -11,6 +11,7 @@ using SGPla.Modules.SolicitudesApertura;
 using SGPla.Modules.Articulos;
 using SGPla.Modules.PeriodosEscolares;
 using SGPla.Modules.DireccionesAreaAcademica;
+using SGPla.Modules.EntidadesAcademicas;
 using SGPla.Commons;
 using System.Security.Claims;
 using System.Text;
@@ -128,6 +129,7 @@ builder.Services.AddSolicitudesAperturaModule();
 builder.Services.AddArticulosModule();
 builder.Services.AddPeriodosEscolaresModule();
 builder.Services.AddDireccionesAreaAcademicaModule();
+builder.Services.AddEntidadesAcademicasModule();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ILdapAuthService, LdapAuthService>();
@@ -165,8 +167,14 @@ if (app.Environment.IsDevelopment()
             .StartsWithSegments("/api/v1/periodos-escolares");
         var esAreasAcademicas = context.Request.Path
             .StartsWithSegments("/api/v1/areas-academicas");
+        var esEntidadesAcademicas = context.Request.Path
+            .StartsWithSegments("/api/v1/entidades-academicas");
 
-        if (esSolicitudesApertura || esArticulos || esPeriodosEscolares || esAreasAcademicas)
+        if (esSolicitudesApertura
+            || esArticulos
+            || esPeriodosEscolares
+            || esAreasAcademicas
+            || esEntidadesAcademicas)
         {
             var correo = app.Configuration["DevelopmentAuthentication:Email"];
             var claveRol = esArticulos
@@ -175,9 +183,14 @@ if (app.Environment.IsDevelopment()
                     ? "DevelopmentAuthentication:PeriodosEscolaresRole"
                     : esAreasAcademicas
                         ? "DevelopmentAuthentication:AreasAcademicasRole"
+                        : esEntidadesAcademicas
+                            ? "DevelopmentAuthentication:EntidadesAcademicasRole"
                         : "DevelopmentAuthentication:Role";
             var rol = app.Configuration[claveRol]
-                ?? (esArticulos || esPeriodosEscolares || esAreasAcademicas
+                ?? (esArticulos
+                    || esPeriodosEscolares
+                    || esAreasAcademicas
+                    || esEntidadesAcademicas
                     ? Constantes.SUPERUSUARIO
                     : Constantes.COORDINADOR_EA);
 
