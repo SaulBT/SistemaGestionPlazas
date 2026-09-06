@@ -10,6 +10,7 @@ using SGPla.Validations.Interfaces;
 using SGPla.Modules.SolicitudesApertura;
 using SGPla.Modules.Articulos;
 using SGPla.Modules.PeriodosEscolares;
+using SGPla.Modules.DireccionesAreaAcademica;
 using SGPla.Commons;
 using System.Security.Claims;
 using System.Text;
@@ -126,6 +127,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddSolicitudesAperturaModule();
 builder.Services.AddArticulosModule();
 builder.Services.AddPeriodosEscolaresModule();
+builder.Services.AddDireccionesAreaAcademicaModule();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ILdapAuthService, LdapAuthService>();
@@ -161,17 +163,21 @@ if (app.Environment.IsDevelopment()
             .StartsWithSegments("/api/v1/articulos");
         var esPeriodosEscolares = context.Request.Path
             .StartsWithSegments("/api/v1/periodos-escolares");
+        var esAreasAcademicas = context.Request.Path
+            .StartsWithSegments("/api/v1/areas-academicas");
 
-        if (esSolicitudesApertura || esArticulos || esPeriodosEscolares)
+        if (esSolicitudesApertura || esArticulos || esPeriodosEscolares || esAreasAcademicas)
         {
             var correo = app.Configuration["DevelopmentAuthentication:Email"];
             var claveRol = esArticulos
                 ? "DevelopmentAuthentication:ArticulosRole"
                 : esPeriodosEscolares
                     ? "DevelopmentAuthentication:PeriodosEscolaresRole"
-                    : "DevelopmentAuthentication:Role";
+                    : esAreasAcademicas
+                        ? "DevelopmentAuthentication:AreasAcademicasRole"
+                        : "DevelopmentAuthentication:Role";
             var rol = app.Configuration[claveRol]
-                ?? (esArticulos || esPeriodosEscolares
+                ?? (esArticulos || esPeriodosEscolares || esAreasAcademicas
                     ? Constantes.SUPERUSUARIO
                     : Constantes.COORDINADOR_EA);
 

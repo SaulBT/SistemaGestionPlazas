@@ -138,6 +138,9 @@ public partial class GestionDePlazasDbContext : DbContext
                 .HasMaxLength(5)
                 .IsUnicode(false)
                 .HasColumnName("extension");
+            entity.Property(e => e.FechaEliminacion)
+                .HasColumnType("datetime2")
+                .HasColumnName("fechaEliminacion");
             entity.Property(e => e.Nombre)
                 .HasMaxLength(100)
                 .IsUnicode(false)
