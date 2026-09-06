@@ -8,6 +8,11 @@ using SGPla.Services.Interfaces;
 using SGPla.Validations.Implementations;
 using SGPla.Validations.Interfaces;
 using SGPla.Modules.SolicitudesApertura;
+using SGPla.Modules.Articulos;
+using SGPla.Modules.PeriodosEscolares;
+using SGPla.Modules.DireccionesAreaAcademica;
+using SGPla.Modules.EntidadesAcademicas;
+using SGPla.Modules.ProgramasEducativos;
 using SGPla.Commons;
 using System.Security.Claims;
 using System.Text;
@@ -122,6 +127,11 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
 builder.Services.AddAuthorization();
 builder.Services.AddSolicitudesAperturaModule();
+builder.Services.AddArticulosModule();
+builder.Services.AddPeriodosEscolaresModule();
+builder.Services.AddDireccionesAreaAcademicaModule();
+builder.Services.AddEntidadesAcademicasModule();
+builder.Services.AddProgramasEducativosModule();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ILdapAuthService, LdapAuthService>();
@@ -151,11 +161,46 @@ if (app.Environment.IsDevelopment()
 {
     app.Use(async (context, next) =>
     {
-        if (context.Request.Path.StartsWithSegments("/api/v1/solicitudes-apertura"))
+        var esSolicitudesApertura = context.Request.Path
+            .StartsWithSegments("/api/v1/solicitudes-apertura");
+        var esArticulos = context.Request.Path
+            .StartsWithSegments("/api/v1/articulos");
+        var esPeriodosEscolares = context.Request.Path
+            .StartsWithSegments("/api/v1/periodos-escolares");
+        var esAreasAcademicas = context.Request.Path
+            .StartsWithSegments("/api/v1/areas-academicas");
+        var esEntidadesAcademicas = context.Request.Path
+            .StartsWithSegments("/api/v1/entidades-academicas");
+        var esProgramasEducativos = context.Request.Path
+            .StartsWithSegments("/api/v1/programas-educativos");
+
+        if (esSolicitudesApertura
+            || esArticulos
+            || esPeriodosEscolares
+            || esAreasAcademicas
+            || esEntidadesAcademicas
+            || esProgramasEducativos)
         {
             var correo = app.Configuration["DevelopmentAuthentication:Email"];
-            var rol = app.Configuration["DevelopmentAuthentication:Role"]
-                ?? Constantes.COORDINADOR_EA;
+            var claveRol = esArticulos
+                ? "DevelopmentAuthentication:ArticulosRole"
+                : esPeriodosEscolares
+                    ? "DevelopmentAuthentication:PeriodosEscolaresRole"
+                    : esAreasAcademicas
+                        ? "DevelopmentAuthentication:AreasAcademicasRole"
+                        : esEntidadesAcademicas
+                            ? "DevelopmentAuthentication:EntidadesAcademicasRole"
+                            : esProgramasEducativos
+                                ? "DevelopmentAuthentication:ProgramasEducativosRole"
+                                : "DevelopmentAuthentication:Role";
+            var rol = app.Configuration[claveRol]
+                ?? (esArticulos
+                    || esPeriodosEscolares
+                    || esAreasAcademicas
+                    || esEntidadesAcademicas
+                    || esProgramasEducativos
+                    ? Constantes.SUPERUSUARIO
+                    : Constantes.COORDINADOR_EA);
 
             if (string.IsNullOrWhiteSpace(correo))
             {

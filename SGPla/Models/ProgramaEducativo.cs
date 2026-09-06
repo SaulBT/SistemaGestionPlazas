@@ -13,6 +13,8 @@ public partial class ProgramaEducativo
 
     public string Campus { get; set; } = null!;
 
+    public DateTime? FechaEliminacion { get; set; }
+
     public virtual EntidadAcademica IdEntidadAcademicaNavigation { get; set; } = null!;
 
     public virtual ICollection<Oferta> Oferta { get; set; } = new List<Oferta>();

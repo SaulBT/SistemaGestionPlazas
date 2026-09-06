@@ -66,7 +66,7 @@ BEGIN
         (2, N'70 y 73', N'personal académico adscrito, al personal de la Universidad Veracruzana y público en general que cubra el perfil requerido y cumpla con los requisitos solicitados'),
         (3, N'70 y 73 a fin', N'personal académico adscrito, así como al personal de la Universidad Veracruzana y público en general que cubra los requisitos solicitados, que ostente un perfil similar o afín al requerido y');
     SET IDENTITY_INSERT [dbo].[Articulo] OFF;
-    DBCC CHECKIDENT ('dbo.Articulo', RESEED, 2);
+    DBCC CHECKIDENT ('dbo.Articulo', RESEED, 3);
 END
 GO
 
