@@ -19,6 +19,10 @@ public partial class ExperienciaEducativa
 
     public string Horas { get; set; } = null!;
 
+    public int? CantidadMinimaSolicitantes { get; set; }
+
+    public int? CantidadMaximaSolicitantes { get; set; }
+
     public virtual ICollection<CargaAcademica> CargaAcademica { get; set; } = new List<CargaAcademica>();
 
     public virtual PlanEstudios IdPlanEstudiosNavigation { get; set; } = null!;

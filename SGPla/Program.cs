@@ -7,6 +7,9 @@ using SGPla.Services.Implementations;
 using SGPla.Services.Interfaces;
 using SGPla.Validations.Implementations;
 using SGPla.Validations.Interfaces;
+using SGPla.Modules.SolicitudesApertura;
+using SGPla.Commons;
+using System.Security.Claims;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -93,9 +96,32 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.SlidingExpiration = true;
         options.Cookie.HttpOnly = true;
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Events.OnRedirectToLogin = context =>
+        {
+            if (context.Request.Path.StartsWithSegments("/api"))
+            {
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                return Task.CompletedTask;
+            }
+
+            context.Response.Redirect(context.RedirectUri);
+            return Task.CompletedTask;
+        };
+        options.Events.OnRedirectToAccessDenied = context =>
+        {
+            if (context.Request.Path.StartsWithSegments("/api"))
+            {
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                return Task.CompletedTask;
+            }
+
+            context.Response.Redirect(context.RedirectUri);
+            return Task.CompletedTask;
+        };
     });
 
 builder.Services.AddAuthorization();
+builder.Services.AddSolicitudesAperturaModule();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ILdapAuthService, LdapAuthService>();
@@ -120,9 +146,44 @@ app.UseSession();       // 2. sesión
 
 app.UseAuthentication(); // 3. ¿quién eres?
 
+if (app.Environment.IsDevelopment()
+    && app.Configuration.GetValue<bool>("DevelopmentAuthentication:Enabled"))
+{
+    app.Use(async (context, next) =>
+    {
+        if (context.Request.Path.StartsWithSegments("/api/v1/solicitudes-apertura"))
+        {
+            var correo = app.Configuration["DevelopmentAuthentication:Email"];
+            var rol = app.Configuration["DevelopmentAuthentication:Role"]
+                ?? Constantes.COORDINADOR_EA;
+
+            if (string.IsNullOrWhiteSpace(correo))
+            {
+                throw new InvalidOperationException(
+                    "DevelopmentAuthentication:Email es obligatorio para probar el endpoint.");
+            }
+
+            var identidad = new ClaimsIdentity(
+                new[]
+                {
+                    new Claim(ClaimTypes.Name, "Usuario de desarrollo"),
+                    new Claim(ClaimTypes.Email, correo),
+                    new Claim(ClaimTypes.Role, rol)
+                },
+                authenticationType: "DevelopmentAuthentication");
+
+            context.User = new ClaimsPrincipal(identidad);
+        }
+
+        await next();
+    });
+}
+
 app.UseAuthorization();  // 4. ¿qué puedes hacer?
 
 app.MapStaticAssets();
+
+app.MapControllers();
 
 app.MapControllerRoute(
     name: "default",
