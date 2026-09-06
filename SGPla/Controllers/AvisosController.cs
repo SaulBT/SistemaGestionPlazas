@@ -33,7 +33,6 @@ namespace SGPla.Controllers
 
         private const string SESSION_ROL = "Rol";
         private const string SESSION_HORARIOS_AGREGADOS = "HorariosAgregados";
-        private const string SESSION_OFERTAS = "Ofertas";
 
         private const string NOMBRE_LOGGER = "AVISOS-FRONT-";
         private const string INDEX = "index:";
@@ -333,7 +332,40 @@ namespace SGPla.Controllers
 
         public async Task<IActionResult> CrearAviso()
         {
+            guardarEnSession(ObtenerLlaveHorarios(null), new List<CrearHorarioAvisoDTO>());
             return View(await ObtenerModelo());
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> EditarAviso(int idAviso)
+        {
+            try
+            {
+                var aviso = await _avisoService.ObtenerAvisoPorIDAsync(idAviso);
+                if (aviso.IdEntidadAcademica != idEntidadAcademica ||
+                    (await _avisoService.VerificarEstadoAvisoAsync(idAviso, Constantes.CREADO) == false &&
+                     await _avisoService.VerificarEstadoAvisoAsync(idAviso, Constantes.DEVUELTO_POR_DGAA) == false))
+                {
+                    TempData["Error"] = "El Aviso no está disponible para edición.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                guardarEnSession(ObtenerLlaveHorarios(idAviso), aviso.Horarios.Select(h => new CrearHorarioAvisoDTO
+                {
+                    IdAviso = idAviso,
+                    Fecha = h.Dia,
+                    HoraInicio = h.HoraInicio.ToString(@"hh\:mm"),
+                    HoraTermino = h.HoraFin.ToString(@"hh\:mm")
+                }).ToList());
+
+                return View("CrearAviso", await ObtenerModelo(idAviso));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "No se pudo cargar el aviso {IdAviso} para edición.", idAviso);
+                TempData["Error"] = "Ha ocurrido un error, inténtelo de nuevo más tarde.";
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         [HttpPost]
@@ -359,8 +391,8 @@ namespace SGPla.Controllers
                     Lugar = model.Lugar,
                     Correo = model.Correo,
                     Modalidad = model.Modalidad,
-                    OfertasId = obtenerDeSession<List<int>>(SESSION_OFERTAS),
-                    Horarios = obtenerDeSession<List<CrearHorarioAvisoDTO>>(SESSION_HORARIOS_AGREGADOS)
+                    OfertasId = model.OfertasId,
+                    Horarios = obtenerDeSession<List<CrearHorarioAvisoDTO>>(ObtenerLlaveHorarios(null)) ?? []
 
                 };
 
@@ -376,7 +408,51 @@ namespace SGPla.Controllers
             }
         }
 
-        private bool validarFormulario(CrearAvisoViewModel model)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditarAviso(CrearAvisoViewModel model)
+        {
+            if (model.IdAviso is null || model.IdAviso <= 0)
+                return RedirectToAction(nameof(Index));
+
+            var horarios = obtenerDeSession<List<CrearHorarioAvisoDTO>>(ObtenerLlaveHorarios(model.IdAviso)) ?? [];
+            if (!validarFormulario(model, horarios))
+                return View("CrearAviso", await CargarCamposCrearAviso(model));
+
+            try
+            {
+                await _avisoService.ActualizarAvisoPorId(new EditarAvisoDTO
+                {
+                    IdAviso = model.IdAviso.Value,
+                    IdEntidadAcademica = idEntidadAcademica,
+                    IdPeriodo = model.IdPeriodo!.Value,
+                    IdArticulo = model.IdArticulo!.Value,
+                    Folio = model.Folio,
+                    FechaCreacion = DateOnly.FromDateTime(DateTime.Now),
+                    FechaCT = DateOnly.Parse(model.FechaCT),
+                    FechaVacantes = DateOnly.Parse(model.FechaVacantes),
+                    Requisitos = model.Requisitos,
+                    Lugar = model.Lugar,
+                    Correo = model.Correo,
+                    Modalidad = model.Modalidad,
+                    Sistema = "Escolarizado",
+                    OfertasId = model.OfertasId,
+                    Horarios = horarios
+                });
+
+                HttpContext.Session.Remove(ObtenerLlaveHorarios(model.IdAviso));
+                TempData["Success"] = "Aviso guardado con éxito";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "No se pudo guardar el aviso {IdAviso}.", model.IdAviso);
+                TempData["Error"] = ex is ValidacionExcepction ? ex.Message : "No se pudo guardar el Aviso, inténtelo de nuevo más tarde";
+                return View("CrearAviso", await CargarCamposCrearAviso(model));
+            }
+        }
+
+        private bool validarFormulario(CrearAvisoViewModel model, List<CrearHorarioAvisoDTO>? horarios = null)
         {
             if ((!model.Modalidad.IsNullOrEmpty())
                     && (model.Modalidad.Equals(Constantes.MODALIDAD_AVISO_PRESENCIAL))
@@ -390,14 +466,14 @@ namespace SGPla.Controllers
                 return false;
             }
 
-            var horarios = obtenerDeSession<List<CrearHorarioAvisoDTO>>(SESSION_HORARIOS_AGREGADOS);
+            horarios ??= obtenerDeSession<List<CrearHorarioAvisoDTO>>(ObtenerLlaveHorarios(model.IdAviso));
             if ((horarios.IsNullOrEmpty()) || (horarios.Count == 0))
             {
                 TempData["Warning"] = "Seleccione por lo menos un Horario";
                 return false;
             }
             
-            var ofertas = obtenerDeSession<List<int>>(SESSION_OFERTAS);
+            var ofertas = model.OfertasId;
             if ((ofertas.IsNullOrEmpty()) || (ofertas.Count == 0))
             {
                 TempData["Warning"] = "No hay ofertas seleccionadas";
@@ -408,7 +484,7 @@ namespace SGPla.Controllers
 
         private async Task<CrearAvisoViewModel> CargarCamposCrearAviso (CrearAvisoViewModel model)
         {
-            CrearAvisoViewModel nuevoModelo = await ObtenerModelo();
+            CrearAvisoViewModel nuevoModelo = await ObtenerModelo(model.IdAviso);
 
             nuevoModelo.Lugar = model.Lugar ?? nuevoModelo.Lugar;
             nuevoModelo.Correo = model.Correo ?? nuevoModelo.Correo;
@@ -420,6 +496,10 @@ namespace SGPla.Controllers
             nuevoModelo.Modalidad = model.Modalidad ?? nuevoModelo.Modalidad;
             nuevoModelo.IdArticulo = model.IdArticulo ?? nuevoModelo.IdArticulo;
             nuevoModelo.Folio = model.Folio ?? nuevoModelo.Folio;
+            nuevoModelo.IdAviso = model.IdAviso;
+            nuevoModelo.Requisitos = model.Requisitos ?? nuevoModelo.Requisitos;
+            nuevoModelo.OfertasId = model.OfertasId;
+            nuevoModelo.PlanesEstudios = await CargarPlanesEstudios(model.IdPeriodo ?? -1, model.IdArticulo ?? -1, model.OfertasId);
 
             return nuevoModelo;
 
@@ -466,35 +546,43 @@ namespace SGPla.Controllers
 
             return new CrearAvisoViewModel
             {
+                IdAviso = aviso.IdAviso > 0 ? aviso.IdAviso : null,
+                IdPeriodo = aviso.IdPeriodo > 0 ? aviso.IdPeriodo : null,
+                IdArticulo = aviso.IdArticulo > 0 ? aviso.IdArticulo : null,
                 Periodos = periodosCombo,
                 Articulos = articulosCombo,
                 Modalidades = modalidadesCombo,
+                Folio = aviso.Folio,
+                FechaCT = aviso.FechaCT,
+                FechaVacantes = aviso.FechaVacantes,
+                Requisitos = aviso.Requisitos,
+                Lugar = aviso.Lugar,
+                Correo = aviso.Correo,
+                Modalidad = aviso.Modalidad,
+                OfertasId = aviso.Ofertas.Select(o => o.IdOferta).ToList(),
                 TablaHorario = await LlenarTablaHorario(aviso.Horarios),
-                PlanesEstudios = await CargarPlanesEstudios(-1, -1)
+                PlanesEstudios = aviso.IdAviso > 0
+                    ? await CargarPlanesEstudios(aviso.IdPeriodo, aviso.IdArticulo, aviso.Ofertas.Select(o => o.IdOferta).ToList())
+                    : []
             };
         }
 
-        private async Task<List<PlanEstudiosAvisoViewModel>> CargarPlanesEstudios(int idPeriodo, int idArticulo)
+        private async Task<List<PlanEstudiosAvisoViewModel>> CargarPlanesEstudios(int idPeriodo, int idArticulo, List<int>? ofertasSeleccionadas = null)
         {
             var planes = await _avisoService.ObtenerPlanesConOfertasAviso //Actualmente retorna las ofertas por Programa educativo
                 (idEntidadAcademica, idPeriodo, idArticulo); //TODO
 
-            List<int> idOfertas = new List<int>();
             List<PlanEstudiosAvisoViewModel> planesViewModel = new List<PlanEstudiosAvisoViewModel>();
             foreach (var p in planes)
             {
                 planesViewModel.Add(new PlanEstudiosAvisoViewModel
                 {
                     Nombre = p.Nombre,
-                    Tabla = await LlenarTablaOfertas(p.Ofertas)
+                    Tabla = await LlenarTablaOfertas(p.Ofertas),
+                    Ofertas = p.Ofertas,
+                    OfertasSeleccionadas = ofertasSeleccionadas ?? []
                 });
-                foreach (var o in p.Ofertas)
-                {
-                    idOfertas.Add(o.IdOferta);
-                }
-                
             }
-            guardarEnSession<List<int>>(SESSION_OFERTAS, idOfertas);
 
             return planesViewModel;
         }
@@ -659,32 +747,33 @@ namespace SGPla.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ActualizarOfertasAsync(int idPeriodo, int idArticulo)
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        public async Task<IActionResult> ActualizarOfertasAsync(int idPeriodo, int idArticulo, [FromQuery] List<int>? ofertasSeleccionadas)
         {
-            var ofertas = await CargarPlanesEstudios(idPeriodo, idArticulo);
+            var ofertas = await CargarPlanesEstudios(idPeriodo, idArticulo, ofertasSeleccionadas);
             return PartialView("_TablasOfertas", ofertas);
         }
 
         [HttpGet]
-        public IActionResult ObtenerHorarios()
+        public IActionResult ObtenerHorarios(int? idAviso)
         {
-            var horarios = obtenerDeSession<List<CrearHorarioAvisoDTO>>(SESSION_HORARIOS_AGREGADOS);
+            var horarios = obtenerDeSession<List<CrearHorarioAvisoDTO>>(ObtenerLlaveHorarios(idAviso));
             horarios ??= new List<CrearHorarioAvisoDTO>();
             return Json(horarios);
         }
 
         [HttpPost]
-        public async Task<IActionResult> AgregarHorario([FromBody] List<CrearHorarioAvisoDTO> horarios)
+        public async Task<IActionResult> AgregarHorario([FromBody] List<CrearHorarioAvisoDTO> horarios, int? idAviso)
         {
-            guardarEnSession<List<CrearHorarioAvisoDTO>>(SESSION_HORARIOS_AGREGADOS, horarios);
+            guardarEnSession(ObtenerLlaveHorarios(idAviso), horarios);
             var tabla = await ActualizarTablaHorarios(horarios);
             return PartialView("_Horarios", tabla);
         }
 
         [HttpGet]
-        public async Task<IActionResult> ObtenerTablaHorarios()
+        public async Task<IActionResult> ObtenerTablaHorarios(int? idAviso)
         {
-            var horarios = obtenerDeSession<List<CrearHorarioAvisoDTO>>(SESSION_HORARIOS_AGREGADOS);
+            var horarios = obtenerDeSession<List<CrearHorarioAvisoDTO>>(ObtenerLlaveHorarios(idAviso));
 
             horarios ??= new List<CrearHorarioAvisoDTO>();
 
@@ -760,6 +849,10 @@ namespace SGPla.Controllers
                 return default;
             }
         }
+
+        private static string ObtenerLlaveHorarios(int? idAviso) =>
+            $"{SESSION_HORARIOS_AGREGADOS}:{(idAviso?.ToString() ?? "nuevo")}";
+
         private void guardarEnSession<T>(string llave, T objeto)
         {
             var json = JsonSerializer.Serialize(objeto);

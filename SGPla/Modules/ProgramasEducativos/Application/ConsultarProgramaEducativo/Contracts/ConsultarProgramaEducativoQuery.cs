@@ -1,0 +1,3 @@
+namespace SGPla.Modules.ProgramasEducativos.Application.ConsultarProgramaEducativo.Contracts;
+
+public sealed record ConsultarProgramaEducativoQuery(int IdProgramaEducativo);

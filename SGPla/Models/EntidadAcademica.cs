@@ -9,6 +9,8 @@ public partial class EntidadAcademica
 
     public int IdAreaAcademica { get; set; }
 
+    public string? Clave { get; set; }
+
     public string Nombre { get; set; } = null!;
 
     public string CalleNumero { get; set; } = null!;
@@ -24,6 +26,8 @@ public partial class EntidadAcademica
     public string Extension { get; set; } = null!;
 
     public string Region { get; set; } = null!;
+
+    public DateTime? FechaEliminacion { get; set; }
 
     public virtual ICollection<Aviso> Aviso { get; set; } = new List<Aviso>();
 

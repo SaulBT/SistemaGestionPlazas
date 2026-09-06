@@ -1,0 +1,14 @@
+.git
+.gitignore
+
+**/bin/
+**/obj/
+**/.vs/
+**/.vscode/
+
+sgpla-app/
+SGPla.Tests/
+
+*.user
+*.suo
+*.swp

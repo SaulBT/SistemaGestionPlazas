@@ -7,6 +7,14 @@ using SGPla.Services.Implementations;
 using SGPla.Services.Interfaces;
 using SGPla.Validations.Implementations;
 using SGPla.Validations.Interfaces;
+using SGPla.Modules.SolicitudesApertura;
+using SGPla.Modules.Articulos;
+using SGPla.Modules.PeriodosEscolares;
+using SGPla.Modules.DireccionesAreaAcademica;
+using SGPla.Modules.EntidadesAcademicas;
+using SGPla.Modules.ProgramasEducativos;
+using SGPla.Commons;
+using System.Security.Claims;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -93,9 +101,37 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.SlidingExpiration = true;
         options.Cookie.HttpOnly = true;
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Events.OnRedirectToLogin = context =>
+        {
+            if (context.Request.Path.StartsWithSegments("/api"))
+            {
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                return Task.CompletedTask;
+            }
+
+            context.Response.Redirect(context.RedirectUri);
+            return Task.CompletedTask;
+        };
+        options.Events.OnRedirectToAccessDenied = context =>
+        {
+            if (context.Request.Path.StartsWithSegments("/api"))
+            {
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                return Task.CompletedTask;
+            }
+
+            context.Response.Redirect(context.RedirectUri);
+            return Task.CompletedTask;
+        };
     });
 
 builder.Services.AddAuthorization();
+builder.Services.AddSolicitudesAperturaModule();
+builder.Services.AddArticulosModule();
+builder.Services.AddPeriodosEscolaresModule();
+builder.Services.AddDireccionesAreaAcademicaModule();
+builder.Services.AddEntidadesAcademicasModule();
+builder.Services.AddProgramasEducativosModule();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ILdapAuthService, LdapAuthService>();
@@ -120,9 +156,79 @@ app.UseSession();       // 2. sesión
 
 app.UseAuthentication(); // 3. ¿quién eres?
 
+if (app.Environment.IsDevelopment()
+    && app.Configuration.GetValue<bool>("DevelopmentAuthentication:Enabled"))
+{
+    app.Use(async (context, next) =>
+    {
+        var esSolicitudesApertura = context.Request.Path
+            .StartsWithSegments("/api/v1/solicitudes-apertura");
+        var esArticulos = context.Request.Path
+            .StartsWithSegments("/api/v1/articulos");
+        var esPeriodosEscolares = context.Request.Path
+            .StartsWithSegments("/api/v1/periodos-escolares");
+        var esAreasAcademicas = context.Request.Path
+            .StartsWithSegments("/api/v1/areas-academicas");
+        var esEntidadesAcademicas = context.Request.Path
+            .StartsWithSegments("/api/v1/entidades-academicas");
+        var esProgramasEducativos = context.Request.Path
+            .StartsWithSegments("/api/v1/programas-educativos");
+
+        if (esSolicitudesApertura
+            || esArticulos
+            || esPeriodosEscolares
+            || esAreasAcademicas
+            || esEntidadesAcademicas
+            || esProgramasEducativos)
+        {
+            var correo = app.Configuration["DevelopmentAuthentication:Email"];
+            var claveRol = esArticulos
+                ? "DevelopmentAuthentication:ArticulosRole"
+                : esPeriodosEscolares
+                    ? "DevelopmentAuthentication:PeriodosEscolaresRole"
+                    : esAreasAcademicas
+                        ? "DevelopmentAuthentication:AreasAcademicasRole"
+                        : esEntidadesAcademicas
+                            ? "DevelopmentAuthentication:EntidadesAcademicasRole"
+                            : esProgramasEducativos
+                                ? "DevelopmentAuthentication:ProgramasEducativosRole"
+                                : "DevelopmentAuthentication:Role";
+            var rol = app.Configuration[claveRol]
+                ?? (esArticulos
+                    || esPeriodosEscolares
+                    || esAreasAcademicas
+                    || esEntidadesAcademicas
+                    || esProgramasEducativos
+                    ? Constantes.SUPERUSUARIO
+                    : Constantes.COORDINADOR_EA);
+
+            if (string.IsNullOrWhiteSpace(correo))
+            {
+                throw new InvalidOperationException(
+                    "DevelopmentAuthentication:Email es obligatorio para probar el endpoint.");
+            }
+
+            var identidad = new ClaimsIdentity(
+                new[]
+                {
+                    new Claim(ClaimTypes.Name, "Usuario de desarrollo"),
+                    new Claim(ClaimTypes.Email, correo),
+                    new Claim(ClaimTypes.Role, rol)
+                },
+                authenticationType: "DevelopmentAuthentication");
+
+            context.User = new ClaimsPrincipal(identidad);
+        }
+
+        await next();
+    });
+}
+
 app.UseAuthorization();  // 4. ¿qué puedes hacer?
 
 app.MapStaticAssets();
+
+app.MapControllers();
 
 app.MapControllerRoute(
     name: "default",

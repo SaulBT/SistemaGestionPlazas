@@ -12,6 +12,30 @@ Este documento explica cómo configurar la conexión a la base de datos **Gestio
 
 Permitir que cualquier integrante del equipo clone el repositorio, configure su entorno local y genere correctamente los modelos y el contexto de Entity Framework sin exponer la cadena de conexión.
 
+## Migraciones de base de datos
+
+El esquema se versiona con **DbUp** porque este proyecto utiliza Database First:
+el SQL es la fuente de verdad y el contexto de EF Core se regenera cuando cambia
+la base de datos. El ejecutable `SGPla.DbMigrator` aplica el baseline existente y
+las migraciones nuevas de `SGPla.DbMigrator/database/migrations` en orden alfabético.
+
+Para ejecutar el migrador localmente:
+
+```powershell
+$env:ConnectionStrings__DefaultConnection = "Server=(localdb)\MSSQLLocalDB;Database=GestionDePlazasBD;Trusted_Connection=True;TrustServerCertificate=True;"
+dotnet run --project SGPla.DbMigrator
+```
+
+También acepta `--connection=<cadena>`. En Docker Compose, el servicio
+`db-init` construye y ejecuta el migrador una sola vez antes de iniciar el
+backend. Compose activa `MIGRATOR_APPLY_DEVELOPMENT_SEED=true` para cargar los
+datos ficticios de `SGPla.DbMigrator/database/seed/development.sql`; producción debe dejarlo en
+`false`. El script `GestionDePlazasBD.sql` queda como respaldo histórico.
+
+Para cada cambio de esquema, agregar un archivo como
+`SGPla.DbMigrator/database/migrations/0002_descripcion.sql`. Una migración aplicada es inmutable:
+para corregirla se agrega otra. El journal de DbUp es `dbo.SchemaVersions`.
+
 ## Requisitos previos
 
 Antes de comenzar, verificar lo siguiente:
@@ -206,7 +230,11 @@ No debe subirse:
 
 ## 12. Si la base de datos cambia
 
-Si se agregan, eliminan o modifican tablas en SQL Server, será necesario volver a ejecutar el scaffolding para regenerar el modelo.
+Si se agregan, eliminan o modifican tablas en SQL Server:
+
+1. agregar una migración nueva en `SGPla.DbMigrator/database/migrations`;
+2. aplicarla con `SGPla.DbMigrator`;
+3. volver a ejecutar el scaffolding para regenerar el modelo.
 
 ## Resumen del flujo
 

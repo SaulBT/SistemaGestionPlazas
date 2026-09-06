@@ -1,0 +1,3 @@
+namespace SGPla.Modules.EntidadesAcademicas.Application.ConsultarEntidadAcademica.Contracts;
+
+public sealed record ConsultarEntidadAcademicaQuery(int IdEntidadAcademica);

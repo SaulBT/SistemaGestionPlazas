@@ -13,6 +13,8 @@ public partial class AreaAcademica
 
     public string Extension { get; set; } = null!;
 
+    public DateTime? FechaEliminacion { get; set; }
+
     public virtual ICollection<CoordinadorDgaa> CoordinadorDgaa { get; set; } = new List<CoordinadorDgaa>();
 
     public virtual ICollection<EntidadAcademica> EntidadAcademica { get; set; } = new List<EntidadAcademica>();

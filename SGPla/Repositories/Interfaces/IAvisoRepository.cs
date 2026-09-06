@@ -19,5 +19,6 @@ namespace SGPla.Repositories.Interfaces
         Task<bool> VerificarEstadoAsync(int idAviso, string estado);
         Task<bool> ExistePorId(int idAviso);
         Task AsociarOfertasPorAviso(List<int> idsOfertas, int idAviso);
+        Task ActualizarCompletoAsync(EditarAvisoDTO aviso, int idArchivoOriginal, List<Horario> horarios);
     }
 }

@@ -1,0 +1,3 @@
+namespace SGPla.Modules.ProgramasEducativos.Application.EliminarProgramaEducativo.Contracts;
+
+public sealed record EliminarProgramaEducativoCommand(int IdProgramaEducativo);

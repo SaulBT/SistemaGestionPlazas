@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using SGPla.Commons;
 using SGPla.Models.Components;
 using SGPla.Models.DTOs.Horario;
+using SGPla.Models.DTOs.Oferta;
 
 namespace SGPla.Models.ViewModels.Avisos
 {
@@ -12,6 +13,8 @@ namespace SGPla.Models.ViewModels.Avisos
 
 
         //Datos del formulario
+
+        public int? IdAviso { get; set; }
 
         [Required(ErrorMessage = campo_obligatorio)]
         public int? IdArticulo { get; set; }
@@ -41,6 +44,9 @@ namespace SGPla.Models.ViewModels.Avisos
         public string Correo { get; set; }
         [Required(ErrorMessage = campo_obligatorio)]
         public string Folio { get; set; }
+
+        [ValidateNever]
+        public List<int> OfertasId { get; set; } = [];
 
         //Tablas
         [ValidateNever]
@@ -81,6 +87,8 @@ namespace SGPla.Models.ViewModels.Avisos
     {
         public string Nombre {  get; set; }
         public TableModel Tabla {  get; set; }
+        public List<DatosOfertaAvisoDTO> Ofertas { get; set; } = [];
+        public List<int> OfertasSeleccionadas { get; set; } = [];
     }
         
 }

@@ -123,5 +123,21 @@ namespace SGPla.Repositories.Implementations
 
             return planesDTO;
         }
+
+        public async Task<bool> SonOfertasValidasParaAvisoAsync(List<int> idsOfertas, int idEntidadAcademica, int idPeriodo, int idArticulo)
+        {
+            var idsDistintos = idsOfertas.Distinct().ToList();
+            if (idsDistintos.Count == 0)
+                return false;
+
+            var cantidadValidas = await _context.Oferta.CountAsync(o =>
+                idsDistintos.Contains(o.IdOferta) &&
+                o.Incluida &&
+                o.IdPeriodo == idPeriodo &&
+                o.IdArticulo == idArticulo &&
+                o.IdProgramaEducativoNavigation.IdEntidadAcademica == idEntidadAcademica);
+
+            return cantidadValidas == idsDistintos.Count;
+        }
     }
 }
