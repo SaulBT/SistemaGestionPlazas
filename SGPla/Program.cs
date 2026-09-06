@@ -8,6 +8,7 @@ using SGPla.Services.Interfaces;
 using SGPla.Validations.Implementations;
 using SGPla.Validations.Interfaces;
 using SGPla.Modules.SolicitudesApertura;
+using SGPla.Modules.Articulos;
 using SGPla.Commons;
 using System.Security.Claims;
 using System.Text;
@@ -122,6 +123,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
 builder.Services.AddAuthorization();
 builder.Services.AddSolicitudesAperturaModule();
+builder.Services.AddArticulosModule();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ILdapAuthService, LdapAuthService>();
@@ -151,11 +153,19 @@ if (app.Environment.IsDevelopment()
 {
     app.Use(async (context, next) =>
     {
-        if (context.Request.Path.StartsWithSegments("/api/v1/solicitudes-apertura"))
+        var esSolicitudesApertura = context.Request.Path
+            .StartsWithSegments("/api/v1/solicitudes-apertura");
+        var esArticulos = context.Request.Path
+            .StartsWithSegments("/api/v1/articulos");
+
+        if (esSolicitudesApertura || esArticulos)
         {
             var correo = app.Configuration["DevelopmentAuthentication:Email"];
-            var rol = app.Configuration["DevelopmentAuthentication:Role"]
-                ?? Constantes.COORDINADOR_EA;
+            var claveRol = esArticulos
+                ? "DevelopmentAuthentication:ArticulosRole"
+                : "DevelopmentAuthentication:Role";
+            var rol = app.Configuration[claveRol]
+                ?? (esArticulos ? Constantes.SUPERUSUARIO : Constantes.COORDINADOR_EA);
 
             if (string.IsNullOrWhiteSpace(correo))
             {
