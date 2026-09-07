@@ -16,15 +16,8 @@ namespace SGPla.ViewComponents
             {
                 EstaAutenticado = estaAutenticado,
                 Nombre = usuario.FindFirst(ClaimTypes.Name)?.Value,
-                Rol = HttpContext.Session.GetString("RolActivo")
-                      ?? usuario.FindFirst(ClaimTypes.Role)?.Value,
-                TieneSuperUsuario = usuario.IsInRole(Constantes.SUPERUSUARIO),
+                Rol = usuario.FindFirst(ClaimTypes.Role)?.Value,
             };
-
-            if (estaAutenticado && model.TieneSuperUsuario)
-            {
-                model.RolActivoEsSuperUsuario = model.Rol == Constantes.SUPERUSUARIO;
-            }
 
             return View(model);
         }

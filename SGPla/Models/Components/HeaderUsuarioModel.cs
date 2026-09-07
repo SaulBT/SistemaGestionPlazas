@@ -9,7 +9,5 @@ namespace SGPla.Models.Components
         public bool EstaAutenticado { get; set; }
         public string? Nombre { get; set; }
         public string? Rol { get; set; }
-        public bool TieneSuperUsuario { get; set; }
-        public bool RolActivoEsSuperUsuario { get; set; }
     }
 }

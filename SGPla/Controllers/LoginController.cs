@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SGPla.Commons;
 using SGPla.Models.ViewModels.Login;
@@ -8,6 +9,7 @@ using System.Security.Claims;
 
 namespace SGPla.Controllers
 {
+    [AllowAnonymous]
     public class LoginController : Controller
     {
         private readonly IAuthService _authService;
@@ -65,13 +67,8 @@ namespace SGPla.Controllers
                 new(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
                 new(ClaimTypes.Name, usuario.NombreCompleto),
                 new(ClaimTypes.Email, usuario.Correo),
-                new(ClaimTypes.Role, usuario.Rol), // Coordinador, siempre así al entrar
+                new(ClaimTypes.Role, usuario.Rol),
             };
-
-            if (usuario.EsSuperUsuario)
-            {
-                claims.Add(new Claim(ClaimTypes.Role, Constantes.SUPERUSUARIO)); // el permiso EXISTE, pero no es el modo activo por defecto
-            }
 
             if (usuario.EntidadAcademicaId is not null)
                 claims.Add(new Claim("EntidadAcademicaId", usuario.EntidadAcademicaId.ToString()!));
@@ -87,10 +84,9 @@ namespace SGPla.Controllers
                      IsPersistent = false
                  });
 
-            if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
-                return Redirect(model.ReturnUrl);
-
-            return RedirectToAction("Index", "ProgramacionesAcademicas");
+            // El inicio depende del único rol efectivo de la sesión. No se reutiliza
+            // ReturnUrl porque podría apuntar a una ruta de otro rol.
+            return RedirigirInicioSegunRol(usuario.Rol);
         }
 
         [HttpPost]
@@ -103,32 +99,13 @@ namespace SGPla.Controllers
             return RedirectToAction("Index", "Login");
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult CambiarModo()
+        private IActionResult RedirigirInicioSegunRol(string rol) => rol switch
         {
-            var rolActivo = HttpContext.Session.GetString("RolActivo");
-            var esSuperUsuario = rolActivo == Constantes.SUPERUSUARIO;
+            Constantes.SUPERUSUARIO => RedirectToAction("Index", "Usuarios"),
+            Constantes.COORDINADOR_DGAA => RedirectToAction("Index", "ProgramacionesAcademicas"),
+            Constantes.COORDINADOR_EA => RedirectToAction("Index", "ProgramacionesAcademicas"),
+            _ => RedirectToAction("Index", "Home")
+        };
 
-            if (esSuperUsuario)
-            {
-                // Vuelve a su rol de coordinador original
-                var rolCoordinador = User.FindAll(ClaimTypes.Role)
-                    .Select(c => c.Value)
-                    .FirstOrDefault(r => r != Constantes.SUPERUSUARIO);
-
-                HttpContext.Session.SetString("RolActivo", rolCoordinador ?? Constantes.SUPERUSUARIO);
-                return RedirectToAction("Index", "ProgramacionesAcademicas");
-            }
-            else
-            {
-                // Solo permite entrar a modo SuperUsuario si de verdad tiene ese claim
-                if (!User.IsInRole(Constantes.SUPERUSUARIO))
-                    return Forbid();
-
-                HttpContext.Session.SetString("RolActivo", Constantes.SUPERUSUARIO);
-                return RedirectToAction("Index", "Usuarios");
-            }
-        }
     }
 }

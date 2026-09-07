@@ -17,7 +17,7 @@ namespace SGPla.Modules.Articulos.Api;
 
 [ApiController]
 [Route("api/v1/articulos")]
-[Authorize]
+[Authorize(Policy = PoliticasAutorizacion.SuperUsuario)]
 public sealed class ArticuloController : ControllerBase
 {
     private readonly IConsultarArticulosService _consultarArticulosService;

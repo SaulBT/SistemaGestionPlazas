@@ -13,6 +13,6 @@ namespace SGPla.Repositories.Interfaces
         Task ActualizarAsync(CoordinadorDgaa coordinadorDgaa);
         Task EliminarAsync(CoordinadorDgaa coordinadorDgaa);
 
-        Task<bool> EsSuperUsuarioAsync(string correo);
+        Task<SuperUsuario?> ObtenerSuperUsuarioPorCorreoAsync(string correo);
     }
 }

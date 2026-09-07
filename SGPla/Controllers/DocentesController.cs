@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using SGPla.Commons;
 using SGPla.Commons.Factories;
@@ -13,6 +14,7 @@ using System.Text.Json;
 
 namespace SGPla.Controllers
 {
+    [Authorize(Policy = PoliticasAutorizacion.EntidadAcademica)]
     public class DocentesController : Controller
     {
         private readonly IDocenteService _docenteService;

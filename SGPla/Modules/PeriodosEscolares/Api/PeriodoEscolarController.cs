@@ -22,7 +22,7 @@ namespace SGPla.Modules.PeriodosEscolares.Api;
 
 [ApiController]
 [Route("api/v1/periodos-escolares")]
-[Authorize]
+[Authorize(Policy = PoliticasAutorizacion.SuperUsuario)]
 public sealed class PeriodoEscolarController : ControllerBase
 {
     private readonly IConsultarPeriodosEscolaresService _consultarPeriodosService;

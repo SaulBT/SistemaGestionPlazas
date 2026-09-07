@@ -7,7 +7,5 @@
         public string NombreCompleto { get; set; } = null!;
         public string Rol { get; set; } = null!; // "Superusuario", "Entidad Academica", "Coordinador DGAA"
         public int? EntidadAcademicaId { get; set; }
-
-        public bool EsSuperUsuario { get; set; }
     }
 }

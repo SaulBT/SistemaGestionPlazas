@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using SGPla.Commons;
 using SGPla.Commons.Factories;
@@ -13,6 +14,7 @@ using System.Numerics;
 
 namespace SGPla.Controllers
 {
+    [Authorize(Policy = PoliticasAutorizacion.SuperUsuario)]
     public class UsuariosController : Controller
     {
         private readonly IUsuarioService _usuarioService;
