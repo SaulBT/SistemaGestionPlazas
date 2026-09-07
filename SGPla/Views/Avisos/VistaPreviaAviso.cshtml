@@ -1,0 +1,16 @@
+@model SGPla.Models.ViewModels.Avisos.VistaPreviaAvisoViewModel
+@{
+    ViewData["Title"] = $"Aviso {Model.Folio}";
+}
+
+<div style="display:flex; justify-content:flex-end; gap:10px; margin-bottom:20px;">
+    <div style="display:flex; gap:10px;">
+        <a href="@Url.Action("Index", "Avisos")" class="btn btn-outline-secondary">Volver</a>
+        <a href="@Model.UrlDescarga" class="btn btn-primary">Descargar DOCX</a>
+    </div>
+</div>
+
+<iframe src="@Model.UrlVistaPrevia"
+        title="Vista previa del aviso @Model.Folio"
+        style="width:100%; height:80vh; border:1px solid #ced4da; border-radius:4px;">
+</iframe>

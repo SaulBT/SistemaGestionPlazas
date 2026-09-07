@@ -79,11 +79,9 @@
 						tipo = "terciario"
 					})
 				</a>
-				@await Component.InvokeAsync("Boton", new
-				{
-					texto = "Ver Aviso",
-					tipo = "secundario"
-				})
+				<a href="@Url.Action("VistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })">
+					@await Component.InvokeAsync("Boton", new { texto = "Ver Aviso", tipo = "secundario" })
+				</a>
                 <a href="@Url.Action("EditarAviso", "Avisos", new { idAviso = Model.IdAviso })">
                     @await Component.InvokeAsync("Boton", new
                     {
@@ -100,11 +98,9 @@
 				break;
 
 			case Constantes.EN_REVISION_POR_DGAA:
-				@await Component.InvokeAsync("Boton", new
-				{
-					texto = "Ver aviso",
-					tipo = "secundario"
-				})
+				<a href="@Url.Action("VistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })">
+					@await Component.InvokeAsync("Boton", new { texto = "Ver Aviso", tipo = "secundario" })
+				</a>
 				break;
 
 			case Constantes.AVALADO_POR_DGAA:
@@ -121,11 +117,9 @@
 					tipo = "secundario",
 					OnClick = $"abrirModalComentarios('{Model.Comentarios}')"
 				})
-				@await Component.InvokeAsync("Boton", new
-				{
-					texto = "Ver Aviso",
-					tipo = "secundario"
-				})
+				<a href="@Url.Action("VistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })">
+					@await Component.InvokeAsync("Boton", new { texto = "Ver Aviso", tipo = "secundario" })
+				</a>
 				break;
 
 			case Constantes.DEVUELTO_POR_DGAA:
@@ -143,11 +137,9 @@
 					tipo = "secundario",
 					OnClick = $"abrirModalComentarios('{Model.Comentarios}')"
 				})
-				@await Component.InvokeAsync("Boton", new
-				{
-					texto = "Ver Aviso",
-					tipo = "secundario"
-				})
+				<a href="@Url.Action("VistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })">
+					@await Component.InvokeAsync("Boton", new { texto = "Ver Aviso", tipo = "secundario" })
+				</a>
                 <a href="@Url.Action("EditarAviso", "Avisos", new { idAviso = Model.IdAviso })">
                     @await Component.InvokeAsync("Boton", new
                     {
@@ -164,11 +156,9 @@
 					tipo = "publicar",
 					OnClick = $"abrirModalPublicar({Model.IdAviso})"
 				})
-				@await Component.InvokeAsync("Boton", new
-				{
-					texto = "Ver Aviso",
-					tipo = "secundario"
-				})
+				<a href="@Url.Action("VistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })">
+					@await Component.InvokeAsync("Boton", new { texto = "Ver Aviso", tipo = "secundario" })
+				</a>
 				break;
 
 			case Constantes.PUBLICADO:
@@ -183,11 +173,9 @@
 					tipo = "terciario",
 					accion = "agregar"
 				})
-				@await Component.InvokeAsync("Boton", new
-				{
-					texto = "Ver Aviso",
-					tipo = "secundario"
-				})
+				<a href="@Url.Action("VistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })">
+					@await Component.InvokeAsync("Boton", new { texto = "Ver Aviso", tipo = "secundario" })
+				</a>
 				break;
 			case Constantes.ACTA_DE_CT_CREADA:
 				@await Component.InvokeAsync("Boton", new

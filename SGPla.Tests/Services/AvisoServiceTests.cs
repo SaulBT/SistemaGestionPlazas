@@ -586,6 +586,47 @@ namespace SGPla.Tests.Services
         }
 
         [Fact]
+        public async Task ActualizarAvisoPorId_Exitoso_EliminaDocumentoOriginalAnterior()
+        {
+            var dto = CrearEdicionValida();
+            ConfigurarDependenciasEdicion(dto, "Creado");
+            var avisoActual = CrearAvisoActual(dto, "Creado");
+            avisoActual.IdArchivoOriginal = 12;
+            var archivoAnterior = new Archivo { IdArchivo = 12, Ruta = "aviso-original/anterior.docx" };
+
+            _avisoRepositoryMock.Setup(r => r.ObtenerPorIDAsync(dto.IdAviso)).ReturnsAsync(avisoActual);
+            _archivoRepositoryMock.Setup(r => r.ObtenerPorIdAsync(12)).ReturnsAsync(archivoAnterior);
+            _archivoRepositoryMock.Setup(r => r.EliminarAsync(archivoAnterior)).Returns(Task.CompletedTask);
+            _archivoServiceMock.Setup(s => s.EliminarAsync(archivoAnterior.Ruta)).Returns(Task.CompletedTask);
+
+            await _avisoService.ActualizarAvisoPorId(dto);
+
+            _archivoRepositoryMock.Verify(r => r.EliminarAsync(archivoAnterior), Times.Once);
+            _archivoServiceMock.Verify(s => s.EliminarAsync(archivoAnterior.Ruta), Times.Once);
+        }
+
+        [Fact]
+        public async Task ActualizarAvisoPorId_FallaAlPersistir_EliminaDocumentoNuevo()
+        {
+            var dto = CrearEdicionValida();
+            ConfigurarDependenciasEdicion(dto, "Creado");
+            var archivoNuevo = new Archivo { IdArchivo = 77, Ruta = "aviso-original/nuevo.docx" };
+
+            _avisoRepositoryMock
+                .Setup(r => r.ActualizarCompletoAsync(dto, 77, It.IsAny<List<Horario>>()))
+                .ThrowsAsync(new InvalidOperationException("Error de persistencia"));
+            _archivoRepositoryMock.Setup(r => r.ObtenerPorIdAsync(77)).ReturnsAsync(archivoNuevo);
+            _archivoRepositoryMock.Setup(r => r.EliminarAsync(archivoNuevo)).Returns(Task.CompletedTask);
+            _archivoServiceMock.Setup(s => s.EliminarAsync(archivoNuevo.Ruta)).Returns(Task.CompletedTask);
+
+            var ex = await Record.ExceptionAsync(() => _avisoService.ActualizarAvisoPorId(dto));
+
+            Assert.IsType<InvalidOperationException>(ex);
+            _archivoRepositoryMock.Verify(r => r.EliminarAsync(archivoNuevo), Times.Once);
+            _archivoServiceMock.Verify(s => s.EliminarAsync(archivoNuevo.Ruta), Times.Once);
+        }
+
+        [Fact]
         public async Task ActualizarAvisoPorId_EstadoNoPermitido_RechazaEdicion()
         {
             var dto = CrearEdicionValida();

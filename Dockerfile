@@ -1,7 +1,7 @@
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends libldap2 \
+    && apt-get install -y --no-install-recommends libldap2 libreoffice-writer \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

@@ -4,6 +4,7 @@ using SGPla.Models;
 using SGPla.Models.DTOs.Archivo;
 using SGPla.Repositories.Interfaces;
 using SGPla.Services.Interfaces;
+using System.Diagnostics;
 
 namespace SGPla.Services.Implementations
 {
@@ -98,6 +99,64 @@ namespace SGPla.Services.Implementations
                 Ruta = rutaFisica,
                 Nombre = archivo.Nombre,
                 Tipo = archivo.Tipo
+            };
+        }
+
+        public async Task<ArchivoDescargadoDTO> ObtenerVistaPreviaPdfAsync(int idArchivo)
+        {
+            var documento = await DescargarAsync(idArchivo);
+            if (!Path.GetExtension(documento.Ruta).Equals(".docx", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Sólo se puede generar una vista previa de documentos DOCX.");
+
+            var directorioVistasPrevias = Path.Combine(_rutaBase, "aviso-preview");
+            var rutaPdf = Path.Combine(directorioVistasPrevias, $"{idArchivo}.pdf");
+            if (!File.Exists(rutaPdf))
+            {
+                Directory.CreateDirectory(directorioVistasPrevias);
+
+                var perfilTemporal = Path.Combine(Path.GetTempPath(), $"sgpla-libreoffice-{Guid.NewGuid():N}");
+                Directory.CreateDirectory(perfilTemporal);
+                try
+                {
+                    var inicio = new ProcessStartInfo
+                    {
+                        FileName = "soffice",
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+                    inicio.ArgumentList.Add($"-env:UserInstallation=file://{perfilTemporal}");
+                    inicio.ArgumentList.Add("--headless");
+                    inicio.ArgumentList.Add("--convert-to");
+                    inicio.ArgumentList.Add("pdf:writer_pdf_Export");
+                    inicio.ArgumentList.Add("--outdir");
+                    inicio.ArgumentList.Add(directorioVistasPrevias);
+                    inicio.ArgumentList.Add(documento.Ruta);
+
+                    using var proceso = Process.Start(inicio)
+                        ?? throw new InvalidOperationException("No se pudo iniciar LibreOffice para generar la vista previa.");
+                    var salidaError = await proceso.StandardError.ReadToEndAsync();
+                    await proceso.WaitForExitAsync();
+
+                    var rutaPdfGenerada = Path.Combine(
+                        directorioVistasPrevias,
+                        $"{Path.GetFileNameWithoutExtension(documento.Ruta)}.pdf");
+                    if (proceso.ExitCode != 0 || !File.Exists(rutaPdfGenerada))
+                        throw new InvalidOperationException($"No se pudo convertir el aviso a PDF. {salidaError}");
+
+                    File.Move(rutaPdfGenerada, rutaPdf, true);
+                }
+                finally
+                {
+                    Directory.Delete(perfilTemporal, true);
+                }
+            }
+
+            return new ArchivoDescargadoDTO
+            {
+                Ruta = rutaPdf,
+                Nombre = $"{Path.GetFileNameWithoutExtension(documento.Nombre)}.pdf",
+                Tipo = "application/pdf"
             };
         }
 

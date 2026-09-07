@@ -152,8 +152,7 @@ namespace SGPla.Services.Implementations
         {
             //await _avisoValidator.ValidarCrearAviso(aviso);
 
-            DatosArchivoGuardadoDTO? archivoGuardado = null;
-            Archivo? archivoRegistrado = null;
+            int? idArchivoGenerado = null;
             try
             {
                 /*archivoGuardado = await _archivoService.GuardarAsync(aviso.archivo.RutaArchivo, aviso.archivo.NombreArchivo, "archivos-avisos");
@@ -183,7 +182,8 @@ namespace SGPla.Services.Implementations
                     //IdArchivoOriginal = archivoRegistrado.IdArchivo
                 };
 
-                avisoRegistrado.IdArchivoOriginal = await generarArchivoAvisoAsync(aviso);
+                idArchivoGenerado = await generarArchivoAvisoAsync(aviso);
+                avisoRegistrado.IdArchivoOriginal = idArchivoGenerado;
 
                 avisoRegistrado = await _avisoRepository.CrearAsync(avisoRegistrado);
                 List<Horario> horarios = new List<Horario>();
@@ -203,13 +203,12 @@ namespace SGPla.Services.Implementations
                 await _horarioRepository.CrearHorarios(horarios);
 
             }
-            catch (Exception ex)
+            catch
             {
-                if (archivoRegistrado != null)
-                    await _archivoRepository.EliminarAsync(archivoRegistrado);
-                if (archivoGuardado != null)
-                    await _archivoService.EliminarAsync(archivoGuardado.Ruta);
-                throw ex;
+                if (idArchivoGenerado.HasValue)
+                    await eliminarArchivoGeneradoAsync(idArchivoGenerado.Value);
+
+                throw;
             }
         }
 
@@ -376,16 +375,42 @@ namespace SGPla.Services.Implementations
                 throw new ValidacionExcepction("Las ofertas seleccionadas ya no son válidas para el aviso.", "400");
             }
 
-            var idArchivoNuevo = await generarArchivoAvisoAsync(aviso);
-            var horarios = aviso.Horarios.Select(h => new Horario
+            var idArchivoAnterior = avisoActual.IdArchivoOriginal;
+            int? idArchivoNuevo = null;
+            try
             {
-                IdAviso = aviso.IdAviso,
-                Dia = h.Fecha,
-                HoraInicio = TimeOnly.Parse(h.HoraInicio),
-                HoraFin = TimeOnly.Parse(h.HoraTermino)
-            }).ToList();
+                idArchivoNuevo = await generarArchivoAvisoAsync(aviso);
+                var horarios = aviso.Horarios.Select(h => new Horario
+                {
+                    IdAviso = aviso.IdAviso,
+                    Dia = h.Fecha,
+                    HoraInicio = TimeOnly.Parse(h.HoraInicio),
+                    HoraFin = TimeOnly.Parse(h.HoraTermino)
+                }).ToList();
 
-            await _avisoRepository.ActualizarCompletoAsync(aviso, idArchivoNuevo, horarios);
+                await _avisoRepository.ActualizarCompletoAsync(aviso, idArchivoNuevo.Value, horarios);
+            }
+            catch
+            {
+                if (idArchivoNuevo.HasValue)
+                    await eliminarArchivoGeneradoAsync(idArchivoNuevo.Value);
+
+                throw;
+            }
+
+            if (idArchivoAnterior.HasValue && idArchivoAnterior.Value != idArchivoNuevo.Value)
+                await eliminarArchivoGeneradoAsync(idArchivoAnterior.Value);
+        }
+
+        private async Task eliminarArchivoGeneradoAsync(int idArchivo)
+        {
+            var archivo = await _archivoRepository.ObtenerPorIdAsync(idArchivo);
+            if (archivo is null)
+                return;
+
+            await _archivoRepository.EliminarAsync(archivo);
+            await _archivoService.EliminarAsync(archivo.Ruta);
+            await _archivoService.EliminarAsync($"aviso-preview/{idArchivo}.pdf");
         }
 
         private static void validarDatosEdicion(EditarAvisoDTO aviso)
