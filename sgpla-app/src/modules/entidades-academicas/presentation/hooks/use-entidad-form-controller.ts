@@ -3,7 +3,6 @@
 import { useState } from "react";
 import {
   HttpClientError,
-  getErrorMessage,
   type ValidationErrors,
 } from "@/shared/api/http-client";
 import { toZodValidationErrors } from "@/shared/forms/zod-validation-errors";
@@ -38,7 +37,6 @@ export function useEntidadFormController({ entidad }: Props) {
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>(
     {},
   );
-  const [formError, setFormError] = useState<string>();
   const [formValues, setFormValues] = useState<EntidadFormValues>(() =>
     toEntidadFormValues(entidad),
   );
@@ -62,7 +60,6 @@ export function useEntidadFormController({ entidad }: Props) {
   }
 
   function validateForm() {
-    setFormError(undefined);
     const validation = entidadAcademicaFormSchema.safeParse(formValues);
 
     if (validation.success) {
@@ -89,10 +86,11 @@ export function useEntidadFormController({ entidad }: Props) {
       };
     } catch (error) {
       if (error instanceof HttpClientError) {
-        setValidationErrors(error.validationErrors ?? {});
+        setValidationErrors(
+          error.validationErrors ??
+            (error.status === 409 ? { clave: [error.message] } : {}),
+        );
       }
-
-      setFormError(getErrorMessage(error));
 
       return { status: "error", error };
     }
@@ -102,7 +100,6 @@ export function useEntidadFormController({ entidad }: Props) {
     areas,
     areasQuery,
     errorFor: (field: keyof EntidadFormValues) => validationErrors[field]?.[0],
-    formError,
     formValues,
     isDirty,
     isSaving: guardarMutation.isPending,

@@ -59,7 +59,8 @@ async function request<T>(
 
   const isJson = response.headers
     .get("content-type")
-    ?.includes("application/json");
+    ?.toLowerCase()
+    .includes("json");
   const payload: unknown = isJson ? await response.json() : undefined;
 
   if (!response.ok) {

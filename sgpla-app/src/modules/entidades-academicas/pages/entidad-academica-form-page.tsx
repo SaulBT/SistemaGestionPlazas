@@ -8,6 +8,7 @@ import { Form, FormContent } from "@/components/form";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { getErrorMessage } from "@/shared/api/http-client";
+import { MINIMUM_LOADING_DURATION_MS } from "@/shared/constants/loading";
 import type { EntidadAcademica } from "../domain/entidad-academica";
 import { useEntidadFormController } from "../presentation/hooks/use-entidad-form-controller";
 import { useUnsavedChangesWarning } from "../presentation/hooks/use-unsaved-changes-warning";
@@ -36,7 +37,6 @@ export function EntidadAcademicaFormPage({
     areas,
     areasQuery,
     errorFor,
-    formError,
     formValues,
     isSubmitDisabled,
     isSaving,
@@ -69,9 +69,12 @@ export function EntidadAcademicaFormPage({
 
     if (result.status !== "saved") return;
 
-    showEntidadAcademicaSavedToast(result.operation);
     router.push("/EntidadesAcademicas");
     router.refresh();
+    window.setTimeout(
+      () => showEntidadAcademicaSavedToast(result.operation),
+      MINIMUM_LOADING_DURATION_MS,
+    );
   }
 
   return (
@@ -139,12 +142,6 @@ export function EntidadAcademicaFormPage({
         {areasQuery.isError ? (
           <p className="text-sm font-medium text-destructive" role="alert">
             {getErrorMessage(areasQuery.error)}
-          </p>
-        ) : null}
-
-        {formError ? (
-          <p className="text-sm font-medium text-destructive" role="alert">
-            {formError}
           </p>
         ) : null}
       </Form>
