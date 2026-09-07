@@ -5,11 +5,21 @@ import { CheckIcon, ChevronDownIcon } from "lucide-react";
 import { Select as SelectPrimitive } from "radix-ui";
 
 import { cn } from "@/lib/utils";
+import { useTextFieldContext } from "@/components/text-field-context";
 
 function Select({
+  required,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Root>) {
-  return <SelectPrimitive.Root data-slot="select" {...props} />;
+  const textField = useTextFieldContext();
+
+  return (
+    <SelectPrimitive.Root
+      data-slot="select"
+      required={required ?? textField?.required}
+      {...props}
+    />
+  );
 }
 
 function SelectGroup({
@@ -35,10 +45,13 @@ function SelectTrigger({
   className,
   children,
   size = "default",
+  id,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Trigger> & {
   size?: "sm" | "default";
 }) {
+  const textFieldId = useTextFieldContext()?.id;
+
   return (
     <SelectPrimitive.Trigger
       data-slot="select-trigger"
@@ -47,6 +60,7 @@ function SelectTrigger({
         size === "sm" && "h-8 text-xs",
         className,
       )}
+      id={id ?? textFieldId}
       {...props}
     >
       <span className="min-w-0 flex-1 overflow-hidden truncate text-left">

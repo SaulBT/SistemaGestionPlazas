@@ -16,7 +16,12 @@ export function DireccionesListView() {
           title="Direcciones de Áreas Académicas"
           description="Administra las direcciones de las áreas académicas."
           actions={
-            <Button nativeButton={false} render={<Link href="/DireccionesAreaAcademica/CrearDireccionAreaAcademica" />}>
+            <Button
+              nativeButton={false}
+              render={
+                <Link href="/DireccionesAreaAcademica/CrearDireccionAreaAcademica" />
+              }
+            >
               <Plus />
               Agregar Dirección
             </Button>
@@ -24,7 +29,10 @@ export function DireccionesListView() {
         />
         <DireccionesFiltersHeader />
         <DireccionesDataGrid />
-        <nav aria-label="Paginación de direcciones" className="flex justify-end text-sm text-muted-foreground">
+        <nav
+          aria-label="Paginación de direcciones"
+          className="flex justify-end text-sm text-muted-foreground"
+        >
           Página 1 de 1
         </nav>
       </div>

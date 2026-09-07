@@ -28,11 +28,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMinimumLoading } from "@/shared/hooks/use-minimum-loading";
+import { MINIMUM_LOADING_DURATION_MS } from "@/shared/constants/loading";
 import {
   toEntidadAcademicaTableRow,
   type EntidadAcademicaTableRow,
-} from "../presentation/entidades-academicas.presenter";
-import type { EntidadAcademica } from "../domain/entidad-academica";
+} from "../../presentation/entidades-academicas.presenter";
+import type { EntidadAcademica } from "../../domain/entidad-academica";
 
 type EntidadColumnId =
   | "nombre"
@@ -114,7 +115,11 @@ export function EntidadesDataGrid({
   isDeleting,
   onDelete,
 }: Props) {
-  const shouldShowLoading = useMinimumLoading(isLoading, 300);
+  const shouldShowLoading = useMinimumLoading(
+    isLoading,
+    MINIMUM_LOADING_DURATION_MS,
+    0,
+  );
 
   if (shouldShowLoading) {
     return <EntidadesTableSkeleton />;

@@ -14,8 +14,7 @@ import { ArticulosFiltersHeader } from "./articulos-filters-header";
 
 export function ArticulosListView() {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingArticulo, setEditingArticulo] =
-    useState<ArticuloListItem>();
+  const [editingArticulo, setEditingArticulo] = useState<ArticuloListItem>();
 
   return (
     <Dashboard activeHref="/Articulos">

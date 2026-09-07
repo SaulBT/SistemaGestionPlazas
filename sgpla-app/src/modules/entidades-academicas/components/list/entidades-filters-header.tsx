@@ -12,9 +12,9 @@ import {
 import {
   REGIONES,
   type ConsultarEntidadesAcademicasQuery,
-} from "../domain/entidad-academica";
-import { useAreasAcademicas } from "../presentation/entidades-academicas.queries";
-import { EntidadAcademicaSearchInput } from "./entidad-academica-search-input";
+} from "../../domain/entidad-academica";
+import { useAreasAcademicas } from "../../presentation/entidades-academicas.queries";
+import { EntidadAcademicaSearchInput } from "./ui/entidad-academica-search-input";
 
 const TODAS = "__todas__";
 

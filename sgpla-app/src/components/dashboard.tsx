@@ -90,87 +90,94 @@ export function Dashboard({
   activeHref?: string;
 }) {
   return (
-    <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                render={<Link href="/" />}
-                icon={LayoutDashboard}
-                size="lg"
-                isActive
-              >
-                SGPla
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarHeader>
+    <>
+      <div aria-hidden="true" className="h-7 w-full shrink-0" />
+      <div className="pointer-events-none fixed inset-x-0 top-0 z-60 flex h-7 items-center bg-primary px-6 text-sm font-medium text-primary-foreground md:px-8">
+        <span>Universidad Veracruzana</span>
+      </div>
 
-        <SidebarSeparator />
-
-        <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupLabel>Administración</SidebarGroupLabel>
+      <SidebarProvider>
+        <Sidebar>
+          <SidebarHeader>
             <SidebarMenu>
-              {navigation.map((item) => (
-                <NavigationItem
-                  key={item.href}
-                  item={item}
-                  active={item.href === activeHref}
-                />
-              ))}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  render={<Link href="/" />}
+                  icon={LayoutDashboard}
+                  size="lg"
+                  isActive
+                >
+                  SGPla
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
-          </SidebarGroup>
-        </SidebarContent>
+          </SidebarHeader>
 
-        <SidebarFooter>
           <SidebarSeparator />
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton render={<Link href="/login" />} icon={Users}>
-                Cerrar sesión
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarFooter>
-      </Sidebar>
 
-      <SidebarInset>
-        <DashboardTopBar />
+          <SidebarContent>
+            <SidebarGroup>
+              <SidebarGroupLabel>Administración</SidebarGroupLabel>
+              <SidebarMenu>
+                {navigation.map((item) => (
+                  <NavigationItem
+                    key={item.href}
+                    item={item}
+                    active={item.href === activeHref}
+                  />
+                ))}
+              </SidebarMenu>
+            </SidebarGroup>
+          </SidebarContent>
 
-        <main className="flex-1 bg-background p-6 pt-20 md:p-8 md:pt-20">
-          {children ?? (
-            <div className="mx-auto max-w-6xl">
-              <div className="mb-8">
-                <p className="text-sm text-muted-foreground">SuperUsuario</p>
-                <h1 className="mt-1 text-3xl font-semibold tracking-tight">
-                  Panel principal
-                </h1>
-                <p className="mt-2 text-muted-foreground">
-                  Selecciona una opción para comenzar a gestionar el sistema.
-                </p>
+          <SidebarFooter>
+            <SidebarSeparator />
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton render={<Link href="/login" />} icon={Users}>
+                  Cerrar sesión
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarFooter>
+        </Sidebar>
+
+        <SidebarInset>
+          <DashboardTopBar />
+
+          <main className="flex-1 bg-background p-6 pt-20 md:p-8 md:pt-20">
+            {children ?? (
+              <div className="mx-auto max-w-6xl">
+                <div className="mb-8">
+                  <p className="text-sm text-muted-foreground">SuperUsuario</p>
+                  <h1 className="mt-1 text-3xl font-semibold tracking-tight">
+                    Panel principal
+                  </h1>
+                  <p className="mt-2 text-muted-foreground">
+                    Selecciona una opción para comenzar a gestionar el sistema.
+                  </p>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {navigation.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className="group flex min-h-32 flex-col justify-between rounded-xl border border-border bg-background p-5 transition-colors hover:bg-accent"
+                      >
+                        <Icon className="size-5 text-muted-foreground transition-colors group-hover:text-foreground" />
+                        <span className="font-medium">{item.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
               </div>
-
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {navigation.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className="group flex min-h-32 flex-col justify-between rounded-xl border border-border bg-background p-5 transition-colors hover:bg-accent"
-                    >
-                      <Icon className="size-5 text-muted-foreground transition-colors group-hover:text-foreground" />
-                      <span className="font-medium">{item.label}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </main>
-      </SidebarInset>
-    </SidebarProvider>
+            )}
+          </main>
+        </SidebarInset>
+      </SidebarProvider>
+    </>
   );
 }

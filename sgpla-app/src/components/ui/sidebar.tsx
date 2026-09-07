@@ -116,7 +116,11 @@ function SidebarSheet({ side, open, onClose, children }: SidebarSheetProps) {
                 className="fixed inset-0 bg-black/40 z-40"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: visible ? 1 : 0 }}
-                transition={visible ? { duration: spring.moderate.duration } : spring.moderate.exit}
+                transition={
+                  visible
+                    ? { duration: spring.moderate.duration }
+                    : spring.moderate.exit
+                }
               />
             );
           }}
@@ -126,10 +130,13 @@ function SidebarSheet({ side, open, onClose, children }: SidebarSheetProps) {
           aria-label="Sidebar"
           initialFocus={panelRef}
           render={(popupProps) => {
-            const { style: baseStyle, ref: baseRef, ...rest } =
-              popupProps as React.HTMLAttributes<HTMLDivElement> & {
-                ref?: React.Ref<HTMLDivElement>;
-              };
+            const {
+              style: baseStyle,
+              ref: baseRef,
+              ...rest
+            } = popupProps as React.HTMLAttributes<HTMLDivElement> & {
+              ref?: React.Ref<HTMLDivElement>;
+            };
             return (
               <motion.div
                 {...(rest as MotionSafeDivProps)}
@@ -139,18 +146,19 @@ function SidebarSheet({ side, open, onClose, children }: SidebarSheetProps) {
                   panelRef.current = node;
                   if (typeof baseRef === "function") baseRef(node);
                   else if (baseRef)
-                    (baseRef as React.MutableRefObject<HTMLDivElement | null>).current =
-                      node;
+                    (
+                      baseRef as React.MutableRefObject<HTMLDivElement | null>
+                    ).current = node;
                 }}
                 tabIndex={-1}
                 data-sidebar="sidebar"
                 data-mobile="true"
                 data-side={side}
                 className={cn(
-                  "fixed inset-y-0 z-50 flex flex-col overflow-hidden outline-none",
+                  "fixed top-7 bottom-0 z-50 flex flex-col overflow-hidden outline-none",
                   !visible && "pointer-events-none",
                   side === "left" ? "left-0" : "right-0",
-                  surfaceClasses(level, 3)
+                  surfaceClasses(level, 3),
                 )}
                 style={{
                   ...(baseStyle as CSSProperties | undefined),
@@ -161,7 +169,13 @@ function SidebarSheet({ side, open, onClose, children }: SidebarSheetProps) {
                 // into x: 0 without overshooting and exposing the page behind
                 // its leading edge.
                 animate={{ x: visible ? 0 : offscreen }}
-                transition={reduceMotion ? { duration: 0 } : visible ? spring.moderate : spring.moderate.exit}
+                transition={
+                  reduceMotion
+                    ? { duration: 0 }
+                    : visible
+                      ? spring.moderate
+                      : spring.moderate.exit
+                }
                 onAnimationComplete={() => {
                   if (closing) finishClose();
                 }}
@@ -178,11 +192,15 @@ function SidebarSheet({ side, open, onClose, children }: SidebarSheetProps) {
 
 // ─── Sidebar ─────────────────────────────────────────────────────────────────
 
-export interface SidebarProps
-  extends Omit<
-    HTMLAttributes<HTMLDivElement>,
-    "onDrag" | "onDragStart" | "onDragEnd" | "onAnimationStart" | "onAnimationEnd" | "onAnimationIteration"
-  > {
+export interface SidebarProps extends Omit<
+  HTMLAttributes<HTMLDivElement>,
+  | "onDrag"
+  | "onDragStart"
+  | "onDragEnd"
+  | "onAnimationStart"
+  | "onAnimationEnd"
+  | "onAnimationIteration"
+> {
   side?: SidebarSide;
   variant?: SidebarVariant;
   /** `"icon"` collapse is intentionally not supported — offcanvas or none. */
@@ -198,10 +216,22 @@ export interface SidebarProps
 
 const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
   (
-    { side = "left", variant = "sidebar", collapsible = "offcanvas", bordered = true, rail = true, railTooltipOpen, className, style, children, ...props },
-    ref
+    {
+      side = "left",
+      variant = "sidebar",
+      collapsible = "offcanvas",
+      bordered = true,
+      rail = true,
+      railTooltipOpen,
+      className,
+      style,
+      children,
+      ...props
+    },
+    ref,
   ) => {
-    const { isMobile, openMobile, setOpenMobile, width, registerSide } = useSidebar();
+    const { isMobile, openMobile, setOpenMobile, width, registerSide } =
+      useSidebar();
 
     // The provider mirrors the side into the default shortcut ("[" / "]")
     // and the rail handle.
@@ -215,9 +245,9 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
           data-variant={variant}
           data-side={side}
           className={cn(
-            "peer sticky top-0 flex h-svh shrink-0 flex-col",
+            "peer sticky top-7 flex h-[calc(100svh-1.75rem)] shrink-0 flex-col",
             side === "right" && "order-last",
-            className
+            className,
           )}
           style={{ width, ...style } as CSSProperties}
           {...props}
@@ -228,7 +258,9 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
               "flex h-full w-full min-h-0 flex-col",
               bordered &&
                 variant === "sidebar" &&
-                (side === "left" ? "border-r border-border" : "border-l border-border")
+                (side === "left"
+                  ? "border-r border-border"
+                  : "border-l border-border"),
             )}
           >
             {children}
@@ -245,16 +277,30 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
     return (
       <>
         {isMobile && (
-          <SidebarSheet side={side} open={openMobile} onClose={() => setOpenMobile(false)}>
+          <SidebarSheet
+            side={side}
+            open={openMobile}
+            onClose={() => setOpenMobile(false)}
+          >
             {children}
           </SidebarSheet>
         )}
-        <SidebarShell ref={ref} side={side} variant={variant} bordered={bordered} rail={rail} railTooltipOpen={railTooltipOpen} className={className} style={style} {...props}>
+        <SidebarShell
+          ref={ref}
+          side={side}
+          variant={variant}
+          bordered={bordered}
+          rail={rail}
+          railTooltipOpen={railTooltipOpen}
+          className={className}
+          style={style}
+          {...props}
+        >
           {children}
         </SidebarShell>
       </>
     );
-  }
+  },
 );
 Sidebar.displayName = "Sidebar";
 
@@ -279,7 +325,10 @@ const SidebarContent = forwardRef<HTMLDivElement, SidebarContentProps>(
           <div
             ref={ref}
             data-sidebar="content"
-            className={cn("scroll-fade flex min-h-0 w-full flex-1 flex-col overflow-y-auto", className)}
+            className={cn(
+              "scroll-fade flex min-h-0 w-full flex-1 flex-col overflow-y-auto",
+              className,
+            )}
             {...props}
           >
             {children}
@@ -293,13 +342,24 @@ const SidebarContent = forwardRef<HTMLDivElement, SidebarContentProps>(
     // instead of truncating, so the viewport's direct child is forced back
     // to a plain shrinkable block.
     return (
-      <ScrollArea className={cn("scroll-divider min-h-0 w-full flex-1", className)} viewportClassName={cn("scroll-fade [&>div]:!block [&>div]:!min-w-0", viewportClassName)}>
-        <div ref={ref} data-sidebar="content" className="flex w-full min-w-0 flex-col" {...props}>
+      <ScrollArea
+        className={cn("scroll-divider min-h-0 w-full flex-1", className)}
+        viewportClassName={cn(
+          "scroll-fade [&>div]:!block [&>div]:!min-w-0",
+          viewportClassName,
+        )}
+      >
+        <div
+          ref={ref}
+          data-sidebar="content"
+          className="flex w-full min-w-0 flex-col"
+          {...props}
+        >
           {children}
         </div>
       </ScrollArea>
     );
-  }
+  },
 );
 SidebarContent.displayName = "SidebarContent";
 

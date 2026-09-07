@@ -1,0 +1,1 @@
+export const MINIMUM_LOADING_DURATION_MS = 400;
