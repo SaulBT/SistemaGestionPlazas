@@ -79,7 +79,8 @@ namespace SGPla.Controllers
         [HttpGet]
         public async Task<IActionResult> Index(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int? idProgramaEducativo, int pagina = 1, int cantidad = 10)
         {
-            HttpContext.Session.Clear();
+            //HttpContext.Session.Clear();
+            LimpiarSesionPlanEstudios();
 
             var modelo = new IndexViewModel
             {
@@ -604,8 +605,9 @@ namespace SGPla.Controllers
             if (!string.IsNullOrEmpty(rutaArchivo))
             {
                 System.IO.File.Delete(rutaArchivo);
-                HttpContext.Session.Remove(Constantes.SESSION_RUTA);
+                //HttpContext.Session.Remove(Constantes.SESSION_RUTA);
             }
+            LimpiarSesionPlanEstudios();
 
             var url = Url.Action(nameof(CargarPlanPaso1), new
             {
@@ -676,7 +678,7 @@ namespace SGPla.Controllers
                             });
 
                             System.IO.File.Delete(rutaArchivo);
-                            HttpContext.Session.Clear();
+                            LimpiarSesionPlanEstudios();
                             TempData["Success"] = string.Format(Constantes.TOAST_GUARDADO_EL, Constantes.PLAN_ESTUDIOS);
                             return RedirectToAction(nameof(Index));
                         }
@@ -1990,6 +1992,16 @@ namespace SGPla.Controllers
             }
 
             return modelo;
+        }
+
+        private void LimpiarSesionPlanEstudios()
+        {
+            HttpContext.Session.Remove(Constantes.SESSION_RUTA);
+            HttpContext.Session.Remove(Constantes.SESSION_NOMBRE_ARCHIVO);
+            HttpContext.Session.Remove(SESSION_EXPERIENCIAS);
+            HttpContext.Session.Remove(SESSION_EXPERIENCIAS_NUEVAS);
+            HttpContext.Session.Remove(SESSION_EXPERIENCIAS_EDITADAS);
+            HttpContext.Session.Remove(SESSION_EXPERIENCIAS_ELIMINADAS);
         }
     }
 }

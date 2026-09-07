@@ -36,7 +36,7 @@ public class ProgramacionesAcademicasController : Controller
     private static readonly List<string> HEADERS_TABLA_ASIGNADAS =
         ["Experiencia educativa", "NRC", "H/S/M", "Tipo contratación", "Horario", "Docente"];
     private static readonly List<string> HEADERS_TABLA_VACANTES =
-        ["Experiencia educativa", "NRC", "H/S/M", "Tipo contratación", "Horario", "Artículo"];
+        ["Experiencia educativa", "NRC", "H/S/M", "Tipo contratación", "Horario"];
     private static readonly List<string> HEADERS_TABLA_RESUMEN_OFERTA =
         ["Entidad Academica", "Programa Educativo", "Periodo", "EE Asignadas", "EE Vacantes", "Acciones"];
     private static readonly List<string> HEADERS_TABLA_CARGAS =
@@ -895,9 +895,13 @@ public class ProgramacionesAcademicasController : Controller
                         new() { Actions = new List<TableActionModel>
                         {
                             new TableActionModel { Accion = "informacion", OnClick = $"abrirModalHorario({JsonSerializer.Serialize(oferta)})" }
-                        }},
-                        tipoOferta == TipoTablaOferta.Vacantes ? new() { Value = oferta.Articulo.ToString() } : new() { Value = oferta.NombreDocente }
+                        }}
                     };
+
+                    if (tipoOferta == TipoTablaOferta.Asignadas)
+                    {
+                        cells.Add(new() { Value = oferta.NombreDocente });
+                    }
 
                     if (tieneAcciones)
                         cells.Add(new TableCellModel { Actions = ConstruirAcciones(oferta) });

@@ -147,8 +147,15 @@ namespace SGPla.Repositories.Implementations
         {
             ArgumentNullException.ThrowIfNull(entidadAcademica);
 
-            _context.EntidadAcademica.Remove(entidadAcademica);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.EntidadAcademica.Remove(entidadAcademica);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                throw new Exception("No es posible eliminar esta Entidad Académica porque tiene Programas Educativos u otros registros asociados. Para proteger la información, primero debe reasignar o eliminar dichos registros.");
+            }
         }
 
         public async Task<int> ContarPorFiltroAsync(string? region, int? idAreaAcademica, string? nombre)
