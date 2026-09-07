@@ -16,19 +16,6 @@
                 </div>
             </div>
 
-            @if (Model.TieneSuperUsuario)
-            {
-                <form asp-controller="Login" asp-action="CambiarModo" method="post" class="form-cambiar-modo">
-                    @Html.AntiForgeryToken()
-                    @await Component.InvokeAsync("Boton", new
-                    {
-                        texto = Model.RolActivoEsSuperUsuario ? "Cambiar a DGAA" : "Cambiar a SuperUsuario",
-                        tipo = "secundario",
-                        ButtonType = "submit"
-                    })
-                </form>
-            }
-
             <form asp-controller="Login" asp-action="Logout" method="post" class="form-cerrar-sesion">
                 @Html.AntiForgeryToken()
                 @await Component.InvokeAsync("Boton", new

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SGPla.Commons;
 using SGPla.Commons.Factories;
@@ -20,6 +21,7 @@ enum TipoTablaOferta
     Vacantes
 }
 
+[Authorize]
 public class ProgramacionesAcademicasController : Controller
 {
     // ── Dependencias ────────────────────────────────────────────────────
@@ -57,6 +59,7 @@ public class ProgramacionesAcademicasController : Controller
     #region Índice y resumen de programaciones
 
     [HttpGet]
+    [Authorize(Policy = PoliticasAutorizacion.OperadorAcademico)]
     public async Task<IActionResult> Index(
         string? region,
         int? idEntidadAcademica,
@@ -140,6 +143,7 @@ public class ProgramacionesAcademicasController : Controller
     }
 
     [HttpGet]
+    [Authorize(Policy = PoliticasAutorizacion.OperadorAcademico)]
     public async Task<IActionResult> ObtenerEntidades(string region)
     {
         var entidades = await _programacionAcademicaService.ObtenerOpcionesEntidadAcademicaAsync(region);
@@ -148,6 +152,7 @@ public class ProgramacionesAcademicasController : Controller
     }
 
     [HttpGet]
+    [Authorize(Policy = PoliticasAutorizacion.OperadorAcademico)]
     public async Task<IActionResult> ObtenerProgramas(int entidad)
     {
         var programas = await _programacionAcademicaService.ObtenerOpcionesProgramaEducativoAsync(entidad);
@@ -160,6 +165,7 @@ public class ProgramacionesAcademicasController : Controller
     #region Carga de programación académica (flujo multi-paso)
 
     [HttpGet]
+    [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
     public async Task<IActionResult> CargarProgramacionAcademicaPaso1()
     {
         _estado.Eliminar(Ofertas);
@@ -172,6 +178,7 @@ public class ProgramacionesAcademicasController : Controller
     }
 
     [HttpPost]
+    [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
     public async Task<IActionResult> RevisarListaDeExperienciasEducativas(CargarProgramacionAcademica1ViewModel modelo)
     {
         if (!ModelState.IsValid)
@@ -227,6 +234,7 @@ public class ProgramacionesAcademicasController : Controller
     }
 
     [HttpGet]
+    [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
     public async Task<IActionResult> CargarProgramacionAcademicaPaso2()
     {
         var region = _estado.Obtener<string>(Region);
@@ -244,6 +252,7 @@ public class ProgramacionesAcademicasController : Controller
     }
 
     [HttpGet]
+    [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
     public async Task<IActionResult> FiltrarOferta(FiltroOfertaDTO filtro, int tab = 0)
     {
         _estado.Guardar(FiltroOfertaActual, filtro);
@@ -253,6 +262,7 @@ public class ProgramacionesAcademicasController : Controller
     }
 
     [HttpGet]
+    [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
     public async Task<IActionResult> FiltrarCarga(FiltroCargaDTO filtro, int tab = 2)
     {
         _estado.Guardar(FiltroCargaActual, filtro);
@@ -268,6 +278,7 @@ public class ProgramacionesAcademicasController : Controller
         _estado.Obtener<FiltroCargaDTO>(FiltroCargaActual) ?? new();
 
     [HttpPost]
+    [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
     public async Task<IActionResult> CargarCargas(IFormFile archivoCarga)
     {
         var vm = new CargarProgramacionAcademica2ViewModel();
@@ -286,6 +297,7 @@ public class ProgramacionesAcademicasController : Controller
     }
 
     [HttpPost]
+    [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
     public async Task<IActionResult> Guardar()
     {
         var ofertas = ObtenerOfertasSesion();
@@ -316,6 +328,7 @@ public class ProgramacionesAcademicasController : Controller
     #region Ver / Detalle de una programación
 
     [HttpGet]
+    [Authorize(Policy = PoliticasAutorizacion.EntidadAcademica)]
     public async Task<IActionResult> Ver(int idEntidadAcademica, int idProgramaEducativo, int idPeriodo, string? busqueda = null)
     {
         var permisos = MatrizPermisos.Para(User);
@@ -350,6 +363,7 @@ public class ProgramacionesAcademicasController : Controller
     }
 
     [HttpGet]
+    [Authorize(Policy = PoliticasAutorizacion.EntidadAcademica)]
     public async Task<IActionResult> VerHistorialExperienciaEducativa(
         int idOferta,
         string experienciaEducativa,
@@ -390,6 +404,7 @@ public class ProgramacionesAcademicasController : Controller
     #region Edición de experiencia educativa
 
     [HttpGet]
+    [Authorize(Policy = PoliticasAutorizacion.EntidadAcademica)]
     public async Task<IActionResult> EditarExperienciaEducativa(
         int idOferta,
         int idEntidadAcademica,
@@ -444,6 +459,7 @@ public class ProgramacionesAcademicasController : Controller
     }
 
     [HttpPost]
+    [Authorize(Policy = PoliticasAutorizacion.EntidadAcademica)]
     public async Task<IActionResult> EditarExperienciaEducativa(FormularioExperienciaEducativaViewModel model)
     {
         var oferta = await _programacionAcademicaService.ObtenerOfertaPorId(model.IdExperienciaEducativa);
@@ -471,6 +487,7 @@ public class ProgramacionesAcademicasController : Controller
     #region Acciones AJAX sobre una oferta (incluir, eliminar, cambiar a vacante)
 
     [HttpPost]
+    [Authorize(Policy = PoliticasAutorizacion.EntidadAcademica)]
     public async Task<IActionResult> CambiarInclusionOferta([FromBody] OfertaDTO dto)
     {
         if (dto == null || dto.IdOferta <= 0)
@@ -494,6 +511,7 @@ public class ProgramacionesAcademicasController : Controller
     }
 
     [HttpPost]
+    [Authorize(Policy = PoliticasAutorizacion.EntidadAcademica)]
     public async Task<IActionResult> EliminarOferta([FromBody] int idOferta)
     {
         if (idOferta <= 0)
@@ -523,6 +541,7 @@ public class ProgramacionesAcademicasController : Controller
     }
 
     [HttpPost]
+    [Authorize(Policy = PoliticasAutorizacion.EntidadAcademica)]
     public async Task<IActionResult> CambiarAVacante([FromBody] CambiarAVacanteRequest request)
     {
         if (request == null || request.IdOferta <= 0)
@@ -551,6 +570,7 @@ public class ProgramacionesAcademicasController : Controller
     #region Asignar docente (navega a Docentes con contexto guardado)
 
     [HttpGet]
+    [Authorize(Policy = PoliticasAutorizacion.EntidadAcademica)]
     public IActionResult AsignarDocente(int idOferta, int idEntidadAcademica, int idProgramaEducativo, int idPeriodo)
     {
         _estado.Guardar(IdOfertaAsignar, idOferta);

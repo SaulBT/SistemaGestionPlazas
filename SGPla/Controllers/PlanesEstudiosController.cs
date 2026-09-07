@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.IdentityModel.Tokens;
 using SGPla.Commons;
@@ -13,6 +14,7 @@ using System.Text.Json;
 
 namespace SGPla.Controllers
 {
+    [Authorize(Policy = PoliticasAutorizacion.SuperUsuario)]
     public class PlanesEstudiosController : Controller
     {
         private readonly IPlanEstudiosService _planEstudiosService;

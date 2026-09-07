@@ -22,7 +22,7 @@ namespace SGPla.Modules.ProgramasEducativos.Api;
 
 [ApiController]
 [Route("api/v1/programas-educativos")]
-[Authorize]
+[Authorize(Policy = PoliticasAutorizacion.SuperUsuario)]
 public sealed class ProgramaEducativoController : ControllerBase
 {
     private readonly IConsultarProgramasEducativosService _consultarProgramasService;

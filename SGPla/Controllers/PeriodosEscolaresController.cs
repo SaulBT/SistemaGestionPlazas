@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using SGPla.Commons;
 using SGPla.Commons.Factories;
@@ -11,6 +12,7 @@ using SGPla.Services.Interfaces;
 
 namespace SGPla.Controllers
 {
+    [Authorize(Policy = PoliticasAutorizacion.SuperUsuario)]
     public class PeriodosEscolaresController : Controller
     {
         private readonly IPeriodoEscolarService _periodoEscolarService;

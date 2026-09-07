@@ -88,12 +88,10 @@ namespace SGPla.Repositories.Implementations
             await _context.SaveChangesAsync();
         }
 
-        public async Task<bool> EsSuperUsuarioAsync(string correo)
+        public async Task<SuperUsuario?> ObtenerSuperUsuarioPorCorreoAsync(string correo)
         {
-            var superUsuario = _context.SuperUsuario.FirstOrDefault(u => u.Correo == correo);
-
-
-            return superUsuario != null;
+            return await _context.SuperUsuario
+                .FirstOrDefaultAsync(u => u.Correo == correo);
         }
     }
 }

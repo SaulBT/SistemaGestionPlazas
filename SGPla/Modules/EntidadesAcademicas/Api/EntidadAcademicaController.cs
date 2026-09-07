@@ -22,7 +22,7 @@ namespace SGPla.Modules.EntidadesAcademicas.Api;
 
 [ApiController]
 [Route("api/v1/entidades-academicas")]
-[Authorize]
+[Authorize(Policy = PoliticasAutorizacion.SuperUsuario)]
 public sealed class EntidadAcademicaController : ControllerBase
 {
     private readonly IConsultarEntidadesAcademicasService _consultarEntidadesService;

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using SGPla.Commons;
 using SGPla.Commons.Factories;
@@ -10,6 +11,7 @@ using System.Numerics;
 
 namespace SGPla.Controllers
 {
+    [Authorize(Policy = PoliticasAutorizacion.SuperUsuario)]
     public class DireccionesAreaAcademicaController: Controller
     {
         private readonly IAreaAcademicaService _areaAcademicaService;

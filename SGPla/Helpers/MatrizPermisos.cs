@@ -25,7 +25,7 @@ namespace SGPla.Helpers
             Acciones.ProgramacionAcademica.Ver,
             Acciones.ProgramacionAcademica.VerSolicitudes,
         ],
-            ["Superusuario"] =
+            [Constantes.SUPERUSUARIO] =
             [
                 // ...
         ]

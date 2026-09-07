@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using SGPla.Data;
 using SGPla.Repositories.Implementations;
@@ -97,6 +98,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     .AddCookie(options =>
     {
         options.LoginPath = "/Login";
+        options.AccessDeniedPath = "/Login";
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
         options.Cookie.HttpOnly = true;
@@ -125,7 +127,22 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    // Toda ruta queda cerrada salvo que se marque explícitamente con AllowAnonymous.
+    options.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+
+    options.AddPolicy(PoliticasAutorizacion.SuperUsuario,
+        policy => policy.RequireRole(Constantes.SUPERUSUARIO));
+    options.AddPolicy(PoliticasAutorizacion.Dgaa,
+        policy => policy.RequireRole(Constantes.COORDINADOR_DGAA));
+    options.AddPolicy(PoliticasAutorizacion.EntidadAcademica,
+        policy => policy.RequireRole(Constantes.COORDINADOR_EA));
+    options.AddPolicy(PoliticasAutorizacion.OperadorAcademico,
+        policy => policy.RequireRole(Constantes.COORDINADOR_DGAA, Constantes.COORDINADOR_EA));
+});
 builder.Services.AddSolicitudesAperturaModule();
 builder.Services.AddArticulosModule();
 builder.Services.AddPeriodosEscolaresModule();
@@ -226,7 +243,7 @@ if (app.Environment.IsDevelopment()
 
 app.UseAuthorization();  // 4. ¿qué puedes hacer?
 
-app.MapStaticAssets();
+app.MapStaticAssets().AllowAnonymous();
 
 app.MapControllers();
 

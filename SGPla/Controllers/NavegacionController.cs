@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SGPla.Services.Interfaces;
 
 namespace SGPla.Controllers
 {
+    [Authorize]
     public class NavegacionController : Controller
     {
         private readonly IEstadoNavegacion _estado;

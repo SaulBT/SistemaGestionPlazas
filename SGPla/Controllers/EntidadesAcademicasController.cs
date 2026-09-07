@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SGPla.Commons;
 using SGPla.Commons.Factories;
 using SGPla.Models.Components;
@@ -10,6 +11,7 @@ using System.Numerics;
 
 namespace SGPla.Controllers
 {
+    [Authorize(Policy = PoliticasAutorizacion.SuperUsuario)]
     public class EntidadesAcademicasController : Controller
     {
         private readonly IEntidadAcademicaService _entidadAcademicaService;

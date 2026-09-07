@@ -22,7 +22,7 @@ namespace SGPla.Modules.DireccionesAreaAcademica.Api;
 
 [ApiController]
 [Route("api/v1/areas-academicas")]
-[Authorize]
+[Authorize(Policy = PoliticasAutorizacion.SuperUsuario)]
 public sealed class AreaAcademicaController : ControllerBase
 {
     private readonly IConsultarAreasAcademicasService _consultarAreasService;

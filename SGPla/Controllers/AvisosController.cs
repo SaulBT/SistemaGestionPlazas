@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SGPla.Commons;
 using SGPla.Models;
 using SGPla.Models.Components;
@@ -19,6 +20,7 @@ using System.Text.Json;
 
 namespace SGPla.Controllers
 {
+    [Authorize]
     public class AvisosController : Controller
     {
         private readonly IAvisoService _avisoService;
@@ -60,6 +62,7 @@ namespace SGPla.Controllers
         // ==========
 
         //Vista
+        [Authorize(Policy = PoliticasAutorizacion.OperadorAcademico)]
         public async Task<IActionResult> Index(string? busqueda, int? idPeriodo, int? idEntidadAcademica, DateOnly? fechaInicio, DateOnly? fechaFin, int cantidad = 10, int pagina = 1)
         {
             // CONFIGURAR EL ROL
@@ -161,6 +164,7 @@ namespace SGPla.Controllers
 
         //Eliminar
         [HttpGet]
+        [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
         public async Task EliminarAvisoAsync(int idAviso)
         {
             try
@@ -179,6 +183,7 @@ namespace SGPla.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = PoliticasAutorizacion.OperadorAcademico)]
         public async Task<IActionResult> VistaPreviaAvisoAsync(int idAviso)
         {
             try
@@ -204,6 +209,7 @@ namespace SGPla.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = PoliticasAutorizacion.OperadorAcademico)]
         public async Task<IActionResult> ObtenerVistaPreviaAvisoAsync(int idAviso)
         {
             try
@@ -231,6 +237,7 @@ namespace SGPla.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = PoliticasAutorizacion.OperadorAcademico)]
         public async Task<IActionResult> DescargarAvisoAsync(int idAviso)
         {
             try
@@ -254,6 +261,7 @@ namespace SGPla.Controllers
 
         //Firmar
         [HttpPost]
+        [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
         public async Task FirmarAvisoAsync([FromForm] int idAviso, [FromForm] IFormFile archivo)
         {
             try
@@ -280,6 +288,7 @@ namespace SGPla.Controllers
 
         //Publicar
         [HttpPost]
+        [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
         public async Task PublicarAvisoAsync(int idAviso, string url)
         {
             try
@@ -299,6 +308,7 @@ namespace SGPla.Controllers
 
         //Archivar / Desarchivar
         [HttpPost]
+        [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
         public async Task ArchivarAvisoAsync(int idAviso)
         {
             try
@@ -317,6 +327,7 @@ namespace SGPla.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
         public async Task DesarchivarAvisoAsync(int idAviso)
         {
             try
@@ -340,6 +351,7 @@ namespace SGPla.Controllers
 
         //Vista
         [HttpGet]
+        [Authorize(Policy = PoliticasAutorizacion.EntidadAcademica)]
         public async Task<IActionResult> EnviarARevisionAsync(int idAviso)
         {
             //TO DO
@@ -347,6 +359,7 @@ namespace SGPla.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = PoliticasAutorizacion.EntidadAcademica)]
         public async Task ConfirmarEnviarARevisionAsync(string comentarios, int idAviso)
         {
             try
@@ -404,6 +417,7 @@ namespace SGPla.Controllers
                 .ToList();
         }
 
+        [Authorize(Policy = PoliticasAutorizacion.EntidadAcademica)]
         public async Task<IActionResult> CrearAviso()
         {
             guardarEnSession(ObtenerLlaveHorarios(null), new List<CrearHorarioAvisoDTO>());
@@ -411,6 +425,7 @@ namespace SGPla.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = PoliticasAutorizacion.EntidadAcademica)]
         public async Task<IActionResult> EditarAviso(int idAviso)
         {
             try
@@ -444,6 +459,7 @@ namespace SGPla.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = PoliticasAutorizacion.EntidadAcademica)]
         public async Task<IActionResult> CrearAviso(CrearAvisoViewModel model)
         {
             if (!validarFormulario(model))
@@ -484,6 +500,7 @@ namespace SGPla.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = PoliticasAutorizacion.EntidadAcademica)]
         public async Task<IActionResult> EditarAviso(CrearAvisoViewModel model)
         {
             if (model.IdAviso is null || model.IdAviso <= 0)
@@ -822,6 +839,7 @@ namespace SGPla.Controllers
 
         [HttpGet]
         [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        [Authorize(Policy = PoliticasAutorizacion.EntidadAcademica)]
         public async Task<IActionResult> ActualizarOfertasAsync(int idPeriodo, int idArticulo, [FromQuery] List<int>? ofertasSeleccionadas)
         {
             var ofertas = await CargarPlanesEstudios(idPeriodo, idArticulo, ofertasSeleccionadas);
@@ -829,6 +847,7 @@ namespace SGPla.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = PoliticasAutorizacion.EntidadAcademica)]
         public IActionResult ObtenerHorarios(int? idAviso)
         {
             var horarios = obtenerDeSession<List<CrearHorarioAvisoDTO>>(ObtenerLlaveHorarios(idAviso));
@@ -837,6 +856,7 @@ namespace SGPla.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = PoliticasAutorizacion.EntidadAcademica)]
         public async Task<IActionResult> AgregarHorario([FromBody] List<CrearHorarioAvisoDTO> horarios, int? idAviso)
         {
             guardarEnSession(ObtenerLlaveHorarios(idAviso), horarios);
@@ -845,6 +865,7 @@ namespace SGPla.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = PoliticasAutorizacion.EntidadAcademica)]
         public async Task<IActionResult> ObtenerTablaHorarios(int? idAviso)
         {
             var horarios = obtenerDeSession<List<CrearHorarioAvisoDTO>>(ObtenerLlaveHorarios(idAviso));

@@ -26,15 +26,23 @@ namespace SGPla.Services.Implementations
             if (!_ldapService.Autenticar(correo, password))
                 return ResultadoAutenticacion.Fallido("Usuario o contraseña incorrectos.");
 
+            var superUsuario = await _coordinadorDgaaRepository.ObtenerSuperUsuarioPorCorreoAsync(correo);
             var coordinador = await _coordinadorDgaaRepository.ExisteCorreoAsync(correo);
             var entidad = await _coordinadorEaRepository.ExisteCorreoAsync(correo);
 
-            if (!coordinador && !entidad)
+            if (superUsuario is null && !coordinador && !entidad)
                 return ResultadoAutenticacion.Fallido("La cuenta no está registrada en el sistema.");
 
             UsuarioDTO usuarioDTO = new UsuarioDTO();
 
-            if (coordinador)
+            if (superUsuario is not null)
+            {
+                usuarioDTO.Correo = superUsuario.Correo;
+                usuarioDTO.Id = superUsuario.IdSuperUsuario;
+                usuarioDTO.NombreCompleto = superUsuario.Nombre;
+                usuarioDTO.Rol = Constantes.SUPERUSUARIO;
+            }
+            else if (coordinador)
             {
                 var usuario = await _coordinadorDgaaRepository.ObtenerPorCorreoAsync(correo);
 
@@ -42,7 +50,6 @@ namespace SGPla.Services.Implementations
                 usuarioDTO.Id = usuario.IdCoordinadorDgaa;
                 usuarioDTO.NombreCompleto = usuario.Nombre;
                 usuarioDTO.Rol = Constantes.COORDINADOR_DGAA;
-                usuarioDTO.EsSuperUsuario = await _coordinadorDgaaRepository.EsSuperUsuarioAsync(correo); // con el supuesto que los superusuarios seran de las direcciones generales
             }
             else if (entidad)
             {
@@ -52,7 +59,7 @@ namespace SGPla.Services.Implementations
                 usuarioDTO.Id = usuario.IdCoordinadorEa;
                 usuarioDTO.NombreCompleto = usuario.Nombre;
                 usuarioDTO.Rol = Constantes.COORDINADOR_EA;
-                usuarioDTO.EsSuperUsuario = false; 
+                usuarioDTO.EntidadAcademicaId = usuario.IdEntidadAcademica;
             }
 
             return ResultadoAutenticacion.Ok(usuarioDTO);
