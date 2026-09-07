@@ -21,7 +21,13 @@ const columns: DataGridColumn<ArticuloColumnId>[] = [
     icon: AlignLeft,
     defaultWidth: 460,
   },
-  { id: "acciones", label: "Acciones", icon: MoreHorizontal, defaultWidth: 132 },
+  {
+    id: "acciones",
+    label: "Acciones",
+    icon: MoreHorizontal,
+    defaultWidth: 132,
+    isActions: true,
+  },
 ];
 
 export function ArticulosDataGrid({ onEdit }: ArticulosDataGridProps) {
@@ -57,8 +63,7 @@ export function ArticulosDataGrid({ onEdit }: ArticulosDataGridProps) {
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-background">
-      <DataGrid
+    <DataGrid
         rows={articulos}
         columns={columns}
         getRowLabel={(row) => row.numero}
@@ -69,8 +74,6 @@ export function ArticulosDataGrid({ onEdit }: ArticulosDataGridProps) {
         getDrawerCellValue={() => null}
         canOpenDrawer={() => false}
         enableRowSelection={false}
-        tableContainerClassName="overflow-hidden"
       />
-    </div>
   );
 }

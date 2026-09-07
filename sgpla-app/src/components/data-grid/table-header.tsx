@@ -19,6 +19,7 @@ type DataGridTableHeaderProps<ColumnId extends string> = {
     columnId: ColumnId,
   ) => void;
   enableRowSelection: boolean;
+  enableFloatingActions: boolean;
 };
 
 export function DataGridTableHeader<ColumnId extends string>({
@@ -29,6 +30,7 @@ export function DataGridTableHeader<ColumnId extends string>({
   onToggleAllRows,
   onResizeStart,
   enableRowSelection,
+  enableFloatingActions,
 }: DataGridTableHeaderProps<ColumnId>) {
   return (
     <>
@@ -42,7 +44,7 @@ export function DataGridTableHeader<ColumnId extends string>({
         ))}
       </colgroup>
 
-      <TableHeader className="bg-card">
+      <TableHeader className="bg-card border-border border-b">
         <TableRow>
           {enableRowSelection && (
             <TableHead className="h-10 w-10 border-r-border bg-muted/20 px-0 text-center">
@@ -64,6 +66,7 @@ export function DataGridTableHeader<ColumnId extends string>({
               column={column}
               width={columnWidths[column.id]}
               onResize={onResizeStart}
+              enableFloatingActions={enableFloatingActions}
             />
           ))}
         </TableRow>

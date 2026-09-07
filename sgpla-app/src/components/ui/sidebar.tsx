@@ -104,9 +104,6 @@ function SidebarSheet({ side, open, onClose, children }: SidebarSheetProps) {
       }}
     >
       <DialogPrimitive.Portal>
-        {/* Scrim: an always-on bg-black/40 base that stays visible for
-            system-dark users (`dark:` only matches the explicit .dark class),
-            boosted to /80 in explicit dark mode. */}
         <DialogPrimitive.Backdrop
           render={(backdropProps) => {
             const rest = {
@@ -116,7 +113,7 @@ function SidebarSheet({ side, open, onClose, children }: SidebarSheetProps) {
             return (
               <motion.div
                 {...(rest as MotionSafeDivProps)}
-                className="fixed inset-0 bg-black/40 dark:bg-black/80 z-40"
+                className="fixed inset-0 bg-black/40 z-40"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: visible ? 1 : 0 }}
                 transition={visible ? { duration: spring.moderate.duration } : spring.moderate.exit}

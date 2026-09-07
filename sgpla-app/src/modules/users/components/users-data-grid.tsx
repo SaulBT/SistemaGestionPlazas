@@ -36,7 +36,13 @@ const columns: DataGridColumn<UserColumnId>[] = [
   { id: "role", label: "Rol", icon: ShieldCheck, defaultWidth: 240 },
   { id: "areaOrEntity", label: "Entidad/Área", icon: Building2, defaultWidth: 210 },
   { id: "region", label: "Región", icon: MapPin, defaultWidth: 180 },
-  { id: "actions", label: "Acciones", icon: MoreHorizontal, defaultWidth: 128 },
+  {
+    id: "actions",
+    label: "Acciones",
+    icon: MoreHorizontal,
+    defaultWidth: 128,
+    isActions: true,
+  },
 ];
 
 export function UsersDataGrid() {
@@ -78,8 +84,7 @@ export function UsersDataGrid() {
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-background">
-      <DataGrid
+    <DataGrid
         rows={rows}
         columns={columns}
         getRowLabel={(row) => row.name}
@@ -94,8 +99,6 @@ export function UsersDataGrid() {
         }
         canOpenDrawer={() => false}
         enableRowSelection={false}
-        tableContainerClassName="overflow-hidden"
       />
-    </div>
   );
 }

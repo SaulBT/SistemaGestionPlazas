@@ -31,7 +31,13 @@ const columns: DataGridColumn<PeriodoColumnId>[] = [
     icon: CalendarDays,
     defaultWidth: 260,
   },
-  { id: "acciones", label: "Acciones", icon: MoreHorizontal, defaultWidth: 132 },
+  {
+    id: "acciones",
+    label: "Acciones",
+    icon: MoreHorizontal,
+    defaultWidth: 132,
+    isActions: true,
+  },
 ];
 
 export function PeriodosDataGrid({ onEdit }: PeriodosDataGridProps) {
@@ -67,8 +73,7 @@ export function PeriodosDataGrid({ onEdit }: PeriodosDataGridProps) {
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-background">
-      <DataGrid
+    <DataGrid
         rows={periodosEscolares}
         columns={columns}
         getRowLabel={(row) => row.codigo}
@@ -79,8 +84,6 @@ export function PeriodosDataGrid({ onEdit }: PeriodosDataGridProps) {
         getDrawerCellValue={() => null}
         canOpenDrawer={() => false}
         enableRowSelection={false}
-        tableContainerClassName="overflow-hidden"
       />
-    </div>
   );
 }

@@ -13,7 +13,13 @@ type DireccionColumnId = "nombre" | "telefono" | "acciones";
 const columns: DataGridColumn<DireccionColumnId>[] = [
   { id: "nombre", label: "Nombre de la Dirección", icon: MoreHorizontal, defaultWidth: 430 },
   { id: "telefono", label: "Teléfono", icon: Phone, defaultWidth: 190 },
-  { id: "acciones", label: "Acciones", icon: MoreHorizontal, defaultWidth: 160 },
+  {
+    id: "acciones",
+    label: "Acciones",
+    icon: MoreHorizontal,
+    defaultWidth: 160,
+    isActions: true,
+  },
 ];
 
 export function DireccionesDataGrid() {
@@ -53,8 +59,7 @@ export function DireccionesDataGrid() {
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-background">
-      <DataGrid
+    <DataGrid
         rows={direccionesAreaAcademica}
         columns={columns}
         getRowLabel={(row) => row.nombre}
@@ -65,8 +70,6 @@ export function DireccionesDataGrid() {
         getDrawerCellValue={() => null}
         canOpenDrawer={() => false}
         enableRowSelection={false}
-        tableContainerClassName="overflow-hidden"
       />
-    </div>
   );
 }

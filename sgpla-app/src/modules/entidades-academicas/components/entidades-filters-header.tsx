@@ -1,36 +1,93 @@
 "use client";
 
-import { Search } from "lucide-react";
+import { useCallback } from "react";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { areasAcademicas, regiones } from "../data";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  REGIONES,
+  type ConsultarEntidadesAcademicasQuery,
+} from "../domain/entidad-academica";
+import { useAreasAcademicas } from "../presentation/entidades-academicas.queries";
+import { EntidadAcademicaSearchInput } from "./entidad-academica-search-input";
 
-function FilterSelect({ id, label, name, options }: { id: string; label: string; name: string; options: string[] }) {
-  return (
-    <Field>
-      <FieldLabel htmlFor={id}>{label}</FieldLabel>
-      <Select name={name}>
-        <SelectTrigger id={id} className="w-full"><SelectValue placeholder={`Todas las ${label.toLowerCase()}`} /></SelectTrigger>
-        <SelectContent>{options.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}</SelectContent>
-      </Select>
-    </Field>
+const TODAS = "__todas__";
+
+type Props = {
+  consulta: ConsultarEntidadesAcademicasQuery;
+  onChange: (cambios: Partial<ConsultarEntidadesAcademicasQuery>) => void;
+};
+
+export function EntidadesFiltersHeader({ consulta, onChange }: Props) {
+  const areasQuery = useAreasAcademicas();
+  const actualizarBusqueda = useCallback(
+    (busqueda: string) => onChange({ busqueda }),
+    [onChange],
   );
-}
 
-export function EntidadesFiltersHeader() {
   return (
     <div className="flex flex-col items-end gap-3 sm:flex-row sm:justify-between">
-      <Field className="w-full sm:max-w-xs">
-        <FieldLabel htmlFor="busqueda">Buscar entidad académica</FieldLabel>
-        <InputGroup>
-          <InputGroupInput id="busqueda" name="busqueda" placeholder="Buscar entidad académica..." />
-          <InputGroupAddon><Search className="size-3.5" /></InputGroupAddon>
-        </InputGroup>
-      </Field>
+      <EntidadAcademicaSearchInput
+        value={consulta.busqueda ?? ""}
+        onChange={actualizarBusqueda}
+      />
+
       <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-        <div className="w-full shrink-0 sm:w-48"><FilterSelect id="region" label="Región" name="region" options={regiones} /></div>
-        <div className="w-full shrink-0 sm:w-48"><FilterSelect id="idAreaAcademica" label="Área Académica" name="idAreaAcademica" options={areasAcademicas} /></div>
+        <Field className="w-full shrink-0 sm:w-48">
+          <FieldLabel htmlFor="region">Región</FieldLabel>
+          <Select
+            value={consulta.region ?? TODAS}
+            onValueChange={(value) =>
+              onChange({ region: value === TODAS ? undefined : value })
+            }
+          >
+            <SelectTrigger id="region" className="w-full">
+              <SelectValue placeholder="Todas las regiones" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={TODAS}>Todas las regiones</SelectItem>
+              {REGIONES.map((region) => (
+                <SelectItem key={region} value={region}>
+                  {region}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+
+        <Field className="w-full shrink-0 sm:w-56">
+          <FieldLabel htmlFor="idAreaAcademica">Área Académica</FieldLabel>
+          <Select
+            value={consulta.idAreaAcademica?.toString() ?? TODAS}
+            onValueChange={(value) =>
+              onChange({
+                idAreaAcademica:
+                  value === TODAS ? undefined : Number(value),
+              })
+            }
+            disabled={areasQuery.isPending}
+          >
+            <SelectTrigger id="idAreaAcademica" className="w-full">
+              <SelectValue placeholder="Todas las áreas" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={TODAS}>Todas las áreas</SelectItem>
+              {(areasQuery.data?.items ?? []).map((area) => (
+                <SelectItem
+                  key={area.idAreaAcademica}
+                  value={area.idAreaAcademica.toString()}
+                >
+                  {area.nombre}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
       </div>
     </div>
   );

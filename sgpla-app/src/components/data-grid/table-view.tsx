@@ -8,6 +8,7 @@ import {
 } from "@/components/data-grid/table-parts"
 import {
   type DataGridColumn,
+  type DataGridEmptyStateProps,
   type DataGridRowBase,
   type EditingCell,
 } from "@/components/data-grid/types"
@@ -52,6 +53,8 @@ type DataGridTableViewProps<
   ) => React.ReactNode
   stickySummaryFooter: boolean
   tableContainerClassName?: string
+  enableFloatingActions: boolean
+  emptyState?: DataGridEmptyStateProps
   enableRowSelection: boolean
   isEmptyValue: (value: React.ReactNode) => boolean
   onResizeStart: (
@@ -92,6 +95,8 @@ export function DataGridTableView<
   renderSummary,
   stickySummaryFooter,
   tableContainerClassName,
+  enableFloatingActions,
+  emptyState,
   isEmptyValue,
   onResizeStart,
   draggingColumnId,
@@ -112,6 +117,7 @@ export function DataGridTableView<
         onToggleAllRows={onToggleAllRows}
         onResizeStart={onResizeStart}
         enableRowSelection={enableRowSelection}
+        enableFloatingActions={enableFloatingActions}
       />
 
       <DataGridTableBody
@@ -135,6 +141,8 @@ export function DataGridTableView<
         columnWidths={columnWidths}
         draggingColumnId={draggingColumnId}
         enableRowSelection={enableRowSelection}
+        enableFloatingActions={enableFloatingActions}
+        emptyState={emptyState}
       />
 
       <DataGridSummaryFooter

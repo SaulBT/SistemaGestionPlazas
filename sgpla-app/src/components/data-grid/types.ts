@@ -6,6 +6,13 @@ export type DataGridIcon = React.ComponentType<{
   className?: string
 }>
 
+export type DataGridEmptyStateProps = {
+  icon?: React.ReactNode
+  title?: React.ReactNode
+  description?: React.ReactNode
+  actions?: React.ReactNode
+}
+
 export type DataGridRowBase = {
   id: string
 }
@@ -16,6 +23,7 @@ export type DataGridColumn<ColumnId extends string> = {
   icon: DataGridIcon
   defaultWidth: number
   minWidth?: number
+  isActions?: boolean
 }
 
 export type DataGridDrawerPanelProps<Row, ColumnId extends string> = {
@@ -86,6 +94,8 @@ export type DataGridProps<
   stickySummaryFooter?: boolean
   fillAvailableHeight?: boolean
   tableContainerClassName?: string
+  enableFloatingActions?: boolean
+  emptyState?: DataGridEmptyStateProps
   onRowsChange?: (rows: Row[]) => void
 }
 

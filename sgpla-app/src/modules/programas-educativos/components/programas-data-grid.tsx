@@ -12,7 +12,7 @@ const columns: DataGridColumn<ProgramaColumnId>[] = [
   { id: "region", label: "Región", icon: MapPin, defaultWidth: 190 },
   { id: "areaAcademica", label: "Área Académica", icon: Building2, defaultWidth: 270 },
   { id: "entidadAcademica", label: "Entidad Académica", icon: Building2, defaultWidth: 270 },
-  { id: "acciones", label: "Acciones", icon: MoreHorizontal, defaultWidth: 190 },
+  { id: "acciones", label: "Acciones", icon: MoreHorizontal, defaultWidth: 190, isActions: true },
 ];
 
 export function ProgramasDataGrid() {
@@ -26,5 +26,5 @@ export function ProgramasDataGrid() {
     return row[column.id];
   }
 
-  return <div className="overflow-hidden rounded-lg border border-border bg-background"><DataGrid rows={programasEducativos} columns={columns} getRowLabel={(row) => row.nombre} renderCell={renderCell} isEditableColumn={() => false} getCellEditValue={() => ""} applyCellEdit={(row) => row} getDrawerCellValue={() => null} canOpenDrawer={() => false} enableRowSelection={false} tableContainerClassName="overflow-hidden" /></div>;
+  return <DataGrid rows={programasEducativos} columns={columns} getRowLabel={(row) => row.nombre} renderCell={renderCell} isEditableColumn={() => false} getCellEditValue={() => ""} applyCellEdit={(row) => row} getDrawerCellValue={() => null} canOpenDrawer={() => false} enableRowSelection={false} />;
 }

@@ -17,6 +17,7 @@ type SortableHeaderCellProps<ColumnId extends string> = {
     event: React.PointerEvent<HTMLButtonElement>,
     columnId: ColumnId
   ) => void
+  enableFloatingActions: boolean
 }
 
 type SortableColumnOptionItemProps<ColumnId extends string> = {
@@ -96,10 +97,16 @@ export function SortableHeaderCell<ColumnId extends string>({
   column,
   width,
   onResize,
+  enableFloatingActions,
 }: SortableHeaderCellProps<ColumnId>) {
   return (
     <TableHead
-      className="group/column-head relative h-10 overflow-hidden border-r-border bg-muted/20 px-2 text-sm"
+      className={cn(
+        "group/column-head relative h-10 overflow-hidden border-r-border bg-muted/20 px-2 text-sm",
+        enableFloatingActions &&
+          column.isActions &&
+          "sticky right-0 z-20 border-l-border bg-card [mask-image:linear-gradient(to_right,transparent_0,black_24px)]",
+      )}
       style={{
         width,
         minWidth: width,
@@ -107,7 +114,9 @@ export function SortableHeaderCell<ColumnId extends string>({
       }}
     >
       <div className="flex h-full min-w-0 items-center overflow-hidden">
-        <ColumnHead icon={column.icon} label={column.label} />
+        {column.isActions ? null : (
+          <ColumnHead icon={column.icon} label={column.label} />
+        )}
       </div>
       <button
         type="button"

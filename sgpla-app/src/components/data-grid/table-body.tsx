@@ -6,9 +6,11 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { DataGridEmptyState } from "@/components/data-grid/data-grid-empty-state";
 
 import {
   type DataGridColumn,
+  type DataGridEmptyStateProps,
   type DataGridRowBase,
   type EditingCell,
 } from "@/components/data-grid/types";
@@ -43,6 +45,8 @@ type DataGridTableBodyProps<
   columnWidths: Record<ColumnId, number>;
   draggingColumnId: ColumnId | null;
   enableRowSelection: boolean;
+  enableFloatingActions: boolean;
+  emptyState?: DataGridEmptyStateProps;
 };
 
 export function DataGridTableBody<
@@ -69,9 +73,21 @@ export function DataGridTableBody<
   columnWidths,
   draggingColumnId,
   enableRowSelection,
+  enableFloatingActions,
+  emptyState,
 }: DataGridTableBodyProps<Row, ColumnId>) {
   return (
     <TableBody>
+      {visibleRows.length === 0 ? (
+        <TableRow>
+          <TableCell
+            colSpan={visibleColumns.length + (enableRowSelection ? 1 : 0)}
+            className="h-64 p-0"
+          >
+            <DataGridEmptyState {...emptyState} />
+          </TableCell>
+        </TableRow>
+      ) : null}
       {visibleRows.map((row, rowIndex) => (
         <TableRow key={row.id}>
           {enableRowSelection && (
@@ -105,6 +121,9 @@ export function DataGridTableBody<
                   "focus-visible:ring-2 focus-visible:ring-ring/40",
                   editable && "cursor-text",
                   draggingColumnId === column.id && "bg-muted/20",
+                  enableFloatingActions &&
+                    column.isActions &&
+                    "sticky right-0 z-10 border-l-border bg-background [mask-image:linear-gradient(to_right,transparent_0,black_24px)]",
                 )}
                 style={{
                   width: columnWidths[column.id],

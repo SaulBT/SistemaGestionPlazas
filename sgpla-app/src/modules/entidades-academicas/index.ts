@@ -1,2 +1,5 @@
 export { EntidadesListView } from "./components/entidades-list-view";
-export { EntidadFormView } from "./components/entidad-form-view";
+export {
+  EntidadFormLoader,
+  EntidadFormView,
+} from "./components/entidad-form-view";

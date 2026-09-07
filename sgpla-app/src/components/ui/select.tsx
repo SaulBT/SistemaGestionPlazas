@@ -49,8 +49,10 @@ function SelectTrigger({
       )}
       {...props}
     >
-      {children}
-      <SelectPrimitive.Icon>
+      <span className="min-w-0 flex-1 overflow-hidden truncate text-left">
+        {children}
+      </span>
+      <SelectPrimitive.Icon className="shrink-0">
         <ChevronDownIcon className="pointer-events-none size-4 text-muted-foreground" />
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>

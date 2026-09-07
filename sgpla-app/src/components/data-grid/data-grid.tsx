@@ -1,21 +1,21 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 
-import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
-import { PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
+import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
+import { PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 
-import { DrawerPanel } from "@/components/data-grid/drawer-panel"
-import { DataGridTableView } from "@/components/data-grid/table-view"
-import { useGridColumns } from "@/components/data-grid/use-grid-columns"
-import { useGridEditing } from "@/components/data-grid/use-grid-editing"
-import { cn } from "@/lib/utils"
+import { DrawerPanel } from "@/components/data-grid/drawer-panel";
+import { DataGridTableView } from "@/components/data-grid/table-view";
+import { useGridColumns } from "@/components/data-grid/use-grid-columns";
+import { useGridEditing } from "@/components/data-grid/use-grid-editing";
+import { cn } from "@/lib/utils";
 import {
   type DataGridDrawerPanelProps,
   type DataGridProps,
   type DataGridRowBase,
   type EditingCell,
-} from "@/components/data-grid/types"
+} from "@/components/data-grid/types";
 
 export type {
   DataGridColumn,
@@ -23,15 +23,15 @@ export type {
   DataGridProps,
   DataGridRowBase,
   DataGridToolbarRenderProps,
-} from "@/components/data-grid/types"
+} from "@/components/data-grid/types";
 
-const MIN_COLUMN_WIDTH = 96
-const CONTROL_COLUMN_WIDTH = 40
+const MIN_COLUMN_WIDTH = 96;
+const CONTROL_COLUMN_WIDTH = 40;
 
 function isEmptyValue(value: React.ReactNode) {
-  if (value === null || value === undefined) return true
-  if (typeof value === "string") return value.trim().length === 0
-  return false
+  if (value === null || value === undefined) return true;
+  if (typeof value === "string") return value.trim().length === 0;
+  return false;
 }
 
 export function DataGrid<Row extends DataGridRowBase, ColumnId extends string>({
@@ -55,21 +55,23 @@ export function DataGrid<Row extends DataGridRowBase, ColumnId extends string>({
   stickySummaryFooter = false,
   fillAvailableHeight = false,
   tableContainerClassName,
+  enableFloatingActions = true,
+  emptyState,
   onRowsChange,
 }: DataGridProps<Row, ColumnId>) {
-  const [showSummaries, setShowSummaries] = React.useState(true)
+  const [showSummaries, setShowSummaries] = React.useState(true);
   const [drawerCell, setDrawerCell] =
-    React.useState<EditingCell<ColumnId> | null>(null)
-  const [selectedRowIds, setSelectedRowIds] = React.useState<string[]>([])
-  const reactInstanceId = React.useId()
+    React.useState<EditingCell<ColumnId> | null>(null);
+  const [selectedRowIds, setSelectedRowIds] = React.useState<string[]>([]);
+  const reactInstanceId = React.useId();
   const instanceId = React.useMemo(
     () => reactInstanceId.replace(/:/g, ""),
-    [reactInstanceId]
-  )
+    [reactInstanceId],
+  );
 
-  const gridRef = React.useRef<HTMLDivElement>(null)
-  const inputRef = React.useRef<HTMLInputElement>(null)
-  const tableRef = React.useRef<HTMLTableElement>(null)
+  const gridRef = React.useRef<HTMLDivElement>(null);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  const tableRef = React.useRef<HTMLTableElement>(null);
 
   const {
     columnWidths,
@@ -86,7 +88,7 @@ export function DataGrid<Row extends DataGridRowBase, ColumnId extends string>({
     tableRef,
     minColumnWidth: MIN_COLUMN_WIDTH,
     controlColumnWidth: CONTROL_COLUMN_WIDTH,
-  })
+  });
 
   const optionsPointerSensorOptions = React.useMemo(
     () => ({
@@ -94,39 +96,39 @@ export function DataGrid<Row extends DataGridRowBase, ColumnId extends string>({
         distance: 6,
       },
     }),
-    []
-  )
+    [],
+  );
   const optionsSensors = useSensors(
-    useSensor(PointerSensor, optionsPointerSensorOptions)
-  )
+    useSensor(PointerSensor, optionsPointerSensorOptions),
+  );
 
   const drawerRow = React.useMemo(() => {
-    if (!drawerCell) return null
-    return rows.find((row) => row.id === drawerCell.rowId) ?? null
-  }, [drawerCell, rows])
+    if (!drawerCell) return null;
+    return rows.find((row) => row.id === drawerCell.rowId) ?? null;
+  }, [drawerCell, rows]);
 
   const drawerRowIndex = React.useMemo(() => {
-    if (!drawerRow) return -1
-    return rows.findIndex((row) => row.id === drawerRow.id)
-  }, [drawerRow, rows])
+    if (!drawerRow) return -1;
+    return rows.findIndex((row) => row.id === drawerRow.id);
+  }, [drawerRow, rows]);
 
   const drawerColumn = React.useMemo(() => {
-    if (!drawerCell) return null
-    return columns.find((column) => column.id === drawerCell.columnId) ?? null
-  }, [columns, drawerCell])
+    if (!drawerCell) return null;
+    return columns.find((column) => column.id === drawerCell.columnId) ?? null;
+  }, [columns, drawerCell]);
 
   const drawerCellValue = React.useMemo(() => {
-    if (!drawerCell || !drawerRow) return null
-    return getDrawerCellValue(drawerRow, drawerCell.columnId)
-  }, [drawerCell, drawerRow, getDrawerCellValue])
+    if (!drawerCell || !drawerRow) return null;
+    return getDrawerCellValue(drawerRow, drawerCell.columnId);
+  }, [drawerCell, drawerRow, getDrawerCellValue]);
 
   const commitRows = React.useCallback(
     (updater: (currentRows: Row[]) => Row[]) => {
-      const nextRows = updater(rows)
-      onRowsChange?.(nextRows)
+      const nextRows = updater(rows);
+      onRowsChange?.(nextRows);
     },
-    [onRowsChange, rows]
-  )
+    [onRowsChange, rows],
+  );
 
   const {
     editingCell,
@@ -145,78 +147,78 @@ export function DataGrid<Row extends DataGridRowBase, ColumnId extends string>({
     getCellEditValue,
     applyCellEdit,
     commitRows,
-  })
+  });
 
   const closeDrawer = React.useCallback(() => {
-    setDrawerCell(null)
-  }, [])
+    setDrawerCell(null);
+  }, []);
 
-  const visibleRowIds = new Set(rows.map((row) => row.id))
+  const visibleRowIds = new Set(rows.map((row) => row.id));
   const visibleSelectedRowIds = selectedRowIds.filter((rowId) =>
-    visibleRowIds.has(rowId)
-  )
+    visibleRowIds.has(rowId),
+  );
 
   const toggleRowSelection = React.useCallback(
     (rowId: string, checked: boolean) => {
       setSelectedRowIds((current) => {
         if (checked) {
-          return current.includes(rowId) ? current : [...current, rowId]
+          return current.includes(rowId) ? current : [...current, rowId];
         }
 
-        return current.filter((currentRowId) => currentRowId !== rowId)
-      })
+        return current.filter((currentRowId) => currentRowId !== rowId);
+      });
     },
-    []
-  )
+    [],
+  );
 
   const toggleAllRows = React.useCallback(
     (checked: boolean) => {
-      setSelectedRowIds(checked ? rows.map((row) => row.id) : [])
+      setSelectedRowIds(checked ? rows.map((row) => row.id) : []);
     },
-    [rows]
-  )
+    [rows],
+  );
 
   const clearSelection = React.useCallback(() => {
-    setSelectedRowIds([])
-  }, [])
+    setSelectedRowIds([]);
+  }, []);
 
-  const selectedRowCount = visibleSelectedRowIds.length
+  const selectedRowCount = visibleSelectedRowIds.length;
   const allVisibleRowsSelected =
-    rows.length > 0 && selectedRowCount === rows.length
+    rows.length > 0 && selectedRowCount === rows.length;
   const someVisibleRowsSelected =
-    selectedRowCount > 0 && !allVisibleRowsSelected
+    selectedRowCount > 0 && !allVisibleRowsSelected;
 
   const updateRow = React.useCallback(
     (rowId: string, updater: (row: Row) => Row) => {
       commitRows((currentRows) =>
-        currentRows.map((row) => (row.id === rowId ? updater(row) : row))
-      )
+        currentRows.map((row) => (row.id === rowId ? updater(row) : row)),
+      );
     },
-    [commitRows]
-  )
+    [commitRows],
+  );
 
   const openDrawerRowAt = React.useCallback(
     (rowIndex: number) => {
-      if (!drawerCell) return
+      if (!drawerCell) return;
 
-      const nextRow = rows[rowIndex]
-      if (!nextRow) return
+      const nextRow = rows[rowIndex];
+      if (!nextRow) return;
 
       setDrawerCell({
         rowId: nextRow.id,
         columnId: drawerCell.columnId,
-      })
+      });
     },
-    [drawerCell, rows]
-  )
+    [drawerCell, rows],
+  );
 
   const openPreviousRow = React.useCallback(() => {
-    openDrawerRowAt(drawerRowIndex - 1)
-  }, [drawerRowIndex, openDrawerRowAt])
+    openDrawerRowAt(drawerRowIndex - 1);
+  }, [drawerRowIndex, openDrawerRowAt]);
 
   const openNextRow = React.useCallback(() => {
-    openDrawerRowAt(drawerRowIndex + 1)
-  }, [drawerRowIndex, openDrawerRowAt])
+    openDrawerRowAt(drawerRowIndex + 1);
+  }, [drawerRowIndex, openDrawerRowAt]);
 
   const drawerPanelProps: DataGridDrawerPanelProps<Row, ColumnId> = {
     drawerRow,
@@ -231,7 +233,7 @@ export function DataGrid<Row extends DataGridRowBase, ColumnId extends string>({
     openPreviousRow,
     openNextRow,
     closeDrawer,
-  }
+  };
 
   const toolbarProps = React.useMemo(
     () => ({
@@ -268,12 +270,12 @@ export function DataGrid<Row extends DataGridRowBase, ColumnId extends string>({
       optionsSensors,
       handleOptionColumnDragEnd,
       instanceId,
-    ]
-  )
+    ],
+  );
 
   React.useEffect(() => {
-    onToolbarPropsChange?.(toolbarProps)
-  }, [onToolbarPropsChange, toolbarProps])
+    onToolbarPropsChange?.(toolbarProps);
+  }, [onToolbarPropsChange, toolbarProps]);
 
   return (
     <DialogPrimitive.Root
@@ -281,56 +283,63 @@ export function DataGrid<Row extends DataGridRowBase, ColumnId extends string>({
       modal={drawerModal}
       disablePointerDismissal={disablePointerDismissal}
       onOpenChange={(open) => {
-        if (!open) closeDrawer()
+        if (!open) closeDrawer();
       }}
     >
-      <div
-        className={cn("min-h-0", fillAvailableHeight && "flex h-full flex-col")}
-        ref={gridRef}
-      >
-        {renderToolbar?.(toolbarProps)}
+      <div className="overflow-hidden rounded-lg border border-border bg-background">
+        <div
+          className={cn(
+            "min-h-0",
+            fillAvailableHeight && "flex h-full flex-col",
+          )}
+          ref={gridRef}
+        >
+          {renderToolbar?.(toolbarProps)}
 
-        <div className={cn(fillAvailableHeight && "min-h-0 flex-1")}>
-          <DataGridTableView
-            tableRef={tableRef}
-            gridMinWidth={gridMinWidth}
-            visibleColumns={visibleColumns}
-            columnWidths={columnWidths}
-            draggingColumnId={draggingColumnId}
-            visibleRows={rows}
-            getRowLabel={getRowLabel}
-            editingCell={editingCell}
-            isEditableColumn={isEditableColumn}
-            startEditing={startEditing}
-            onCellKeyDown={handleCellKeyDown}
-            inputRef={inputRef}
-            draftValue={draftValue}
-            setDraftValue={setDraftValue}
-            commitEdit={commitEdit}
-            cancelEdit={cancelEdit}
-            canOpenDrawer={canOpenDrawer}
-            renderCell={renderCell}
-            onOpenDrawer={(cell) => {
-              if (onOpenDrawerCell) {
-                onOpenDrawerCell(cell)
-                return
-              }
+          <div className={cn(fillAvailableHeight && "min-h-0 flex-1")}>
+            <DataGridTableView
+              tableRef={tableRef}
+              gridMinWidth={gridMinWidth}
+              visibleColumns={visibleColumns}
+              columnWidths={columnWidths}
+              draggingColumnId={draggingColumnId}
+              visibleRows={rows}
+              getRowLabel={getRowLabel}
+              editingCell={editingCell}
+              isEditableColumn={isEditableColumn}
+              startEditing={startEditing}
+              onCellKeyDown={handleCellKeyDown}
+              inputRef={inputRef}
+              draftValue={draftValue}
+              setDraftValue={setDraftValue}
+              commitEdit={commitEdit}
+              cancelEdit={cancelEdit}
+              canOpenDrawer={canOpenDrawer}
+              renderCell={renderCell}
+              onOpenDrawer={(cell) => {
+                if (onOpenDrawerCell) {
+                  onOpenDrawerCell(cell);
+                  return;
+                }
 
-              setDrawerCell(cell)
-            }}
-            selectedRowIds={visibleSelectedRowIds}
-            allVisibleRowsSelected={allVisibleRowsSelected}
-            someVisibleRowsSelected={someVisibleRowsSelected}
-            onToggleRowSelection={toggleRowSelection}
-            onToggleAllRows={toggleAllRows}
-            showSummaries={showSummaries}
-            renderSummary={renderSummary}
-            stickySummaryFooter={stickySummaryFooter}
-            tableContainerClassName={tableContainerClassName}
-            isEmptyValue={isEmptyValue}
-            onResizeStart={beginResize}
-            enableRowSelection={enableRowSelection}
-          />
+                setDrawerCell(cell);
+              }}
+              selectedRowIds={visibleSelectedRowIds}
+              allVisibleRowsSelected={allVisibleRowsSelected}
+              someVisibleRowsSelected={someVisibleRowsSelected}
+              onToggleRowSelection={toggleRowSelection}
+              onToggleAllRows={toggleAllRows}
+              showSummaries={showSummaries}
+              renderSummary={renderSummary}
+              stickySummaryFooter={stickySummaryFooter}
+              tableContainerClassName={tableContainerClassName}
+              enableFloatingActions={enableFloatingActions}
+              emptyState={emptyState}
+              isEmptyValue={isEmptyValue}
+              onResizeStart={beginResize}
+              enableRowSelection={enableRowSelection}
+            />
+          </div>
         </div>
       </div>
 
@@ -347,5 +356,5 @@ export function DataGrid<Row extends DataGridRowBase, ColumnId extends string>({
         />
       )}
     </DialogPrimitive.Root>
-  )
+  );
 }
