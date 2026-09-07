@@ -178,6 +178,80 @@ namespace SGPla.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> VistaPreviaAvisoAsync(int idAviso)
+        {
+            try
+            {
+                var aviso = await _avisoService.ObtenerAvisoPorIDAsync(idAviso);
+                if (aviso.IdEntidadAcademica != idEntidadAcademica)
+                    return Forbid();
+
+                if (aviso.IdArchivoOriginal <= 0)
+                    return NotFound("El aviso no tiene un documento original disponible.");
+
+                return View(new VistaPreviaAvisoViewModel
+                {
+                    Folio = aviso.Folio,
+                    UrlVistaPrevia = Url.Action("ObtenerVistaPreviaAviso", new { idAviso })!,
+                    UrlDescarga = Url.Action("DescargarAviso", new { idAviso })!
+                });
+            }
+            catch (ValidacionExcepction)
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ObtenerVistaPreviaAvisoAsync(int idAviso)
+        {
+            try
+            {
+                var aviso = await _avisoService.ObtenerAvisoPorIDAsync(idAviso);
+                if (aviso.IdEntidadAcademica != idEntidadAcademica)
+                    return Forbid();
+
+                var archivo = await _archivoService.ObtenerVistaPreviaPdfAsync(aviso.IdArchivoOriginal);
+                return PhysicalFile(archivo.Ruta, archivo.Tipo, enableRangeProcessing: true);
+            }
+            catch (ValidacionExcepction)
+            {
+                return NotFound();
+            }
+            catch (FileNotFoundException)
+            {
+                return NotFound("No se encontró el documento del aviso.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "No se pudo generar la vista previa del aviso {IdAviso}.", idAviso);
+                return Problem("No se pudo generar la vista previa del aviso.");
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> DescargarAvisoAsync(int idAviso)
+        {
+            try
+            {
+                var aviso = await _avisoService.ObtenerAvisoPorIDAsync(idAviso);
+                if (aviso.IdEntidadAcademica != idEntidadAcademica)
+                    return Forbid();
+
+                var archivo = await _archivoService.DescargarAsync(aviso.IdArchivoOriginal);
+                return PhysicalFile(archivo.Ruta, archivo.Tipo, archivo.Nombre);
+            }
+            catch (ValidacionExcepction)
+            {
+                return NotFound();
+            }
+            catch (FileNotFoundException)
+            {
+                return NotFound("No se encontró el documento del aviso.");
+            }
+        }
+
         //Firmar
         [HttpPost]
         public async Task FirmarAvisoAsync([FromForm] int idAviso, [FromForm] IFormFile archivo)
@@ -805,7 +879,7 @@ namespace SGPla.Controllers
                                     new TableActionModel
                                     {
                                         Accion = "Editar",
-                                        OnClick = $"editarHorario()"
+                                        OnClick = $"editarHorario({JsonSerializer.Serialize(h.Fecha)}, {JsonSerializer.Serialize(h.HoraInicio)}, {JsonSerializer.Serialize(h.HoraTermino)})"
                                     },
                                     new TableActionModel
                                     {

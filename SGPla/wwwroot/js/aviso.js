@@ -7,6 +7,7 @@ const lugar = document.getElementById("Lugar");
 const horarios = document.getElementById("contenedorHorarios");
 
 let listaHorarios = [];
+let indiceHorarioEnEdicion = null;
 
 periodo.addEventListener("change", actualizarOfertas);
 articulo.addEventListener("change", actualizarOfertas);
@@ -48,7 +49,7 @@ async function cargarHorarios() {
         return;
     }
 
-    listaHorarios = await response.json();
+    listaHorarios = (await response.json()).map(normalizarHorario);
 
     const responseTabla = await fetch(`${UrlObtenerTablaHorarios}${parametroAviso}`);
 
@@ -72,9 +73,35 @@ async function cambiarVisibilidad(idElemento) {
 }
 
 function abrirModalAgregarHorario() {
+    indiceHorarioEnEdicion = null;
     limpiarErroresHorario();
     limpiarCamposHorario();
+    establecerModoModalHorario("Agregar horario", "Cancelar", "Guardar");
     abrirModal("modalAgregarHorario");
+}
+
+function editarHorario(fecha, horaInicio, horaTermino) {
+    const index = buscarIndiceHorario(fecha, horaInicio, horaTermino);
+    if (index === -1) {
+        console.error("No se encontró el horario a editar.");
+        return;
+    }
+
+    const horario = listaHorarios[index];
+    indiceHorarioEnEdicion = index;
+    limpiarErroresHorario();
+    document.getElementById("Fecha").value = horario.Fecha;
+    document.getElementById("HoraInicio").value = horario.HoraInicio;
+    document.getElementById("HoraTermino").value = horario.HoraTermino;
+    establecerModoModalHorario("Editar horario", "Cancelar cambios", "Guardar");
+    abrirModal("modalAgregarHorario");
+}
+
+function establecerModoModalHorario(titulo, textoCancelar, textoConfirmar) {
+    document.querySelector("#modalAgregarHorario .modal-header h3").textContent = titulo;
+    const botones = document.querySelectorAll("#modalAgregarHorario .modal-footer .text-wrapper");
+    botones[0].textContent = textoCancelar;
+    botones[1].textContent = textoConfirmar;
 }
 
 function verPerfilDocenteOferta(perfilDocente) {
@@ -162,15 +189,18 @@ function agregarHorario() {
         return;
     }
 
-    var datosHorario = {}
-    datosHorario = {
+    const datosHorario = {
         "Fecha": fecha.value,
         "HoraInicio": horaInicio.value,
         "HoraTermino": horaTermino.value
+    };
+
+    if (indiceHorarioEnEdicion === null) {
+        listaHorarios.push(datosHorario);
+    } else {
+        listaHorarios[indiceHorarioEnEdicion] = datosHorario;
+        indiceHorarioEnEdicion = null;
     }
-
-
-    listaHorarios.push(datosHorario);
 
     actualizarHorarios();
     cerrarModal("modalAgregarHorario");
@@ -221,13 +251,7 @@ function limpiarErroresHorario() {
 }
 
 async function eliminarHorario(fecha, horaInicio, horaTermino) {
-    console.log(listaHorarios);
-    console.log(fecha + " | " + horaInicio + " | " + horaTermino);
-    const index = listaHorarios.findIndex(h =>
-        h.Fecha === fecha &&
-        h.HoraInicio === horaInicio &&
-        h.HoraTermino === horaTermino
-    );
+    const index = buscarIndiceHorario(fecha, horaInicio, horaTermino);
 
     if (index === -1) {
         console.error("No se encontró el horario.");
@@ -237,4 +261,20 @@ async function eliminarHorario(fecha, horaInicio, horaTermino) {
     listaHorarios.splice(index, 1);
 
     await actualizarHorarios();
+}
+
+function buscarIndiceHorario(fecha, horaInicio, horaTermino) {
+    return listaHorarios.findIndex(h =>
+        h.Fecha === fecha &&
+        h.HoraInicio === horaInicio &&
+        h.HoraTermino === horaTermino
+    );
+}
+
+function normalizarHorario(horario) {
+    return {
+        Fecha: horario.Fecha ?? horario.fecha,
+        HoraInicio: horario.HoraInicio ?? horario.horaInicio,
+        HoraTermino: horario.HoraTermino ?? horario.horaTermino
+    };
 }
