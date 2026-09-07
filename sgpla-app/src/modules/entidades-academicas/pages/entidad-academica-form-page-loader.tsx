@@ -3,22 +3,22 @@
 import { getErrorMessage } from "@/shared/api/http-client";
 import { useMinimumLoading } from "@/shared/hooks/use-minimum-loading";
 import { MINIMUM_LOADING_DURATION_MS } from "@/shared/constants/loading";
-import { useEntidadAcademica } from "../../presentation/entidades-academicas.queries";
-import { EntidadFormView } from "./entidad-form-view";
+import { useEntidadAcademica } from "../presentation/entidades-academicas.queries";
+import { EntidadAcademicaFormPage } from "./entidad-academica-form-page";
 
-type EntidadFormLoaderProps = {
+type EntidadAcademicaFormPageLoaderProps = {
   idEntidadAcademica: number | undefined;
   readOnly?: boolean;
   title: string;
   description: string;
 };
 
-export function EntidadFormLoader({
+export function EntidadAcademicaFormPageLoader({
   idEntidadAcademica,
   readOnly = false,
   title,
   description,
-}: EntidadFormLoaderProps) {
+}: EntidadAcademicaFormPageLoaderProps) {
   const entidadQuery = useEntidadAcademica(idEntidadAcademica);
   const shouldShowLoading = useMinimumLoading(
     entidadQuery.isPending,
@@ -55,7 +55,8 @@ export function EntidadFormLoader({
   }
 
   return (
-    <EntidadFormView
+    <EntidadAcademicaFormPage
+      key={entidadQuery.data.idEntidadAcademica}
       entidad={entidadQuery.data}
       readOnly={readOnly}
       title={title}

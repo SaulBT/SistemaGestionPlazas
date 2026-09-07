@@ -72,6 +72,10 @@ type Props = {
   entidades: EntidadAcademica[];
   isLoading?: boolean;
   isDeleting: boolean;
+  createHref: string;
+  getEditHref: (entidad: EntidadAcademica) => string;
+  getProgramsHref: (entidad: EntidadAcademica) => string;
+  getViewHref: (entidad: EntidadAcademica) => string;
   onDelete: (entidad: EntidadAcademica) => void;
 };
 
@@ -113,6 +117,10 @@ export function EntidadesDataGrid({
   entidades,
   isLoading = false,
   isDeleting,
+  createHref,
+  getEditHref,
+  getProgramsHref,
+  getViewHref,
   onDelete,
 }: Props) {
   const shouldShowLoading = useMinimumLoading(
@@ -148,7 +156,7 @@ export function EntidadesDataGrid({
             <DropdownMenuContent align="end">
               <DropdownMenuItem asChild>
                 <Link
-                  href={`/EntidadesAcademicas/VerEntidadAcademica?id=${row.entidad.idEntidadAcademica}`}
+                  href={getViewHref(row.entidad)}
                 >
                   <Eye />
                   Ver entidad
@@ -156,7 +164,7 @@ export function EntidadesDataGrid({
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link
-                  href={`/ProgramasEducativos/Buscar?idEntidadAcademica=${row.entidad.idEntidadAcademica}&region=${encodeURIComponent(row.region)}&idAreaAcademica=${row.entidad.idAreaAcademica}`}
+                  href={getProgramsHref(row.entidad)}
                 >
                   <GraduationCap />
                   Ver programas
@@ -164,7 +172,7 @@ export function EntidadesDataGrid({
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link
-                  href={`/EntidadesAcademicas/EditarEntidadAcademica?id=${row.entidad.idEntidadAcademica}`}
+                  href={getEditHref(row.entidad)}
                 >
                   <Pencil />
                   Editar entidad
@@ -206,7 +214,7 @@ export function EntidadesDataGrid({
         actions: (
           <Button
             nativeButton={false}
-            render={<Link href="/EntidadesAcademicas/CrearEntidadAcademica" />}
+            render={<Link href={createHref} />}
           >
             <Plus />
             Registrar entidad académica

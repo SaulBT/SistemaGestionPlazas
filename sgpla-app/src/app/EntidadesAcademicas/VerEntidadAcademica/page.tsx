@@ -1,5 +1,5 @@
 import { Dashboard } from "@/components/dashboard";
-import { EntidadFormLoader } from "@/modules/entidades-academicas";
+import { EntidadAcademicaFormPageLoader } from "@/modules/entidades-academicas";
 export const metadata = { title: "Entidad Académica - SGPla" };
 export default async function VerEntidadPage({
   searchParams,
@@ -9,7 +9,7 @@ export default async function VerEntidadPage({
   const { id } = await searchParams;
   return (
     <Dashboard activeHref="/EntidadesAcademicas">
-      <EntidadFormLoader
+      <EntidadAcademicaFormPageLoader
         idEntidadAcademica={Number(id)}
         title="Entidad Académica"
         description="Consulta la información de la entidad."

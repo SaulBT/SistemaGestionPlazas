@@ -3,11 +3,13 @@
 import { useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useDebouncedValue } from "@/shared/hooks/use-debounced-value";
+import { guardarEntidadAcademica } from "../application/guardar-entidad-academica";
+import type { EntidadAcademica } from "../domain/entidad-academica";
 import type {
   ConsultarEntidadesAcademicasQuery,
   GuardarEntidadAcademicaInput,
-} from "../domain/entidad-academica";
-import { httpEntidadesAcademicasAdapter } from "../infra/http-entidades-academicas.adapter";
+} from "../application/entidades-academicas.contracts";
+import { entidadesAcademicasPort } from "../composition";
 
 export const entidadesAcademicasKeys = {
   all: ["entidades-academicas"] as const,
@@ -39,7 +41,7 @@ export function useEntidadesAcademicas(
   return useQuery({
     queryKey: entidadesAcademicasKeys.list(consultaDebounced),
     queryFn: () =>
-      httpEntidadesAcademicasAdapter.consultar(consultaDebounced),
+      entidadesAcademicasPort.consultar(consultaDebounced),
     retry: false,
   });
 }
@@ -48,7 +50,7 @@ export function useEntidadAcademica(idEntidadAcademica: number | undefined) {
   return useQuery({
     queryKey: entidadesAcademicasKeys.detail(idEntidadAcademica ?? 0),
     queryFn: () =>
-      httpEntidadesAcademicasAdapter.consultarPorId(idEntidadAcademica!),
+      entidadesAcademicasPort.consultarPorId(idEntidadAcademica!),
     enabled: Boolean(idEntidadAcademica && idEntidadAcademica > 0),
     retry: false,
   });
@@ -57,7 +59,7 @@ export function useEntidadAcademica(idEntidadAcademica: number | undefined) {
 export function useAreasAcademicas() {
   return useQuery({
     queryKey: entidadesAcademicasKeys.areas(),
-    queryFn: () => httpEntidadesAcademicasAdapter.consultarAreasAcademicas(),
+    queryFn: () => entidadesAcademicasPort.consultarAreasAcademicas(),
     retry: false,
   });
 }
@@ -69,27 +71,18 @@ function useInvalidarEntidadesAcademicas() {
     queryClient.invalidateQueries({ queryKey: entidadesAcademicasKeys.all });
 }
 
-export function useCrearEntidadAcademica() {
-  const invalidar = useInvalidarEntidadesAcademicas();
-
-  return useMutation({
-    mutationFn: (input: GuardarEntidadAcademicaInput) =>
-      httpEntidadesAcademicasAdapter.crear(input),
-    onSuccess: invalidar,
-  });
-}
-
-export function useActualizarEntidadAcademica() {
+export function useGuardarEntidadAcademica() {
   const invalidar = useInvalidarEntidadesAcademicas();
 
   return useMutation({
     mutationFn: ({
-      idEntidadAcademica,
       input,
+      entidadExistente,
     }: {
-      idEntidadAcademica: number;
       input: GuardarEntidadAcademicaInput;
-    }) => httpEntidadesAcademicasAdapter.actualizar(idEntidadAcademica, input),
+      entidadExistente?: EntidadAcademica;
+    }) =>
+      guardarEntidadAcademica(entidadesAcademicasPort, input, entidadExistente),
     onSuccess: invalidar,
   });
 }
@@ -99,7 +92,7 @@ export function useEliminarEntidadAcademica() {
 
   return useMutation({
     mutationFn: (idEntidadAcademica: number) =>
-      httpEntidadesAcademicasAdapter.eliminar(idEntidadAcademica),
+      entidadesAcademicasPort.eliminar(idEntidadAcademica),
     onSuccess: invalidar,
   });
 }

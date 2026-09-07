@@ -3,9 +3,9 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { FormSection } from "@/components/form-section";
 import { TextField } from "@/components/text-field";
+import { FormSelectField } from "@/components/form-select-field";
 import { REGIONES } from "../../domain/entidad-academica";
 import type { EntidadFormValues } from "../../application/entidad-form.model";
-import { EntidadFormSelectField } from "./ui/entidad-form-select-field";
 
 type EntidadFormFieldsProps = {
   values: EntidadFormValues;
@@ -16,7 +16,7 @@ type EntidadFormFieldsProps = {
     field: K,
     value: EntidadFormValues[K],
   ) => void;
-  errorFor: (field: string) => string | undefined;
+  errorFor: (field: keyof EntidadFormValues) => string | undefined;
 };
 
 export function EntidadFormFields({
@@ -68,17 +68,18 @@ export function EntidadFormFields({
         description="Área académica y región a la que pertenece."
       >
         <div className="flex flex-col gap-5">
-          <EntidadFormSelectField
+          <FormSelectField
             id="idAreaAcademica"
             label="Área Académica"
             value={values.idAreaAcademica}
             options={areas}
             onChange={(value) => onChange("idAreaAcademica", value)}
             loading={areasLoading}
-            readOnly={readOnly}
+            disabled={readOnly}
+            required
             error={errorFor("idAreaAcademica")}
           />
-          <EntidadFormSelectField
+          <FormSelectField
             id="region"
             label="Región"
             value={values.region}
@@ -87,7 +88,8 @@ export function EntidadFormFields({
               label: region,
             }))}
             onChange={(value) => onChange("region", value)}
-            readOnly={readOnly}
+            disabled={readOnly}
+            required
             error={errorFor("region")}
           />
         </div>

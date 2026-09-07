@@ -1,10 +1,12 @@
 import type {
-  AreaAcademica,
-  ConsultarEntidadesAcademicasQuery,
   EntidadAcademica,
+  AreaAcademica,
+} from "../domain/entidad-academica";
+import type {
+  ConsultarEntidadesAcademicasQuery,
   GuardarEntidadAcademicaInput,
   Pagina,
-} from "../domain/entidad-academica";
+} from "./entidades-academicas.contracts";
 
 export interface EntidadesAcademicasPort {
   consultar(

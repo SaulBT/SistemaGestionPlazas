@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback } from "react";
 import { Field, FieldLabel } from "@/components/ui/field";
 import {
   Select,
@@ -11,30 +10,32 @@ import {
 } from "@/components/ui/select";
 import {
   REGIONES,
-  type ConsultarEntidadesAcademicasQuery,
+  type Region,
 } from "../../domain/entidad-academica";
-import { useAreasAcademicas } from "../../presentation/entidades-academicas.queries";
+import type { ConsultarEntidadesAcademicasQuery } from "../../application/entidades-academicas.contracts";
 import { EntidadAcademicaSearchInput } from "./ui/entidad-academica-search-input";
 
 const TODAS = "__todas__";
 
 type Props = {
   consulta: ConsultarEntidadesAcademicasQuery;
+  areas: Array<{ value: string; label: string }>;
+  areasLoading: boolean;
   onChange: (cambios: Partial<ConsultarEntidadesAcademicasQuery>) => void;
 };
 
-export function EntidadesFiltersHeader({ consulta, onChange }: Props) {
-  const areasQuery = useAreasAcademicas();
-  const actualizarBusqueda = useCallback(
-    (busqueda: string) => onChange({ busqueda }),
-    [onChange],
-  );
+export function EntidadesFiltersHeader({
+  consulta,
+  areas,
+  areasLoading,
+  onChange,
+}: Props) {
 
   return (
     <div className="flex flex-col items-end gap-3 sm:flex-row sm:justify-between">
       <EntidadAcademicaSearchInput
         value={consulta.busqueda ?? ""}
-        onChange={actualizarBusqueda}
+        onChange={(busqueda) => onChange({ busqueda })}
       />
 
       <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
@@ -43,7 +44,9 @@ export function EntidadesFiltersHeader({ consulta, onChange }: Props) {
           <Select
             value={consulta.region ?? TODAS}
             onValueChange={(value) =>
-              onChange({ region: value === TODAS ? undefined : value })
+              onChange({
+                region: value === TODAS ? undefined : (value as Region),
+              })
             }
           >
             <SelectTrigger id="region" className="w-full">
@@ -70,19 +73,19 @@ export function EntidadesFiltersHeader({ consulta, onChange }: Props) {
                   value === TODAS ? undefined : Number(value),
               })
             }
-            disabled={areasQuery.isPending}
+            disabled={areasLoading}
           >
             <SelectTrigger id="idAreaAcademica" className="w-full">
               <SelectValue placeholder="Todas las áreas" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={TODAS}>Todas las áreas</SelectItem>
-              {(areasQuery.data?.items ?? []).map((area) => (
+              {areas.map((area) => (
                 <SelectItem
-                  key={area.idAreaAcademica}
-                  value={area.idAreaAcademica.toString()}
+                  key={area.value}
+                  value={area.value}
                 >
-                  {area.nombre}
+                  {area.label}
                 </SelectItem>
               ))}
             </SelectContent>

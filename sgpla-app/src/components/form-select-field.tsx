@@ -9,44 +9,44 @@ import {
 } from "@/components/ui/select";
 import { TextField } from "@/components/text-field";
 
+export type SelectOption = { value: string; label: string };
+
 type Props = {
-  id: "idAreaAcademica" | "region";
+  id: string;
   label: string;
+  options: SelectOption[];
   value?: string;
-  options: Array<{ value: string; label: string }>;
   onChange: (value: string) => void;
-  readOnly?: boolean;
+  placeholder?: string;
+  disabled?: boolean;
   loading?: boolean;
   error?: string;
+  required?: boolean;
 };
 
-export function EntidadFormSelectField({
+export function FormSelectField({
   id,
   label,
-  value,
   options,
+  value,
   onChange,
-  readOnly = false,
+  placeholder = `Seleccione ${label.toLowerCase()}`,
+  disabled = false,
   loading = false,
   error,
+  required = false,
 }: Props) {
   return (
-    <TextField id={id} required>
+    <TextField id={id} required={required}>
       <Label>{label}</Label>
       <Select
         name={id}
         value={value}
         onValueChange={onChange}
-        disabled={readOnly || loading}
+        disabled={disabled || loading}
       >
         <SelectTrigger id={id} className="w-full" aria-invalid={Boolean(error)}>
-          <SelectValue
-            placeholder={
-              loading
-                ? "Cargando opciones..."
-                : `Seleccione ${label.toLowerCase()}`
-            }
-          />
+          <SelectValue placeholder={loading ? "Cargando opciones..." : placeholder} />
         </SelectTrigger>
         <SelectContent>
           {options.map((option) => (

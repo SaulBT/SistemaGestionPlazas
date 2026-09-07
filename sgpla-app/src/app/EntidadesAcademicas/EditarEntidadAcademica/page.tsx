@@ -1,5 +1,5 @@
 import { Dashboard } from "@/components/dashboard";
-import { EntidadFormLoader } from "@/modules/entidades-academicas";
+import { EntidadAcademicaFormPageLoader } from "@/modules/entidades-academicas";
 export const metadata = { title: "Editar Entidad Académica - SGPla" };
 export default async function EditarEntidadPage({
   searchParams,
@@ -9,7 +9,7 @@ export default async function EditarEntidadPage({
   const { id } = await searchParams;
   return (
     <Dashboard activeHref="/EntidadesAcademicas">
-      <EntidadFormLoader
+      <EntidadAcademicaFormPageLoader
         idEntidadAcademica={Number(id)}
         title="Editar Entidad Académica"
         description="Actualiza la información de la entidad."

@@ -9,8 +9,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-
-type PaginationItemValue = number | "ellipsis";
+import { buildPageItems } from "@/shared/pagination/build-page-items";
 
 type Props = {
   currentPage: number;
@@ -19,48 +18,13 @@ type Props = {
   onPageChange: (page: number) => void;
 };
 
-function getPageItems(
-  currentPage: number,
-  totalPages: number,
-): PaginationItemValue[] {
-  if (totalPages <= 7) {
-    return Array.from({ length: totalPages }, (_, index) => index + 1);
-  }
-
-  if (currentPage <= 4) {
-    return [1, 2, 3, 4, 5, "ellipsis", totalPages];
-  }
-
-  if (currentPage >= totalPages - 3) {
-    return [
-      1,
-      "ellipsis",
-      totalPages - 4,
-      totalPages - 3,
-      totalPages - 2,
-      totalPages - 1,
-      totalPages,
-    ];
-  }
-
-  return [
-    1,
-    "ellipsis",
-    currentPage - 1,
-    currentPage,
-    currentPage + 1,
-    "ellipsis",
-    totalPages,
-  ];
-}
-
 export function EntidadesPagination({
   currentPage,
   isLoading,
   totalPages,
   onPageChange,
 }: Props) {
-  const pageItems = getPageItems(currentPage, totalPages);
+  const pageItems = buildPageItems(currentPage, totalPages);
 
   return (
     <div className="flex items-center justify-end gap-4 text-sm text-muted-foreground">

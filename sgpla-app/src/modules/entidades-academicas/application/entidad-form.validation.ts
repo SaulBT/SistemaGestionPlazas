@@ -66,18 +66,3 @@ export const entidadAcademicaFormSchema = z.object({
     error: "Selecciona una región válida.",
   }),
 });
-
-export function toValidationErrors(error: z.ZodError) {
-  return error.issues.reduce<Record<string, string[]>>((errors, issue) => {
-    const field = issue.path[0]?.toString();
-
-    if (!field) return errors;
-
-    errors[field] ??= [];
-    if (!errors[field].includes(issue.message)) {
-      errors[field].push(issue.message);
-    }
-
-    return errors;
-  }, {});
-}

@@ -1,3 +1,3 @@
-export { EntidadesListView } from "./components/list/entidades-list-view";
-export { EntidadFormLoader } from "./components/form/entidad-form-loader";
-export { EntidadFormView } from "./components/form/entidad-form-view";
+export { EntidadesAcademicasListPage } from "./pages/entidades-academicas-list-page";
+export { EntidadAcademicaFormPage } from "./pages/entidad-academica-form-page";
+export { EntidadAcademicaFormPageLoader } from "./pages/entidad-academica-form-page-loader";

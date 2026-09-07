@@ -1,13 +1,14 @@
 import type {
   EntidadAcademica,
-  GuardarEntidadAcademicaInput,
 } from "../domain/entidad-academica";
+import type { GuardarEntidadAcademicaInput } from "./entidades-academicas.contracts";
 
 export type EntidadFormValues = Omit<
   GuardarEntidadAcademicaInput,
-  "idAreaAcademica"
+  "idAreaAcademica" | "region"
 > & {
   idAreaAcademica: string;
+  region: string;
 };
 
 export function toEntidadFormValues(
@@ -41,6 +42,15 @@ export function toGuardarEntidadAcademicaInput(
     telefono: values.telefono.trim(),
     extension: values.extension.trim(),
     idAreaAcademica: Number(values.idAreaAcademica),
-    region: values.region.trim(),
+    region: values.region.trim() as GuardarEntidadAcademicaInput["region"],
   };
+}
+
+export function hasEntidadFormChanges(
+  values: EntidadFormValues,
+  originalValues: EntidadFormValues,
+) {
+  return (Object.keys(values) as Array<keyof EntidadFormValues>).some(
+    (field) => values[field].trim() !== originalValues[field].trim(),
+  );
 }

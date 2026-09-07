@@ -1,15 +1,6 @@
 "use client";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 
 type Props = {
   isEditing: boolean;
@@ -25,25 +16,19 @@ export function EntidadFormExitConfirmationDialog({
   onConfirm,
 }: Props) {
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>
-            {isEditing ? "¿Salir de la edición?" : "¿Salir del registro?"}
-          </AlertDialogTitle>
-          <AlertDialogDescription>
-            {isEditing
-              ? "Los cambios realizados no se guardarán."
-              : "La información capturada se perderá."}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Continuar aquí</AlertDialogCancel>
-          <AlertDialogAction variant="destructive" onClick={onConfirm}>
-            Salir sin guardar
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <ConfirmationDialog
+      open={open}
+      title={isEditing ? "¿Salir de la edición?" : "¿Salir del registro?"}
+      description={
+        isEditing
+          ? "Los cambios realizados no se guardarán."
+          : "La información capturada se perderá."
+      }
+      confirmLabel="Salir sin guardar"
+      cancelLabel="Continuar aquí"
+      destructive
+      onOpenChange={onOpenChange}
+      onConfirm={onConfirm}
+    />
   );
 }
