@@ -9,12 +9,35 @@ import {
   toEntidadAcademica,
   toPagina,
   toProgramaEducativo,
+  toProgramaEducativoDetalle,
   type PaginaDto,
 } from "./programas-educativos.dto";
 
 const programasEducativosPath = "/api/v1/programas-educativos";
 const areasAcademicasPath = "/api/v1/areas-academicas";
 const entidadesAcademicasPath = "/api/v1/entidades-academicas";
+
+function toProgramaEducativoFormData(input: GuardarProgramaEducativoInput) {
+  const formData = new FormData();
+  formData.set("nombre", input.nombre);
+  formData.set("campus", input.campus);
+  formData.set("idEntidadAcademica", String(input.idEntidadAcademica));
+
+  input.planesEstudio.forEach((plan, index) => {
+    const prefix = `planesEstudio[${index}]`;
+    if (plan.idPlanEstudios) {
+      formData.set(`${prefix}.idPlanEstudios`, String(plan.idPlanEstudios));
+    }
+
+    formData.set(`${prefix}.nombre`, plan.nombre);
+    formData.set(`${prefix}.modalidad`, plan.modalidad);
+    if (plan.archivo) {
+      formData.set(`${prefix}.archivo`, plan.archivo, plan.archivo.name);
+    }
+  });
+
+  return formData;
+}
 
 export const httpProgramasEducativosAdapter: ProgramasEducativosPort = {
   async consultar(query: ConsultarProgramasEducativosQuery) {
@@ -30,16 +53,16 @@ export const httpProgramasEducativosAdapter: ProgramasEducativosPort = {
       `${programasEducativosPath}/${idProgramaEducativo}`,
     );
 
-    return toProgramaEducativo(response);
+    return toProgramaEducativoDetalle(response);
   },
 
   async crear(input: GuardarProgramaEducativoInput) {
     const response = await httpClient.post<unknown>(
       programasEducativosPath,
-      input,
+      toProgramaEducativoFormData(input),
     );
 
-    return toProgramaEducativo(response);
+    return toProgramaEducativoDetalle(response);
   },
 
   async actualizar(
@@ -48,10 +71,10 @@ export const httpProgramasEducativosAdapter: ProgramasEducativosPort = {
   ) {
     const response = await httpClient.put<unknown>(
       `${programasEducativosPath}/${idProgramaEducativo}`,
-      input,
+      toProgramaEducativoFormData(input),
     );
 
-    return toProgramaEducativo(response);
+    return toProgramaEducativoDetalle(response);
   },
 
   eliminar(idProgramaEducativo: number) {

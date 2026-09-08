@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using SGPla.Commons;
 using SGPla.Modules.ProgramasEducativos.Application.ActualizarProgramaEducativo;
@@ -17,6 +18,8 @@ using SGPla.Modules.ProgramasEducativos.Application.CrearProgramaEducativo.Ports
 using SGPla.Modules.ProgramasEducativos.Application.EliminarProgramaEducativo;
 using SGPla.Modules.ProgramasEducativos.Application.EliminarProgramaEducativo.Contracts;
 using SGPla.Modules.ProgramasEducativos.Application.EliminarProgramaEducativo.Ports;
+using SGPla.Modules.ProgramasEducativos.Application.Models;
+using SGPla.Modules.ProgramasEducativos.Domain;
 
 namespace SGPla.Modules.ProgramasEducativos.Api;
 
@@ -98,19 +101,27 @@ public sealed class ProgramaEducativoController : ControllerBase
 
     [HttpPost]
     [Authorize(Roles = Constantes.SUPERUSUARIO)]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(PlanEstudiosConstantes.TamanioMaximoSolicitudHttp)]
+    [RequestFormLimits(
+        MultipartBodyLengthLimit = PlanEstudiosConstantes.TamanioMaximoSolicitudHttp)]
     [ProducesResponseType(typeof(ProgramaEducativoResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> CrearAsync(
-        [FromBody] CrearProgramaEducativoRequest request,
+        [FromForm] CrearProgramaEducativoRequest request,
         CancellationToken cancellationToken = default)
     {
+        var planesEstudio = await MapearPlanesEstudioAsync(
+            request.PlanesEstudio,
+            cancellationToken);
         var resultado = await _crearProgramaService.CrearAsync(
             new CrearProgramaEducativoCommand(
                 request.Nombre,
                 request.Campus,
-                request.IdEntidadAcademica),
+                request.IdEntidadAcademica,
+                planesEstudio),
             cancellationToken);
 
         return resultado.Tipo switch
@@ -119,28 +130,36 @@ public sealed class ProgramaEducativoController : ControllerBase
                 StatusCode(StatusCodes.Status201Created, resultado.Respuesta),
             TipoResultadoProgramaEducativo.Validacion => CrearRespuestaValidacion(resultado),
             TipoResultadoProgramaEducativo.NoEncontrado => NotFound(CrearProblema(resultado)),
-            TipoResultadoProgramaEducativo.Conflicto => Conflict(CrearProblema(resultado)),
+            TipoResultadoProgramaEducativo.Conflicto => CrearRespuestaConflicto(resultado),
             _ => Problem("El resultado de la creación del programa educativo no es válido.")
         };
     }
 
     [HttpPut("{id:int}")]
     [Authorize(Roles = Constantes.SUPERUSUARIO)]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(PlanEstudiosConstantes.TamanioMaximoSolicitudHttp)]
+    [RequestFormLimits(
+        MultipartBodyLengthLimit = PlanEstudiosConstantes.TamanioMaximoSolicitudHttp)]
     [ProducesResponseType(typeof(ProgramaEducativoResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> ActualizarAsync(
         int id,
-        [FromBody] ActualizarProgramaEducativoRequest request,
+        [FromForm] ActualizarProgramaEducativoRequest request,
         CancellationToken cancellationToken = default)
     {
+        var planesEstudio = await MapearPlanesEstudioAsync(
+            request.PlanesEstudio,
+            cancellationToken);
         var resultado = await _actualizarProgramaService.ActualizarAsync(
             new ActualizarProgramaEducativoCommand(
                 id,
                 request.Nombre,
                 request.Campus,
-                request.IdEntidadAcademica),
+                request.IdEntidadAcademica,
+                planesEstudio),
             cancellationToken);
 
         return resultado.Tipo switch
@@ -148,7 +167,7 @@ public sealed class ProgramaEducativoController : ControllerBase
             TipoResultadoProgramaEducativo.Exito => Ok(resultado.Respuesta),
             TipoResultadoProgramaEducativo.Validacion => CrearRespuestaValidacion(resultado),
             TipoResultadoProgramaEducativo.NoEncontrado => NotFound(CrearProblema(resultado)),
-            TipoResultadoProgramaEducativo.Conflicto => Conflict(CrearProblema(resultado)),
+            TipoResultadoProgramaEducativo.Conflicto => CrearRespuestaConflicto(resultado),
             _ => Problem("El resultado de la actualización del programa educativo no es válido.")
         };
     }
@@ -196,5 +215,62 @@ public sealed class ProgramaEducativoController : ControllerBase
         {
             Detail = resultado.Mensaje
         };
+    }
+
+    private static ActionResult CrearRespuestaConflicto<T>(
+        ProgramaEducativoResultado<T> resultado)
+    {
+        if (string.IsNullOrWhiteSpace(resultado.Campo))
+        {
+            return new ConflictObjectResult(CrearProblema(resultado));
+        }
+
+        var errores = new Dictionary<string, string[]>
+        {
+            [resultado.Campo] =
+                [resultado.Mensaje ?? "La información proporcionada no es válida."]
+        };
+
+        return new ObjectResult(new ValidationProblemDetails(errores))
+        {
+            StatusCode = StatusCodes.Status409Conflict
+        };
+    }
+
+    private static async Task<IReadOnlyList<PlanEstudioParaGuardar>> MapearPlanesEstudioAsync(
+        IEnumerable<PlanEstudioRequest> planesEstudio,
+        CancellationToken cancellationToken)
+    {
+        var planes = new List<PlanEstudioParaGuardar>();
+
+        foreach (var plan in planesEstudio)
+        {
+            ArchivoPlanContenido? archivo = null;
+            if (plan.Archivo is not null)
+            {
+                var contenido = Array.Empty<byte>();
+                if (plan.Archivo.Length <= PlanEstudiosConstantes.TamanioMaximoArchivo)
+                {
+                    await using var stream = plan.Archivo.OpenReadStream();
+                    using var memoria = new MemoryStream();
+                    await stream.CopyToAsync(memoria, cancellationToken);
+                    contenido = memoria.ToArray();
+                }
+
+                archivo = new ArchivoPlanContenido(
+                    plan.Archivo.FileName,
+                    plan.Archivo.ContentType,
+                    plan.Archivo.Length,
+                    contenido);
+            }
+
+            planes.Add(new PlanEstudioParaGuardar(
+                plan.IdPlanEstudios,
+                plan.Nombre,
+                plan.Modalidad,
+                archivo));
+        }
+
+        return planes;
     }
 }

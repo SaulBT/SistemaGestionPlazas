@@ -32,6 +32,7 @@ export function ProgramaEducativoFormPage({
   const {
     areas,
     areasQuery,
+    addPlanEstudio,
     entidades,
     entidadesQuery,
     errorFor,
@@ -41,6 +42,8 @@ export function ProgramaEducativoFormPage({
     isSubmitDisabled,
     saveForm: submitForm,
     updateField,
+    updatePlanEstudio,
+    removePlanEstudio,
     validateForm,
   } = useProgramaFormController({ programa });
   const [confirmationOpen, setConfirmationOpen] = useState(false);
@@ -140,6 +143,9 @@ export function ProgramaEducativoFormPage({
             entidadesLoading={entidadesQuery.isPending}
             readOnly={readOnly}
             onChange={updateField}
+            onPlanAdd={addPlanEstudio}
+            onPlanChange={updatePlanEstudio}
+            onPlanRemove={removePlanEstudio}
             errorFor={errorFor}
           />
         </FormContent>

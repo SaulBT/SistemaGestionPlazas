@@ -44,8 +44,9 @@ async function request<T>(
 ): Promise<T> {
   const headers = new Headers(options.headers);
   const hasBody = options.body !== undefined;
+  const isFormData = options.body instanceof FormData;
 
-  if (hasBody && !headers.has("Content-Type")) {
+  if (hasBody && !isFormData && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
 
@@ -54,7 +55,11 @@ async function request<T>(
     method,
     headers,
     credentials: "include",
-    body: hasBody ? JSON.stringify(options.body) : undefined,
+    body: hasBody
+      ? isFormData
+        ? options.body
+        : JSON.stringify(options.body)
+      : undefined,
   });
 
   const isJson = response.headers

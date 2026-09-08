@@ -47,4 +47,47 @@ export const programaFormSchema = z.object({
   region: z.enum(REGIONES, {
     error: "Selecciona una región válida.",
   }),
+  planesEstudio: z.array(
+    z
+      .object({
+        idPlanEstudios: z.number().int().positive().optional(),
+        nombre: z
+          .string()
+          .trim()
+          .min(1, "El nombre del plan es obligatorio.")
+          .max(100, "El nombre del plan no puede superar los 100 caracteres."),
+        modalidad: z.string().trim(),
+        archivo: z
+          .custom<File>(
+            (value) =>
+              value === undefined ||
+              (typeof File !== "undefined" && value instanceof File),
+            "Selecciona un archivo válido.",
+          )
+          .optional(),
+        nombreArchivo: z.string(),
+        cantidadExperienciasEducativas: z
+          .number()
+          .int()
+          .nonnegative()
+          .optional(),
+      })
+      .superRefine((plan, context) => {
+        if (plan.archivo && !/\.xlsx?$/i.test(plan.archivo.name)) {
+          context.addIssue({
+            code: "custom",
+            path: ["archivo"],
+            message: "Selecciona un archivo XLS o XLSX.",
+          });
+        }
+
+        if (plan.archivo && plan.archivo.size > 10 * 1024 * 1024) {
+          context.addIssue({
+            code: "custom",
+            path: ["archivo"],
+            message: "El archivo del plan no puede superar 10 MB.",
+          });
+        }
+      }),
+  ),
 });

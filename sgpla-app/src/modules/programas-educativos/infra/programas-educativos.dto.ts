@@ -4,10 +4,12 @@ import {
   REGIONES,
   type AreaAcademica,
   type EntidadAcademica,
+  type PlanEstudio,
+  type ProgramaEducativoDetalle,
   type ProgramaEducativo,
 } from "../domain/programa-educativo";
 
-const programaEducativoDtoSchema = z.object({
+const programaEducativoBaseDtoSchema = z.object({
   idProgramaEducativo: z.number().int().positive(),
   nombre: z.string(),
   campus: z.string(),
@@ -17,6 +19,37 @@ const programaEducativoDtoSchema = z.object({
   nombreAreaAcademica: z.string(),
   region: z.enum(REGIONES),
 });
+
+const planesEstudioResumenSchema = z.array(
+  z.object({
+    idPlanEstudios: z.number().int().positive(),
+    nombre: z.string(),
+  }),
+);
+
+const programaEducativoDtoSchema = programaEducativoBaseDtoSchema.extend({
+  planesEstudio: planesEstudioResumenSchema.default([]),
+});
+
+const programaEducativoDetalleDtoSchema = programaEducativoBaseDtoSchema.extend(
+  {
+    planesEstudio: z
+      .array(
+        z.object({
+          idPlanEstudios: z.number().int().positive(),
+          nombre: z.string(),
+          modalidad: z.string().nullable(),
+          idArchivo: z.number().int().positive().nullable(),
+          nombreArchivo: z.string().nullable(),
+          tipoArchivo: z.string().nullable(),
+          tamanioArchivo: z.number().nullable(),
+          cantidadExperienciasEducativas: z.number().int().nonnegative(),
+        }),
+      )
+      .optional()
+      .default([]),
+  },
+);
 
 const areaAcademicaDtoSchema = z.object({
   idAreaAcademica: z.number().int().positive(),
@@ -47,6 +80,12 @@ export type PaginaDto<T> = {
 
 export function toProgramaEducativo(dto: unknown): ProgramaEducativo {
   return programaEducativoDtoSchema.parse(dto);
+}
+
+export function toProgramaEducativoDetalle(
+  dto: unknown,
+): ProgramaEducativoDetalle {
+  return programaEducativoDetalleDtoSchema.parse(dto);
 }
 
 export function toAreaAcademica(dto: unknown): AreaAcademica {

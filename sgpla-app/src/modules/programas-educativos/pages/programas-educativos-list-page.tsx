@@ -24,11 +24,6 @@ export function ProgramasEducativosListPage() {
       `/ProgramasEducativos/EditarProgramaEducativo?id=${programa.idProgramaEducativo}`,
     [],
   );
-  const getPlansHref = useCallback(
-    (programa: ProgramaEducativo) =>
-      `/PlanesEstudios?programaEducativoId=${programa.idProgramaEducativo}`,
-    [],
-  );
   function confirmDeletion() {
     const operation = controller.confirmDeletion();
     showProgramaEducativoDeletionToast(operation);
@@ -81,7 +76,6 @@ export function ProgramasEducativosListPage() {
           createHref="/ProgramasEducativos/CrearProgramaEducativo"
           getViewHref={getViewHref}
           getEditHref={getEditHref}
-          getPlansHref={getPlansHref}
           onDelete={controller.requestDeletion}
         />
         <ProgramasPagination

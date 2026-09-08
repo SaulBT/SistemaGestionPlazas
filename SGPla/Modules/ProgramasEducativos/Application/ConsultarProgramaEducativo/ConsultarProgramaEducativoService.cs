@@ -38,11 +38,17 @@ public sealed class ConsultarProgramaEducativoService : IConsultarProgramaEducat
                 "El programa educativo indicado no existe.");
         }
 
-        return ProgramaEducativoResultado<ProgramaEducativoResponse>.Exito(Mapear(registro));
+        var planesEstudio = await _repository.ObtenerPlanesEstudioAsync(
+            registro.IdProgramaEducativo,
+            cancellationToken);
+
+        return ProgramaEducativoResultado<ProgramaEducativoResponse>.Exito(
+            Mapear(registro, planesEstudio));
     }
 
     private static ProgramaEducativoResponse Mapear(
-        ProgramaEducativoRegistro registro)
+        ProgramaEducativoRegistro registro,
+        IReadOnlyList<PlanEstudioRegistro> planesEstudio)
     {
         return new ProgramaEducativoResponse(
             registro.IdProgramaEducativo,
@@ -52,6 +58,15 @@ public sealed class ConsultarProgramaEducativoService : IConsultarProgramaEducat
             registro.NombreEntidadAcademica,
             registro.IdAreaAcademica,
             registro.NombreAreaAcademica,
-            registro.Region);
+            registro.Region,
+            planesEstudio.Select(plan => new PlanEstudioResponse(
+                plan.IdPlanEstudios,
+                plan.Nombre,
+                plan.Modalidad,
+                plan.IdArchivo,
+                plan.NombreArchivo,
+                plan.TipoArchivo,
+                plan.TamanioArchivo,
+                plan.CantidadExperienciasEducativas)).ToList());
     }
 }

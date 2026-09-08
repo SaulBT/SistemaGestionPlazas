@@ -10,13 +10,14 @@ import {
   hasProgramaFormChanges,
   toGuardarProgramaEducativoInput,
   toProgramaFormValues,
+  type PlanEstudioFormValues,
   type ProgramaFormValues,
 } from "../../application/programa-form.model";
 import {
   programaFormRequiredFields,
   programaFormSchema,
 } from "../../application/programa-form.validation";
-import type { ProgramaEducativo } from "../../domain/programa-educativo";
+import type { ProgramaEducativoDetalle } from "../../domain/programa-educativo";
 import {
   useAreasAcademicas,
   useEntidadesAcademicas,
@@ -24,7 +25,7 @@ import {
 } from "../programas-educativos.queries";
 
 type Props = {
-  programa?: ProgramaEducativo;
+  programa?: ProgramaEducativoDetalle;
 };
 
 type SaveResult =
@@ -107,6 +108,41 @@ export function useProgramaFormController({ programa }: Props) {
     setFormValues((current) => ({ ...current, [field]: value }));
   }
 
+  function addPlanEstudio() {
+    setFormValues((current) => ({
+      ...current,
+      planesEstudio: [
+        ...current.planesEstudio,
+        {
+          nombre: "",
+          modalidad: "",
+          nombreArchivo: "",
+        },
+      ],
+    }));
+  }
+
+  function updatePlanEstudio(
+    index: number,
+    changes: Partial<PlanEstudioFormValues>,
+  ) {
+    setFormValues((current) => ({
+      ...current,
+      planesEstudio: current.planesEstudio.map((plan, planIndex) =>
+        planIndex === index ? { ...plan, ...changes } : plan,
+      ),
+    }));
+  }
+
+  function removePlanEstudio(index: number) {
+    setFormValues((current) => ({
+      ...current,
+      planesEstudio: current.planesEstudio.filter(
+        (_, planIndex) => planIndex !== index,
+      ),
+    }));
+  }
+
   function validateForm() {
     const validation = programaFormSchema.safeParse(formValues);
 
@@ -149,13 +185,21 @@ export function useProgramaFormController({ programa }: Props) {
     areasQuery,
     entidades,
     entidadesQuery,
-    errorFor: (field: keyof ProgramaFormValues) => validationErrors[field]?.[0],
+    addPlanEstudio,
+    errorFor: (field: string) => {
+      const normalizedField = field.replace(/\.(\d+)\./g, "[$1].");
+      return (
+        validationErrors[field]?.[0] ?? validationErrors[normalizedField]?.[0]
+      );
+    },
     formValues,
     isDirty,
     isSaving: guardarMutation.isPending,
     isSubmitDisabled,
     saveForm,
     updateField,
+    updatePlanEstudio,
+    removePlanEstudio,
     validateForm,
   };
 }

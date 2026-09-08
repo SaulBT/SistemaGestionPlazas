@@ -8,7 +8,6 @@ import {
   MoreHorizontal,
   Pencil,
   Plus,
-  Tag,
   Trash2,
 } from "lucide-react";
 import {
@@ -17,6 +16,7 @@ import {
   type DataGridColumn,
 } from "@/components/data-grid";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,10 +36,18 @@ type ProgramaColumnId =
   | "region"
   | "nombreAreaAcademica"
   | "nombreEntidadAcademica"
+  | "planesEstudio"
   | "acciones";
+
 const columns: DataGridColumn<ProgramaColumnId>[] = [
   { id: "nombre", label: "Nombre", icon: GraduationCap, defaultWidth: 330 },
-  { id: "region", label: "Región", icon: MapPin, defaultWidth: 190 },
+  {
+    id: "nombreEntidadAcademica",
+    label: "Entidad Académica",
+    icon: Building2,
+    defaultWidth: 270,
+  },
+  { id: "region", label: "Región", icon: MapPin, defaultWidth: 160 },
   {
     id: "nombreAreaAcademica",
     label: "Área Académica",
@@ -47,10 +55,10 @@ const columns: DataGridColumn<ProgramaColumnId>[] = [
     defaultWidth: 270,
   },
   {
-    id: "nombreEntidadAcademica",
-    label: "Entidad Académica",
-    icon: Building2,
-    defaultWidth: 270,
+    id: "planesEstudio",
+    label: "Planes de estudio",
+    icon: GraduationCap,
+    defaultWidth: 250,
   },
   {
     id: "acciones",
@@ -60,6 +68,7 @@ const columns: DataGridColumn<ProgramaColumnId>[] = [
     isActions: true,
   },
 ];
+
 type Props = {
   programas: ProgramaEducativo[];
   isLoading?: boolean;
@@ -67,13 +76,14 @@ type Props = {
   createHref: string;
   getEditHref: (programa: ProgramaEducativo) => string;
   getViewHref: (programa: ProgramaEducativo) => string;
-  getPlansHref: (programa: ProgramaEducativo) => string;
   onDelete: (programa: ProgramaEducativo) => void;
 };
+
 const skeletonRows = Array.from({ length: 6 }, (_, index) => ({
   id: `skeleton-${index}`,
   nombre: "Programa educativo",
 }));
+
 function ProgramasTableSkeleton() {
   return (
     <DataGrid
@@ -94,6 +104,7 @@ function ProgramasTableSkeleton() {
     />
   );
 }
+
 export function ProgramasDataGrid({
   programas,
   isLoading = false,
@@ -101,7 +112,6 @@ export function ProgramasDataGrid({
   createHref,
   getEditHref,
   getViewHref,
-  getPlansHref,
   onDelete,
 }: Props) {
   const shouldShowLoading = useMinimumLoading(
@@ -137,12 +147,6 @@ export function ProgramasDataGrid({
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href={getPlansHref(row.programa)}>
-                  <Tag />
-                  Ver plan de estudios
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
                 <Link href={getEditHref(row.programa)}>
                   <Pencil />
                   Editar programa
@@ -160,6 +164,25 @@ export function ProgramasDataGrid({
           </DropdownMenu>
         </DataGridActions>
       );
+    if (column.id === "planesEstudio") {
+      if (row.planesEstudio.length === 0) {
+        return <span className="text-muted-foreground">Sin planes</span>;
+      }
+
+      return (
+        <div className="flex flex-wrap gap-1.5 py-1">
+          {row.planesEstudio.map((plan) => (
+            <Badge
+              key={plan.idPlanEstudios}
+              variant="secondary"
+              className="rounded-full bg-soft-primary text-primary px-2 py-0.5 font-medium"
+            >
+              {plan.nombre}
+            </Badge>
+          ))}
+        </div>
+      );
+    }
     return row[column.id];
   }
   return (

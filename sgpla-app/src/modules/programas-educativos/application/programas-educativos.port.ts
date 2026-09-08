@@ -2,6 +2,7 @@ import type {
   AreaAcademica,
   EntidadAcademica,
   ProgramaEducativo,
+  ProgramaEducativoDetalle,
 } from "../domain/programa-educativo";
 import type {
   ConsultarProgramasEducativosQuery,
@@ -13,12 +14,16 @@ export interface ProgramasEducativosPort {
   consultar(
     query: ConsultarProgramasEducativosQuery,
   ): Promise<Pagina<ProgramaEducativo>>;
-  consultarPorId(idProgramaEducativo: number): Promise<ProgramaEducativo>;
-  crear(input: GuardarProgramaEducativoInput): Promise<ProgramaEducativo>;
+  consultarPorId(
+    idProgramaEducativo: number,
+  ): Promise<ProgramaEducativoDetalle>;
+  crear(
+    input: GuardarProgramaEducativoInput,
+  ): Promise<ProgramaEducativoDetalle>;
   actualizar(
     idProgramaEducativo: number,
     input: GuardarProgramaEducativoInput,
-  ): Promise<ProgramaEducativo>;
+  ): Promise<ProgramaEducativoDetalle>;
   eliminar(idProgramaEducativo: number): Promise<void>;
   consultarAreasAcademicas(): Promise<Pagina<AreaAcademica>>;
   consultarEntidadesAcademicas(): Promise<Pagina<EntidadAcademica>>;

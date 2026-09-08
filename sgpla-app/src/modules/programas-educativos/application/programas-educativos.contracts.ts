@@ -20,4 +20,12 @@ export type GuardarProgramaEducativoInput = {
   nombre: string;
   campus: string;
   idEntidadAcademica: number;
+  planesEstudio: PlanEstudioInput[];
+};
+
+export type PlanEstudioInput = {
+  idPlanEstudios?: number;
+  nombre: string;
+  modalidad: string;
+  archivo?: File;
 };

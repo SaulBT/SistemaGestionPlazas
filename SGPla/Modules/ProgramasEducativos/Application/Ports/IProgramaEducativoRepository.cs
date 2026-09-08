@@ -12,6 +12,10 @@ public interface IProgramaEducativoRepository
         int idProgramaEducativo,
         CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<PlanEstudioRegistro>> ObtenerPlanesEstudioAsync(
+        int idProgramaEducativo,
+        CancellationToken cancellationToken);
+
     Task<bool> ExisteEntidadAcademicaActivaAsync(
         int idEntidadAcademica,
         CancellationToken cancellationToken);
@@ -25,8 +29,22 @@ public interface IProgramaEducativoRepository
         ProgramaEducativoParaCrear programaEducativo,
         CancellationToken cancellationToken);
 
+    Task<ProgramaEducativoRegistro> CrearConPlanesEstudioAsync(
+        ProgramaEducativoParaCrear programaEducativo,
+        IReadOnlyList<PlanEstudioParaPersistir> planesEstudio,
+        CancellationToken cancellationToken);
+
     Task<ProgramaEducativoRegistro?> ActualizarAsync(
         ProgramaEducativoParaActualizar programaEducativo,
+        CancellationToken cancellationToken);
+
+    Task<ProgramaActualizacionConPlanesResultado?> ActualizarConPlanesEstudioAsync(
+        ProgramaEducativoParaActualizar programaEducativo,
+        IReadOnlyList<PlanEstudioParaPersistir> planesEstudio,
+        CancellationToken cancellationToken);
+
+    Task<bool> PlanesEstudioTienenDependenciasAsync(
+        IReadOnlyCollection<int> idsPlanesEstudio,
         CancellationToken cancellationToken);
 
     Task<bool> EliminarAsync(

@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using SGPla.Modules.ProgramasEducativos.Application;
 using SGPla.Modules.ProgramasEducativos.Application.ActualizarProgramaEducativo;
 using SGPla.Modules.ProgramasEducativos.Application.ActualizarProgramaEducativo.Ports;
 using SGPla.Modules.ProgramasEducativos.Application.ConsultarProgramaEducativo;
@@ -20,6 +21,9 @@ public static class ProgramasEducativosModuleExtensions
         this IServiceCollection services)
     {
         services.AddScoped<IProgramaEducativoRepository, ProgramaEducativoRepository>();
+        services.AddScoped<IPlanEstudiosArchivoStorage, PlanEstudiosArchivoStorage>();
+        services.AddSingleton<IPlanEstudiosImportador, PlanEstudiosImportador>();
+        services.AddScoped<ProcesadorPlanesEstudio>();
         services.AddScoped<IConsultarProgramasEducativosService, ConsultarProgramasEducativosService>();
         services.AddScoped<IConsultarProgramaEducativoService, ConsultarProgramaEducativoService>();
         services.AddScoped<ICrearProgramaEducativoService, CrearProgramaEducativoService>();

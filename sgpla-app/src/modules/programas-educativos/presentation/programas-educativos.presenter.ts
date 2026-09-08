@@ -7,6 +7,7 @@ export type ProgramaEducativoTableRow = {
   region: string;
   nombreAreaAcademica: string;
   nombreEntidadAcademica: string;
+  planesEstudio: ProgramaEducativo["planesEstudio"];
 };
 
 function obtenerNombreVisible(nombreCompleto: string) {
@@ -27,5 +28,6 @@ export function toProgramaEducativoTableRow(
     region: programa.region,
     nombreAreaAcademica: programa.nombreAreaAcademica,
     nombreEntidadAcademica: programa.nombreEntidadAcademica,
+    planesEstudio: programa.planesEstudio,
   };
 }

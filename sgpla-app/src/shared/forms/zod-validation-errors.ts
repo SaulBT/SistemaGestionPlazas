@@ -3,7 +3,7 @@ import type { ValidationErrors } from "@/shared/api/http-client";
 
 export function toZodValidationErrors(error: ZodError): ValidationErrors {
   return error.issues.reduce<ValidationErrors>((errors, issue) => {
-    const field = issue.path[0]?.toString();
+    const field = issue.path.map(String).join(".");
 
     if (!field) return errors;
 

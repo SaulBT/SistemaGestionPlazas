@@ -11,6 +11,7 @@
   --primary-foreground: oklch(0.97 0.014 254.604);
   --secondary: oklch(0.967 0.001 286.375);
   --secondary-foreground: oklch(0.21 0.006 285.885);
+  --soft-primary: #ddeafc;
   --skeleton: #d2d3d4;
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
@@ -87,6 +88,7 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
+  --color-soft-primary: var(--soft-primary);
   --color-accent: var(--accent);
   --color-skeleton: var(--skeleton);
   --color-accent-foreground: var(--accent-foreground);

@@ -7,5 +7,5 @@ export type ProgramaFormSectionProps = {
     field: K,
     value: ProgramaFormValues[K],
   ) => void;
-  errorFor: (field: keyof ProgramaFormValues) => string | undefined;
+  errorFor: (field: string) => string | undefined;
 };
