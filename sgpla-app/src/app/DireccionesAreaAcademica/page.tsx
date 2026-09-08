@@ -1,7 +1,12 @@
-import { DireccionesListView } from "@/modules/direcciones-area-academica";
+import { Dashboard } from "@/components/dashboard";
+import { DireccionesAreaAcademicaListPage } from "@/modules/direcciones-area-academica";
 
 export const metadata = { title: "Direcciones de Áreas Académicas - SGPla" };
 
 export default function DireccionesPage() {
-  return <DireccionesListView />;
+  return (
+    <Dashboard activeHref="/DireccionesAreaAcademica">
+      <DireccionesAreaAcademicaListPage />
+    </Dashboard>
+  );
 }
