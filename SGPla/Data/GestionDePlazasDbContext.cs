@@ -771,6 +771,7 @@ public partial class GestionDePlazasDbContext : DbContext
             entity.Property(e => e.Modalidad)
                 .HasMaxLength(100)
                 .IsUnicode(false)
+                .IsRequired(false)
                 .HasColumnName("modalidad");
             entity.Property(e => e.Nombre)
                 .HasMaxLength(100)

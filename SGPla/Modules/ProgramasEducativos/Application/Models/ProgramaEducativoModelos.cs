@@ -8,7 +8,12 @@ public sealed record ProgramaEducativoRegistro(
     string NombreEntidadAcademica,
     int IdAreaAcademica,
     string NombreAreaAcademica,
-    string Region);
+    string Region,
+    IReadOnlyList<PlanEstudioResumenRegistro>? PlanesEstudio = null);
+
+public sealed record PlanEstudioResumenRegistro(
+    int IdPlanEstudios,
+    string Nombre);
 
 public sealed record ProgramaEducativoParaCrear(
     string Nombre,
@@ -32,3 +37,7 @@ public sealed record ProgramaEducativoFiltro(
 public sealed record ProgramasEducativosPagina(
     IReadOnlyList<ProgramaEducativoRegistro> Items,
     int Total);
+
+public sealed record ProgramaActualizacionConPlanesResultado(
+    ProgramaEducativoRegistro Programa,
+    IReadOnlyList<string> RutasArchivosAnteriores);
