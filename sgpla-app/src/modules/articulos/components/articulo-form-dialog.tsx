@@ -1,5 +1,11 @@
 "use client";
 
+import { useState } from "react";
+import {
+  HttpClientError,
+  type ValidationErrors,
+} from "@/shared/api/http-client";
+import { toZodValidationErrors } from "@/shared/forms/zod-validation-errors";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,61 +15,112 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Field, FieldLabel } from "@/components/ui/field";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import type { Articulo } from "../domain/articulo";
+import {
+  articuloFormSchema,
+  type ArticuloFormValues,
+} from "../application/articulo-form.validation";
+import { useGuardarArticulo } from "../presentation/articulos.queries";
 
-import type { ArticuloListItem } from "../data";
-
-type ArticuloFormDialogProps = {
-  articulo?: ArticuloListItem;
+type Props = {
+  articulo?: Articulo;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSaved: (editing: boolean) => void;
 };
 
 export function ArticuloFormDialog({
   articulo,
   open,
   onOpenChange,
-}: ArticuloFormDialogProps) {
-  const isEditing = Boolean(articulo);
+  onSaved,
+}: Props) {
+  const editing = Boolean(articulo);
+  const [values, setValues] = useState<ArticuloFormValues>(() => ({
+    numero: articulo?.numero ?? "",
+    descripcion: articulo?.descripcion ?? "",
+  }));
+  const [errors, setErrors] = useState<ValidationErrors>({});
+  const mutation = useGuardarArticulo();
+
+  const errorFor = (field: keyof ArticuloFormValues) => errors[field]?.[0];
+
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const result = articuloFormSchema.safeParse(values);
+    if (!result.success) {
+      setErrors(toZodValidationErrors(result.error));
+      return;
+    }
+    try {
+      await mutation.mutateAsync({
+        input: result.data,
+        articuloExistente: articulo,
+      });
+      onOpenChange(false);
+      onSaved(editing);
+    } catch (error) {
+      if (error instanceof HttpClientError)
+        setErrors(
+          error.validationErrors ??
+            (error.status === 409 ? { numero: [error.message] } : {}),
+        );
+    }
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Artículo</DialogTitle>
+          <DialogTitle>
+            {editing ? "Editar artículo" : "Registrar artículo"}
+          </DialogTitle>
           <DialogDescription>
-            {isEditing
+            {editing
               ? "Actualiza los datos del artículo."
-              : "Registra un nuevo artículo."}
+              : "Registra un nuevo artículo para el sistema."}
           </DialogDescription>
         </DialogHeader>
-
-        <form key={articulo?.id ?? "nuevo"} className="grid gap-4">
+        <form id="articulo-form" className="grid gap-4" onSubmit={submit}>
           <Field>
-            <FieldLabel htmlFor="numero">Título</FieldLabel>
+            <FieldLabel htmlFor="numero-articulo">
+              Número del artículo
+            </FieldLabel>
             <Input
-              id="numero"
-              name="numero"
-              defaultValue={articulo?.numero}
-              placeholder="Ej. Artículo 1"
+              id="numero-articulo"
+              value={values.numero}
               maxLength={50}
+              onChange={(event) =>
+                setValues((current) => ({
+                  ...current,
+                  numero: event.target.value,
+                }))
+              }
+              aria-invalid={Boolean(errorFor("numero"))}
+              placeholder="Ej. Artículo 1"
             />
+            <FieldError>{errorFor("numero")}</FieldError>
           </Field>
-
           <Field>
-            <FieldLabel htmlFor="descripcion">Descripción</FieldLabel>
+            <FieldLabel htmlFor="descripcion-articulo">Descripción</FieldLabel>
             <Textarea
-              id="descripcion"
-              name="descripcion"
-              defaultValue={articulo?.descripcion}
+              id="descripcion-articulo"
+              value={values.descripcion}
+              onChange={(event) =>
+                setValues((current) => ({
+                  ...current,
+                  descripcion: event.target.value,
+                }))
+              }
+              aria-invalid={Boolean(errorFor("descripcion"))}
               placeholder="Describe el artículo..."
-              maxLength={250}
             />
+            <FieldError>{errorFor("descripcion")}</FieldError>
           </Field>
         </form>
-
         <DialogFooter>
           <Button
             type="button"
@@ -72,8 +129,16 @@ export function ArticuloFormDialog({
           >
             Cancelar
           </Button>
-          <Button type="button" onClick={() => onOpenChange(false)}>
-            {isEditing ? "Guardar cambios" : "Guardar"}
+          <Button
+            type="submit"
+            form="articulo-form"
+            disabled={mutation.isPending}
+          >
+            {mutation.isPending
+              ? "Guardando..."
+              : editing
+                ? "Guardar cambios"
+                : "Registrar artículo"}
           </Button>
         </DialogFooter>
       </DialogContent>

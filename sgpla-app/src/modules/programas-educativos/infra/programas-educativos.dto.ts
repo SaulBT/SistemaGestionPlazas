@@ -4,7 +4,6 @@ import {
   REGIONES,
   type AreaAcademica,
   type EntidadAcademica,
-  type PlanEstudio,
   type ProgramaEducativoDetalle,
   type ProgramaEducativo,
 } from "../domain/programa-educativo";
