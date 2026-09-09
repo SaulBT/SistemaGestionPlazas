@@ -11,6 +11,7 @@ namespace SGPla.Services.Interfaces
         //Propios de Aviso
         Task<(List<ListaAvisosDTO> items, int total)> ObtenerTodosAvisosAsync(FiltroAvisosDTO filtroDTO);
         Task<DatosAvisoDTO> ObtenerAvisoPorIDAsync(int idAviso);
+        int ObtenerIdArchivoVigente(DatosAvisoDTO aviso);
         Task ArchivarAvisoAsync(int idAviso);
         Task DesarchivarAvisoAsync(int idAviso);
         Task<bool> VerificarEstadoAvisoAsync(int idAviso, string estado);

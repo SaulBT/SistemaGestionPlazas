@@ -105,8 +105,15 @@ namespace SGPla.Services.Implementations
         public async Task<ArchivoDescargadoDTO> ObtenerVistaPreviaPdfAsync(int idArchivo)
         {
             var documento = await DescargarAsync(idArchivo);
-            if (!Path.GetExtension(documento.Ruta).Equals(".docx", StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException("Sólo se puede generar una vista previa de documentos DOCX.");
+            var extension = Path.GetExtension(documento.Ruta);
+            if (extension.Equals(".pdf", StringComparison.OrdinalIgnoreCase))
+            {
+                documento.Tipo = "application/pdf";
+                return documento;
+            }
+
+            if (!extension.Equals(".docx", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Sólo se admiten documentos DOCX o PDF.");
 
             var directorioVistasPrevias = Path.Combine(_rutaBase, "aviso-preview");
             var rutaPdf = Path.Combine(directorioVistasPrevias, $"{idArchivo}.pdf");

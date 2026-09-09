@@ -30,6 +30,7 @@ namespace SGPla.Services.Implementations
         private readonly IEntidadAcademicaRepository _entidadAcademicaRepository;
         private readonly IArticuloRepository _articuloRepository;
         private readonly IPlantillaService _plantillaService;
+        private readonly ILogger<AvisoService> _logger;
 
         public AvisoService(
             IAvisoRepository avisoRepository, 
@@ -42,7 +43,8 @@ namespace SGPla.Services.Implementations
             IPeriodoEscolarRepository periodoEscolarRepository,
             IEntidadAcademicaRepository entidadAcademicaRepository,
             IArticuloRepository articuloRepository,
-            IPlantillaService plantillaService)
+            IPlantillaService plantillaService,
+            ILogger<AvisoService> logger)
         {
             _avisoRepository = avisoRepository;
             _programacionAcademicaRepository = programacionAcademicaRepository;
@@ -56,6 +58,7 @@ namespace SGPla.Services.Implementations
             _archivoRepository = archivoRepository;
             _plantillaService = plantillaService;
             _articuloRepository = articuloRepository;
+            _logger = logger;
         }
 
         public async Task<(List<ListaAvisosDTO> items, int total)> ObtenerTodosAvisosAsync(FiltroAvisosDTO filtroDTO)
@@ -94,6 +97,7 @@ namespace SGPla.Services.Implementations
                 NombreEntidadAcademica = aviso.IdEntidadAcademicaNavigation.Nombre,
                 Periodo = periodoDTO.PeriodoMostrar,
                 Folio = aviso.Folio,
+                Estado = aviso.Estado,
                 Sistema = "",
                 Ofertas = ofertas,
                 Requisitos = aviso.Requisitos,
@@ -110,6 +114,20 @@ namespace SGPla.Services.Implementations
                 }).ToList(),
                 UrlPublicacion = ""
             };
+        }
+
+        public int ObtenerIdArchivoVigente(DatosAvisoDTO aviso)
+        {
+            ArgumentNullException.ThrowIfNull(aviso);
+
+            var idArchivo = aviso.Estado is Constantes.FIRMADO or Constantes.PUBLICADO
+                ? aviso.IdArchivoFirmado
+                : aviso.IdArchivoOriginal;
+
+            if (idArchivo <= 0)
+                throw new ValidacionExcepction("El aviso no tiene disponible el documento correspondiente a su estado actual.", "404");
+
+            return idArchivo;
         }
 
         public async Task ArchivarAvisoAsync(int idAviso)
@@ -201,6 +219,7 @@ namespace SGPla.Services.Implementations
                 
                 await _avisoRepository.AsociarOfertasPorAviso(aviso.OfertasId, avisoRegistrado.IdAviso);
                 await _horarioRepository.CrearHorarios(horarios);
+                await prepararVistaPreviaPdfAsync(idArchivoGenerado.Value);
 
             }
             catch
@@ -344,7 +363,7 @@ namespace SGPla.Services.Implementations
 
         private string generarFechaNormal(DateOnly fecha)
         {
-            return fecha.ToString("d 'de' MMM 'de' yyyy", new CultureInfo("es-ES"));
+            return fecha.ToString("d 'de' MMMM 'de' yyyy", new CultureInfo("es-ES"));
         }
 
         public async Task EliminarAvisoPorId(int idAviso)
@@ -400,6 +419,8 @@ namespace SGPla.Services.Implementations
 
             if (idArchivoAnterior.HasValue && idArchivoAnterior.Value != idArchivoNuevo.Value)
                 await eliminarArchivoGeneradoAsync(idArchivoAnterior.Value);
+
+            await prepararVistaPreviaPdfAsync(idArchivoNuevo.Value);
         }
 
         private async Task eliminarArchivoGeneradoAsync(int idArchivo)
@@ -470,6 +491,7 @@ namespace SGPla.Services.Implementations
                 archivoGuardado = await _archivoRepository.CrearAsync(archivo);
 
                 await _avisoRepository.FirmarAsync(idAviso, archivoGuardado.IdArchivo);
+                await prepararVistaPreviaPdfAsync(archivoGuardado.IdArchivo);
             }
             catch (Exception ex)
             {
@@ -477,6 +499,18 @@ namespace SGPla.Services.Implementations
                     await _archivoService.EliminarAsync(archivo?.Ruta ?? "");
 
                 throw;
+            }
+        }
+
+        private async Task prepararVistaPreviaPdfAsync(int idArchivo)
+        {
+            try
+            {
+                await _archivoService.ObtenerVistaPreviaPdfAsync(idArchivo);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "No se pudo preparar la vista previa PDF para el archivo {IdArchivo}.", idArchivo);
             }
         }
 
