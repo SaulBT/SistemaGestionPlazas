@@ -16,6 +16,18 @@ modalidad.addEventListener("change", () => cambiarVisibilidad("contenedorLugar")
 
 document.addEventListener("DOMContentLoaded", cargarFormulario);
 
+document.addEventListener("change", (event) => {
+    if (event.target.id === "seleccionarTodasLasOfertas") {
+        document.querySelectorAll('input[name="OfertasId"]')
+            .forEach(checkbox => checkbox.checked = event.target.checked);
+        return;
+    }
+
+    if (event.target.matches('input[name="OfertasId"]')) {
+        sincronizarSeleccionGlobalOfertas();
+    }
+});
+
 async function cargarFormulario() {
     await actualizarOfertas();
     cambiarVisibilidad("contenedorLugar");
@@ -38,6 +50,19 @@ async function actualizarOfertas() {
     const html = await response.text();
 
     ofertas.innerHTML = html;
+    sincronizarSeleccionGlobalOfertas();
+}
+
+function sincronizarSeleccionGlobalOfertas() {
+    const selectorGlobal = document.getElementById("seleccionarTodasLasOfertas");
+    const casillasOfertas = [...document.querySelectorAll('input[name="OfertasId"]')];
+
+    if (!selectorGlobal) {
+        return;
+    }
+
+    selectorGlobal.checked = casillasOfertas.length > 0 && casillasOfertas.every(checkbox => checkbox.checked);
+    selectorGlobal.indeterminate = casillasOfertas.some(checkbox => checkbox.checked) && !selectorGlobal.checked;
 }
 
 async function cargarHorarios() {
