@@ -5,7 +5,7 @@ public class BotonViewComponent : ViewComponent
 {
 
     
-    public IViewComponentResult Invoke(string texto = "", string tipo = "", string accion = "", bool disabled = false, bool fondo = true, string buttonType = "button", string onClick = "", string id ="", BotonModel botonModel = null)
+    public IViewComponentResult Invoke(string texto = "", string tipo = "", string accion = "", bool disabled = false, bool fondo = true, string buttonType = "button", string onClick = "", string id ="", string ariaLabel = "", BotonModel? botonModel = null)
     {
         if (botonModel != null)
         {
@@ -23,7 +23,8 @@ public class BotonViewComponent : ViewComponent
             Fondo = fondo,
             ButtonType = buttonType,
             OnClick = onClick,
-            Id = id
+            Id = id,
+            AriaLabel = ariaLabel
         };
         ConfigurarTipoAccion(model);
 

@@ -7,8 +7,15 @@
 }
 else
 {
+    var ofertas = Model.SelectMany(plan => plan.Ofertas).ToList();
+    var ofertasSeleccionadas = Model
+        .SelectMany(plan => plan.OfertasSeleccionadas)
+        .ToHashSet();
+    var estanTodasSeleccionadas = ofertas.Count > 0 && ofertas.All(oferta => ofertasSeleccionadas.Contains(oferta.IdOferta));
+
     @foreach (var carrera in Model)
     {
+        var esPrimeraTabla = carrera == Model[0];
         <div class="mb-4">
 
             <h5 style="margin-left:10px">@carrera.Nombre</h5>
@@ -16,7 +23,18 @@ else
             <div class="table-container">
                 <table class="custom-table">
                     <thead>
-                        <tr><th>Seleccionar</th><th>Horas</th><th>EE</th><th>NRC</th><th>Plaza</th><th>Horario</th><th>TC</th><th>Perfil docente</th></tr>
+                        <tr>
+                            <th>
+                                @if (esPrimeraTabla)
+                                {
+                                    <input id="seleccionarTodasLasOfertas"
+                                           type="checkbox"
+                                           aria-label="Seleccionar todas las experiencias educativas"
+                                           @(estanTodasSeleccionadas ? "checked" : null) />
+                                }
+                            </th>
+                            <th>Horas</th><th>EE</th><th>NRC</th><th>Plaza</th><th>Horario</th><th>TC</th><th>Perfil docente</th>
+                        </tr>
                     </thead>
                     <tbody>
                     @foreach (var oferta in carrera.Ofertas)
@@ -24,9 +42,25 @@ else
                         <tr>
                             <td><input type="checkbox" name="OfertasId" value="@oferta.IdOferta" @(carrera.OfertasSeleccionadas.Contains(oferta.IdOferta) ? "checked" : null) /></td>
                             <td>@oferta.Horas</td><td>@oferta.ExperienciaEducativa</td><td>@oferta.NRC</td><td>@oferta.Plaza</td>
-                            <td><button type="button" onclick='abrirModalHorario(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(oferta)))'>Ver</button></td>
+                            <td>
+                                @await Component.InvokeAsync("Boton", new
+                                {
+                                    accion = "ver",
+                                    fondo = false,
+                                    onClick = $"abrirModalHorario({System.Text.Json.JsonSerializer.Serialize(oferta)})",
+                                    ariaLabel = "Ver horario de la experiencia educativa"
+                                })
+                            </td>
                             <td>@oferta.TipoContratacion</td>
-                            <td><button type="button" onclick='verPerfilDocenteOferta(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(oferta.PerfilDocente)))'>Ver</button></td>
+                            <td>
+                                @await Component.InvokeAsync("Boton", new
+                                {
+                                    accion = "ver",
+                                    fondo = false,
+                                    onClick = $"verPerfilDocenteOferta({System.Text.Json.JsonSerializer.Serialize(oferta.PerfilDocente)})",
+                                    ariaLabel = "Ver perfil docente de la experiencia educativa"
+                                })
+                            </td>
                         </tr>
                     }
                     </tbody>

@@ -5,6 +5,7 @@
         class="boton-primario @(Model.Fondo ? $"boton-{Model.Tipo}" : "boton-icono")"
         disabled="@(Model.Disabled ? "disabled" : null)"
         onclick="@Model.OnClick"
+        aria-label="@(string.IsNullOrWhiteSpace(Model.AriaLabel) ? null : Model.AriaLabel)"
     @( (Model.Accion == "siguiente" || Model.Accion == "ver mas") ? "style=\"flex-direction: row-reverse\"" : "" )>
 
     @if (!string.IsNullOrWhiteSpace(Model.Icono))
