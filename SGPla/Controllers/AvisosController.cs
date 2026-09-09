@@ -192,15 +192,8 @@ namespace SGPla.Controllers
                 if (aviso.IdEntidadAcademica != idEntidadAcademica)
                     return Forbid();
 
-                if (aviso.IdArchivoOriginal <= 0)
-                    return NotFound("El aviso no tiene un documento original disponible.");
-
-                return View(new VistaPreviaAvisoViewModel
-                {
-                    Folio = aviso.Folio,
-                    UrlVistaPrevia = Url.Action("ObtenerVistaPreviaAviso", new { idAviso })!,
-                    UrlDescarga = Url.Action("DescargarAviso", new { idAviso })!
-                });
+                _avisoService.ObtenerIdArchivoVigente(aviso);
+                return RedirectToAction(nameof(ObtenerVistaPreviaAvisoAsync), new { idAviso });
             }
             catch (ValidacionExcepction)
             {
@@ -218,7 +211,8 @@ namespace SGPla.Controllers
                 if (aviso.IdEntidadAcademica != idEntidadAcademica)
                     return Forbid();
 
-                var archivo = await _archivoService.ObtenerVistaPreviaPdfAsync(aviso.IdArchivoOriginal);
+                var idArchivo = _avisoService.ObtenerIdArchivoVigente(aviso);
+                var archivo = await _archivoService.ObtenerVistaPreviaPdfAsync(idArchivo);
                 return PhysicalFile(archivo.Ruta, archivo.Tipo, enableRangeProcessing: true);
             }
             catch (ValidacionExcepction)
@@ -246,7 +240,8 @@ namespace SGPla.Controllers
                 if (aviso.IdEntidadAcademica != idEntidadAcademica)
                     return Forbid();
 
-                var archivo = await _archivoService.DescargarAsync(aviso.IdArchivoOriginal);
+                var idArchivo = _avisoService.ObtenerIdArchivoVigente(aviso);
+                var archivo = await _archivoService.ObtenerVistaPreviaPdfAsync(idArchivo);
                 return PhysicalFile(archivo.Ruta, archivo.Tipo, archivo.Nombre);
             }
             catch (ValidacionExcepction)
