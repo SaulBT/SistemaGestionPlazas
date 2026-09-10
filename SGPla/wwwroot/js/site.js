@@ -1,6 +1,29 @@
 ﻿
 /* * * * * * Componentes * * * * * */
 
+// Bootstrap no inicializa los tooltips automáticamente. Inicializamos los
+// tooltips declarativos y el toggler, que ya usa data-bs-toggle="collapse".
+document.addEventListener("DOMContentLoaded", function () {
+    if (!window.bootstrap || !window.bootstrap.Tooltip) return;
+
+    document
+        .querySelectorAll('[data-bs-toggle="tooltip"]')
+        .forEach(function (element) {
+            window.bootstrap.Tooltip.getOrCreateInstance(element, {
+                container: "body"
+            });
+        });
+
+    document
+        .querySelectorAll("[data-tooltip]")
+        .forEach(function (element) {
+            window.bootstrap.Tooltip.getOrCreateInstance(element, {
+                container: "body",
+                title: element.getAttribute("data-tooltip") || ""
+            });
+        });
+});
+
 // Modal
 
 function abrirModal(id) {

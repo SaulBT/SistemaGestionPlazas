@@ -7,9 +7,9 @@
         <!-- Header -->
         <div class="modal-header">
             <h3>@Model.Titulo</h3>
-            <button type="button" class="modal-close" aria-label="Cerrar"
+            <button type="button" class="modal-close" aria-label="Cerrar" data-bs-toggle="tooltip" data-bs-title="Cerrar"
                     onclick="cerrarModal('@Model.Id')">
-                <i class="bi bi-x-lg"></i>
+                <i class="bi bi-x-lg" aria-hidden="true"></i>
             </button>
         </div>
 

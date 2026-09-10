@@ -35,18 +35,19 @@
                                             {
                                                 accion = action.Accion,
                                                 fondo = false,
+                                                ariaLabel = action.AriaLabel,
                                                 onClick = action.OnClick
                                             })
                                         }
                                         else
                                         {
-                                            <a href="@action.Url">
-                                                @await Component.InvokeAsync("Boton", new
-                                                {
-                                                    accion = action.Accion,
-                                                    fondo = false
-                                                })
-                                            </a>
+                                            @await Component.InvokeAsync("Boton", new
+                                            {
+                                                accion = action.Accion,
+                                                fondo = false,
+                                                ariaLabel = action.AriaLabel,
+                                                url = action.Url
+                                            })
                                         }
                                     }
                                 </div>

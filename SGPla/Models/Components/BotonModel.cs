@@ -11,4 +11,5 @@
     public string? OnClick { get; set; }
     public string? Id { get; set; }
     public string? AriaLabel { get; set; }
+    public string? Url { get; set; }
 }

@@ -82,17 +82,18 @@
 				<a href="@Url.Action("ObtenerVistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })" target="_blank" rel="noopener">
 					@await Component.InvokeAsync("Boton", new { texto = "Ver Aviso", tipo = "secundario" })
 				</a>
-                <a href="@Url.Action("EditarAviso", "Avisos", new { idAviso = Model.IdAviso })">
-                    @await Component.InvokeAsync("Boton", new
-                    {
-                        accion = "editar",
-                        fondo = false
-                    })
-                </a>
+                @await Component.InvokeAsync("Boton", new
+                {
+                    accion = "editar",
+                    fondo = false,
+                    ariaLabel = "Editar aviso",
+                    url = Url.Action("EditarAviso", "Avisos", new { idAviso = Model.IdAviso })
+                })
 				@await Component.InvokeAsync("Boton", new
 				{
 					accion = "eliminar",
 					fondo = false,
+					ariaLabel = "Eliminar aviso",
 					OnClick = $"abrirModalEliminar({Model.IdAviso})"
 				})
 				break;
@@ -140,13 +141,13 @@
 				<a href="@Url.Action("ObtenerVistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })" target="_blank" rel="noopener">
 					@await Component.InvokeAsync("Boton", new { texto = "Ver Aviso", tipo = "secundario" })
 				</a>
-                <a href="@Url.Action("EditarAviso", "Avisos", new { idAviso = Model.IdAviso })">
-                    @await Component.InvokeAsync("Boton", new
-                    {
-                        accion = "editar",
-                        fondo = false
-                    })
-                </a>
+                @await Component.InvokeAsync("Boton", new
+                {
+                    accion = "editar",
+                    fondo = false,
+                    ariaLabel = "Editar aviso",
+                    url = Url.Action("EditarAviso", "Avisos", new { idAviso = Model.IdAviso })
+                })
 				break;
 
 			case Constantes.FIRMADO:
@@ -192,6 +193,7 @@
 				{
 					accion = "archivar",
 					fondo = false,
+					ariaLabel = Model.Archivado ? "Desarchivar aviso" : "Archivar aviso",
 					OnClick = $"archivarAsync({Model.IdAviso}, {Model.Archivado.ToString().ToLower()})"
 				})
 				break;
