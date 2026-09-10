@@ -192,6 +192,17 @@
             })
         </form>
 
+        <!-- Modal Eliminar Horario -->
+        @await Component.InvokeAsync("Modal", new ModalModel
+        {
+            Id = "modalEliminarHorario",
+            Tipo = "confirm",
+            Titulo = "Eliminar horario",
+            Mensaje = "Esta acción es irreversible. ¿Está seguro de eliminar este horario?",
+            OnConfirm = "confirmarEliminarHorario()",
+            OnCancel = "cancelarEliminacionHorario()"
+        })
+
         <!-- Modal Ver Horarios -->
         @await Component.InvokeAsync("Modal", new ModalModel
             {

@@ -895,12 +895,14 @@ namespace SGPla.Controllers
                                     new TableActionModel
                                     {
                                         Accion = "Editar",
+                                        AriaLabel = "Editar horario",
                                         OnClick = $"editarHorario({JsonSerializer.Serialize(h.Fecha)}, {JsonSerializer.Serialize(h.HoraInicio)}, {JsonSerializer.Serialize(h.HoraTermino)})"
                                     },
                                     new TableActionModel
                                     {
                                         Accion = "Eliminar",
-                                        OnClick = $"eliminarHorario({JsonSerializer.Serialize(h.Fecha)}, {JsonSerializer.Serialize(h.HoraInicio)}, {JsonSerializer.Serialize(h.HoraTermino)})"
+                                        AriaLabel = "Eliminar horario",
+                                        OnClick = $"solicitarEliminarHorario({JsonSerializer.Serialize(h.Fecha)}, {JsonSerializer.Serialize(h.HoraInicio)}, {JsonSerializer.Serialize(h.HoraTermino)})"
                                     }
                                 }
                             }

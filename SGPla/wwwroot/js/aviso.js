@@ -8,6 +8,7 @@ const horarios = document.getElementById("contenedorHorarios");
 
 let listaHorarios = [];
 let indiceHorarioEnEdicion = null;
+let horarioPendienteEliminar = null;
 
 periodo.addEventListener("change", actualizarOfertas);
 articulo.addEventListener("change", actualizarOfertas);
@@ -50,7 +51,29 @@ async function actualizarOfertas() {
     const html = await response.text();
 
     ofertas.innerHTML = html;
+    inicializarTooltipsDeOfertas();
     sincronizarSeleccionGlobalOfertas();
+}
+
+function inicializarTooltipsDeOfertas() {
+    if (!window.bootstrap || !window.bootstrap.Tooltip) {
+        return;
+    }
+
+    // Las ofertas se insertan después de DOMContentLoaded, por lo que no las
+    // alcanza el inicializador general de site.js. Limitamos la inicialización
+    // a los dos botones de ojo de este flujo; otros iconos dinámicos
+    // permanecen sin tooltip.
+    ofertas
+        .querySelectorAll(
+            '[aria-label="Ver horario"], ' +
+            '[aria-label="Ver perfil"]'
+        )
+        .forEach((boton) => {
+            window.bootstrap.Tooltip.getOrCreateInstance(boton, {
+                container: "body"
+            });
+        });
 }
 
 function sincronizarSeleccionGlobalOfertas() {
@@ -84,6 +107,24 @@ async function cargarHorarios() {
     }
 
     horarios.innerHTML = await responseTabla.text();
+    inicializarTooltipsDeHorarios();
+}
+
+function inicializarTooltipsDeHorarios() {
+    if (!window.bootstrap || !window.bootstrap.Tooltip) {
+        return;
+    }
+
+    horarios
+        .querySelectorAll(
+            '[aria-label="Editar horario"], ' +
+            '[aria-label="Eliminar horario"]'
+        )
+        .forEach((boton) => {
+            window.bootstrap.Tooltip.getOrCreateInstance(boton, {
+                container: "body"
+            });
+        });
 }
 
 async function cambiarVisibilidad(idElemento) {
@@ -244,6 +285,7 @@ async function actualizarHorarios() {
     });
 
     horarios.innerHTML = await response.text();
+    inicializarTooltipsDeHorarios();
 }
  
 function mostrarErrorHorario(id, mensaje) {
@@ -273,6 +315,27 @@ function limpiarErroresHorario() {
     document
         .querySelectorAll("#formHorario .input-error-text")
         .forEach(x => x.remove());
+}
+
+function solicitarEliminarHorario(fecha, horaInicio, horaTermino) {
+    horarioPendienteEliminar = { fecha, horaInicio, horaTermino };
+    abrirModal("modalEliminarHorario");
+}
+
+function cancelarEliminacionHorario() {
+    horarioPendienteEliminar = null;
+}
+
+async function confirmarEliminarHorario() {
+    if (!horarioPendienteEliminar) {
+        return;
+    }
+
+    const { fecha, horaInicio, horaTermino } = horarioPendienteEliminar;
+    horarioPendienteEliminar = null;
+
+    await eliminarHorario(fecha, horaInicio, horaTermino);
+    cerrarModal("modalEliminarHorario");
 }
 
 async function eliminarHorario(fecha, horaInicio, horaTermino) {
