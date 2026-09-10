@@ -1,18 +1,55 @@
-﻿@model BotonModel
+@model BotonModel
 
-<button id="@Model.Id"
-        type="@Model.ButtonType"
-        class="boton-primario @(Model.Fondo ? $"boton-{Model.Tipo}" : "boton-icono")"
-        disabled="@(Model.Disabled ? "disabled" : null)"
-        onclick="@Model.OnClick"
-    @( (Model.Accion == "siguiente" || Model.Accion == "ver mas") ? "style=\"flex-direction: row-reverse\"" : "" )>
+@{
+    var esSoloIcono = !Model.Fondo || string.IsNullOrWhiteSpace(Model.Texto);
+    var claseBoton = $"boton-primario {(Model.Fondo ? $"boton-{Model.Tipo}" : "boton-icono")}";
+    var estiloBoton = Model.Accion == "siguiente" || Model.Accion == "ver mas"
+        ? "flex-direction: row-reverse"
+        : null;
+    var etiquetaAccesible = esSoloIcono ? Model.AriaLabel : null;
+    var tieneTooltip = !string.IsNullOrWhiteSpace(etiquetaAccesible);
+}
 
-    @if (!string.IsNullOrWhiteSpace(Model.Icono))
-    {
-        <i class="@Model.Icono"></i>
-    }
+@if (!string.IsNullOrWhiteSpace(Model.Url))
+{
+    <a id="@Model.Id"
+       href="@Model.Url"
+       class="@claseBoton"
+       style="@estiloBoton"
+       onclick="@Model.OnClick"
+       aria-label="@etiquetaAccesible"
+       data-bs-toggle="@(tieneTooltip ? "tooltip" : null)"
+       data-bs-title="@etiquetaAccesible">
 
-    <span class="text-wrapper">
-        @Model.Texto
-    </span>
-</button>
+        @if (!string.IsNullOrWhiteSpace(Model.Icono))
+        {
+            <i class="@Model.Icono" aria-hidden="true"></i>
+        }
+
+        <span class="text-wrapper">
+            @Model.Texto
+        </span>
+    </a>
+}
+else
+{
+    <button id="@Model.Id"
+            type="@Model.ButtonType"
+            class="@claseBoton"
+            style="@estiloBoton"
+            disabled="@(Model.Disabled ? "disabled" : null)"
+            onclick="@Model.OnClick"
+            aria-label="@etiquetaAccesible"
+            data-bs-toggle="@(tieneTooltip ? "tooltip" : null)"
+            data-bs-title="@etiquetaAccesible">
+
+        @if (!string.IsNullOrWhiteSpace(Model.Icono))
+        {
+            <i class="@Model.Icono" aria-hidden="true"></i>
+        }
+
+        <span class="text-wrapper">
+            @Model.Texto
+        </span>
+    </button>
+}

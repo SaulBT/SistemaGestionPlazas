@@ -5,11 +5,12 @@ public class BotonViewComponent : ViewComponent
 {
 
     
-    public IViewComponentResult Invoke(string texto = "", string tipo = "", string accion = "", bool disabled = false, bool fondo = true, string buttonType = "button", string onClick = "", string id ="", BotonModel botonModel = null)
+    public IViewComponentResult Invoke(string texto = "", string tipo = "", string accion = "", bool disabled = false, bool fondo = true, string buttonType = "button", string onClick = "", string id ="", string ariaLabel = "", string url = "", BotonModel? botonModel = null)
     {
         if (botonModel != null)
         {
             ConfigurarTipoAccion(botonModel);
+            ConfigurarEtiquetaAccesible(botonModel);
             return View(botonModel);
         }
 
@@ -23,11 +24,48 @@ public class BotonViewComponent : ViewComponent
             Fondo = fondo,
             ButtonType = buttonType,
             OnClick = onClick,
-            Id = id
+            Id = id,
+            AriaLabel = string.IsNullOrWhiteSpace(ariaLabel) ? null : ariaLabel,
+            Url = string.IsNullOrWhiteSpace(url) ? null : url
         };
         ConfigurarTipoAccion(model);
+        ConfigurarEtiquetaAccesible(model);
 
         return View(model);
+    }
+
+    private static void ConfigurarEtiquetaAccesible(BotonModel model)
+    {
+        var esSoloIcono = !model.Fondo || string.IsNullOrWhiteSpace(model.Texto);
+        if (!esSoloIcono || !string.IsNullOrWhiteSpace(model.AriaLabel))
+        {
+            return;
+        }
+
+        model.AriaLabel = !string.IsNullOrWhiteSpace(model.Texto)
+            ? model.Texto.Trim()
+            : model.Accion.ToLowerInvariant() switch
+            {
+                "editar" => "Editar",
+                "eliminar" => "Eliminar",
+                "ver" => "Ver",
+                "archivar" => "Archivar",
+                "informacion" or "info" => "Ver información",
+                "programa educativo" or "programa" => "Ver programa educativo",
+                "plan de estudios" or "plan" => "Ver plan de estudios",
+                "agregar" => "Agregar",
+                "aspirante" => "Ver aspirante",
+                "derecha" => "Mover a la derecha",
+                "izquierda" => "Mover a la izquierda",
+                "firmar" => "Firmar",
+                "solicitudes" => "Ver solicitudes",
+                "historial" => "Ver historial",
+                "excel" => "Exportar a Excel",
+                "pdf" => "Exportar a PDF",
+                "pregunta" => "Ver simbología",
+                "ver mas" => "Ver más",
+                _ => string.IsNullOrWhiteSpace(model.Accion) ? "Acción" : model.Accion
+            };
     }
 
     // Configurar botones con texto predefinido

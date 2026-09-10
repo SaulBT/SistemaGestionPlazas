@@ -29,6 +29,7 @@ public class TableActionModel
 {
     public string Id {  get; set; } = string.Empty;
     public string Accion { get; set; } = ""; // editar, eliminar, etc.
+    public string? AriaLabel { get; set; }
     public string? Url { get; set; } = "";
 
     public Dictionary<string, string>? Data { get; set; }
