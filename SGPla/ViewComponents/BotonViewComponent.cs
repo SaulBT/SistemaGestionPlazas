@@ -26,6 +26,7 @@ public class BotonViewComponent : ViewComponent
             OnClick = onClick,
             Id = id,
             AriaLabel = string.IsNullOrWhiteSpace(ariaLabel) ? null : ariaLabel,
+            AriaLabel = string.IsNullOrWhiteSpace(ariaLabel) ? null : ariaLabel,
             Url = string.IsNullOrWhiteSpace(url) ? null : url
         };
         ConfigurarTipoAccion(model);
