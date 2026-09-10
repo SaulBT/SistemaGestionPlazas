@@ -48,7 +48,7 @@ else
                                     accion = "ver",
                                     fondo = false,
                                     onClick = $"abrirModalHorario({System.Text.Json.JsonSerializer.Serialize(oferta)})",
-                                    ariaLabel = "Ver horario de la experiencia educativa"
+                                    ariaLabel = "Ver horario"
                                 })
                             </td>
                             <td>@oferta.TipoContratacion</td>
@@ -58,7 +58,7 @@ else
                                     accion = "ver",
                                     fondo = false,
                                     onClick = $"verPerfilDocenteOferta({System.Text.Json.JsonSerializer.Serialize(oferta.PerfilDocente)})",
-                                    ariaLabel = "Ver perfil docente de la experiencia educativa"
+                                    ariaLabel = "Ver perfil"
                                 })
                             </td>
                         </tr>
