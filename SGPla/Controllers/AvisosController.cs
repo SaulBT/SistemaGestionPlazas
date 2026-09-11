@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+using SGPla.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using SGPla.Commons;
 using SGPla.Models;
@@ -31,9 +33,11 @@ namespace SGPla.Controllers
         private readonly ILogger<AvisosController> _logger;
         private readonly IPlantillaService _plantillaService;
         private int _paginaActual = 1;
-        private const int idEntidadAcademica = 1; //TODO: reemplazar al tener login
+        private int idEntidadAcademica => int.TryParse(User.FindFirstValue("EntidadAcademicaId"), out var id) && id > 0
+            ? id : throw new ValidacionExcepction("La cuenta no tiene una entidad académica asignada.", "403");
+        private readonly IAvisoRepository _avisos;
+        private readonly ICoordinadorDgaaRepository _coordinadores;
 
-        private const string SESSION_ROL = "Rol";
         private const string SESSION_HORARIOS_AGREGADOS = "HorariosAgregados";
 
         private const string NOMBRE_LOGGER = "AVISOS-FRONT-";
@@ -46,8 +50,10 @@ namespace SGPla.Controllers
             IEntidadAcademicaService entidadService,
             IArchivoService archivoService,
             IPlantillaService plantillaService,
-            ILogger<AvisosController> logger)
+            ILogger<AvisosController> logger, IAvisoRepository avisos, ICoordinadorDgaaRepository coordinadores)
         {
+            _avisos = avisos;
+            _coordinadores = coordinadores;
             _avisoService = avisoService;
             _periodoService = periodoService;
             _articuloService = articuloService;
@@ -65,46 +71,23 @@ namespace SGPla.Controllers
         [Authorize(Policy = PoliticasAutorizacion.OperadorAcademico)]
         public async Task<IActionResult> Index(string? busqueda, int? idPeriodo, int? idEntidadAcademica, DateOnly? fechaInicio, DateOnly? fechaFin, int cantidad = 10, int pagina = 1)
         {
-            // CONFIGURAR EL ROL
-            HttpContext.Session.SetString(SESSION_ROL, Constantes.COORDINADOR_EA);
-            HttpContext.Session.SetInt32(Constantes.ID_ENTIDAD_ACADEMICA, 1);
-            HttpContext.Session.SetInt32(Constantes.ID_AREA_ACADEMICA, 1);
-
             try
             {
                 var periodos = await generarCatalogoPeriodosAsync(idPeriodo);
                 var entidades = new List<OptionModel>();
                 var avisos = new List<ListaAvisosDTO>();
                 var total = 0;
-                int? idAreaAcademica = 0;
-
-                var rol = HttpContext.Session.GetString(SESSION_ROL);
-                if (string.IsNullOrEmpty(rol))
+                int? idAreaAcademica = null;
+                var rol = User.FindFirstValue(ClaimTypes.Role) ?? "";
+                if (User.IsInRole(Constantes.COORDINADOR_EA))
+                    idEntidadAcademica = this.idEntidadAcademica;
+                else if (User.IsInRole(Constantes.COORDINADOR_DGAA))
                 {
-                    this.LanzarError(_logger, null, NOMBRE_LOGGER, INDEX, string.Format(Constantes.LOG_ERROR_NULO, SESSION_ROL));
-                    return View(new IndexViewModel());
-                }
-
-                //Verificar rol
-                if (rol.Contains(Constantes.COORDINADOR_EA))
-                {
-                    idEntidadAcademica = HttpContext.Session.GetInt32(Constantes.ID_ENTIDAD_ACADEMICA);
-                    if (idEntidadAcademica is null)
-                    {
-                        this.LanzarError(_logger, null, NOMBRE_LOGGER, INDEX, string.Format(Constantes.LOG_ERROR_NULA, Constantes.ID_ENTIDAD_ACADEMICA));
-                        return View(new IndexViewModel());
-                    }
-                }
-                else if (rol.Contains(Constantes.COORDINADOR_DGAA))
-                {
-                    idAreaAcademica = HttpContext.Session.GetInt32(Constantes.ID_AREA_ACADEMICA);
-                    if (idAreaAcademica is null)
-                    {
-                        this.LanzarError(_logger, null, NOMBRE_LOGGER, INDEX, string.Format(Constantes.LOG_ERROR_NULA, Constantes.ID_AREA_ACADEMICA));
-                        return View(new IndexViewModel());
-                    }
+                    idAreaAcademica = await ObtenerAreaActualAsync();
+                    if (idAreaAcademica is null) return Forbid();
                     entidades = await generarCatalogoEntidadesAsync(idEntidadAcademica, idAreaAcademica.Value);
                 }
+                else return Forbid();
 
                 (avisos, total) = await _avisoService.ObtenerTodosAvisosAsync(new FiltroAvisosDTO
                 {
@@ -112,18 +95,21 @@ namespace SGPla.Controllers
                     IdEntidadAcademica = idEntidadAcademica,
                     IdPeriodo = idPeriodo,
                     FechaInicio = fechaInicio,
+                    FechaFin = fechaFin,
+                    IdAreaAcademica = idAreaAcademica,
+                    SoloEnviadosDgaa = User.IsInRole(Constantes.COORDINADOR_DGAA),
                     Cantidad = cantidad,
                     Pagina = pagina
                 });
 
                 TabAvisosViewModel todos = new() { Lista = avisos.Where(a => !a.Archivado).ToList() };
-                TabAvisosViewModel creados = new() { Lista = avisos.Where(a => a.Estado.Contains(Constantes.CREADO) && !a.Archivado).ToList() };
-                TabAvisosViewModel enRevision = new() { Lista = avisos.Where(a => a.Estado.Contains(Constantes.EN_REVISION_POR_DGAA) && !a.Archivado).ToList() };
-                TabAvisosViewModel avalados = new() { Lista = avisos.Where(a => a.Estado.Contains(Constantes.AVALADO_POR_DGAA) && !a.Archivado).ToList() };
-                TabAvisosViewModel devueltos = new() { Lista = avisos.Where(a => a.Estado.Contains(Constantes.DEVUELTO_POR_DGAA) && !a.Archivado).ToList() };
-                TabAvisosViewModel firmados = new() { Lista = avisos.Where(a => a.Estado.Contains(Constantes.FIRMADO) && !a.Archivado).ToList() };
-                TabAvisosViewModel publicados = new() { Lista = avisos.Where(a => a.Estado.Contains(Constantes.PUBLICADO) && !a.Archivado).ToList() };
-                TabAvisosViewModel conActa = new() { Lista = avisos.Where(a => a.Estado.Contains(Constantes.ACTA_DE_CT_CREADA) && !a.Archivado).ToList() };
+                TabAvisosViewModel creados = new() { Lista = avisos.Where(a => a.Estado == Constantes.CREADO && !a.Archivado).ToList() };
+                TabAvisosViewModel enRevision = new() { Lista = avisos.Where(a => a.Estado == Constantes.EN_REVISION_POR_DGAA && !a.Archivado).ToList() };
+                TabAvisosViewModel avalados = new() { Lista = avisos.Where(a => a.Estado == Constantes.AVALADO_POR_DGAA && !a.Archivado).ToList() };
+                TabAvisosViewModel devueltos = new() { Lista = avisos.Where(a => a.Estado == Constantes.DEVUELTO_POR_DGAA && !a.Archivado).ToList() };
+                TabAvisosViewModel firmados = new() { Lista = avisos.Where(a => a.Estado == Constantes.FIRMADO && !a.Archivado).ToList() };
+                TabAvisosViewModel publicados = new() { Lista = avisos.Where(a => a.Estado == Constantes.PUBLICADO && !a.Archivado).ToList() };
+                TabAvisosViewModel conActa = new() { Lista = avisos.Where(a => a.Estado == Constantes.ACTA_DE_CT_CREADA && !a.Archivado).ToList() };
                 TabAvisosViewModel archivados = new() { Lista = avisos.Where(a => a.Archivado).ToList() };
 
                 return View(new IndexViewModel
@@ -189,10 +175,10 @@ namespace SGPla.Controllers
             try
             {
                 var aviso = await _avisoService.ObtenerAvisoPorIDAsync(idAviso);
-                if (aviso.IdEntidadAcademica != idEntidadAcademica)
+                if (!await PuedeConsultarAsync(idAviso))
                     return Forbid();
 
-                if (aviso.IdArchivoOriginal <= 0)
+                if (aviso.IdArchivoFirmado <= 0 && aviso.IdArchivoOriginal <= 0)
                     return NotFound("El aviso no tiene un documento original disponible.");
 
                 return View(new VistaPreviaAvisoViewModel
@@ -215,10 +201,10 @@ namespace SGPla.Controllers
             try
             {
                 var aviso = await _avisoService.ObtenerAvisoPorIDAsync(idAviso);
-                if (aviso.IdEntidadAcademica != idEntidadAcademica)
+                if (!await PuedeConsultarAsync(idAviso))
                     return Forbid();
 
-                var archivo = await _archivoService.ObtenerVistaPreviaPdfAsync(aviso.IdArchivoOriginal);
+                var archivo = await _archivoService.ObtenerVistaPreviaPdfAsync(aviso.IdArchivoFirmado > 0 ? aviso.IdArchivoFirmado : aviso.IdArchivoOriginal);
                 return PhysicalFile(archivo.Ruta, archivo.Tipo, enableRangeProcessing: true);
             }
             catch (ValidacionExcepction)
@@ -243,10 +229,10 @@ namespace SGPla.Controllers
             try
             {
                 var aviso = await _avisoService.ObtenerAvisoPorIDAsync(idAviso);
-                if (aviso.IdEntidadAcademica != idEntidadAcademica)
+                if (!await PuedeConsultarAsync(idAviso))
                     return Forbid();
 
-                var archivo = await _archivoService.DescargarAsync(aviso.IdArchivoOriginal);
+                var archivo = await _archivoService.DescargarAsync(aviso.IdArchivoFirmado > 0 ? aviso.IdArchivoFirmado : aviso.IdArchivoOriginal);
                 return PhysicalFile(archivo.Ruta, archivo.Tipo, archivo.Nombre);
             }
             catch (ValidacionExcepction)
@@ -259,50 +245,75 @@ namespace SGPla.Controllers
             }
         }
 
-        //Firmar
+        // El CEA adjunta el PDF previamente firmado y registra su publicación.
         [HttpPost]
-        [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
-        public async Task FirmarAvisoAsync([FromForm] int idAviso, [FromForm] IFormFile archivo)
+        [ValidateAntiForgeryToken]
+        [RequestSizeLimit(22 * 1024 * 1024)]
+        [Authorize(Policy = PoliticasAutorizacion.EntidadAcademica)]
+        public async Task<IActionResult> FirmarAvisoAsync([FromForm] int idAviso, [FromForm] IFormFile? archivo)
         {
+            string? temporal = null;
             try
             {
-                (var nombre, var ruta) = await _archivoService.GuardarTemporalmenteAsync(archivo);
-                var archivoDTO = new CargarArchivoDTO
+                if (!await PuedeConsultarAsync(idAviso)) return Forbid();
+                var aviso = await _avisos.ObtenerPorIDAsync(idAviso);
+                if (aviso!.Archivado == true || aviso.Estado != Constantes.AVALADO_POR_DGAA)
+                    return Conflict(new { message = "Solo puede firmar un aviso avalado por DGAA y no archivado." });
+                if (archivo is null || archivo.Length == 0 || archivo.Length > 20 * 1024 * 1024 ||
+                    !string.Equals(Path.GetExtension(archivo.FileName), ".pdf", StringComparison.OrdinalIgnoreCase))
+                    return BadRequest(new { message = "Seleccione un PDF firmado, de hasta 20 MB y no vacío." });
+                await using (var stream = archivo.OpenReadStream())
                 {
-                    NombreArchivo = nombre,
-                    RutaArchivo = ruta
-                };
-                await _avisoService.FirmarAvisoAsync(idAviso, archivoDTO);
-                TempData["Success"] = "Aviso firmado con éxito.";
-                System.IO.File.Delete(ruta);
+                    var encabezado = new byte[5];
+                    var leidos = await stream.ReadAtLeastAsync(encabezado, 5, throwOnEndOfStream: false);
+                    if (leidos < 5 || System.Text.Encoding.ASCII.GetString(encabezado) != "%PDF-")
+                        return BadRequest(new { message = "El archivo seleccionado no tiene un formato PDF válido." });
+                }
+                var (nombre, ruta) = await _archivoService.GuardarTemporalmenteAsync(archivo);
+                temporal = ruta;
+                await _avisoService.FirmarAvisoAsync(idAviso, new CargarArchivoDTO { NombreArchivo = nombre, RutaArchivo = ruta });
+                TempData["Success"] = "PDF firmado guardado. El aviso está listo para publicar.";
+                return Ok(new { message = "Aviso firmado con éxito." });
             }
-            catch (ValidacionExcepction vx)
+            catch (ValidacionExcepction ex)
             {
-                this.LanzarError(_logger, vx, NOMBRE_LOGGER, INDEX, Constantes.LOG_ERROR_VALIDACION);
+                return BadRequest(new { message = ex.Message });
             }
             catch (Exception ex)
             {
-                this.LanzarError(_logger, ex, NOMBRE_LOGGER, INDEX, Constantes.LOG_ERROR_INESPERADO);
+                _logger.LogError(ex, "No se pudo firmar el aviso {IdAviso}", idAviso);
+                return StatusCode(500, new { message = "No se pudo guardar el PDF firmado. Inténtelo nuevamente." });
+            }
+            finally
+            {
+                if (temporal is not null)
+                {
+                    try { System.IO.File.Delete(temporal); }
+                    catch (Exception ex) { _logger.LogWarning(ex, "No se pudo limpiar el archivo temporal de firma."); }
+                }
             }
         }
 
-        //Publicar
         [HttpPost]
-        [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
-        public async Task PublicarAvisoAsync(int idAviso, string url)
+        [ValidateAntiForgeryToken]
+        [Authorize(Policy = PoliticasAutorizacion.EntidadAcademica)]
+        public async Task<IActionResult> PublicarAvisoAsync(int idAviso, string url)
         {
             try
             {
+                if (!await PuedeConsultarAsync(idAviso)) return Forbid();
+                var aviso = await _avisos.ObtenerPorIDAsync(idAviso);
+                if (aviso!.Archivado == true || aviso.Estado != Constantes.FIRMADO || aviso.IdArchivoFirmado is null)
+                    return Conflict(new { message = "Solo puede publicar un aviso firmado y no archivado." });
                 await _avisoService.PublicarAvisoAsync(idAviso, url);
-                TempData["Success"] = "Aviso publicado con éxito.";
+                TempData["Success"] = "Publicación del aviso registrada con éxito.";
+                return Ok(new { message = "Aviso publicado." });
             }
-            catch (ValidacionExcepction vx)
-            {
-                this.LanzarError(_logger, vx, NOMBRE_LOGGER, INDEX, Constantes.LOG_ERROR_VALIDACION);
-            }
+            catch (ValidacionExcepction ex) { return BadRequest(new { message = ex.Message }); }
             catch (Exception ex)
             {
-                this.LanzarError(_logger, ex, NOMBRE_LOGGER, INDEX, Constantes.LOG_ERROR_INESPERADO);
+                _logger.LogError(ex, "No se pudo publicar el aviso {IdAviso}", idAviso);
+                return StatusCode(500, new { message = "No se pudo registrar la publicación. Inténtelo nuevamente." });
             }
         }
 
@@ -349,38 +360,108 @@ namespace SGPla.Controllers
         // Enviar a Revisión
         // =================
 
-        //Vista
+        private async Task<int?> ObtenerAreaActualAsync()
+        {
+            var correo = User.FindFirstValue(ClaimTypes.Email);
+            if (string.IsNullOrWhiteSpace(correo)) return null;
+            var area = (await _coordinadores.ObtenerPorCorreoAsync(correo))?.IdAreaAcademica;
+            return area > 0 ? area : null;
+        }
+
+        private async Task<bool> PuedeConsultarAsync(int idAviso)
+        {
+            var aviso = await _avisos.ObtenerPorIDAsync(idAviso);
+            if (aviso is null) return false;
+            if (User.IsInRole(Constantes.COORDINADOR_EA))
+                return int.TryParse(User.FindFirstValue("EntidadAcademicaId"), out var entidad)
+                    && entidad > 0 && aviso.IdEntidadAcademica == entidad;
+            return User.IsInRole(Constantes.COORDINADOR_DGAA)
+                && EstadosAviso.RecibidosDgaa.Contains(aviso.Estado)
+                && aviso.IdEntidadAcademicaNavigation.IdAreaAcademica == await ObtenerAreaActualAsync();
+        }
+
         [HttpGet]
         [Authorize(Policy = PoliticasAutorizacion.EntidadAcademica)]
         public async Task<IActionResult> EnviarARevisionAsync(int idAviso)
         {
-            //TO DO
-            return View();
+            if (!await PuedeConsultarAsync(idAviso)) return Forbid();
+            var aviso = await _avisos.ObtenerPorIDAsync(idAviso);
+            if (aviso!.Archivado == true || (aviso.Estado != Constantes.CREADO && aviso.Estado != Constantes.DEVUELTO_POR_DGAA))
+                return Conflict("El aviso ya no está disponible para envío.");
+            return View("Revision", aviso);
+        }
+
+        [HttpGet]
+        [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
+        public async Task<IActionResult> RevisarAvisoAsync(int idAviso)
+        {
+            if (!await PuedeConsultarAsync(idAviso)) return Forbid();
+            var aviso = await _avisos.ObtenerPorIDAsync(idAviso);
+            if (aviso!.Estado != Constantes.EN_REVISION_POR_DGAA || aviso.Archivado == true) return Forbid();
+            return View("Revision", aviso);
+        }
+
+        [HttpGet]
+        [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
+        public async Task<IActionResult> EditarRevisionAsync(int idAviso)
+        {
+            if (!await PuedeConsultarAsync(idAviso)) return Forbid();
+            var aviso = await _avisos.ObtenerPorIDAsync(idAviso);
+            if (!EstadosAviso.RevisadosDgaa.Contains(aviso!.Estado)) return Forbid();
+            ViewData["EditarComentarios"] = true;
+            ViewData["ComentariosIngresados"] = aviso.Comentarios;
+            return View("Revision", aviso);
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
+        public Task<IActionResult> GuardarComentariosRevisionAsync(int idAviso, string comentarios)
+            => GuardarRevisionAsync(new RevisionDTO { IdAviso = idAviso, Comentarios = comentarios }, true, true);
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Policy = PoliticasAutorizacion.EntidadAcademica)]
-        public async Task ConfirmarEnviarARevisionAsync(string comentarios, int idAviso)
+        public Task<IActionResult> ConfirmarEnviarARevisionAsync(RevisionDTO revision)
+            => GuardarRevisionAsync(revision, false);
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
+        public Task<IActionResult> ConfirmarRevisionAsync(RevisionDTO revision)
+            => GuardarRevisionAsync(revision, true);
+
+        private async Task<IActionResult> GuardarRevisionAsync(RevisionDTO revision, bool revisar, bool editarComentarios = false)
         {
+            if (!await PuedeConsultarAsync(revision.IdAviso)) return Forbid();
+            var aviso = await _avisos.ObtenerPorIDAsync(revision.IdAviso);
+            if (revisar && (editarComentarios
+                ? !EstadosAviso.RevisadosDgaa.Contains(aviso!.Estado)
+                : aviso!.Estado != Constantes.EN_REVISION_POR_DGAA || aviso.Archivado == true)) return Forbid();
             try
             {
-                var revisionDTO = new RevisionDTO
-                {
-                    Comentarios = comentarios,
-                    IdAviso = idAviso
-                };
-
-                await _avisoService.EnviarARevisionAsync(revisionDTO);
-                TempData["Success"] = "El Aviso se ha enviado a revisión por DGAA.";
+                if (!ModelState.IsValid)
+                    throw new ValidacionExcepction("Revise los datos ingresados.", "400");
+                if (editarComentarios) await _avisoService.EditarComentariosRevisionAsync(revision.IdAviso, revision.Comentarios);
+                else if (revisar) await _avisoService.RevisarAvisoAsync(revision);
+                else await _avisoService.EnviarARevisionAsync(revision);
+                TempData["Success"] = editarComentarios ? "Comentarios de la revisión actualizados." : revisar
+                    ? (revision.Aprobado ? "Aviso avalado por DGAA." : "Aviso devuelto a la Entidad Académica para corrección.")
+                    : "El aviso se ha enviado a revisión por DGAA.";
+                return RedirectToAction(nameof(Index));
             }
-            catch (ValidacionExcepction vx)
+            catch (ValidacionExcepction ex)
             {
-                this.LanzarError(_logger, vx, NOMBRE_LOGGER, INDEX, Constantes.LOG_ERROR_VALIDACION);
+                ModelState.AddModelError("", ex.Message);
             }
             catch (Exception ex)
             {
-                this.LanzarError(_logger, ex, NOMBRE_LOGGER, INDEX, Constantes.LOG_ERROR_INESPERADO);
+                _logger.LogError(ex, "No se pudo guardar la revisión del aviso {IdAviso}", revision.IdAviso);
+                ModelState.AddModelError("", "No se pudo guardar el cambio. Inténtelo nuevamente.");
             }
+            ViewData["EditarComentarios"] = editarComentarios;
+            ViewData["ComentariosIngresados"] = revision.Comentarios;
+            return View("Revision", await _avisos.ObtenerPorIDAsync(revision.IdAviso));
         }
 
         // ==========

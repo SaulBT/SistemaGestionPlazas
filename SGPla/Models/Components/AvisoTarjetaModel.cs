@@ -1,4 +1,4 @@
-﻿namespace SGPla.Models.Components
+namespace SGPla.Models.Components
 {
     public class AvisoTarjetaModel
     {
@@ -9,6 +9,7 @@
         public string Articulo { get; set; } = string.Empty;
         public string FechaCreacion { get; set; } = string.Empty;
         public string Estado { get; set; } = string.Empty;
+        public string? UrlPublicacion { get; set; }
         public string Comentarios { get; set; } = string.Empty;
         public bool Archivado { get; set; } = false;
     }

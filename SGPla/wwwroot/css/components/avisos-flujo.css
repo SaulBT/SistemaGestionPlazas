@@ -1,0 +1,33 @@
+/* Colores de estado con texto e iconos; el color no es la única señal. */
+.avisos-modulo .estado-todos { --estado: #475569; --estado-fondo: #f1f5f9; }
+.avisos-modulo .estado-creado { --estado: #2456a6; --estado-fondo: #edf4ff; }
+.avisos-modulo .estado-revision { --estado: #925000; --estado-fondo: #fff5e6; }
+.avisos-modulo .estado-avalado { --estado: #686000; --estado-fondo: #faf8d9; }
+.avisos-modulo .estado-devuelto { --estado: #a13240; --estado-fondo: #fff0f2; }
+.avisos-modulo .estado-firmado { --estado: #405da0; --estado-fondo: #edf1fc; }
+.avisos-modulo .estado-publicado { --estado: #32651f; --estado-fondo: #eef8e9; }
+.avisos-modulo .estado-acta { --estado: #704197; --estado-fondo: #f6effc; }
+.avisos-modulo .estado-archivado { --estado: #525866; --estado-fondo: #f2f3f5; }
+.avisos-modulo .tabs-header { flex-wrap: wrap; gap: 8px; padding: 12px 0; border-bottom: 1px solid #dbe2eb; }
+.avisos-modulo .tab-button { color: var(--estado); background: var(--estado-fondo); border: 1px solid #dce2ea; border-bottom: 3px solid transparent; border-radius: 10px; min-height: 44px; padding: 10px 14px; font-weight: 600; }
+.avisos-modulo .tab-button:hover { border-color: var(--estado); }
+.avisos-modulo .tab-button.active { border-color: var(--estado); box-shadow: inset 0 -2px 0 var(--estado); }
+.avisos-modulo .tab-count { min-width: 24px; padding: 1px 6px; border-radius: 6px; background: #fff; font-size: .85em; }
+.avisos-modulo :is(button,a):focus-visible, .aviso-dialog button:focus-visible { outline: 3px solid var(--AzulPrimario, #005baa); outline-offset: 3px; }
+.aviso-comentarios { padding: 12px 24px; border-top: 1px solid #e6ebf0; background: #f8fafc; }
+.aviso-comentarios-boton { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 8px 14px; background: white; border: 1px solid #c7d6e5; border-radius: 8px; color: var(--AzulPrimario, #005baa); font-weight: 600; }
+.aviso-comentarios-boton:hover { background: #edf4fb; border-color: var(--AzulPrimario, #005baa); }
+.aviso-dialog { border: 1px solid #dbe2eb; border-radius: 14px; padding: 24px; width: min(600px, calc(100% - 32px)); max-height: 85vh; color: #243448; box-shadow: 0 20px 60px #142b4933; }
+.aviso-dialog::backdrop { background: #152c4b66; }
+.aviso-dialog-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 16px; }
+.aviso-dialog-etiqueta { color: #526478; font-size: .75rem; letter-spacing: .08em; }
+.aviso-dialog h2 { font-size: 1.3rem; margin: 6px 0 0; }
+#comentariosAvisoTexto { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.7; padding: 20px 0; }
+.aviso-dialog form { text-align: right; }
+.aviso-siguiente-paso { display: flex; align-items: center; gap: 16px; padding: 16px 20px; margin: 16px 0; border: 1px solid #bed8c2; border-left: 4px solid #32651f; border-radius: 10px; background: #f2faf3; color: #285333; }
+.aviso-siguiente-paso > i { font-size: 1.5rem; }
+.aviso-siguiente-paso button { margin-left: auto; }
+.aviso-operacion-error { margin-top: 12px; color: #9b2333; background: #fff0f2; padding: 12px; border-radius: 8px; }
+.aviso-operacion-error:empty { display: none; }
+@media (max-width: 640px) { .aviso-siguiente-paso { flex-wrap: wrap; } .avisos-modulo .tab-button { padding: 8px 10px; } .aviso-tarjeta-acciones { flex-wrap: wrap; } }
+@media (prefers-reduced-motion: reduce) { .avisos-modulo .tab-button { transition: none; } }

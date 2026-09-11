@@ -1,4 +1,4 @@
-﻿using Microsoft.IdentityModel.Tokens;
+using Microsoft.IdentityModel.Tokens;
 using SGPla.Commons;
 using SGPla.Models.DTOs.Archivo;
 using SGPla.Models.DTOs.Aviso;
@@ -32,7 +32,7 @@ namespace SGPla.Validations.Implementations
             else
             {
                 await ValidarIdAsync(revisionDTO.IdAviso);
-                if (string.IsNullOrEmpty(revisionDTO.Comentarios))
+                if (string.IsNullOrWhiteSpace(revisionDTO.Comentarios))
                     throw new ValidacionExcepction("Los Comentarios son obligatorios.", "400");
             }
         }

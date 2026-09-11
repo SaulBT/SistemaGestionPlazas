@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using SGPla.Commons;
 using SGPla.Mappers;
 using SGPla.Models;
@@ -62,7 +62,8 @@ namespace SGPla.Services.Implementations
         {
             var avisos = await _avisoRepository.ObtenerTodosAsync(filtroDTO);
 
-            var items = (await Task.WhenAll(avisos.Select(mapearAListaAvisoDTOAsync))).ToList();
+            var items = new List<ListaAvisosDTO>();
+            foreach (var aviso in avisos) items.Add(await mapearAListaAvisoDTOAsync(aviso));
             var total = await _avisoRepository.ContarAsync(filtroDTO);
 
             return (items, total);
@@ -136,8 +137,10 @@ namespace SGPla.Services.Implementations
         public async Task PublicarAvisoAsync(int idAviso, string url)
         {
             await _avisoValidator.ValidarPublicacionAsync(idAviso, url);
-
-            await _avisoRepository.PublicarAsync(idAviso, url);
+            if (!Uri.TryCreate(url?.Trim(), UriKind.Absolute, out var direccion) ||
+                (direccion.Scheme != Uri.UriSchemeHttps && direccion.Scheme != Uri.UriSchemeHttp))
+                throw new ValidacionExcepction("Ingrese una dirección de publicación válida (https:// o http://).", "400");
+            await _avisoRepository.PublicarAsync(idAviso, direccion.AbsoluteUri);
         }
 
         public async Task<bool> VerificarEstadoAvisoAsync(int idAviso, string estado)
@@ -473,8 +476,10 @@ namespace SGPla.Services.Implementations
             }
             catch (Exception ex)
             {
-                if (archivoGuardado is null)
-                    await _archivoService.EliminarAsync(archivo?.Ruta ?? "");
+                if (archivoGuardado is not null)
+                    await _archivoRepository.EliminarAsync(archivoGuardado);
+                if (archivoDisco is not null)
+                    await _archivoService.EliminarAsync(archivoDisco.Ruta);
 
                 throw;
             }
@@ -484,9 +489,20 @@ namespace SGPla.Services.Implementations
         //DGAA
         public async Task RevisarAvisoAsync(RevisionDTO revisionDTO)
         {
-            throw new NotImplementedException();
+            if (revisionDTO is null || string.IsNullOrWhiteSpace(revisionDTO.Comentarios))
+                throw new ValidacionExcepction("Los comentarios son obligatorios.", "400");
+            await _avisoRepository.CambiarEstadoRevisionAsync(revisionDTO.IdAviso,
+                revisionDTO.Aprobado ? Constantes.AVALADO_POR_DGAA : Constantes.DEVUELTO_POR_DGAA,
+                revisionDTO.Comentarios.Trim());
         }
 
+
+        public async Task EditarComentariosRevisionAsync(int idAviso, string comentarios)
+        {
+            if (idAviso <= 0 || string.IsNullOrWhiteSpace(comentarios))
+                throw new ValidacionExcepction("El aviso y los comentarios son obligatorios.", "400");
+            await _avisoRepository.EditarComentariosRevisionAsync(idAviso, comentarios.Trim());
+        }
 
         //Utils
         private async Task<ListaAvisosDTO> mapearAListaAvisoDTOAsync(Aviso aviso)
@@ -505,6 +521,7 @@ namespace SGPla.Services.Implementations
                 FechaCreacion = aviso.FechaCreacion.ToString("dd/MM/yyyy"),
                 Estado = aviso.Estado,
                 Archivado = aviso.Archivado ?? false,
+                UrlPublicacion = aviso.UrlPublicacion,
                 Comentarios = aviso.Comentarios ?? ""
             };
 

@@ -1,4 +1,4 @@
-﻿namespace SGPla.Models.Components
+namespace SGPla.Models.Components
 {
     public class TabsModel
     {
@@ -12,6 +12,9 @@
     public class TabItemModel
     {
         public string Titulo { get; set; }
+
+        public string? EstadoClase { get; set; }
+        public int? Cantidad { get; set; }
 
         public string? IconClass { get; set; }
 

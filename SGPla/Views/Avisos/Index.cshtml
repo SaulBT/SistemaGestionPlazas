@@ -1,11 +1,42 @@
-﻿
+@using SGPla.Commons
+
 @using SGPla.Models.ViewModels.Avisos
 @model IndexViewModel
 @{
-    ViewData["Title"] = "Personal Académico";
+    ViewData["Title"] = "Gestionar Avisos";
+    var esCea = User.IsInRole(Constantes.COORDINADOR_EA);
+    var tabs = new TabsModel { Id = esCea ? "tabs-avisos-cea" : "tabs-avisos-dgaa" };
+    void AgregarTab(string titulo, TabAvisosViewModel contenido, string estado, string icono)
+    {
+        tabs.Tabs.Add(new TabItemModel {
+            Titulo = titulo, Cantidad = contenido.Lista.Count, EstadoClase = $"estado-{estado}",
+            IconClass = $"bi bi-{icono}", PartialView = "_TabAvisos", PartialModel = contenido
+        });
+    }
+    AgregarTab("Todos", Model.Todos, "todos", "grid");
+    if (esCea) AgregarTab("Creados", Model.Creados, "creado", "file-earmark");
+    AgregarTab("En revisión", Model.EnRevision, "revision", "clock");
+    AgregarTab("Avalados", Model.Avalados, "avalado", "check-circle");
+    AgregarTab("Devueltos", Model.Devueltos, "devuelto", "arrow-return-left");
+    if (esCea) AgregarTab("Firmados", Model.Firmados, "firmado", "pen");
+    AgregarTab("Publicados", Model.Publicados, "publicado", "megaphone");
+    AgregarTab("Actas de CT", Model.ConActa, "acta", "file-earmark-check");
+    if (esCea) AgregarTab("Archivados", Model.Archivados, "archivado", "archive");
 }
 
-<div>
+<link rel="stylesheet" href="~/css/components/avisos-flujo.css" asp-append-version="true" />
+<div class="avisos-modulo">
+    <h1 class="h3">Gestionar Avisos</h1>
+    <p class="text-muted">@(User.IsInRole(Constantes.COORDINADOR_DGAA) ? "Avisos recibidos de su área académica y seguimiento de sus revisiones." : "Consulte el estado de sus avisos y los comentarios de DGAA.") Ordenados por fecha de creación, del más reciente al más antiguo.</p>
+    @if (esCea && Model.Avalados.Lista.Count > 0)
+    {
+        <div class="aviso-siguiente-paso" role="status">
+            <i class="bi bi-check-circle" aria-hidden="true"></i>
+            <div><strong>DGAA avaló @Model.Avalados.Lista.Count aviso(s).</strong><br />Ya puede adjuntar el PDF firmado y continuar con la publicación.</div>
+            <button type="button" class="btn btn-outline-primary" onclick="seleccionarTab('tabs-avisos-cea', 3)">Ver avalados</button>
+        </div>
+    }
+    <div id="avisoToken" hidden>@Html.AntiForgeryToken()</div>
     <form id="filtrosForm" method="get" action="@Url.Action("Index", "Avisos")" >
         
         <!-- Filtros -->
@@ -29,6 +60,8 @@
                 Method = "get",
                 Value = Context.Request.Query["busqueda"]
             })
+            @if (User.IsInRole(Constantes.COORDINADOR_EA))
+            {
             <a href="@Url.Action("CrearAviso", "Avisos")" style="display: inline-block; text-decoration: none;">
                 @await Component.InvokeAsync("Boton", new
                 {
@@ -36,6 +69,7 @@
                     Texto = "Crear Aviso"
                 })
             </a>
+            }
         </div>
 
         <!-- Campos ocultos para paginación -->
@@ -44,69 +78,7 @@
 
     </form>
 
-    @await Component.InvokeAsync("Tabs",
-        new TabsModel
-        {
-            Id = "tabs-avisos",
-
-            Tabs =
-            [
-                new()
-                {
-                    Titulo = "Todos",
-                    PartialView = "_TabAvisos",
-                    PartialModel = Model.Todos
-                },
-                new()
-                {
-                    Titulo = "Creados",
-                    PartialView = "_TabAvisos",
-                    PartialModel = Model.Creados
-                },
-                new()
-                {
-                    Titulo = "En Revisión",
-                    PartialView = "_TabAvisos",
-                    PartialModel = Model.EnRevision
-                },
-                new()
-                {
-                    Titulo = "Avalados por DGAA",
-                    PartialView = "_TabAvisos",
-                    PartialModel = Model.Avalados
-                },
-                new()
-                {
-                    Titulo = "Devueltos por DGAA",
-                    PartialView = "_TabAvisos",
-                    PartialModel = Model.Devueltos
-                },
-                new()
-                {
-                    Titulo = "Firmados",
-                    PartialView = "_TabAvisos",
-                    PartialModel = Model.Firmados
-                },
-                new()
-                {
-                    Titulo = "Publicados",
-                    PartialView = "_TabAvisos",
-                    PartialModel = Model.Publicados
-                },
-                new()
-                {
-                    Titulo = "Actas de Ct Creadas",
-                    PartialView = "_TabAvisos",
-                    PartialModel = Model.ConActa
-                },
-                new()
-                {
-                    Titulo = "Archivados",
-                    PartialView = "_TabAvisos",
-                    PartialModel = Model.Archivados
-                }
-            ]
-        })
+    @await Component.InvokeAsync("Tabs", tabs)
 </div>
 
 @await Component.InvokeAsync("ModalArchivo", new ModalArchivoModel
@@ -117,24 +89,23 @@
     OnConfirm = "firmarAviso()"
 })
 
-@await Component.InvokeAsync("Modal", new ModalModel
-{
-    Id = "modalEliminarAviso",
-    Tipo = "confirm",
-    Titulo = "Eliminar Aviso",
-    Mensaje = "Esta acción es irreversible ¿Está seguro de eliminar el Aviso?",
-    OnConfirm = "eliminarAvisoAsync()",
-    OnCancel = "cerrarModal('modalEliminarAviso')"
-})
+<dialog id="funcionPendienteAviso" class="aviso-dialog" aria-labelledby="funcionPendienteTitulo">
+    <div class="aviso-dialog-header">
+        <div><span class="aviso-dialog-etiqueta">EN CONSTRUCCIÓN</span><h2 id="funcionPendienteTitulo">Función pendiente</h2></div>
+        <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('funcionPendienteAviso').close()" aria-label="Cerrar"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    </div>
+    <p class="py-3">Esta función está en construcción y estará disponible próximamente.</p>
+    <form method="dialog"><button class="btn btn-primary">Entendido</button></form>
+</dialog>
 
-@await Component.InvokeAsync("Modal", new ModalModel
-{
-    Id = "modalComentarios",
-    Tipo = "info",
-    Titulo = "Comentarios",
-    Mensaje = "",
-    OnConfirm = "cerrarModal('modalComentarios')"
-})
+<dialog id="comentariosAviso" class="aviso-dialog" aria-labelledby="comentariosAvisoTitulo">
+    <div class="aviso-dialog-header">
+        <div><span class="aviso-dialog-etiqueta">SEGUIMIENTO DEL AVISO</span><h2 id="comentariosAvisoTitulo">Comentarios</h2></div>
+        <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('comentariosAviso').close()" aria-label="Cerrar comentarios"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    </div>
+    <p id="comentariosAvisoTexto"></p>
+    <form method="dialog"><button class="btn btn-primary">Entendido</button></form>
+</dialog>
 
 @await Component.InvokeAsync("ModalFormulario", new ModalFormularioModel
 {
@@ -147,128 +118,13 @@
 })
 
 <script>
-    //Eliminar
-    const UrlEliminarAviso = '@Url.Action("EliminarAviso", "Avisos")';
-    var idAvisoEliminar = 0;
-
-    function abrirModalEliminar(idAviso){
-        idAvisoEliminar = idAviso;
-        abrirModal("modalEliminarAviso");
-    }
-
-    async function eliminarAvisoAsync() {
-        const response = await fetch(`${UrlEliminarAviso}?idAviso=${idAvisoEliminar}`);
-        if (response.ok) {
-            document.getElementById("filtrosForm").submit();
-            cerrarModal("modalEliminarAviso")
-        } else {
-            //TO DO
-            console.log("Error");
-        }
-    }
-
-    //Firmar
     const UrlFirmarAviso = '@Url.Action("FirmarAviso", "Avisos")';
-    var idAvisoFirmar = 0;
-    
-    function abrirModalFirmar(idAviso){
-        idAvisoFirmar = idAviso;
-        abrirModal("modalFirmarAviso");
-    }
-
-    async function firmarAviso() {
-        var inputArchivo = document.getElementById("inputFile-modalFirmarAviso");
-        var avisoFirmado = inputArchivo.files[0];
-        
-        var formData = new FormData();
-        formData.append("idAviso", idAvisoFirmar); 
-        formData.append("archivo", avisoFirmado);
-
-        const response = await fetch(UrlFirmarAviso, {
-            method: 'POST',
-            body: formData
-        });
-        if (response.ok){
-            document.getElementById("filtrosForm").submit();
-            cerrarModal("modalFirmarAviso");
-        } else {
-            //TO DO
-            console.log("Error");
-        }
-    }
-
-    //Comentarios
-    function abrirModalComentarios(comentarios) {
-        document.getElementById("modalComentarios-mensaje").innerText = comentarios;
-        abrirModal("modalComentarios")
-    }
-
-    //Publicar
     const UrlPublicarAviso = '@Url.Action("PublicarAviso", "Avisos")';
-    var idAvisoPublicar = 0;
-    const url = document.getElementById("urlPublicacion");
-
-    function abrirModalPublicar(idAviso) {
-        idAvisoPublicar = idAviso;
-        abrirModal("modalPublicar");
-    }
-
-    async function publicar() {
-        const response = await fetch(`${UrlPublicarAviso}?idAviso=${idAvisoPublicar}&url=${url.value}`,{
-            method: 'POST'
-        });
-        if (response.ok) {
-            document.getElementById("filtrosForm").submit();
-            cerrarModal("modalPublicar")
-        } else {
-            //TO DO
-            console.log("Error");
-        }
-    }
-
-    //Archivar
     const UrlArchivarAviso = '@Url.Action("ArchivarAviso", "Avisos")';
     const UrlDesarchivarAviso = '@Url.Action("DesarchivarAviso", "Avisos")';
-
-    async function archivarAsync(idAviso, archivado) {
-        if (archivado) {
-            const response = await fetch(`${UrlDesarchivarAviso}?idAviso=${idAviso}`, {
-                method: 'POST'
-            });
-            if (response.ok) {
-                document.getElementById("filtrosForm").submit();
-            } else {
-                //TO DO
-                console.log("Error");
-            }
-        } else {
-            const response = await fetch(`${UrlArchivarAviso}?idAviso=${idAviso}`, {
-                method: 'POST'
-            });
-            if (response.ok) {
-                document.getElementById("filtrosForm").submit();
-            } else {
-                //TO DO
-                console.log("Error");
-            }
-        }
-    }
-
-    //Test
-    async function test() {
-        const UrlTest = '@Url.Action("GenerarDocumento", "Avisos")';
-        const response = await fetch(UrlTest, {
-            method: 'POST'
-        });
-        if (response.ok) {
-            console.log("Todo bien, según.")
-        } else {
-            //TO DO
-            console.log("Error");
-        }
-    }
 </script>
 
 @section Scripts {
     <script src="~/js/cargarArchivo.js"></script>
+    <script src="~/js/avisos-flujo.js" asp-append-version="true"></script>
 }
