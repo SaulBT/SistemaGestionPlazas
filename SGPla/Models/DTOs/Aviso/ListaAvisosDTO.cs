@@ -1,4 +1,4 @@
-﻿namespace SGPla.Models.DTOs.Aviso
+namespace SGPla.Models.DTOs.Aviso
 {
     public class ListaAvisosDTO
     {
@@ -13,6 +13,7 @@
         public string FechaCreacion { get; set; } = string.Empty;
         public string Estado { get; set; } = string.Empty;
         public bool Archivado { get; set; } = false;
+        public string? UrlPublicacion { get; set; }
         public string Comentarios { get; set; } = string.Empty;
     }
 }

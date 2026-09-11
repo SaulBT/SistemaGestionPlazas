@@ -1,4 +1,4 @@
-﻿@using SGPla.Commons
+@using SGPla.Commons
 @model AvisoTarjetaModel
 
 <div class="aviso-tarjeta">
@@ -6,6 +6,10 @@
 		<div class="aviso-tarjeta-datos">
 			<div>
 				<strong>Folio: </strong>@Model.Folio
+                @if (User.IsInRole(Constantes.COORDINADOR_DGAA))
+                {
+                    <div><strong>Entidad: </strong>@Model.EntidadAcademica</div>
+                }
 			</div>
 
 			<div>
@@ -67,43 +71,49 @@
 		Fecha de creación: @Model.FechaCreacion
 	</div>
 
-	<div class="aviso-tarjeta-acciones">
-		@switch (Model.Estado)
-		{
-			case Constantes.CREADO:
-				<a href="@Url.Action("EnviarARevision", "Avisos", new { Model.IdAviso })">
-					@await Component.InvokeAsync("Boton", new
-					{
-						texto = "Enviar a revisión por DGAA",
-						accion = "enviar",
-						tipo = "terciario"
-					})
-				</a>
-				<a href="@Url.Action("ObtenerVistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })" target="_blank" rel="noopener">
-					@await Component.InvokeAsync("Boton", new { texto = "Ver Aviso", tipo = "secundario" })
-				</a>
-                @await Component.InvokeAsync("Boton", new
-                {
-                    accion = "editar",
-                    fondo = false,
-                    ariaLabel = "Editar aviso",
-                    url = Url.Action("EditarAviso", "Avisos", new { idAviso = Model.IdAviso })
-                })
-				@await Component.InvokeAsync("Boton", new
-				{
-					accion = "eliminar",
-					fondo = false,
-					ariaLabel = "Eliminar aviso",
-					OnClick = $"abrirModalEliminar({Model.IdAviso})"
-				})
-				break;
-
-			case Constantes.EN_REVISION_POR_DGAA:
-				<a href="@Url.Action("ObtenerVistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })" target="_blank" rel="noopener">
-					@await Component.InvokeAsync("Boton", new { texto = "Ver Aviso", tipo = "secundario" })
-				</a>
-				break;
-
+    @if (User.IsInRole(Constantes.COORDINADOR_DGAA))
+    {
+        <div class="aviso-tarjeta-acciones">
+            @if (Model.Estado == Constantes.ACTA_DE_CT_CREADA)
+            {
+                <button type="button" class="btn btn-outline-primary" onclick="mostrarFuncionPendienteAviso('Revisar acta')"><i class="bi bi-tools" aria-hidden="true"></i> Revisar acta · En construcción</button>
+            }
+            else
+            {
+            <a class="btn btn-outline-primary" href="@Url.Action("VistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })">Ver aviso</a>
+            <a class="btn btn-outline-secondary" href="@Url.Action("DescargarAviso", "Avisos", new { idAviso = Model.IdAviso })">Descargar aviso</a>
+            @if (!Model.Archivado && Model.Estado == Constantes.EN_REVISION_POR_DGAA)
+            {
+                <a class="btn btn-primary" href="@Url.Action("RevisarAviso", "Avisos", new { idAviso = Model.IdAviso })">Revisar aviso</a>
+            }
+            @if (Model.Estado == Constantes.DEVUELTO_POR_DGAA)
+            {
+                <a class="btn btn-outline-primary" href="@Url.Action("EditarRevision", "Avisos", new { idAviso = Model.IdAviso })">Editar comentarios de revisión</a>
+            }
+            }
+        </div>
+    }
+    else if (User.IsInRole(Constantes.COORDINADOR_EA))
+    {
+    <div class="aviso-tarjeta-acciones">
+        @if (Model.Estado == Constantes.CREADO || Model.Estado == Constantes.DEVUELTO_POR_DGAA || Model.Estado == Constantes.EN_REVISION_POR_DGAA)
+        {
+        <a class="btn btn-outline-primary" href="@Url.Action("VistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })">Ver aviso</a>
+        }
+        @if (!Model.Archivado && User.IsInRole(Constantes.COORDINADOR_EA) &&
+            (Model.Estado == Constantes.CREADO || Model.Estado == Constantes.DEVUELTO_POR_DGAA))
+        {
+            <a class="btn btn-primary" href="@Url.Action("EnviarARevision", "Avisos", new { idAviso = Model.IdAviso })">Enviar a revisión por DGAA</a>
+            <a class="btn btn-outline-secondary" href="@Url.Action("EditarAviso", "Avisos", new { idAviso = Model.IdAviso })">Editar aviso</a>
+        }
+        @if (!Model.Archivado && User.IsInRole(Constantes.COORDINADOR_DGAA) && Model.Estado == Constantes.EN_REVISION_POR_DGAA)
+        {
+            <a class="btn btn-primary" href="@Url.Action("RevisarAviso", "Avisos", new { idAviso = Model.IdAviso })">Revisar aviso</a>
+        }
+        @if (!Model.Archivado)
+        {
+        @switch (Model.Estado)
+        {
 			case Constantes.AVALADO_POR_DGAA:
 				@await Component.InvokeAsync("Boton", new
 				{
@@ -112,42 +122,9 @@
 					tipo = "terciario",
 					OnClick = $"abrirModalFirmar({Model.IdAviso})"
 				})
-				@await Component.InvokeAsync("Boton", new
-				{
-					texto = "Ver comentarios",
-					tipo = "secundario",
-					OnClick = $"abrirModalComentarios('{Model.Comentarios}')"
-				})
-				<a href="@Url.Action("ObtenerVistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })" target="_blank" rel="noopener">
+				<a href="@Url.Action("VistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })">
 					@await Component.InvokeAsync("Boton", new { texto = "Ver Aviso", tipo = "secundario" })
 				</a>
-				break;
-
-			case Constantes.DEVUELTO_POR_DGAA:
-				<a href="@Url.Action("EnviarARevision", "Avisos", new { Model.IdAviso })">
-					@await Component.InvokeAsync("Boton", new
-					{
-						texto = "Enviar a revisión por DGAA",
-						accion = "enviar",
-						tipo = "terciario",
-					})
-				</a>
-				@await Component.InvokeAsync("Boton", new
-				{
-					texto = "Ver comentarios",
-					tipo = "secundario",
-					OnClick = $"abrirModalComentarios('{Model.Comentarios}')"
-				})
-				<a href="@Url.Action("ObtenerVistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })" target="_blank" rel="noopener">
-					@await Component.InvokeAsync("Boton", new { texto = "Ver Aviso", tipo = "secundario" })
-				</a>
-                @await Component.InvokeAsync("Boton", new
-                {
-                    accion = "editar",
-                    fondo = false,
-                    ariaLabel = "Editar aviso",
-                    url = Url.Action("EditarAviso", "Avisos", new { idAviso = Model.IdAviso })
-                })
 				break;
 
 			case Constantes.FIRMADO:
@@ -165,12 +142,14 @@
 			case Constantes.PUBLICADO:
 				@await Component.InvokeAsync("Boton", new
 				{
-					texto = "Generar Acta CT",
+					texto = "Generar Acta CT · En construcción",
+                    OnClick = "mostrarFuncionPendienteAviso('Generar Acta CT')",
 					tipo = "terciario"
 				})
 				@await Component.InvokeAsync("Boton", new
 				{
-					texto = "Gestionar solicitantes",
+					texto = "Asociar Aspirante · En construcción",
+                    OnClick = "mostrarFuncionPendienteAviso('Asociar Aspirante')",
 					tipo = "terciario",
 					accion = "agregar"
 				})
@@ -181,7 +160,8 @@
 			case Constantes.ACTA_DE_CT_CREADA:
 				@await Component.InvokeAsync("Boton", new
 				{
-					texto = "Ver Acta",
+					texto = "Ver Acta · En construcción",
+                    OnClick = "mostrarFuncionPendienteAviso('Ver Acta')",
 					tipo = "secundario"
 				})
 				@await Component.InvokeAsync("Boton", new
@@ -197,6 +177,37 @@
 					OnClick = $"archivarAsync({Model.IdAviso}, {Model.Archivado.ToString().ToLower()})"
 				})
 				break;
-		}
-	</div>
+        }
+        }
+    </div>
+    }
+    @if (User.IsInRole(Constantes.COORDINADOR_EA) &&
+        (Model.Estado == Constantes.FIRMADO || Model.Estado == Constantes.PUBLICADO || Model.Estado == Constantes.ACTA_DE_CT_CREADA))
+    {
+        <div class="aviso-tarjeta-acciones">
+            <a class="btn btn-outline-primary" href="@Url.Action("DescargarAviso", "Avisos", new { idAviso = Model.IdAviso })"><i class="bi bi-download" aria-hidden="true"></i> Descargar PDF firmado</a>
+            @if (Uri.TryCreate(Model.UrlPublicacion, UriKind.Absolute, out var publicacion) && (publicacion.Scheme == "https" || publicacion.Scheme == "http"))
+            {
+                <a class="btn btn-outline-primary" href="@publicacion.AbsoluteUri" target="_blank" rel="noopener noreferrer">Ver publicación <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>
+            }
+        </div>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.Comentarios) &&
+        !(User.IsInRole(Constantes.COORDINADOR_DGAA) && Model.Estado == Constantes.ACTA_DE_CT_CREADA))
+    {
+        <div class="aviso-comentarios">
+            <button type="button" class="aviso-comentarios-boton" data-comentarios="@Model.Comentarios" data-folio="@Model.Folio" onclick="mostrarComentariosAviso(this)">
+                <i class="bi bi-chat-left-text" aria-hidden="true"></i>
+                <span>Ver comentarios</span><i class="bi bi-arrow-up-right" aria-hidden="true"></i>
+            </button>
+        </div>
+    }
+    @if (Model.Estado == Constantes.EN_REVISION_POR_DGAA && User.IsInRole(Constantes.COORDINADOR_EA))
+    {
+        <p class="text-muted mx-4 my-2">Pendiente de revisión por DGAA. La edición está bloqueada durante la revisión.</p>
+    }
+    @if (Model.Estado == Constantes.DEVUELTO_POR_DGAA && User.IsInRole(Constantes.COORDINADOR_EA))
+    {
+        <p class="text-muted mx-4 my-2">Revise los comentarios, edite el aviso y envíelo nuevamente a revisión.</p>
+    }
 </div>

@@ -1,0 +1,53 @@
+@using SGPla.Commons
+@model SGPla.Models.Aviso
+@{
+    var revisar = User.IsInRole(Constantes.COORDINADOR_DGAA);
+    var editarComentarios = ViewData["EditarComentarios"] is true;
+    ViewData["Title"] = editarComentarios ? "Editar comentarios de revisión" : revisar ? "Revisar aviso" : "Enviar a revisión por DGAA";
+}
+<div class="container py-4">
+    <h1 class="h3">@ViewData["Title"]</h1>
+    <p>Folio: <strong>@Model.Folio</strong> · @Model.IdEntidadAcademicaNavigation.Nombre</p>
+    <p>Estado actual: <strong>@Model.Estado</strong></p>
+    <p>Creado → En revisión por DGAA → Avalado o devuelto para corrección.</p>
+    @if (!string.IsNullOrWhiteSpace(Model.Comentarios))
+    {
+        <div class="alert alert-info"><strong>Últimos comentarios:</strong><p class="mb-0" style="white-space:pre-wrap">@Model.Comentarios</p></div>
+    }
+    <a class="btn btn-outline-primary mb-3" target="_blank" rel="noopener" href="@Url.Action("VistaPreviaAviso", new { idAviso = Model.IdAviso })">Ver aviso</a>
+    <a class="btn btn-outline-secondary mb-3" href="@Url.Action("DescargarAviso", new { idAviso = Model.IdAviso })">Descargar aviso</a>
+    <form method="post" action="@Url.Action(editarComentarios ? "GuardarComentariosRevision" : revisar ? "ConfirmarRevision" : "ConfirmarEnviarARevision")" id="formRevision">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="IdAviso" value="@Model.IdAviso" />
+        <div asp-validation-summary="All" class="text-danger" role="alert"></div>
+        <label for="Comentarios" class="form-label">@(revisar ? "Comentarios de la revisión" : "Comentarios para DGAA")</label>
+        <textarea id="Comentarios" name="Comentarios" required rows="5" class="form-control mb-3">@ViewData["ComentariosIngresados"]</textarea>
+        <p class="text-muted">@(editarComentarios ? "Los comentarios serán visibles para la entidad. El estado y la decisión de la revisión se conservarán." : revisar ? "Al devolver, indique las correcciones necesarias. La entidad verá estos comentarios." : "Al enviar, el aviso quedará pendiente de revisión y no podrá editarse hasta que DGAA lo devuelva.")</p>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-secondary" href="@Url.Action("Index")">Cancelar</a>
+            @if (editarComentarios)
+            {
+                <button type="submit" class="btn btn-primary">Guardar comentarios</button>
+            }
+            else if (revisar)
+            {
+                <button type="submit" name="Aprobado" value="false" class="btn btn-outline-danger">Devolver para corrección</button>
+                <button type="submit" name="Aprobado" value="true" class="btn btn-primary">Avalar aviso</button>
+            }
+            else
+            {
+                <button type="submit" class="btn btn-primary">Confirmar envío a DGAA</button>
+            }
+        </div>
+        <p id="estadoEnvio" role="status" class="mt-2"></p>
+    </form>
+</div>
+@section Scripts {
+    <script>
+        document.getElementById('formRevision').addEventListener('submit', function (event) {
+            if (this.dataset.enviando) { event.preventDefault(); return; }
+            this.dataset.enviando = 'true';
+            document.getElementById('estadoEnvio').textContent = 'Guardando cambio de estado…';
+        });
+    </script>
+}

@@ -1,23 +1,30 @@
-﻿@model SGPla.Models.Components.TabsModel
+@model SGPla.Models.Components.TabsModel
 
 <div class="tabs-container" id="@Model.Id">
 
-    <div class="tabs-header">
+    <div class="tabs-header" role="tablist" aria-label="Secciones">
 
         @for (int i = 0; i < Model.Tabs.Count; i++)
         {
             var tab = Model.Tabs[i];
 
             <button type="button"
-                    class="tab-button @(i == Model.TabActivaPorDefecto ? "active" : "")"
+                    id="@Model.Id-tab-@i" role="tab" aria-controls="@Model.Id-panel-@i"
+                    aria-selected="@(i == Model.TabActivaPorDefecto ? "true" : "false")"
+                    tabindex="@(i == Model.TabActivaPorDefecto ? "0" : "-1")"
+                    class="tab-button @tab.EstadoClase @(i == Model.TabActivaPorDefecto ? "active" : "")"
                     onclick="seleccionarTab('@Model.Id', @i)">
 
                 @if (!string.IsNullOrEmpty(tab.IconClass))
                 {
-                    <i class="@tab.IconClass"></i>
+                    <i class="@tab.IconClass" aria-hidden="true"></i>
                 }
 
                 <span>@tab.Titulo</span>
+                @if (tab.Cantidad.HasValue)
+                {
+                    <span class="tab-count">@tab.Cantidad</span>
+                }
 
             </button>
         }
@@ -30,7 +37,7 @@
         {
             var tab = Model.Tabs[i];
 
-            <div class="tab-content @(i == Model.TabActivaPorDefecto ? "active" : "")">
+            <div id="@Model.Id-panel-@i" role="tabpanel" aria-labelledby="@Model.Id-tab-@i" tabindex="0" class="tab-content @(i == Model.TabActivaPorDefecto ? "active" : "")">
 
                 @await Html.PartialAsync(
                     tab.PartialView,
@@ -43,4 +50,4 @@
     </div>
 
 </div>
-<script src="js/tabs.js"></script>
+<script src="~/js/tabs.js" asp-append-version="true"></script>

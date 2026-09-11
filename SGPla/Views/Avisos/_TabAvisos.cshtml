@@ -1,4 +1,4 @@
-﻿@using SGPla.Commons
+@using SGPla.Commons
 @model SGPla.Models.ViewModels.Avisos.TabAvisosViewModel
 @{
 	<div class="d-flex flex-column row-gap-2">
@@ -17,9 +17,14 @@
 					FechaCreacion = aviso.FechaCreacion,
 					Estado = aviso.Estado,
 					Comentarios = aviso.Comentarios,
+                    UrlPublicacion = aviso.UrlPublicacion,
 					Archivado = aviso.Archivado
 				});
 			}
 		}
+		@if (Model.Lista.Count == 0)
+        {
+            <p class="text-muted p-3" role="status">No hay avisos en este estado con los filtros seleccionados.</p>
+        }
 	</div>
 }
