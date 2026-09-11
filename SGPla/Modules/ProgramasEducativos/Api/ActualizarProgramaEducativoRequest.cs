@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Http;
+
 namespace SGPla.Modules.ProgramasEducativos.Api;
 
 public sealed class ActualizarProgramaEducativoRequest
@@ -7,4 +9,6 @@ public sealed class ActualizarProgramaEducativoRequest
     public string? Campus { get; set; }
 
     public int? IdEntidadAcademica { get; set; }
+
+    public List<PlanEstudioRequest> PlanesEstudio { get; set; } = [];
 }

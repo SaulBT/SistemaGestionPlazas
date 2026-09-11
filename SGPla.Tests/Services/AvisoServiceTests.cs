@@ -1,4 +1,5 @@
 using Moq;
+using Microsoft.Extensions.Logging.Abstractions;
 using SGPla.Commons;
 using SGPla.Models;
 using SGPla.Models.DTOs.Aviso;
@@ -56,7 +57,8 @@ namespace SGPla.Tests.Services
                 _periodoEscolarRepositoryMock.Object,
                 _entidadAcademicaRepositoryMock.Object,
                 _articuloRepositoryMock.Object,
-                _plantillaServiceMock.Object
+                _plantillaServiceMock.Object,
+                NullLogger<AvisoService>.Instance
             );
         }
 
@@ -726,6 +728,39 @@ namespace SGPla.Tests.Services
 
             Assert.IsType<ValidacionExcepction>(ex);
             Assert.Contains("Llena la tabla de Horarios", ex!.Message);
+        }
+
+        [Theory]
+        [InlineData(Constantes.CREADO, 10)]
+        [InlineData(Constantes.EN_REVISION_POR_DGAA, 10)]
+        [InlineData(Constantes.FIRMADO, 20)]
+        [InlineData(Constantes.PUBLICADO, 20)]
+        public void ObtenerIdArchivoVigente_SeleccionaElArchivoCorrespondienteAlEstado(string estado, int idEsperado)
+        {
+            var aviso = new DatosAvisoDTO
+            {
+                Estado = estado,
+                IdArchivoOriginal = 10,
+                IdArchivoFirmado = 20
+            };
+
+            var idArchivo = _avisoService.ObtenerIdArchivoVigente(aviso);
+
+            Assert.Equal(idEsperado, idArchivo);
+        }
+
+        [Fact]
+        public void ObtenerIdArchivoVigente_SinArchivoVigente_LanzaValidacion()
+        {
+            var aviso = new DatosAvisoDTO
+            {
+                Estado = Constantes.FIRMADO,
+                IdArchivoOriginal = 10
+            };
+
+            var ex = Record.Exception(() => _avisoService.ObtenerIdArchivoVigente(aviso));
+
+            Assert.IsType<ValidacionExcepction>(ex);
         }
 
         private static EditarAvisoDTO CrearEdicionValida() => new()

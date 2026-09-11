@@ -3,6 +3,7 @@
 .boton-primario {
     display: inline-flex;
     vertical-align: middle;
+    text-decoration: none;
     height: 30px;
     width: fit-content;
     align-items: center;

@@ -34,7 +34,11 @@ public sealed class SolicitudAperturaRepository : ISolicitudAperturaRepository
     {
         return await _context.ExperienciaEducativa
             .AsNoTracking()
-            .Where(experiencia => experiencia.IdExperienciaEducativa == idExperienciaEducativa)
+            .Where(experiencia => experiencia.IdExperienciaEducativa == idExperienciaEducativa
+                && experiencia.IdPlanEstudiosNavigation.IdProgramaEducativoNavigation
+                    .FechaEliminacion == null
+                && experiencia.IdPlanEstudiosNavigation.IdProgramaEducativoNavigation
+                    .IdEntidadAcademicaNavigation.FechaEliminacion == null)
             .Select(experiencia => new ExperienciaEducativaContexto(
                 experiencia.IdExperienciaEducativa,
                 experiencia.Nombre,

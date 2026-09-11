@@ -55,10 +55,10 @@ public sealed class ConsultarProgramasEducativosService : IConsultarProgramasEdu
                 pagina.Total));
     }
 
-    private static ProgramaEducativoResponse Mapear(
+    private static ProgramaEducativoListaResponse Mapear(
         ProgramaEducativoRegistro registro)
     {
-        return new ProgramaEducativoResponse(
+        return new ProgramaEducativoListaResponse(
             registro.IdProgramaEducativo,
             registro.Nombre,
             registro.Campus,
@@ -66,6 +66,11 @@ public sealed class ConsultarProgramasEducativosService : IConsultarProgramasEdu
             registro.NombreEntidadAcademica,
             registro.IdAreaAcademica,
             registro.NombreAreaAcademica,
-            registro.Region);
+            registro.Region,
+            (registro.PlanesEstudio ?? Array.Empty<PlanEstudioResumenRegistro>())
+                .Select(plan => new PlanEstudioResumenResponse(
+                    plan.IdPlanEstudios,
+                    plan.Nombre))
+                .ToList());
     }
 }

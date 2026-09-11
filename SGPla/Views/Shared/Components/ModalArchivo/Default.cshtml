@@ -15,8 +15,11 @@
                 <span id="fileName-@Model.Id" class="modal-file-name"></span>
                 <button type="button"
                         class="modal-file-x"
+                        aria-label="Quitar archivo seleccionado"
+                        data-bs-toggle="tooltip"
+                        data-bs-title="Quitar archivo seleccionado"
                         onclick="quitarArchivo('@Model.Id')">
-                    ×
+                    <span aria-hidden="true">×</span>
                 </button>
             </div>
 

@@ -134,7 +134,7 @@
 					tipo = "publicar",
 					OnClick = $"abrirModalPublicar({Model.IdAviso})"
 				})
-				<a href="@Url.Action("VistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })">
+				<a href="@Url.Action("ObtenerVistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })" target="_blank" rel="noopener">
 					@await Component.InvokeAsync("Boton", new { texto = "Ver Aviso", tipo = "secundario" })
 				</a>
 				break;
@@ -173,6 +173,7 @@
 				{
 					accion = "archivar",
 					fondo = false,
+					ariaLabel = Model.Archivado ? "Desarchivar aviso" : "Archivar aviso",
 					OnClick = $"archivarAsync({Model.IdAviso}, {Model.Archivado.ToString().ToLower()})"
 				})
 				break;

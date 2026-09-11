@@ -10,8 +10,11 @@
 
             <button type="button"
                     class="toast-close"
+                    aria-label="Cerrar notificación"
+                    data-bs-toggle="tooltip"
+                    data-bs-title="Cerrar notificación"
                     onclick="cerrarToast('@Model.Id')">
-                ×
+                <span aria-hidden="true">×</span>
             </button>
         </div>
 

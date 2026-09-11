@@ -12,6 +12,7 @@ namespace SGPla.Services.Interfaces
         Task<(List<ListaAvisosDTO> items, int total)> ObtenerTodosAvisosAsync(FiltroAvisosDTO filtroDTO);
         Task<DatosAvisoDTO> ObtenerAvisoPorIDAsync(int idAviso);
         Task EditarComentariosRevisionAsync(int idAviso, string comentarios);
+        int ObtenerIdArchivoVigente(DatosAvisoDTO aviso);
         Task ArchivarAvisoAsync(int idAviso);
         Task DesarchivarAvisoAsync(int idAviso);
         Task<bool> VerificarEstadoAvisoAsync(int idAviso, string estado);
