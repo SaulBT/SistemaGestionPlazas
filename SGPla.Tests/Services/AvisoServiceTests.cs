@@ -60,6 +60,53 @@ namespace SGPla.Tests.Services
             );
         }
 
+        [Theory]
+        [InlineData(true, Constantes.AVALADO_POR_DGAA)]
+        [InlineData(false, Constantes.DEVUELTO_POR_DGAA)]
+        public async Task RevisarAviso_GuardaDecisionYComentarios(bool aprobado, string estado)
+        {
+            await _avisoService.RevisarAvisoAsync(new RevisionDTO
+                { IdAviso = 15, Aprobado = aprobado, Comentarios = "  Revisado  " });
+            _avisoRepositoryMock.Verify(r => r.CambiarEstadoRevisionAsync(15, estado, "Revisado"), Times.Once);
+        }
+
+        [Theory]
+        [InlineData("")]
+        [InlineData("   ")]
+        public async Task RevisarAviso_SinComentarios_NoModificaEstado(string comentarios)
+        {
+            await Assert.ThrowsAsync<ValidacionExcepction>(() => _avisoService.RevisarAvisoAsync(
+                new RevisionDTO { IdAviso = 15, Comentarios = comentarios }));
+            _avisoRepositoryMock.Verify(r => r.CambiarEstadoRevisionAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task EditarComentariosRevision_NoCambiaEstado()
+        {
+            await _avisoService.EditarComentariosRevisionAsync(15, "  Corregido  ");
+            _avisoRepositoryMock.Verify(r => r.EditarComentariosRevisionAsync(15, "Corregido"), Times.Once);
+            _avisoRepositoryMock.Verify(r => r.CambiarEstadoRevisionAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Theory]
+        [InlineData(0, "Comentario")]
+        [InlineData(15, "   ")]
+        public async Task EditarComentariosRevision_RechazaDatosInvalidos(int id, string comentarios)
+        {
+            await Assert.ThrowsAsync<ValidacionExcepction>(() => _avisoService.EditarComentariosRevisionAsync(id, comentarios));
+            _avisoRepositoryMock.Verify(r => r.EditarComentariosRevisionAsync(It.IsAny<int>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Theory]
+        [InlineData("javascript:alert(1)")]
+        [InlineData("ftp://servidor/aviso.pdf")]
+        [InlineData("no es una URL")]
+        public async Task PublicarAviso_RechazaDireccionInvalida(string url)
+        {
+            await Assert.ThrowsAsync<ValidacionExcepction>(() => _avisoService.PublicarAvisoAsync(15, url));
+            _avisoRepositoryMock.Verify(r => r.PublicarAsync(It.IsAny<int>(), It.IsAny<string>()), Times.Never);
+        }
+
         // CP-01
         [Fact]
         public async Task CrearAviso_DatosCompletos_RegistraAvisoOfertasYHorarios()
