@@ -735,6 +735,9 @@ namespace SGPla.Tests.Services
         [InlineData(Constantes.EN_REVISION_POR_DGAA, 10)]
         [InlineData(Constantes.FIRMADO, 20)]
         [InlineData(Constantes.PUBLICADO, 20)]
+        [InlineData(Constantes.ACTA_DE_CT_CREADA, 20)]
+        [InlineData(Constantes.DEVUELTO_POR_DGAA, 10)]
+        [InlineData(Constantes.AVALADO_POR_DGAA, 10)]
         public void ObtenerIdArchivoVigente_SeleccionaElArchivoCorrespondienteAlEstado(string estado, int idEsperado)
         {
             var aviso = new DatosAvisoDTO

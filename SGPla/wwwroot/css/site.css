@@ -307,6 +307,23 @@ body {
         color: white;
     }
 
+    .menu-item.menu-item-disabled,
+    .menu-item.menu-item-disabled:hover {
+        opacity: 0.6;
+        cursor: not-allowed;
+        background: transparent;
+        color: white;
+        transform: none;
+    }
+
+    .menu-item.menu-item-disabled {
+        flex-wrap: wrap;
+    }
+
+    .menu-item.menu-item-disabled small {
+        font-size: 0.75rem;
+    }
+
 /* ========================================== */
 /* CONTENIDO PRINCIPAL */
 /* ========================================== */

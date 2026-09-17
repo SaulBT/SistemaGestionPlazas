@@ -12,3 +12,6 @@ SGPla.Tests/
 *.user
 *.suo
 *.swp
+
+# Configuración privada del entorno de pruebas
+.local/sgpla-pruebas/
