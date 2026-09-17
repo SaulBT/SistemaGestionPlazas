@@ -9,6 +9,8 @@ public partial class EntidadAcademica
 
     public int IdAreaAcademica { get; set; }
 
+    public int? IdRegion { get; set; }
+
     public string? Clave { get; set; }
 
     public string Nombre { get; set; } = null!;
@@ -34,6 +36,8 @@ public partial class EntidadAcademica
     public virtual ICollection<CoordinadorEa> CoordinadorEa { get; set; } = new List<CoordinadorEa>();
 
     public virtual AreaAcademica IdAreaAcademicaNavigation { get; set; } = null!;
+
+    public virtual Region? RegionNavigation { get; set; }
 
     public virtual ICollection<IntegranteCt> IntegranteCt { get; set; } = new List<IntegranteCt>();
 

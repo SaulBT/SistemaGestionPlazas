@@ -12,6 +12,7 @@ using SGPla.Models.ViewModels.ProgramacionesAcademicas;
 using SGPla.Services.Interfaces;
 using System.Text.Json;
 using static SGPla.Services.Implementations.ClavesEstado.ProgramacionAcademica;
+using ProgramacionClaves = SGPla.Services.Implementations.ClavesEstado.ProgramacionAcademica;
 
 namespace SGPla.Controllers;
 
@@ -218,7 +219,7 @@ public class ProgramacionesAcademicasController : Controller
             var entidadSeleccionada = (await _programacionAcademicaService.ObtenerOpcionesEntidadAcademicaAsync(modelo.Region))
                 .FirstOrDefault(e => e.IdEntidadAcademica == modelo.IdEntidadAcademica!.Value);
 
-            _estado.Guardar(Region, modelo.Region);
+            _estado.Guardar(ProgramacionClaves.Region, modelo.Region);
             _estado.Guardar(IdPeriodo, modelo.IdPeriodo!.Value);
             _estado.Guardar(NombrePeriodo, periodoSeleccionado?.PeriodoMostrar ?? "");
             _estado.Guardar(IdEntidadAcademica, modelo.IdEntidadAcademica!.Value);
@@ -237,7 +238,7 @@ public class ProgramacionesAcademicasController : Controller
     [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
     public async Task<IActionResult> CargarProgramacionAcademicaPaso2()
     {
-        var region = _estado.Obtener<string>(Region);
+        var region = _estado.Obtener<string>(ProgramacionClaves.Region);
         var idPeriodo = _estado.Obtener<int?>(IdPeriodo);
         var idEntidadAcademica = _estado.Obtener<int?>(IdEntidadAcademica);
 
@@ -634,7 +635,7 @@ public class ProgramacionesAcademicasController : Controller
 
         var vm = await ObtenerViewModelDesdeSesion(filtroOferta, filtroCarga);
 
-        vm.Region = _estado.Obtener<string>(Region);
+        vm.Region = _estado.Obtener<string>(ProgramacionClaves.Region);
         vm.IdEntidadAcademica = _estado.Obtener<int?>(IdEntidadAcademica)!.Value;
         vm.NombrePeriodo = _estado.Obtener<string>(NombrePeriodo);
         vm.NombreEntidadAcademica = _estado.Obtener<string>(NombreEntidadAcademica);

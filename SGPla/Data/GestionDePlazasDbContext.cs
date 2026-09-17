@@ -59,6 +59,8 @@ public partial class GestionDePlazasDbContext : DbContext
 
     public virtual DbSet<ProgramaEducativo> ProgramaEducativo { get; set; }
 
+    public virtual DbSet<Region> Region { get; set; }
+
     public virtual DbSet<Solicitud> Solicitud { get; set; }
 
     public virtual DbSet<Modalidad> Modalidad { get; set; }
@@ -457,6 +459,7 @@ public partial class GestionDePlazasDbContext : DbContext
                 .IsUnicode(false)
                 .HasColumnName("extension");
             entity.Property(e => e.IdAreaAcademica).HasColumnName("idAreaAcademica");
+            entity.Property(e => e.IdRegion).HasColumnName("idRegion");
             entity.Property(e => e.Municipio)
                 .HasMaxLength(100)
                 .IsUnicode(false)
@@ -481,6 +484,24 @@ public partial class GestionDePlazasDbContext : DbContext
                 .HasForeignKey(d => d.IdAreaAcademica)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_EntidadAcademica_AreaAcademica");
+
+            entity.HasOne(d => d.RegionNavigation).WithMany(p => p.EntidadAcademica)
+                .HasForeignKey(d => d.IdRegion)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_EntidadAcademica_Region");
+        });
+
+        modelBuilder.Entity<Region>(entity =>
+        {
+            entity.HasKey(e => e.IdRegion);
+
+            entity.Property(e => e.IdRegion).HasColumnName("id");
+            entity.Property(e => e.Nombre)
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .HasColumnName("nombre");
+
+            entity.ToTable("Region");
         });
 
         modelBuilder.Entity<ExperienciaEducativa>(entity =>
@@ -796,6 +817,10 @@ public partial class GestionDePlazasDbContext : DbContext
             entity.HasIndex(e => e.IdEntidadAcademica, "IX_ProgramaEducativo_idEntidadAcademica");
 
             entity.Property(e => e.IdProgramaEducativo).HasColumnName("idProgramaEducativo");
+            entity.Property(e => e.Codigo)
+                .HasMaxLength(5)
+                .IsUnicode(false)
+                .HasColumnName("codigo");
             entity.Property(e => e.Campus)
                 .HasMaxLength(100)
                 .IsUnicode(false)

@@ -44,7 +44,8 @@ public class EntidadAcademicaServiceTests
         Assert.Equal(7, idEntidadAcademica);
         Assert.NotNull(entidadCreada);
         Assert.Equal(dto.IdAreaAcademica, entidadCreada!.IdAreaAcademica);
-        Assert.Equal($"{dto.Clave}-{dto.Nombre}", entidadCreada.Nombre);
+        Assert.Equal(dto.Clave, entidadCreada!.Clave);
+        Assert.Equal(dto.Nombre, entidadCreada.Nombre);
         Assert.Equal(dto.CalleNumero, entidadCreada.CalleNumero);
         Assert.Equal(dto.Colonia, entidadCreada.Colonia);
         Assert.Equal(dto.Cp, entidadCreada.Cp);
@@ -112,7 +113,7 @@ public class EntidadAcademicaServiceTests
             {
                 Assert.Equal(12, primerDto.IdEntidadAcademica);
                 Assert.Equal(1, primerDto.IdAreaAcademica);
-                Assert.Equal("11304-Facultad de Estadística e Informática", primerDto.Nombre);
+                Assert.Equal("Facultad de Estadística e Informática", primerDto.Nombre);
                 Assert.Contains("Av. Xalapa Esq. Manuel Ávila Camacho S/N", primerDto.Domicilio);
                 Assert.Contains("Obrero Campesina", primerDto.Domicilio);
                 Assert.Contains("91020", primerDto.Domicilio);
@@ -126,7 +127,7 @@ public class EntidadAcademicaServiceTests
             {
                 Assert.Equal(97, segundoDto.IdEntidadAcademica);
                 Assert.Equal(2, segundoDto.IdAreaAcademica);
-                Assert.Equal("21052-Facultad de Ingeniería Mecánica y Ciencias Navales", segundoDto.Nombre);
+                Assert.Equal("Facultad de Ingeniería Mecánica y Ciencias Navales", segundoDto.Nombre);
                 Assert.Contains("Bv. Adolfo Ruíz Cortines 455", segundoDto.Domicilio);
                 Assert.Contains("Costa Verde", segundoDto.Domicilio);
                 Assert.Contains("94294", segundoDto.Domicilio);
@@ -182,7 +183,7 @@ public class EntidadAcademicaServiceTests
         var dto = Assert.Single(resultado);
         Assert.Equal(12, dto.IdEntidadAcademica);
         Assert.Equal(1, dto.IdAreaAcademica);
-        Assert.Equal("11304-Facultad de Estadística e Informática", dto.Nombre);
+        Assert.Equal("Facultad de Estadística e Informática", dto.Nombre);
         Assert.Contains("Av. Xalapa Esq. Manuel Ávila Camacho S/N", dto.Domicilio);
         Assert.Contains("Obrero Campesina", dto.Domicilio);
         Assert.Contains("91020", dto.Domicilio);
@@ -266,7 +267,8 @@ public class EntidadAcademicaServiceTests
         Assert.NotNull(entidadActualizada);
         Assert.Equal(dto.IdEntidadAcademica, entidadActualizada!.IdEntidadAcademica);
         Assert.Equal(dto.IdAreaAcademica, entidadActualizada.IdAreaAcademica);
-        Assert.Equal($"{dto.Clave}-{dto.Nombre}", entidadActualizada.Nombre);
+        Assert.Equal(dto.Clave, entidadActualizada!.Clave);
+        Assert.Equal(dto.Nombre, entidadActualizada.Nombre);
         Assert.Equal(dto.CalleNumero, entidadActualizada.CalleNumero);
         Assert.Equal(dto.Colonia, entidadActualizada.Colonia);
         Assert.Equal(dto.Cp, entidadActualizada.Cp);

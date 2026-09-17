@@ -114,20 +114,23 @@ namespace SGPla.Repositories.Implementations
 
         public async Task<bool> ExistePorClaveAsync(string clave)
         {
-            string prefijoClave = $"{clave.Trim()}-";
+            clave = clave.Trim();
+            string prefijoClave = $"{clave}-";
 
             return await _context.EntidadAcademica
-                .AnyAsync(e => e.Nombre != null && e.Nombre.StartsWith(prefijoClave));
+                .AnyAsync(e => e.Clave == clave
+                    || (e.Clave == null && e.Nombre != null && e.Nombre.StartsWith(prefijoClave)));
         }
 
         public async Task<bool> ExistePorClaveAsync(string clave, int idEntidadAcademica)
         {
-            string prefijoClave = $"{clave.Trim()}-";
+            clave = clave.Trim();
+            string prefijoClave = $"{clave}-";
 
             return await _context.EntidadAcademica
                 .AnyAsync(e => e.IdEntidadAcademica != idEntidadAcademica
-                    && e.Nombre != null
-                    && e.Nombre.StartsWith(prefijoClave));
+                    && (e.Clave == clave
+                        || (e.Clave == null && e.Nombre != null && e.Nombre.StartsWith(prefijoClave))));
         }
 
         public async Task<EntidadAcademica> CrearAsync(EntidadAcademica entidadAcademica)

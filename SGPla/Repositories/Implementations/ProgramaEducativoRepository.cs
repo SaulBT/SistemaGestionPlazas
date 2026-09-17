@@ -25,6 +25,7 @@ namespace SGPla.Repositories.Implementations
                 return null;
 
             actualizado.Nombre = programaEducativo.Nombre;
+            actualizado.Codigo = programaEducativo.Codigo;
             actualizado.Campus = programaEducativo.Campus;
             actualizado.IdEntidadAcademica = programaEducativo.IdEntidadAcademica;
             await _context.SaveChangesAsync();
@@ -41,14 +42,16 @@ namespace SGPla.Repositories.Implementations
 
         public async Task<ProgramaEducativo?> ExisteAsync(ProgramaEducativo programaEducativo)
         {
-            string clave = programaEducativo.Nombre.Split('-', 2)[0].Trim();
+            string clave = string.IsNullOrWhiteSpace(programaEducativo.Codigo)
+                ? programaEducativo.Nombre.Split('-', 2)[0].Trim()
+                : programaEducativo.Codigo.Trim();
 
             string prefijoClave = $"{clave}-";
 
             return await _context.ProgramaEducativo
                 .FirstOrDefaultAsync(a =>
-                    a.Nombre != null &&
-                    a.Nombre.StartsWith(prefijoClave) 
+                    (a.Codigo != null && a.Codigo == clave)
+                    || (a.Codigo == null && a.Nombre != null && a.Nombre.StartsWith(prefijoClave))
                 );
         }
 
@@ -149,7 +152,7 @@ namespace SGPla.Repositories.Implementations
                 .ToListAsync();
 
             return programasBd
-                .Where(p => claves.Contains(ObtenerClavePrograma(p.Nombre)))
+                .Where(p => claves.Contains(ObtenerClavePrograma(p)))
                 .Select(p => p.Nombre)
                 .ToList();
         }
@@ -166,10 +169,18 @@ namespace SGPla.Repositories.Implementations
                 .ToListAsync();
 
             return programasBd
-                .Where(p => codigosArchivo.Contains(ObtenerClavePrograma(p.Nombre)))
+                .Where(p => codigosArchivo.Contains(ObtenerClavePrograma(p)))
                 .ToDictionary(
-                    p => ObtenerClavePrograma(p.Nombre),
+                    p => ObtenerClavePrograma(p),
                     p => p.IdProgramaEducativo);
+        }
+
+        private static string ObtenerClavePrograma(ProgramaEducativo programa)
+        {
+            if (!string.IsNullOrWhiteSpace(programa.Codigo))
+                return programa.Codigo.Trim();
+
+            return ObtenerClavePrograma(programa.Nombre);
         }
 
         private static string ObtenerClavePrograma(string nombre)

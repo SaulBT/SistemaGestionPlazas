@@ -34,11 +34,12 @@ namespace SGPla.Services.Implementations
         {
             await _entidadAcademicaValidator.ValidarCreacionAsync(dto);
 
-            string nombre = $"{dto.Clave}-{dto.Nombre}";
             var entidad = new EntidadAcademica
             {
                 IdAreaAcademica = dto.IdAreaAcademica.Value,
-                Nombre = nombre,
+                IdRegion = ObtenerIdRegion(dto.Region),
+                Clave = dto.Clave.Trim(),
+                Nombre = dto.Nombre.Trim(),
                 CalleNumero = dto.CalleNumero,
                 Colonia = dto.Colonia,
                 Cp = dto.Cp,
@@ -56,12 +57,13 @@ namespace SGPla.Services.Implementations
         {
             await _entidadAcademicaValidator.ValidarEdicionAsync(dto);
 
-            string nombre = $"{dto.Clave}-{dto.Nombre}";
             var entidad = new EntidadAcademica
             {
                 IdEntidadAcademica = dto.IdEntidadAcademica,
                 IdAreaAcademica = dto.IdAreaAcademica,
-                Nombre = nombre,
+                IdRegion = ObtenerIdRegion(dto.Region),
+                Clave = dto.Clave.Trim(),
+                Nombre = dto.Nombre.Trim(),
                 CalleNumero = dto.CalleNumero,
                 Colonia = dto.Colonia,
                 Cp = dto.Cp,
@@ -123,10 +125,28 @@ namespace SGPla.Services.Implementations
 
         }
 
+        private static int? ObtenerIdRegion(string? region)
+        {
+            if (string.IsNullOrWhiteSpace(region))
+                return null;
+
+            var valor = region.Trim();
+            var separador = valor.IndexOf('-');
+            var codigo = separador > 0 ? valor[..separador] : valor;
+
+            if (int.TryParse(codigo, out var id) && id > 0)
+                return id;
+
+            var indice = SGPla.Commons.Constantes.REGIONES
+                .Select((nombre, posicion) => new { nombre, posicion })
+                .FirstOrDefault(item => item.nombre.EndsWith(valor, StringComparison.OrdinalIgnoreCase));
+
+            return indice is null ? null : indice.posicion + 1;
+        }
+
         private DatosEntidadAcademicaDTO mapearDto(EntidadAcademica entidad)
         {
-            var clave = entidad.Nombre[..5];
-            var nombre = entidad.Nombre[6..];
+            var (clave, nombre) = SepararClaveYNombre(entidad.Clave, entidad.Nombre);
 
             return new DatosEntidadAcademicaDTO
             {
@@ -145,8 +165,33 @@ namespace SGPla.Services.Implementations
             };
         }
 
+        private static (string Clave, string Nombre) SepararClaveYNombre(string? clave, string nombre)
+        {
+            var nombreLimpio = nombre.Trim();
+            var claveLimpia = clave?.Trim() ?? string.Empty;
+
+            if (!string.IsNullOrWhiteSpace(claveLimpia))
+            {
+                if (nombreLimpio.StartsWith(claveLimpia + "-", StringComparison.Ordinal))
+                    return (claveLimpia, nombreLimpio[(claveLimpia.Length + 1)..].Trim());
+
+                return (claveLimpia, nombreLimpio);
+            }
+
+            var separador = nombreLimpio.IndexOf('-');
+            if (separador > 0 && separador + 1 < nombreLimpio.Length)
+            {
+                var posibleClave = nombreLimpio[..separador].Trim();
+                if (posibleClave.Length == 5 && posibleClave.All(char.IsDigit))
+                    return (posibleClave, nombreLimpio[(separador + 1)..].Trim());
+            }
+
+            return (string.Empty, nombreLimpio);
+        }
+
         private ListaEntidadAcademicaDTO mapearLista(EntidadAcademica entidad)
         {
+            var (_, nombre) = SepararClaveYNombre(entidad.Clave, entidad.Nombre);
             string domicilio = $"{entidad.CalleNumero} Col. {entidad.Colonia} C.P. {entidad.Cp} {entidad.Municipio}";
             string telefono = $"Teléfono: {entidad.Telefono} Ext: {entidad.Extension}";
 
@@ -154,7 +199,7 @@ namespace SGPla.Services.Implementations
             {
                 IdEntidadAcademica = entidad.IdEntidadAcademica,
                 IdAreaAcademica = entidad.IdAreaAcademica,
-                Nombre = entidad.Nombre,
+                Nombre = nombre,
                 Domicilio = domicilio,
                 Telefono = telefono,
                 NombreAreaAcademica = entidad.IdAreaAcademicaNavigation.Nombre,

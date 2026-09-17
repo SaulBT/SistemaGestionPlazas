@@ -71,6 +71,12 @@ namespace SGPla.Validations.Implementations
             var programaEducativo = new ProgramaEducativo
             {
                 IdProgramaEducativo = programaEducativoDTO is EditarProgramaEducativoDTO editarProgramaEducativoDTO ? editarProgramaEducativoDTO.IdProgramaEducativo : 0,
+                // Preserve the legacy null value when callers have not supplied
+                // a code; this keeps repository equality/mocks compatible while
+                // allowing MVC to provide the normalized code explicitly.
+                Codigo = string.IsNullOrWhiteSpace(programaEducativoDTO.Codigo)
+                    ? null
+                    : programaEducativoDTO.Codigo.Trim(),
                 Nombre = programaEducativoDTO.Nombre,
                 IdEntidadAcademica = programaEducativoDTO.IdEntidadAcademica
             };
@@ -97,6 +103,13 @@ namespace SGPla.Validations.Implementations
 
             if (string.IsNullOrEmpty(programaEducativoDTO.Nombre))
                 throw new ArgumentException("El nombre del programa educativo es obligatorio.");
+
+            if (!string.IsNullOrWhiteSpace(programaEducativoDTO.Codigo)
+                && (programaEducativoDTO.Codigo.Trim().Length != 5
+                    || !programaEducativoDTO.Codigo.Trim().All(char.IsDigit)))
+            {
+                throw new ArgumentException("El código debe contener exactamente 5 dígitos.");
+            }
 
             if (programaEducativoDTO.Nombre.Length > 100)
                 throw new ArgumentException("El nombre no debe ser superior a 100 caracteres.");

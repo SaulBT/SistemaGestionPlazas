@@ -297,7 +297,8 @@ namespace SGPla.Controllers
 
             var dto = new CrearProgramaEducativoDTO
             {
-                Nombre = model.Clave+ "-" + model.Nombre,
+                Codigo = model.Clave,
+                Nombre = model.Nombre,
                 Campus = model.Campus,
                 IdEntidadAcademica = model.IdEntidadAcademica!.Value,
             };
@@ -330,7 +331,8 @@ namespace SGPla.Controllers
             var dto = new EditarProgramaEducativoDTO
             {
                 IdProgramaEducativo = model.IdProgramaEducativo,
-                Nombre = model.Clave + "-" + model.Nombre,
+                Codigo = model.Clave,
+                Nombre = model.Nombre,
                 Campus = model.Campus,
                 IdEntidadAcademica = model.IdEntidadAcademica!.Value,
             };
@@ -381,15 +383,17 @@ namespace SGPla.Controllers
         {
             var programaEducativo = await _programaEducativoService.ObtenerPorIdAsync(id);
 
-            string[] identificadores = programaEducativo.Nombre.Split('-', 2);
-
-            string clave = "";
+            string clave = programaEducativo.Codigo;
             string nombre = programaEducativo.Nombre;
 
-            if (identificadores.Length > 1)
+            if (string.IsNullOrWhiteSpace(clave))
             {
-                clave = identificadores[0];
-                nombre = identificadores[1];
+                var identificador = programaEducativo.Nombre.Split('-', 2);
+                if (identificador.Length > 1)
+                {
+                    clave = identificador[0].Trim();
+                    nombre = identificador[1].Trim();
+                }
             }
 
             var model = new CrearProgramaEducativoViewModel
