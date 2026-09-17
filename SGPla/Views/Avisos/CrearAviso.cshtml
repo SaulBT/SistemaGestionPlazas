@@ -42,16 +42,16 @@
 
                     @await Component.InvokeAsync("DatePicker", new DatePickerModel
                     {
-                        Label = "Fecha a ocupar vacantes:",
-                        Name = "FechaVacantes",
-                        Value = Model.FechaVacantes,
+                        Label = "Fecha de publicación:",
+                        Name = "FechaPublicacion",
+                        Value = Model.FechaPublicacion,
                         Flexible = true
                     })
                     @await Component.InvokeAsync("DatePicker", new DatePickerModel
                     {
-                        Label = "Fecha de publicación:",
-                        Name = "FechaPublicacion",
-                        Value = Model.FechaPublicacion,
+                        Label = "Fecha a ocupar vacantes:",
+                        Name = "FechaVacantes",
+                        Value = Model.FechaVacantes,
                         Flexible = true
                     })
                 </div>
