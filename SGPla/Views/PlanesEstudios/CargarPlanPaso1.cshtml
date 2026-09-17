@@ -2,7 +2,6 @@
 
 @{
     ViewData["Title"] = "Cargar Plan de Estudios";
-    ViewBag.RegresarUrl = Url.Action("Index", "PlanesEstudios");
 }
 
 @await Component.InvokeAsync("Stepper", new StepperModel
@@ -12,7 +11,7 @@
     Paso2Texto = "Visualización de Experiencias Educativas"
 })
 
-<form id="form" method="post" action="@Url.Action("ValidarPaso1", "PlanesEstudios")" enctype="multipart/form-data">
+<form id="form" class="formulario-con-barra-acciones" method="post" action="@Url.Action("ValidarPaso1", "PlanesEstudios")" enctype="multipart/form-data">
     <div class="d-flex flex-column gap-3">
         @await Component.InvokeAsync("SelectField", new SelectFieldModel
         {
@@ -93,7 +92,7 @@
     </div>
 
     <!-- BOTONES -->
-    <div style="display:flex; justify-content:flex-end; gap:var(--button-gap)">
+    <div class="barra-acciones-fija">
         <a href="@Url.Action("Index", "PlanesEstudios")" style="display: inline-block; text-decoration: none;">
             @await Component.InvokeAsync("Boton", new
             {

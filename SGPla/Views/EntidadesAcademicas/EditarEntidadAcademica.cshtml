@@ -3,11 +3,10 @@
 @model CrearEntidadAcademicaViewModel
 @{
     ViewData["Title"] = "Editar Entidad Académica";
-    ViewBag.RegresarUrl = Url.Action("Index", "EntidadesAcademicas");
 }
 
 <!-- Campos -->
-<form method="post" action="@Url.Action("EditarEntidadAcademica", "EntidadesAcademicas")">
+<form class="formulario-con-barra-acciones" method="post" action="@Url.Action("EditarEntidadAcademica", "EntidadesAcademicas")">
     @Html.AntiForgeryToken()
 
     <input type="hidden" name="IdEntidadAcademica" value="@Model.IdEntidadAcademica" />
@@ -153,7 +152,7 @@
     </div>
 
     <!-- Botones -->
-    <div style="display:flex; justify-content:flex-end; gap:var(--button-gap)">
+    <div class="barra-acciones-fija">
         <a href="@Url.Action("Index", "EntidadesAcademicas")" style="display: inline-block; text-decoration: none;">
             @await Component.InvokeAsync("Boton", new
             {
