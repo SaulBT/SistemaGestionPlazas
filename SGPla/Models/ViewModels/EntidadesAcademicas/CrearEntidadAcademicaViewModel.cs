@@ -22,7 +22,6 @@ namespace SGPla.Models.ViewModels.EntidadesAcademicas
         [Required(ErrorMessage = "Campo obligatorio")]
         public string Telefono { get; set; } = string.Empty;
         
-        [Required(ErrorMessage = "Campo obligatorio")]
         public string Extension { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Campo obligatorio")]
