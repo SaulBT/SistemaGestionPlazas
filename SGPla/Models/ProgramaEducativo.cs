@@ -11,6 +11,8 @@ public partial class ProgramaEducativo
 
     public string Nombre { get; set; } = null!;
 
+    public string? Codigo { get; set; }
+
     public string Campus { get; set; } = null!;
 
     public DateTime? FechaEliminacion { get; set; }

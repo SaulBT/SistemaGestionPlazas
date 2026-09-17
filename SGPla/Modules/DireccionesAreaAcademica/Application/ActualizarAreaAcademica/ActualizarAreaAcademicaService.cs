@@ -44,7 +44,7 @@ public sealed class ActualizarAreaAcademicaService : IActualizarAreaAcademicaSer
         var datos = AreaAcademicaReglas.Normalizar(
             command.Nombre!,
             command.Telefono!,
-            command.Extension!);
+            command.Extension);
 
         var actualizado = await _repository.ActualizarAsync(
             new AreaAcademicaParaActualizar(

@@ -4,6 +4,8 @@
     {
         public int IdProgramaEducativo { get; set; }
 
+        public string Codigo { get; set; } = string.Empty;
+
         public string Nombre { get; set; } = null!;
 
         public string Campus { get; set; } = null!;

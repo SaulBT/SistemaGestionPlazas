@@ -4,7 +4,7 @@ public sealed record AreaAcademicaResponse(
     int IdAreaAcademica,
     string Nombre,
     string Telefono,
-    string Extension);
+    string? Extension);
 
 public sealed record AreasAcademicasResponse(
     IReadOnlyList<AreaAcademicaResponse> Items,

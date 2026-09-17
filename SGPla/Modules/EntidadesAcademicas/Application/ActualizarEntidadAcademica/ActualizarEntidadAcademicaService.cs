@@ -56,7 +56,7 @@ public sealed class ActualizarEntidadAcademicaService : IActualizarEntidadAcadem
             command.Cp!,
             command.Municipio!,
             command.Telefono!,
-            command.Extension!,
+            command.Extension,
             command.IdAreaAcademica!.Value,
             command.Region!);
 

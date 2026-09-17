@@ -115,7 +115,7 @@
                     Id = "extension",
                     Name = "extension",
                     Label = "Extensión (opcional):",
-                    Valor = Model.Extension,
+                    Valor = Model.Extension ?? string.Empty,
                     Flexible = true,
                     Error = ViewData.ModelState["extension"]?.Errors.FirstOrDefault()?.ErrorMessage,
                     MaximoCaracteres = 5

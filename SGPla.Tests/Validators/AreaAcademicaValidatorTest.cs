@@ -33,6 +33,41 @@ public class AreaAcademicaValidatorTests
         Assert.Contains("obligatorio", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact]
+    public void CrearAreaAcademicaSinExtensionEsValida()
+    {
+        var dto = new CrearAreaAcademicaDTO
+        {
+            Nombre = "Área Académica",
+            Telefono = "2288421700",
+            Extension = null
+        };
+
+        var ex = Record.Exception(() => _areaAcademicaValidator.ValidarCreacion(dto));
+
+        Assert.Null(ex);
+    }
+
+    [Fact]
+    public async Task EditarAreaAcademicaSinExtensionEsValida()
+    {
+        var dto = new DatosAreaAcademicaDTO
+        {
+            IdAreaAcademica = 1,
+            Nombre = "Área Académica",
+            Telefono = "2288421700",
+            Extension = null
+        };
+
+        _areaAcademicaRepositoryMock
+            .Setup(repository => repository.ExistePorIdAsync(dto.IdAreaAcademica))
+            .ReturnsAsync(true);
+
+        var ex = await Record.ExceptionAsync(() => _areaAcademicaValidator.ValidarEdicionAsync(dto));
+
+        Assert.Null(ex);
+    }
+
     //CP-03-06
     [Fact]
     public async Task ObtenerAreaAcademicaConIdInvalida()
