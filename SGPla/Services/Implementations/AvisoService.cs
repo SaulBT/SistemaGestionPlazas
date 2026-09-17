@@ -121,7 +121,7 @@ namespace SGPla.Services.Implementations
         {
             ArgumentNullException.ThrowIfNull(aviso);
 
-            var idArchivo = aviso.Estado is Constantes.FIRMADO or Constantes.PUBLICADO
+            var idArchivo = aviso.Estado is Constantes.FIRMADO or Constantes.PUBLICADO or Constantes.ACTA_DE_CT_CREADA
                 ? aviso.IdArchivoFirmado
                 : aviso.IdArchivoOriginal;
 

@@ -178,15 +178,8 @@ namespace SGPla.Controllers
                 if (!await PuedeConsultarAsync(idAviso))
                     return Forbid();
 
-                if (aviso.IdArchivoFirmado <= 0 && aviso.IdArchivoOriginal <= 0)
-                    return NotFound("El aviso no tiene un documento original disponible.");
-
-                return View(new VistaPreviaAvisoViewModel
-                {
-                    Folio = aviso.Folio,
-                    UrlVistaPrevia = Url.Action("ObtenerVistaPreviaAviso", new { idAviso })!,
-                    UrlDescarga = Url.Action("DescargarAviso", new { idAviso })!
-                });
+                _avisoService.ObtenerIdArchivoVigente(aviso);
+                return RedirectToAction("ObtenerVistaPreviaAviso", new { idAviso });
             }
             catch (ValidacionExcepction)
             {
@@ -204,7 +197,8 @@ namespace SGPla.Controllers
                 if (!await PuedeConsultarAsync(idAviso))
                     return Forbid();
 
-                var archivo = await _archivoService.ObtenerVistaPreviaPdfAsync(aviso.IdArchivoFirmado > 0 ? aviso.IdArchivoFirmado : aviso.IdArchivoOriginal);
+                var idArchivo = _avisoService.ObtenerIdArchivoVigente(aviso);
+                var archivo = await _archivoService.ObtenerVistaPreviaPdfAsync(idArchivo);
                 return PhysicalFile(archivo.Ruta, archivo.Tipo, enableRangeProcessing: true);
             }
             catch (ValidacionExcepction)
@@ -232,7 +226,8 @@ namespace SGPla.Controllers
                 if (!await PuedeConsultarAsync(idAviso))
                     return Forbid();
 
-                var archivo = await _archivoService.DescargarAsync(aviso.IdArchivoFirmado > 0 ? aviso.IdArchivoFirmado : aviso.IdArchivoOriginal);
+                var idArchivo = _avisoService.ObtenerIdArchivoVigente(aviso);
+                var archivo = await _archivoService.ObtenerVistaPreviaPdfAsync(idArchivo);
                 return PhysicalFile(archivo.Ruta, archivo.Tipo, archivo.Nombre);
             }
             catch (ValidacionExcepction)
@@ -242,6 +237,11 @@ namespace SGPla.Controllers
             catch (FileNotFoundException)
             {
                 return NotFound("No se encontró el documento del aviso.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "No se pudo preparar la descarga PDF del aviso {IdAviso}.", idAviso);
+                return Problem("No se pudo preparar el PDF para descargar.");
             }
         }
 

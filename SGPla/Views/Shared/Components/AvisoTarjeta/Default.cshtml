@@ -80,7 +80,7 @@
             }
             else
             {
-            <a class="btn btn-outline-primary" href="@Url.Action("VistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })">Ver aviso</a>
+            <a class="btn btn-outline-primary" href="@Url.Action("ObtenerVistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })" target="_blank" rel="noopener">Ver aviso</a>
             <a class="btn btn-outline-secondary" href="@Url.Action("DescargarAviso", "Avisos", new { idAviso = Model.IdAviso })">Descargar aviso</a>
             @if (!Model.Archivado && Model.Estado == Constantes.EN_REVISION_POR_DGAA)
             {
@@ -98,7 +98,7 @@
     <div class="aviso-tarjeta-acciones">
         @if (Model.Estado == Constantes.CREADO || Model.Estado == Constantes.DEVUELTO_POR_DGAA || Model.Estado == Constantes.EN_REVISION_POR_DGAA)
         {
-        <a class="btn btn-outline-primary" href="@Url.Action("VistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })">Ver aviso</a>
+        <a class="btn btn-outline-primary" href="@Url.Action("ObtenerVistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })" target="_blank" rel="noopener">Ver aviso</a>
         }
         @if (!Model.Archivado && User.IsInRole(Constantes.COORDINADOR_EA) &&
             (Model.Estado == Constantes.CREADO || Model.Estado == Constantes.DEVUELTO_POR_DGAA))
@@ -122,7 +122,7 @@
 					tipo = "terciario",
 					OnClick = $"abrirModalFirmar({Model.IdAviso})"
 				})
-				<a href="@Url.Action("VistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })">
+				<a href="@Url.Action("ObtenerVistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })" target="_blank" rel="noopener">
 					@await Component.InvokeAsync("Boton", new { texto = "Ver Aviso", tipo = "secundario" })
 				</a>
 				break;
@@ -153,7 +153,7 @@
 					tipo = "terciario",
 					accion = "agregar"
 				})
-				<a href="@Url.Action("VistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })">
+				<a href="@Url.Action("ObtenerVistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })" target="_blank" rel="noopener">
 					@await Component.InvokeAsync("Boton", new { texto = "Ver Aviso", tipo = "secundario" })
 				</a>
 				break;

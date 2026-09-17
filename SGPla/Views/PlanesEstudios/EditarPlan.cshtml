@@ -1,10 +1,9 @@
 ﻿@model SGPla.Models.ViewModels.PlanesEstudios.EditarPlanViewModel
 @{
 	ViewData["Title"] = "Cargar Plan de Estudios";
-    ViewBag.RegresarUrl = Url.Action("Index", "PlanesEstudios");
 }
 
-<form method="post" action="@Url.Action("GuardarPlanEstudiosEditado", "PlanesEstudios")" enctype="multipart/form-data">
+<form class="formulario-con-barra-acciones" method="post" action="@Url.Action("GuardarPlanEstudiosEditado", "PlanesEstudios")" enctype="multipart/form-data">
     <input name="IdPlanEstudios" value="@Model.IdPlanEstudios" type="hidden"/>
     <input name="NuevoArchivo" id="nuevoArchivo" value="false" type="hidden"/>
     <!-- BLOQUE SUPERIOR -->
@@ -102,8 +101,8 @@
         @await Component.InvokeAsync("TableExperiencias", Model.Table)
     </div>
 
-    <div class="d-flex">
-        <div class="d-flex col-12 gap-3 justify-content-end">
+    <div class="barra-acciones-fija">
+        <div class="barra-acciones-fija__grupo">
             <!-- BOTÓN CANCELAR -->
                 @await Component.InvokeAsync("Boton", new
                 {

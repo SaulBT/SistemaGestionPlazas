@@ -307,6 +307,23 @@ body {
         color: white;
     }
 
+    .menu-item.menu-item-disabled,
+    .menu-item.menu-item-disabled:hover {
+        opacity: 0.6;
+        cursor: not-allowed;
+        background: transparent;
+        color: white;
+        transform: none;
+    }
+
+    .menu-item.menu-item-disabled {
+        flex-wrap: wrap;
+    }
+
+    .menu-item.menu-item-disabled small {
+        font-size: 0.75rem;
+    }
+
 /* ========================================== */
 /* CONTENIDO PRINCIPAL */
 /* ========================================== */
@@ -380,4 +397,57 @@ body {
     font-family: var(--labels-font-family);
     font-size: var(--labels-font-size);
     color: var(--negativo-rojo-letra);
+}
+
+/* ========================================== */
+/* BARRA DE ACCIONES DE FORMULARIOS */
+/* ========================================== */
+
+.formulario-con-barra-acciones {
+    padding-block-end: calc(96px + env(safe-area-inset-bottom));
+}
+
+.barra-acciones-fija {
+    position: fixed;
+    inset-inline-start: calc(var(--menu-width) + 20px);
+    inset-inline-end: 20px;
+    inset-block-end: 0;
+    z-index: 900;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 24px calc(16px + env(safe-area-inset-bottom));
+    background-color: var(--bg-white);
+    border-top: 1px solid var(--border-default);
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.barra-acciones-fija__grupo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+
+.barra-acciones-fija--distribuida {
+    justify-content: space-between;
+}
+
+@media (max-width: 767.98px) {
+    .formulario-con-barra-acciones {
+        padding-block-end: calc(160px + env(safe-area-inset-bottom));
+    }
+
+    .barra-acciones-fija {
+        inset-inline-start: 12px;
+        inset-inline-end: 12px;
+        padding-inline: 16px;
+    }
+
+    .barra-acciones-fija--distribuida,
+    .barra-acciones-fija__grupo {
+        justify-content: flex-end;
+    }
 }

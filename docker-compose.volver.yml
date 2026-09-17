@@ -1,0 +1,6 @@
+# Solo para recuperar la aplicación habitual reutilizando el volumen ya existente.
+# external evita crear por accidente un volumen vacío si falta el original.
+volumes:
+  sgpla-sqlserver-data:
+    external: true
+    name: sistema_sgpla_sgpla-sqlserver-data

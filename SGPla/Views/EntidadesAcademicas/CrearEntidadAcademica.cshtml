@@ -3,11 +3,10 @@
 @model CrearEntidadAcademicaViewModel
 @{
     ViewData["Title"] = "Agregar Entidad Académica"; 
-    ViewBag.RegresarUrl = Url.Action("Index", "EntidadesAcademicas");
 }
 
 <!-- Campos -->
-<form method="post" action="@Url.Action("CrearEntidadAcademica", "EntidadesAcademicas")">
+<form class="formulario-con-barra-acciones" method="post" action="@Url.Action("CrearEntidadAcademica", "EntidadesAcademicas")">
 
     @Html.AntiForgeryToken()
 
@@ -114,7 +113,7 @@
                 {
                     Id = "extension",
                     Name = "extension",
-                    Label = "Extensión:",
+                    Label = "Extensión (opcional):",
                     Valor = Model.Extension,
                     Flexible = true,
                     Error = ViewData.ModelState["extension"]?.Errors.FirstOrDefault()?.ErrorMessage,
@@ -152,7 +151,7 @@
     </div>
 
     <!-- Botones -->
-    <div style="display:flex; justify-content:flex-end; gap:var(--button-gap)">
+    <div class="barra-acciones-fija">
         <a href="@Url.Action("Index", "EntidadesAcademicas")" style="display: inline-block; text-decoration: none;">
             @await Component.InvokeAsync("Boton", new
             {

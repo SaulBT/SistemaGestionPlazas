@@ -1,0 +1,60 @@
+# Archivo independiente: no combinar con docker-compose.yml.
+# Usar scripts/Entorno-Pruebas.ps1 para fijar proyecto y configuración.
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${SGPLA_PRUEBAS_SQL_PASSWORD:?Ejecute scripts/Entorno-Pruebas.ps1}
+      SGPLA_TEST_ADMIN_EMAIL: ${SGPLA_PRUEBAS_ADMIN_EMAIL:?Falta correo administrador}
+    volumes:
+      - sql-pruebas:/var/opt/mssql
+      - ./scripts/pruebas/inicializar-acceso.sql:/bootstrap/inicializar-acceso.sql:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          SQLCMDPASSWORD="$$MSSQL_SA_PASSWORD" /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -b -Q 'SELECT 1' -o /dev/null
+      interval: 5s
+      timeout: 5s
+      retries: 40
+      start_period: 20s
+
+  db-init:
+    build:
+      context: .
+      dockerfile: SGPla.DbMigrator/Dockerfile
+    environment:
+      MIGRATOR_APPLY_DEVELOPMENT_SEED: "true"
+      ConnectionStrings__DefaultConnection: >-
+        Server=db,1433;Database=GestionDePlazasBD;User Id=sa;Password=${SGPLA_PRUEBAS_SQL_PASSWORD};TrustServerCertificate=True;Encrypt=False;
+    depends_on:
+      db:
+        condition: service_healthy
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: >-
+        Server=db,1433;Database=GestionDePlazasBD;User Id=sa;Password=${SGPLA_PRUEBAS_SQL_PASSWORD};TrustServerCertificate=True;Encrypt=False;
+      Archivos__RutaBase: /datos-pruebas
+      EntornoPruebas__Enabled: "true"
+      DevelopmentAuthentication__Enabled: "false"
+    ports:
+      - "127.0.0.1:8081:8080"
+    volumes:
+      - archivos-pruebas:/datos-pruebas
+      - ./SGPla/Archivos/plantillas:/datos-pruebas/plantillas:ro
+      - claves-pruebas:/root/.aspnet/DataProtection-Keys
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+
+volumes:
+  sql-pruebas:
+  archivos-pruebas:
+  claves-pruebas:

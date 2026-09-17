@@ -453,9 +453,6 @@ public class ProgramacionesAcademicasController : Controller
             IdPeriodo = idPeriodo
         };
 
-        ViewBag.RegresarUrl = Url.Action("Ver", "ProgramacionesAcademicas",
-            new { idEntidadAcademica, idProgramaEducativo, idPeriodo });
-
         return View(model);
     }
 
@@ -704,45 +701,71 @@ public class ProgramacionesAcademicasController : Controller
 
     private TableModel LlenarTablaResumen(List<ResumenOfertaProgramacionAcademicaDTO> resumen)
     {
-        if (resumen.Count() == 0)
-            return TablaFactory.GenerarTablaConMensaje(HEADERS_TABLA_RESUMEN_OFERTA, string.Format(Constantes.TABLA_VACIA, Constantes.PROGRAMACIONES_ACADEMICAS));
+        bool mostrarAcciones = User.IsInRole(Constantes.COORDINADOR_EA);
+
+        var headers = HEADERS_TABLA_RESUMEN_OFERTA.ToList();
+
+        if (!mostrarAcciones)
+        {
+            headers.Remove("Acciones");
+        }
+
+        if (resumen.Count == 0)
+        {
+            return TablaFactory.GenerarTablaConMensaje(
+                headers,
+                string.Format(
+                    Constantes.TABLA_VACIA,
+                    Constantes.PROGRAMACIONES_ACADEMICAS));
+        }
 
         try
         {
             return new TableModel
             {
                 TableId = "tablaResumenOferta",
-                Headers = HEADERS_TABLA_RESUMEN_OFERTA,
-                Rows = resumen.Select(r => new TableRowModel
+                Headers = headers,
+                Rows = resumen.Select(r =>
                 {
-                    Cells = new List<TableCellModel>
+                    var cells = new List<TableCellModel>
                     {
                         new() { Value = r.EntidadAcademica },
                         new() { Value = r.ProgramaEducativo },
                         new() { Value = r.PeriodoMostrar },
                         new() { Value = r.EEAsignadas.ToString() },
-                        new() { Value = r.EEVacantes.ToString() },
-                        new()
+                        new() { Value = r.EEVacantes.ToString() }
+                    };
+
+                    if (mostrarAcciones)
+                    {
+                        cells.Add(new TableCellModel
                         {
                             Actions = new List<TableActionModel>
                             {
-                                new TableActionModel()
+                                new()
                                 {
                                     Accion = "ver",
-                                    OnClick = $"location.href='{Url.Action("Ver", new {
+                                    AriaLabel = "Ver programación académica",
+                                    Url = Url.Action("Ver", new
+                                    {
                                         idEntidadAcademica = r.IdEntidadAcademica,
                                         idProgramaEducativo = r.IdProgramaEducativo,
                                         idPeriodo = r.IdPeriodo
-                                    })}'"
+                                    })
                                 },
-                                new TableActionModel()
+                                new()
                                 {
                                     Accion = "solicitudes",
-                                    //OnClick = $"abrirModalConfirmacion('¿Desea eliminar este periodo?', function() {{ eliminarPeriodoEscolar({a.IdPeriodoEscolar}); }})"
+                                    AriaLabel = "Ver solicitudes"
                                 }
                             }
-                        }
+                        });
                     }
+
+                    return new TableRowModel
+                    {
+                        Cells = cells
+                    };
                 }).ToList(),
                 Pagination = new PaginationInfo
                 {
@@ -755,7 +778,11 @@ public class ProgramacionesAcademicasController : Controller
         }
         catch (Exception)
         {
-            return TablaFactory.GenerarTablaConMensaje(HEADERS_TABLA_RESUMEN_OFERTA, string.Format(Constantes.ERROR_TABLA, Constantes.PLANES_ESTUDIOS));
+            return TablaFactory.GenerarTablaConMensaje(
+                headers,
+                string.Format(
+                    Constantes.ERROR_TABLA,
+                    Constantes.PROGRAMACIONES_ACADEMICAS));
         }
     }
 

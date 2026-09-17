@@ -45,7 +45,7 @@ namespace SGPla.Services.Implementations
                 Cp = dto.Cp,
                 Municipio = dto.Municipio,
                 Telefono = dto.Telefono,
-                Extension = dto.Extension,
+                Extension = string.IsNullOrWhiteSpace(dto.Extension) ? null : dto.Extension.Trim(),
                 Region = dto.Region
             };
 
@@ -69,7 +69,7 @@ namespace SGPla.Services.Implementations
                 Cp = dto.Cp,
                 Municipio = dto.Municipio,
                 Telefono = dto.Telefono,
-                Extension = dto.Extension,
+                Extension = string.IsNullOrWhiteSpace(dto.Extension) ? null : dto.Extension.Trim(),
                 Region = dto.Region
             };
 
@@ -193,7 +193,9 @@ namespace SGPla.Services.Implementations
         {
             var (_, nombre) = SepararClaveYNombre(entidad.Clave, entidad.Nombre);
             string domicilio = $"{entidad.CalleNumero} Col. {entidad.Colonia} C.P. {entidad.Cp} {entidad.Municipio}";
-            string telefono = $"Teléfono: {entidad.Telefono} Ext: {entidad.Extension}";
+            string telefono = string.IsNullOrWhiteSpace(entidad.Extension)
+                ? $"Teléfono: {entidad.Telefono}"
+                : $"Teléfono: {entidad.Telefono} Ext: {entidad.Extension}";
 
             return new ListaEntidadAcademicaDTO
             {

@@ -19,6 +19,11 @@ using System.Security.Claims;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+// Solo el Compose aislado activa este modo; no cambia las cookies del entorno habitual.
+var entornoPruebas = builder.Environment.IsDevelopment()
+    && builder.Configuration.GetValue<bool>("EntornoPruebas:Enabled");
+if (entornoPruebas)
+    builder.Services.AddAntiforgery(options => options.Cookie.Name = "SGPla.Pruebas.Antiforgery");
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -26,6 +31,7 @@ builder.Services.AddDistributedMemoryCache();
 
 builder.Services.AddSession(options =>
 {
+    if (entornoPruebas) options.Cookie.Name = "SGPla.Pruebas.Session";
     options.IdleTimeout = TimeSpan.FromHours(8); // antes: FromMinutes(30)
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
@@ -97,6 +103,7 @@ builder.Services.AddScoped<IEstadoNavegacion, EstadoNavegacion>();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
+        if (entornoPruebas) options.Cookie.Name = "SGPla.Pruebas.Auth";
         options.LoginPath = "/Login";
         options.AccessDeniedPath = "/Login";
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
