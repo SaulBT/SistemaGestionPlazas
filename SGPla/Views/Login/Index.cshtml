@@ -1,4 +1,6 @@
-﻿@using SGPla.Models.ViewModels.Login
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuracion
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment Entorno
+@using SGPla.Models.ViewModels.Login
 @model LoginViewModel
 
 @{
@@ -6,6 +8,11 @@
 }
 
 
+
+@if (Entorno.EnvironmentName == "Development" && Configuracion["EntornoPruebas:Enabled"] == "true")
+{
+    <div class="alert alert-info" role="status"><strong>Entorno de pruebas · puerto 8081</strong><br />Esta instancia utiliza datos y documentos separados. Sus registros habituales siguen en el puerto 8080.</div>
+}
 
 <form method="post" asp-action="Index">
 

@@ -1,5 +1,6 @@
 ﻿@using SGPla.Models.ViewModels.ProgramacionesAcademicas
 @model IndexViewModel
+@using SGPla.Commons
 
 @{
 	ViewData["Title"] = "Programaciones Académicas";
@@ -29,13 +30,17 @@
 				Method = "get",
 				Value = Context.Request.Query["busqueda"]
 			})
-			<a href="@Url.Action("CargarProgramacionAcademicaPaso1", "ProgramacionesAcademicas")" style="display: inline-block; text-decoration: none;">
-				@await Component.InvokeAsync("Boton", new
-				{
-					Accion = "Agregar",
-					Texto = "Cargar Programación Académica"
-				})
-			</a>
+			@if (User.IsInRole(Constantes.COORDINADOR_DGAA))
+			{
+				<a href="@Url.Action("CargarProgramacionAcademicaPaso1", "ProgramacionesAcademicas")"
+				style="display: inline-block; text-decoration: none;">
+					@await Component.InvokeAsync("Boton", new
+					{
+						Accion = "Agregar",
+						Texto = "Cargar Programación Académica"
+					})
+				</a>
+			}
 		</div>
 
 		<!-- Campos ocultos para paginación -->

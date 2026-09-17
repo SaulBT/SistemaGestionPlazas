@@ -70,3 +70,6 @@ SGPla/Archivos/temp-uploads/*
 
 # Cookies locales
 cookies.txt
+
+# Configuración privada del entorno de pruebas
+.local/sgpla-pruebas/
