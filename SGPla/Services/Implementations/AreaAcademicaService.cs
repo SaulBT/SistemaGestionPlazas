@@ -30,7 +30,7 @@ namespace SGPla.Services.Implementations
             {
                 Nombre = dto.Nombre,
                 Telefono = dto.Telefono,
-                Extension = dto.Extension,
+                Extension = string.IsNullOrWhiteSpace(dto.Extension) ? null : dto.Extension.Trim(),
             };
 
             var areaAcademicaCreada = await _areaAcademicaRepository.CrearAsync(areaAcademica);
@@ -87,7 +87,7 @@ namespace SGPla.Services.Implementations
                 IdAreaAcademica = dto.IdAreaAcademica,
                 Nombre = dto.Nombre,
                 Telefono = dto.Telefono,
-                Extension = dto.Extension,
+                Extension = string.IsNullOrWhiteSpace(dto.Extension) ? null : dto.Extension.Trim(),
             };
 
             await _areaAcademicaRepository.ActualizarAsync(areaAcademica);
@@ -102,12 +102,9 @@ namespace SGPla.Services.Implementations
 
         private ListaAreaAcademicaDTO generarListaAreaAcademicaDTO(AreaAcademica areaAcademica)
         {
-            var telefono = string.Concat(
-                    "Teléfono: ",
-                    areaAcademica.Telefono,
-                    " Ext: ",
-                    areaAcademica.Extension
-                );
+            var telefono = string.IsNullOrWhiteSpace(areaAcademica.Extension)
+                ? $"Teléfono: {areaAcademica.Telefono}"
+                : $"Teléfono: {areaAcademica.Telefono} Ext: {areaAcademica.Extension}";
 
             return new ListaAreaAcademicaDTO
             {

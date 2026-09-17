@@ -489,6 +489,9 @@ public partial class GestionDePlazasDbContext : DbContext
                 .HasForeignKey(d => d.IdRegion)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_EntidadAcademica_Region");
+
+            entity.ToTable("EntidadAcademica", table =>
+                table.HasTrigger("TR_EntidadAcademica_SincronizarRegion"));
         });
 
         modelBuilder.Entity<Region>(entity =>

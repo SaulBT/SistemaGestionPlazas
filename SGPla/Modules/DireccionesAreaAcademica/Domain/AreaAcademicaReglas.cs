@@ -46,14 +46,8 @@ public static class AreaAcademicaReglas
                 "El teléfono no puede exceder los 30 caracteres.");
         }
 
-        if (string.IsNullOrWhiteSpace(extension))
-        {
-            return new AreaAcademicaValidacion(
-                "extension",
-                "La extensión es obligatoria.");
-        }
-
-        if (extension.Trim().Length > EXTENSION_LONGITUD_MAXIMA)
+        if (!string.IsNullOrWhiteSpace(extension)
+            && extension.Trim().Length > EXTENSION_LONGITUD_MAXIMA)
         {
             return new AreaAcademicaValidacion(
                 "extension",
@@ -84,11 +78,14 @@ public static class AreaAcademicaReglas
         return null;
     }
 
-    public static (string Nombre, string Telefono, string Extension) Normalizar(
+    public static (string Nombre, string Telefono, string? Extension) Normalizar(
         string nombre,
         string telefono,
-        string extension)
+        string? extension)
     {
-        return (nombre.Trim(), telefono.Trim(), extension.Trim());
+        return (
+            nombre.Trim(),
+            telefono.Trim(),
+            string.IsNullOrWhiteSpace(extension) ? null : extension.Trim());
     }
 }

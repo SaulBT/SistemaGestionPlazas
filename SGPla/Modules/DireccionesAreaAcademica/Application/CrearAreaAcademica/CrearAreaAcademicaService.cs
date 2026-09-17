@@ -36,7 +36,7 @@ public sealed class CrearAreaAcademicaService : ICrearAreaAcademicaService
         var datos = AreaAcademicaReglas.Normalizar(
             command.Nombre!,
             command.Telefono!,
-            command.Extension!);
+            command.Extension);
 
         var registro = await _repository.CrearAsync(
             new AreaAcademicaParaCrear(datos.Nombre, datos.Telefono, datos.Extension),

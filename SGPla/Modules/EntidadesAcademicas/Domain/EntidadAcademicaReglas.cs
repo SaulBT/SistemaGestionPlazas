@@ -14,7 +14,7 @@ public sealed record EntidadAcademicaDatosNormalizados(
     string Cp,
     string Municipio,
     string Telefono,
-    string Extension,
+    string? Extension,
     int IdAreaAcademica,
     string Region);
 
@@ -168,15 +168,12 @@ public static class EntidadAcademicaReglas
             return validacionLongitud;
         }
 
-        validacionLongitud = ValidarTextoObligatorio(
-            extension,
-            LONGITUD_MAXIMA_EXTENSION,
-            "extension",
-            "La extensión es obligatoria.",
-            "La extensión no puede exceder los 5 caracteres.");
-        if (validacionLongitud is not null)
+        if (!string.IsNullOrWhiteSpace(extension)
+            && extension.Trim().Length > LONGITUD_MAXIMA_EXTENSION)
         {
-            return validacionLongitud;
+            return new EntidadAcademicaValidacion(
+                "extension",
+                "La extensión no puede exceder los 5 caracteres.");
         }
 
         if (!idAreaAcademica.HasValue || idAreaAcademica <= 0)
@@ -219,7 +216,7 @@ public static class EntidadAcademicaReglas
         string cp,
         string municipio,
         string telefono,
-        string extension,
+        string? extension,
         int idAreaAcademica,
         string region)
     {
@@ -231,7 +228,7 @@ public static class EntidadAcademicaReglas
             cp.Trim(),
             municipio.Trim(),
             telefono.Trim(),
-            extension.Trim(),
+            string.IsNullOrWhiteSpace(extension) ? null : extension.Trim(),
             idAreaAcademica,
             region.Trim());
     }

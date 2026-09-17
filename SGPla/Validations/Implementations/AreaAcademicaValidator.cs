@@ -46,8 +46,6 @@ namespace SGPla.Validations.Implementations
                 throw new ArgumentException("El Nombre es obligatorio.");
             if (string.IsNullOrWhiteSpace(crearAreaAcademicaDTO.Telefono))
                 throw new ArgumentException("El Teléfono es obligatorio.");
-            if (string.IsNullOrWhiteSpace(crearAreaAcademicaDTO.Extension))
-                throw new ArgumentException("La Extensión es obligatoria.");
         }
 
         private void validarCamposEdicion(DatosAreaAcademicaDTO datosAreaAcademicaDTO)
@@ -56,8 +54,6 @@ namespace SGPla.Validations.Implementations
                 throw new ArgumentException("El Nombre es obligatorio.");
             if (string.IsNullOrWhiteSpace(datosAreaAcademicaDTO.Telefono))
                 throw new ArgumentException("El Teléfono es obligatorio.");
-            if (string.IsNullOrWhiteSpace(datosAreaAcademicaDTO.Extension))
-                throw new ArgumentException("La Extensión es obligatoria.");
         }
     }
 }

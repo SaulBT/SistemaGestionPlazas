@@ -9,7 +9,7 @@ public sealed record EntidadAcademicaRegistro(
     string Cp,
     string Municipio,
     string Telefono,
-    string Extension,
+    string? Extension,
     int IdAreaAcademica,
     string NombreAreaAcademica,
     string Region);
@@ -22,7 +22,7 @@ public sealed record EntidadAcademicaParaCrear(
     string Cp,
     string Municipio,
     string Telefono,
-    string Extension,
+    string? Extension,
     int IdAreaAcademica,
     string Region);
 
@@ -35,7 +35,7 @@ public sealed record EntidadAcademicaParaActualizar(
     string Cp,
     string Municipio,
     string Telefono,
-    string Extension,
+    string? Extension,
     int IdAreaAcademica,
     string Region);
 

@@ -48,7 +48,7 @@ public sealed class CrearEntidadAcademicaService : ICrearEntidadAcademicaService
             command.Cp!,
             command.Municipio!,
             command.Telefono!,
-            command.Extension!,
+            command.Extension,
             command.IdAreaAcademica!.Value,
             command.Region!);
 

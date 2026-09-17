@@ -11,7 +11,7 @@ public partial class AreaAcademica
 
     public string Telefono { get; set; } = null!;
 
-    public string Extension { get; set; } = null!;
+    public string? Extension { get; set; }
 
     public DateTime? FechaEliminacion { get; set; }
 

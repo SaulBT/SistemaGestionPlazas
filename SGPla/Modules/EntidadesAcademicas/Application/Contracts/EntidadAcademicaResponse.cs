@@ -9,7 +9,7 @@ public sealed record EntidadAcademicaResponse(
     string Cp,
     string Municipio,
     string Telefono,
-    string Extension,
+    string? Extension,
     int IdAreaAcademica,
     string NombreAreaAcademica,
     string Region);
