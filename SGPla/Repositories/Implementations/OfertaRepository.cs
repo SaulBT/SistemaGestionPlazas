@@ -19,10 +19,11 @@ namespace SGPla.Repositories.Implementations
 
         public async Task<Oferta?> ObtenerPorIdAsync(int id)
         {
-            return _context.Oferta
+            return await _context.Oferta
                 .Include(o => o.IdProgramaEducativoNavigation)
                 .Include(o => o.IdExperienciaEducativaNavigation)
-                .FirstOrDefault(o => o.IdOferta == id);
+                    .ThenInclude(e => e.IdPlanEstudiosNavigation)
+                .FirstOrDefaultAsync(o => o.IdOferta == id);
         }
 
         public async Task<List<Oferta>> ObtenerPorAvisoAsync(int idAviso)
@@ -126,8 +127,11 @@ namespace SGPla.Repositories.Implementations
 
         public async Task<bool> SonOfertasValidasParaAvisoAsync(List<int> idsOfertas, int idEntidadAcademica, int idPeriodo, int idArticulo)
         {
+            if (idsOfertas is null)
+                return false;
+
             var idsDistintos = idsOfertas.Distinct().ToList();
-            if (idsDistintos.Count == 0)
+            if (idsDistintos.Count == 0 || idsDistintos.Count != idsOfertas.Count)
                 return false;
 
             var cantidadValidas = await _context.Oferta.CountAsync(o =>
@@ -138,6 +142,19 @@ namespace SGPla.Repositories.Implementations
                 o.IdProgramaEducativoNavigation.IdEntidadAcademica == idEntidadAcademica);
 
             return cantidadValidas == idsDistintos.Count;
+        }
+
+        public async Task<string?> ObtenerSistemaParaAvisoAsync(List<int> idsOfertas)
+        {
+            var sistemas = await _context.Oferta
+                .Where(o => idsOfertas.Contains(o.IdOferta))
+                .Select(o => o.IdExperienciaEducativaNavigation.IdPlanEstudiosNavigation.Modalidad)
+                .Distinct()
+                .ToListAsync();
+
+            return sistemas.Count == 1 && !string.IsNullOrWhiteSpace(sistemas[0])
+                ? sistemas[0]
+                : null;
         }
     }
 }

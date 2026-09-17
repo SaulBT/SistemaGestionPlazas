@@ -276,12 +276,12 @@ function agregarHorario() {
 async function actualizarHorarios() {
 
     const url = IdAviso ? `${UrlAgregarHorario}?idAviso=${IdAviso}` : UrlAgregarHorario;
+    const datos = new FormData();
+    datos.append("horariosJson", JSON.stringify(listaHorarios));
+    datos.append("__RequestVerificationToken", document.querySelector('input[name="__RequestVerificationToken"]').value);
     const response = await fetch(url, {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(listaHorarios)
+        body: datos
     });
 
     horarios.innerHTML = await response.text();

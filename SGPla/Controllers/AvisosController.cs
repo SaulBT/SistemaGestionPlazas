@@ -149,22 +149,30 @@ namespace SGPla.Controllers
         }
 
         //Eliminar
-        [HttpGet]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
-        public async Task EliminarAvisoAsync(int idAviso)
+        public async Task<IActionResult> EliminarAvisoAsync(int idAviso)
         {
             try
             {
+                if (idAviso <= 0) return BadRequest(new { message = "La Id del Aviso es inválida." });
+                var aviso = await _avisos.ObtenerPorIDAsync(idAviso);
+                if (aviso is null) return NotFound();
+                if (!await PuedeConsultarAsync(aviso, false)) return Forbid();
                 await _avisoService.EliminarAvisoPorId(idAviso);
                 TempData["Success"] = string.Format(Constantes.TOAST_ELIMINACION_EL, Constantes.AVISO);
+                return Ok(new { message = "Aviso eliminado." });
             }
             catch (ValidacionExcepction vx)
             {
                 this.LanzarError(_logger, vx, NOMBRE_LOGGER, INDEX, Constantes.LOG_ERROR_VALIDACION);
+                return ResultadoValidacion(vx);
             }
             catch (Exception ex)
             {
                 this.LanzarError(_logger, ex, NOMBRE_LOGGER, INDEX, Constantes.LOG_ERROR_INESPERADO);
+                return Problem("No se pudo eliminar el aviso.");
             }
         }
 
@@ -179,7 +187,11 @@ namespace SGPla.Controllers
                     return Forbid();
 
                 _avisoService.ObtenerIdArchivoVigente(aviso);
-                return RedirectToAction("ObtenerVistaPreviaAviso", new { idAviso });
+                return View(new VistaPreviaAvisoViewModel
+                {
+                    UrlVistaPrevia = Url.Action("ObtenerVistaPreviaAviso", new { idAviso }) ?? string.Empty,
+                    UrlDescarga = Url.Action("DescargarAviso", new { idAviso }) ?? string.Empty
+                });
             }
             catch (ValidacionExcepction)
             {
@@ -226,8 +238,10 @@ namespace SGPla.Controllers
                 if (!await PuedeConsultarAsync(idAviso))
                     return Forbid();
 
-                var idArchivo = _avisoService.ObtenerIdArchivoVigente(aviso);
-                var archivo = await _archivoService.ObtenerVistaPreviaPdfAsync(idArchivo);
+                if (aviso.IdArchivoOriginal <= 0)
+                    return NotFound("No se encontró el documento original del aviso.");
+
+                var archivo = await _archivoService.DescargarAsync(aviso.IdArchivoOriginal);
                 return PhysicalFile(archivo.Ruta, archivo.Tipo, archivo.Nombre);
             }
             catch (ValidacionExcepction)
@@ -240,8 +254,8 @@ namespace SGPla.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "No se pudo preparar la descarga PDF del aviso {IdAviso}.", idAviso);
-                return Problem("No se pudo preparar el PDF para descargar.");
+                _logger.LogError(ex, "No se pudo preparar la descarga del aviso {IdAviso}.", idAviso);
+                return Problem("No se pudo preparar el archivo para descargar.");
             }
         }
 
@@ -319,40 +333,56 @@ namespace SGPla.Controllers
 
         //Archivar / Desarchivar
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
-        public async Task ArchivarAvisoAsync(int idAviso)
+        public async Task<IActionResult> ArchivarAvisoAsync(int idAviso)
         {
             try
             {
+                if (idAviso <= 0) return BadRequest(new { message = "La Id del Aviso es inválida." });
+                var aviso = await _avisos.ObtenerPorIDAsync(idAviso);
+                if (aviso is null) return NotFound();
+                if (!await PuedeConsultarAsync(aviso, false)) return Forbid();
                 await _avisoService.ArchivarAvisoAsync(idAviso);
                 TempData["Success"] = "Aviso archivado.";
+                return Ok(new { message = "Aviso archivado." });
             }
             catch (ValidacionExcepction vx)
             {
                 this.LanzarError(_logger, vx, NOMBRE_LOGGER, INDEX, Constantes.LOG_ERROR_VALIDACION);
+                return ResultadoValidacion(vx);
             }
             catch (Exception ex)
             {
                 this.LanzarError(_logger, ex, NOMBRE_LOGGER, INDEX, Constantes.LOG_ERROR_INESPERADO);
+                return Problem("No se pudo archivar el aviso.");
             }
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
-        public async Task DesarchivarAvisoAsync(int idAviso)
+        public async Task<IActionResult> DesarchivarAvisoAsync(int idAviso)
         {
             try
             {
+                if (idAviso <= 0) return BadRequest(new { message = "La Id del Aviso es inválida." });
+                var aviso = await _avisos.ObtenerPorIDAsync(idAviso);
+                if (aviso is null) return NotFound();
+                if (!await PuedeConsultarAsync(aviso, false)) return Forbid();
                 await _avisoService.DesarchivarAvisoAsync(idAviso);
                 TempData["Success"] = "Aviso desarchivado.";
+                return Ok(new { message = "Aviso desarchivado." });
             }
             catch (ValidacionExcepction vx)
             {
                 this.LanzarError(_logger, vx, NOMBRE_LOGGER, INDEX, Constantes.LOG_ERROR_VALIDACION);
+                return ResultadoValidacion(vx);
             }
             catch (Exception ex)
             {
                 this.LanzarError(_logger, ex, NOMBRE_LOGGER, INDEX, Constantes.LOG_ERROR_INESPERADO);
+                return Problem("No se pudo desarchivar el aviso.");
             }
         }
 
@@ -368,17 +398,30 @@ namespace SGPla.Controllers
             return area > 0 ? area : null;
         }
 
-        private async Task<bool> PuedeConsultarAsync(int idAviso)
+        private async Task<bool> PuedeConsultarAsync(int idAviso, bool requiereRecibidoPorDgaa = true)
         {
             var aviso = await _avisos.ObtenerPorIDAsync(idAviso);
             if (aviso is null) return false;
+            return await PuedeConsultarAsync(aviso, requiereRecibidoPorDgaa);
+        }
+
+        private async Task<bool> PuedeConsultarAsync(Aviso aviso, bool requiereRecibidoPorDgaa = true)
+        {
             if (User.IsInRole(Constantes.COORDINADOR_EA))
                 return int.TryParse(User.FindFirstValue("EntidadAcademicaId"), out var entidad)
                     && entidad > 0 && aviso.IdEntidadAcademica == entidad;
             return User.IsInRole(Constantes.COORDINADOR_DGAA)
-                && EstadosAviso.RecibidosDgaa.Contains(aviso.Estado)
+                && (!requiereRecibidoPorDgaa || EstadosAviso.RecibidosDgaa.Contains(aviso.Estado))
                 && aviso.IdEntidadAcademicaNavigation.IdAreaAcademica == await ObtenerAreaActualAsync();
         }
+
+        private IActionResult ResultadoValidacion(ValidacionExcepction error) => error.Codigo switch
+        {
+            "403" => Forbid(),
+            "404" => NotFound(),
+            "409" => Conflict(new { message = error.Message }),
+            _ => BadRequest(new { message = error.Message })
+        };
 
         [HttpGet]
         [Authorize(Policy = PoliticasAutorizacion.EntidadAcademica)]
@@ -512,7 +555,7 @@ namespace SGPla.Controllers
             try
             {
                 var aviso = await _avisoService.ObtenerAvisoPorIDAsync(idAviso);
-                if (aviso.IdEntidadAcademica != idEntidadAcademica ||
+                if (aviso.IdEntidadAcademica != idEntidadAcademica || aviso.Archivado == true ||
                     (await _avisoService.VerificarEstadoAvisoAsync(idAviso, Constantes.CREADO) == false &&
                      await _avisoService.VerificarEstadoAvisoAsync(idAviso, Constantes.DEVUELTO_POR_DGAA) == false))
                 {
@@ -554,8 +597,8 @@ namespace SGPla.Controllers
                     IdEntidadAcademica = idEntidadAcademica,
                     IdPeriodo = (int)model.IdPeriodo,
                     IdArticulo = (int)model.IdArticulo,
-                    Folio = model.Folio,
                     FechaCreacion = DateOnly.FromDateTime(DateTime.Now),
+                    FechaPublicacion = DateOnly.Parse(model.FechaPublicacion),
                     FechaCT = DateOnly.Parse(model.FechaCT),
                     FechaVacantes = DateOnly.Parse(model.FechaVacantes),
                     Requisitos = model.Requisitos,
@@ -599,15 +642,14 @@ namespace SGPla.Controllers
                     IdEntidadAcademica = idEntidadAcademica,
                     IdPeriodo = model.IdPeriodo!.Value,
                     IdArticulo = model.IdArticulo!.Value,
-                    Folio = model.Folio,
                     FechaCreacion = DateOnly.FromDateTime(DateTime.Now),
+                    FechaPublicacion = DateOnly.Parse(model.FechaPublicacion),
                     FechaCT = DateOnly.Parse(model.FechaCT),
                     FechaVacantes = DateOnly.Parse(model.FechaVacantes),
                     Requisitos = model.Requisitos,
                     Lugar = model.Lugar,
                     Correo = model.Correo,
                     Modalidad = model.Modalidad,
-                    Sistema = "Escolarizado",
                     OfertasId = model.OfertasId,
                     Horarios = horarios
                 });
@@ -626,6 +668,17 @@ namespace SGPla.Controllers
 
         private bool validarFormulario(CrearAvisoViewModel model, List<CrearHorarioAvisoDTO>? horarios = null)
         {
+            foreach (var campoFecha in new[]
+            {
+                (Nombre: nameof(model.FechaVacantes), Valor: model.FechaVacantes),
+                (Nombre: nameof(model.FechaPublicacion), Valor: model.FechaPublicacion),
+                (Nombre: nameof(model.FechaCT), Valor: model.FechaCT)
+            })
+            {
+                if (!DateOnly.TryParse(campoFecha.Valor, out _))
+                    ModelState.AddModelError(campoFecha.Nombre, "Ingrese una fecha válida.");
+            }
+
             if ((!model.Modalidad.IsNullOrEmpty())
                     && (model.Modalidad.Equals(Constantes.MODALIDAD_AVISO_PRESENCIAL))
                     && (model.Lugar.IsNullOrEmpty()))
@@ -663,11 +716,11 @@ namespace SGPla.Controllers
             nuevoModelo.FechaCT = model.FechaCT ?? nuevoModelo.FechaCT;
             
             nuevoModelo.FechaVacantes = model.FechaVacantes ?? nuevoModelo.FechaVacantes;
+            nuevoModelo.FechaPublicacion = model.FechaPublicacion ?? nuevoModelo.FechaPublicacion;
             nuevoModelo.Horarios = model.Horarios ?? nuevoModelo.Horarios;
             nuevoModelo.IdPeriodo = model.IdPeriodo ?? nuevoModelo.IdPeriodo;
             nuevoModelo.Modalidad = model.Modalidad ?? nuevoModelo.Modalidad;
             nuevoModelo.IdArticulo = model.IdArticulo ?? nuevoModelo.IdArticulo;
-            nuevoModelo.Folio = model.Folio ?? nuevoModelo.Folio;
             nuevoModelo.IdAviso = model.IdAviso;
             nuevoModelo.Requisitos = model.Requisitos ?? nuevoModelo.Requisitos;
             nuevoModelo.OfertasId = model.OfertasId;
@@ -724,10 +777,10 @@ namespace SGPla.Controllers
                 Periodos = periodosCombo,
                 Articulos = articulosCombo,
                 Modalidades = modalidadesCombo,
-                Folio = aviso.Folio,
                 FechaCT = aviso.FechaCT,
                 FechaVacantes = aviso.FechaVacantes,
-                Requisitos = aviso.Requisitos,
+                FechaPublicacion = aviso.FechaPublicacion,
+                Requisitos = aviso.IdAviso > 0 ? aviso.Requisitos : Constantes.REQUISITOS_AVISO,
                 Lugar = aviso.Lugar,
                 Correo = aviso.Correo,
                 Modalidad = aviso.Modalidad,
@@ -938,8 +991,10 @@ namespace SGPla.Controllers
 
         [HttpPost]
         [Authorize(Policy = PoliticasAutorizacion.EntidadAcademica)]
-        public async Task<IActionResult> AgregarHorario([FromBody] List<CrearHorarioAvisoDTO> horarios, int? idAviso)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AgregarHorario([FromForm] string horariosJson, int? idAviso)
         {
+            var horarios = JsonSerializer.Deserialize<List<CrearHorarioAvisoDTO>>(horariosJson) ?? [];
             guardarEnSession(ObtenerLlaveHorarios(idAviso), horarios);
             var tabla = await ActualizarTablaHorarios(horarios);
             return PartialView("_Horarios", tabla);

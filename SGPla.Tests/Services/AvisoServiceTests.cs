@@ -118,8 +118,8 @@ namespace SGPla.Tests.Services
                 IdEntidadAcademica = 1,
                 IdPeriodo = 1,
                 IdArticulo = 1,
-                Folio = "AV-2026-001",
                 FechaCreacion = new DateOnly(2026, 9, 3),
+                FechaPublicacion = new DateOnly(2026, 9, 4),
                 FechaCT = new DateOnly(2026, 9, 10),
                 FechaVacantes = new DateOnly(2026, 9, 15),
                 Requisitos = "Título profesional y cédula.",
@@ -184,33 +184,21 @@ namespace SGPla.Tests.Services
                 .ReturnsAsync(50);
 
             _avisoRepositoryMock
-                .Setup(r => r.CrearAsync(It.IsAny<Aviso>()))
-                .ReturnsAsync((Aviso a) =>
-                {
-                    a.IdAviso = 1;
-                    return a;
-                });
-
-            _avisoRepositoryMock
-                .Setup(r => r.AsociarOfertasPorAviso(dto.OfertasId, 1))
+                .Setup(r => r.CrearCompletoAsync(It.IsAny<Aviso>(), dto.OfertasId, It.IsAny<List<Horario>>()))
                 .Returns(Task.CompletedTask);
-
-            _horarioRepositoryMock
-                .Setup(r => r.CrearHorarios(It.IsAny<List<Horario>>()))
-                .Returns(Task.CompletedTask);
+            _ofertaRepositoryMock.Setup(r => r.SonOfertasValidasParaAvisoAsync(dto.OfertasId, 1, 1, 1)).ReturnsAsync(true);
+            _ofertaRepositoryMock.Setup(r => r.ObtenerSistemaParaAvisoAsync(dto.OfertasId)).ReturnsAsync(Constantes.MODALIDAD_ESCOLARIZADA);
 
             var excepcion = await Record.ExceptionAsync(() => _avisoService.CrearAviso(dto));
 
             Assert.Null(excepcion);
 
             _plantillaServiceMock.Verify(s => s.GenerarAvisoAsync(It.IsAny<PlantillaAvisoDTO>()), Times.Once);
-            _avisoRepositoryMock.Verify(r => r.CrearAsync(It.Is<Aviso>(a =>
-                a.Folio == dto.Folio &&
+            _avisoRepositoryMock.Verify(r => r.CrearCompletoAsync(It.Is<Aviso>(a =>
                 a.IdEntidadAcademica == dto.IdEntidadAcademica &&
                 a.Estado == "Creado" &&
-                a.IdArchivoOriginal == 50)), Times.Once);
-            _avisoRepositoryMock.Verify(r => r.AsociarOfertasPorAviso(dto.OfertasId, 1), Times.Once);
-            _horarioRepositoryMock.Verify(r => r.CrearHorarios(It.Is<List<Horario>>(h => h.Count == 1)), Times.Once);
+                a.IdArchivoOriginal == 50 && a.Sistema == Constantes.MODALIDAD_ESCOLARIZADA), dto.OfertasId,
+                It.Is<List<Horario>>(h => h.Count == 1)), Times.Once);
         }
 
         // CP-02
@@ -234,7 +222,6 @@ namespace SGPla.Tests.Services
                     IdEntidadAcademica = 1,
                     IdPeriodo = 1,
                     IdArticulo = 1,
-                    Folio = "AV-2026-001",
                     FechaCreacion = new DateOnly(2026, 9, 1),
                     Estado = "Creado",
                     Archivado = false,
@@ -274,7 +261,6 @@ namespace SGPla.Tests.Services
 
             var avisoObtenido = items[0];
             Assert.Equal(1, avisoObtenido.IdAviso);
-            Assert.Equal("AV-2026-001", avisoObtenido.Folio);
             Assert.Equal("Creado", avisoObtenido.Estado);
             Assert.False(avisoObtenido.Archivado);
 
@@ -324,7 +310,6 @@ namespace SGPla.Tests.Services
                 IdEntidadAcademica = 1,
                 IdPeriodo = 1,
                 IdArticulo = 1,
-                Folio = "AV-2026-001",
                 FechaCreacion = new DateOnly(2026, 9, 1),
                 FechaVacantes = new DateOnly(2026, 9, 15),
                 Modalidad = "Presencial",
@@ -369,7 +354,6 @@ namespace SGPla.Tests.Services
 
             Assert.NotNull(resultado);
             Assert.Equal(idAviso, resultado.IdAviso);
-            Assert.Equal("AV-2026-001", resultado.Folio);
             Assert.Equal("Presencial", resultado.Modalidad);
             Assert.Equal("Título profesional y cédula.", resultado.Requisitos);
             Assert.Equal("Facultad de Estadística e Informática", resultado.Lugar);
@@ -580,14 +564,14 @@ namespace SGPla.Tests.Services
                 .Returns(Task.CompletedTask);
 
             _avisoRepositoryMock
-                .Setup(r => r.EliminarAsync(idAviso))
-                .Returns(Task.CompletedTask);
+                .Setup(r => r.EliminarCompletoAsync(idAviso))
+                .ReturnsAsync((null, null));
 
             var ex = await Record.ExceptionAsync(() => _avisoService.EliminarAvisoPorId(idAviso));
 
             Assert.Null(ex);
             _avisoValidatorMock.Verify(v => v.ValidarIdAsync(idAviso), Times.Once);
-            _avisoRepositoryMock.Verify(r => r.EliminarAsync(idAviso), Times.Once);
+            _avisoRepositoryMock.Verify(r => r.EliminarCompletoAsync(idAviso), Times.Once);
         }
 
         // CP-35
@@ -723,6 +707,8 @@ namespace SGPla.Tests.Services
             dto.Horarios = [];
             _avisoRepositoryMock.Setup(r => r.ObtenerPorIDAsync(dto.IdAviso))
                 .ReturnsAsync(CrearAvisoActual(dto, "Creado"));
+            _avisoValidatorMock.Setup(v => v.ValidarCrearAviso(dto))
+                .ThrowsAsync(new ValidacionExcepction("Llena la tabla de Horarios.", "400"));
 
             var ex = await Record.ExceptionAsync(() => _avisoService.ActualizarAvisoPorId(dto));
 
@@ -766,14 +752,99 @@ namespace SGPla.Tests.Services
             Assert.IsType<ValidacionExcepction>(ex);
         }
 
+        [Fact]
+        public async Task CrearAviso_OfertasInvalidas_NoGeneraArchivoNiPersiste()
+        {
+            var dto = CrearEdicionValida();
+            _ofertaRepositoryMock.Setup(r => r.SonOfertasValidasParaAvisoAsync(dto.OfertasId, dto.IdEntidadAcademica, dto.IdPeriodo, dto.IdArticulo))
+                .ReturnsAsync(false);
+
+            await Assert.ThrowsAsync<ValidacionExcepction>(() => _avisoService.CrearAviso(dto));
+
+            _plantillaServiceMock.Verify(p => p.GenerarAvisoAsync(It.IsAny<PlantillaAvisoDTO>()), Times.Never);
+            _avisoRepositoryMock.Verify(r => r.CrearCompletoAsync(It.IsAny<Aviso>(), It.IsAny<List<int>>(), It.IsAny<List<Horario>>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task CrearAviso_SistemasDistintos_NoGeneraArchivoNiPersiste()
+        {
+            var dto = CrearEdicionValida();
+            _ofertaRepositoryMock.Setup(r => r.SonOfertasValidasParaAvisoAsync(dto.OfertasId, dto.IdEntidadAcademica, dto.IdPeriodo, dto.IdArticulo))
+                .ReturnsAsync(true);
+            _ofertaRepositoryMock.Setup(r => r.ObtenerSistemaParaAvisoAsync(dto.OfertasId)).ReturnsAsync((string?)null);
+
+            await Assert.ThrowsAsync<ValidacionExcepction>(() => _avisoService.CrearAviso(dto));
+
+            _plantillaServiceMock.Verify(p => p.GenerarAvisoAsync(It.IsAny<PlantillaAvisoDTO>()), Times.Never);
+            _avisoRepositoryMock.Verify(r => r.CrearCompletoAsync(It.IsAny<Aviso>(), It.IsAny<List<int>>(), It.IsAny<List<Horario>>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task CrearAviso_FallaTransaccion_RetiraArchivoGenerado()
+        {
+            var dto = CrearEdicionValida();
+            ConfigurarDependenciasEdicion(dto, Constantes.CREADO);
+            var archivo = new Archivo { IdArchivo = 77, Ruta = "aviso-original/nuevo.docx" };
+            _avisoRepositoryMock.Setup(r => r.CrearCompletoAsync(It.IsAny<Aviso>(), dto.OfertasId, It.IsAny<List<Horario>>()))
+                .ThrowsAsync(new InvalidOperationException("Fallo al guardar relaciones."));
+            _archivoRepositoryMock.Setup(r => r.ObtenerPorIdAsync(77)).ReturnsAsync(archivo);
+            _archivoRepositoryMock.Setup(r => r.EliminarAsync(archivo)).Returns(Task.CompletedTask);
+            _archivoServiceMock.Setup(s => s.EliminarAsync(archivo.Ruta)).Returns(Task.CompletedTask);
+
+            await Assert.ThrowsAsync<InvalidOperationException>(() => _avisoService.CrearAviso(dto));
+
+            _archivoRepositoryMock.Verify(r => r.EliminarAsync(archivo), Times.Once);
+            _archivoServiceMock.Verify(s => s.EliminarAsync(archivo.Ruta), Times.Once);
+        }
+
+        [Fact]
+        public async Task ActualizarAviso_Archivado_RechazaPostManipulado()
+        {
+            var dto = CrearEdicionValida();
+            var aviso = CrearAvisoActual(dto, Constantes.CREADO);
+            aviso.Archivado = true;
+            _avisoRepositoryMock.Setup(r => r.ObtenerPorIDAsync(dto.IdAviso)).ReturnsAsync(aviso);
+
+            var ex = await Assert.ThrowsAsync<ValidacionExcepction>(() => _avisoService.ActualizarAvisoPorId(dto));
+
+            Assert.Equal("409", ex.Codigo);
+            _avisoRepositoryMock.Verify(r => r.ActualizarCompletoAsync(It.IsAny<EditarAvisoDTO>(), It.IsAny<int>(), It.IsAny<List<Horario>>()), Times.Never);
+        }
+
+        [Theory]
+        [InlineData("2026-09-10", "09:00", "11:00", "El día 10 del mes septiembre de 09:00 hrs. a 11:00 hrs.")]
+        public void GenerarHorarioAceptacion_UnIntervalo_FormateaDia(string fecha, string inicio, string fin, string esperado)
+        {
+            Assert.Equal(esperado, AvisoService.GenerarHorarioAceptacion([
+                new CrearHorarioAvisoDTO { Fecha = fecha, HoraInicio = inicio, HoraTermino = fin }]));
+        }
+
+        [Fact]
+        public void GenerarHorarioAceptacion_DosIntervalosMismoDia_LosAgrupa()
+        {
+            var texto = AvisoService.GenerarHorarioAceptacion([
+                new CrearHorarioAvisoDTO { Fecha = "2026-09-10", HoraInicio = "13:00", HoraTermino = "15:00" },
+                new CrearHorarioAvisoDTO { Fecha = "2026-09-10", HoraInicio = "09:00", HoraTermino = "11:00" }]);
+            Assert.Equal("El día 10 del mes septiembre de 09:00 hrs. a 11:00 hrs. y de 13:00 hrs. a 15:00 hrs.", texto);
+        }
+
+        [Fact]
+        public void GenerarHorarioAceptacion_MesesDistintos_ConservaYOrdenaTodosLosDias()
+        {
+            var texto = AvisoService.GenerarHorarioAceptacion([
+                new CrearHorarioAvisoDTO { Fecha = "2026-10-02", HoraInicio = "09:00", HoraTermino = "11:00" },
+                new CrearHorarioAvisoDTO { Fecha = "2026-09-30", HoraInicio = "12:00", HoraTermino = "14:00" }]);
+            Assert.Equal("El día 30 del mes septiembre de 12:00 hrs. a 14:00 hrs.; El día 2 del mes octubre de 09:00 hrs. a 11:00 hrs.", texto);
+        }
+
         private static EditarAvisoDTO CrearEdicionValida() => new()
         {
             IdAviso = 8,
             IdEntidadAcademica = 1,
             IdPeriodo = 2,
             IdArticulo = 3,
-            Folio = "AV-2026-008",
             FechaCreacion = new DateOnly(2026, 9, 4),
+            FechaPublicacion = new DateOnly(2026, 9, 5),
             FechaCT = new DateOnly(2026, 9, 10),
             FechaVacantes = new DateOnly(2026, 9, 15),
             Requisitos = "Requisitos actualizados",
@@ -790,7 +861,6 @@ namespace SGPla.Tests.Services
             IdAviso = dto.IdAviso,
             IdEntidadAcademica = entidad ?? dto.IdEntidadAcademica,
             Estado = estado,
-            Folio = dto.Folio,
             Requisitos = dto.Requisitos,
             Modalidad = dto.Modalidad,
             Sistema = dto.Sistema
@@ -800,6 +870,7 @@ namespace SGPla.Tests.Services
         {
             _avisoRepositoryMock.Setup(r => r.ObtenerPorIDAsync(dto.IdAviso)).ReturnsAsync(CrearAvisoActual(dto, estado));
             _ofertaRepositoryMock.Setup(r => r.SonOfertasValidasParaAvisoAsync(dto.OfertasId, dto.IdEntidadAcademica, dto.IdPeriodo, dto.IdArticulo)).ReturnsAsync(true);
+            _ofertaRepositoryMock.Setup(r => r.ObtenerSistemaParaAvisoAsync(dto.OfertasId)).ReturnsAsync(Constantes.MODALIDAD_ESCOLARIZADA);
             _entidadAcademicaRepositoryMock.Setup(r => r.ObtenerPorIdAsync(dto.IdEntidadAcademica)).ReturnsAsync(new EntidadAcademica
             {
                 Nombre = "Facultad de Prueba", Region = "1-Xalapa", IdAreaAcademicaNavigation = new AreaAcademica { Nombre = "Área" }

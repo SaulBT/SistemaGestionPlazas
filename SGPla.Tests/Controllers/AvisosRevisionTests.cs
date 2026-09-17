@@ -122,9 +122,7 @@ public class AvisosRevisionTests
             { IdAviso = 15, IdEntidadAcademica = 7, IdArchivoOriginal = 4 });
         var controller = Crear(Constantes.COORDINADOR_DGAA);
         controller.Url = Mock.Of<IUrlHelper>();
-        var respuesta = Assert.IsType<RedirectToActionResult>(await controller.VistaPreviaAvisoAsync(15));
-        Assert.Equal("ObtenerVistaPreviaAviso", respuesta.ActionName);
-        Assert.Equal(15, respuesta.RouteValues!["idAviso"]);
+        Assert.IsType<ViewResult>(await controller.VistaPreviaAvisoAsync(15));
     }
 
     [Theory]
@@ -266,39 +264,42 @@ public class AvisosRevisionTests
     }
 
     [Fact]
-    public async Task Descargar_UsaPdfDelArchivoVigente()
+    public async Task Descargar_AvisoFirmadoEntregaWordOriginal()
     {
         Aviso(Constantes.FIRMADO);
         servicio.Setup(s => s.ObtenerAvisoPorIDAsync(15)).ReturnsAsync(new DatosAvisoDTO
-            { IdArchivoOriginal = 4, IdArchivoFirmado = 20 });
-        servicio.Setup(s => s.ObtenerIdArchivoVigente(It.IsAny<DatosAvisoDTO>())).Returns(20);
-        archivos.Setup(a => a.ObtenerVistaPreviaPdfAsync(20)).ReturnsAsync(new ArchivoDescargadoDTO
-            { Ruta = "C:/archivos/firmado.pdf", Tipo = "application/pdf", Nombre = "firmado.pdf" });
-        Assert.IsType<PhysicalFileResult>(await Crear(Constantes.COORDINADOR_EA).DescargarAvisoAsync(15));
-        archivos.Verify(a => a.ObtenerVistaPreviaPdfAsync(20), Times.Once);
-        archivos.Verify(a => a.DescargarAsync(It.IsAny<int>()), Times.Never);
+            { Estado = Constantes.FIRMADO, IdArchivoOriginal = 4, IdArchivoFirmado = 20 });
+        archivos.Setup(a => a.DescargarAsync(4)).ReturnsAsync(new ArchivoDescargadoDTO
+            { Ruta = "C:/archivos/aviso.docx", Tipo = "application/vnd.openxmlformats-officedocument.wordprocessingml.document", Nombre = "aviso.docx" });
+
+        var resultado = Assert.IsType<PhysicalFileResult>(await Crear(Constantes.COORDINADOR_EA).DescargarAvisoAsync(15));
+
+        Assert.Equal("application/vnd.openxmlformats-officedocument.wordprocessingml.document", resultado.ContentType);
+        Assert.Equal("aviso.docx", resultado.FileDownloadName);
+        archivos.Verify(a => a.DescargarAsync(4), Times.Once);
+        archivos.Verify(a => a.ObtenerVistaPreviaPdfAsync(It.IsAny<int>()), Times.Never);
     }
 
     [Fact]
-    public async Task Descargar_OriginalSolicitaConversionPdf()
+    public async Task Descargar_OriginalEntregaWordGenerado()
     {
         Aviso(Constantes.CREADO);
         servicio.Setup(s => s.ObtenerAvisoPorIDAsync(15)).ReturnsAsync(new DatosAvisoDTO
             { Estado = Constantes.CREADO, IdArchivoOriginal = 4 });
         servicio.Setup(s => s.ObtenerIdArchivoVigente(It.IsAny<DatosAvisoDTO>())).Returns(4);
-        archivos.Setup(a => a.ObtenerVistaPreviaPdfAsync(4)).ReturnsAsync(new ArchivoDescargadoDTO
-            { Ruta = "C:/archivos/aviso.pdf", Tipo = "application/pdf", Nombre = "aviso.pdf" });
+        archivos.Setup(a => a.DescargarAsync(4)).ReturnsAsync(new ArchivoDescargadoDTO
+            { Ruta = "C:/archivos/aviso.docx", Tipo = "application/vnd.openxmlformats-officedocument.wordprocessingml.document", Nombre = "aviso.docx" });
         var resultado = Assert.IsType<PhysicalFileResult>(await Crear(Constantes.COORDINADOR_EA).DescargarAvisoAsync(15));
-        Assert.Equal("application/pdf", resultado.ContentType);
-        Assert.Equal("aviso.pdf", resultado.FileDownloadName);
-        archivos.Verify(a => a.DescargarAsync(It.IsAny<int>()), Times.Never);
+        Assert.Equal("application/vnd.openxmlformats-officedocument.wordprocessingml.document", resultado.ContentType);
+        Assert.Equal("aviso.docx", resultado.FileDownloadName);
+        archivos.Verify(a => a.DescargarAsync(4), Times.Once);
+        archivos.Verify(a => a.ObtenerVistaPreviaPdfAsync(It.IsAny<int>()), Times.Never);
     }
 
     [Theory]
     [InlineData("vista")]
     [InlineData("pdf")]
-    [InlineData("descarga")]
-    public async Task DocumentoFaltante_NoSustituyeFirmadoPorOriginal(string accion)
+    public async Task DocumentoFirmadoFaltante_NoSustituyeFirmadoPorOriginal(string accion)
     {
         Aviso(Constantes.FIRMADO);
         servicio.Setup(s => s.ObtenerAvisoPorIDAsync(15)).ReturnsAsync(new DatosAvisoDTO
@@ -307,8 +308,7 @@ public class AvisosRevisionTests
             .Throws(new ValidacionExcepction("Falta el documento firmado", "404"));
         var controller = Crear(Constantes.COORDINADOR_EA);
         var resultado = accion == "vista" ? await controller.VistaPreviaAvisoAsync(15)
-            : accion == "pdf" ? await controller.ObtenerVistaPreviaAvisoAsync(15)
-            : await controller.DescargarAvisoAsync(15);
+            : await controller.ObtenerVistaPreviaAvisoAsync(15);
         Assert.IsType<NotFoundResult>(resultado);
         archivos.Verify(a => a.ObtenerVistaPreviaPdfAsync(It.IsAny<int>()), Times.Never);
         archivos.Verify(a => a.DescargarAsync(It.IsAny<int>()), Times.Never);
@@ -328,5 +328,50 @@ public class AvisosRevisionTests
             : await controller.DescargarAvisoAsync(15);
         Assert.IsType<ForbidResult>(resultado);
         archivos.Verify(a => a.ObtenerVistaPreviaPdfAsync(It.IsAny<int>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Dgaa_NoArchivaAvisoDeOtraArea()
+    {
+        Aviso(Constantes.CREADO, area: 4);
+        var resultado = await Crear(Constantes.COORDINADOR_DGAA).ArchivarAvisoAsync(15);
+        Assert.IsType<ForbidResult>(resultado);
+        servicio.Verify(s => s.ArchivarAvisoAsync(It.IsAny<int>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Dgaa_ArchivaAvisoDeSuArea()
+    {
+        Aviso(Constantes.CREADO);
+        var resultado = await Crear(Constantes.COORDINADOR_DGAA).ArchivarAvisoAsync(15);
+        Assert.IsType<OkObjectResult>(resultado);
+        servicio.Verify(s => s.ArchivarAvisoAsync(15), Times.Once);
+    }
+
+    [Fact]
+    public async Task EliminarInexistente_Responde404()
+    {
+        var resultado = await Crear(Constantes.COORDINADOR_DGAA).EliminarAvisoAsync(15);
+        Assert.IsType<NotFoundResult>(resultado);
+    }
+
+    [Fact]
+    public async Task EditarGet_Archivado_RedireccionaSinExponerFormulario()
+    {
+        servicio.Setup(s => s.ObtenerAvisoPorIDAsync(15)).ReturnsAsync(new DatosAvisoDTO
+            { IdAviso = 15, IdEntidadAcademica = 7, Archivado = true });
+        var resultado = await Crear(Constantes.COORDINADOR_EA).EditarAviso(15);
+        Assert.IsType<RedirectToActionResult>(resultado);
+    }
+
+    [Theory]
+    [InlineData(nameof(AvisosController.EliminarAvisoAsync))]
+    [InlineData(nameof(AvisosController.ArchivarAvisoAsync))]
+    [InlineData(nameof(AvisosController.DesarchivarAvisoAsync))]
+    public void OperacionesMutantesDgaa_UsanPostYAntiforgery(string accion)
+    {
+        var metodo = typeof(AvisosController).GetMethod(accion)!;
+        Assert.NotEmpty(metodo.GetCustomAttributes(typeof(HttpPostAttribute), true));
+        Assert.NotEmpty(metodo.GetCustomAttributes(typeof(ValidateAntiForgeryTokenAttribute), true));
     }
 }

@@ -1,4 +1,3 @@
-using Microsoft.IdentityModel.Tokens;
 using SGPla.Commons;
 using SGPla.Models.DTOs.Archivo;
 using SGPla.Models.DTOs.Aviso;
@@ -59,32 +58,46 @@ namespace SGPla.Validations.Implementations
 
         public Task ValidarCrearAviso(CrearAvisoDTO dto)
         {
-            throw new NotImplementedException();
-            if (dto == null)
-            {
-                throw new ArgumentNullException(nameof(dto));
-            }else
-            {
-                validarDatosAviso(dto);
-                validarHorarios(dto.Horarios);
-            }
+            ArgumentNullException.ThrowIfNull(dto);
+            validarDatosAviso(dto);
+            validarHorarios(dto.Horarios);
+            return Task.CompletedTask;
         }
 
         private void validarDatosAviso(CrearAvisoDTO dto)
         {
-            if(dto.Folio.IsNullOrEmpty())
-                throw new ArgumentException(nameof(dto.Folio));
-            if (dto.FechaCreacion != null)
-                throw new ArgumentException(nameof(dto.FechaCreacion));
+            if (dto.IdEntidadAcademica <= 0 || dto.IdPeriodo <= 0 || dto.IdArticulo <= 0 ||
+                dto.FechaCreacion == DateOnly.MinValue || dto.FechaPublicacion == DateOnly.MinValue ||
+                dto.FechaCT == DateOnly.MinValue || dto.FechaVacantes == DateOnly.MinValue ||
+                string.IsNullOrWhiteSpace(dto.Requisitos) || string.IsNullOrWhiteSpace(dto.Modalidad) ||
+                string.IsNullOrWhiteSpace(dto.Correo))
+                throw new ValidacionExcepction("Hay campos obligatorios sin completar.", "400");
 
-            //TODO
-            throw new NotImplementedException();
+            if (!System.Net.Mail.MailAddress.TryCreate(dto.Correo, out _))
+                throw new ValidacionExcepction("El correo electrónico no es válido.", "400");
+
+            if (dto.Modalidad != Constantes.MODALIDAD_AVISO_PRESENCIAL && dto.Modalidad != Constantes.MODALIDAD_AVISO_VIRTUAL)
+                throw new ValidacionExcepction("La modalidad no es válida.", "400");
+
+            if (dto.Modalidad == Constantes.MODALIDAD_AVISO_PRESENCIAL && string.IsNullOrWhiteSpace(dto.Lugar))
+                throw new ValidacionExcepction("El lugar es obligatorio para la modalidad presencial.", "400");
+
+            if (dto.OfertasId is null || dto.OfertasId.Count == 0)
+                throw new ValidacionExcepction("Seleccione al menos una oferta.", "400");
+
+            if (dto.OfertasId.Distinct().Count() != dto.OfertasId.Count)
+                throw new ValidacionExcepction("No es posible seleccionar una oferta más de una vez.", "400");
         }
 
         private void validarHorarios(List<CrearHorarioAvisoDTO> horarios)
         {
-            //TODO
-            throw new NotImplementedException();
+            if (horarios is null || horarios.Count == 0)
+                throw new ValidacionExcepction("Llena la tabla de Horarios.", "400");
+
+            if (horarios.Any(h => h is null || !DateOnly.TryParse(h.Fecha, out _) ||
+                !TimeOnly.TryParse(h.HoraInicio, out var inicio) ||
+                !TimeOnly.TryParse(h.HoraTermino, out var fin) || inicio >= fin))
+                throw new ValidacionExcepction("Cada horario debe tener una fecha y hora de inicio menor a la hora de término.", "400");
         }
     }
 }

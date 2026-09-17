@@ -9,5 +9,6 @@ namespace SGPla.Repositories.Interfaces
         Task<List<OfertaPlanEstudiosAvisoDTO>> ObtenerPlanesEstudioCrearAviso(int idEntidadAcademica, int idPeriodo, int idArticulo);
         Task<Oferta?> ObtenerPorIdAsync(int id);
         Task<bool> SonOfertasValidasParaAvisoAsync(List<int> idsOfertas, int idEntidadAcademica, int idPeriodo, int idArticulo);
+        Task<string?> ObtenerSistemaParaAvisoAsync(List<int> idsOfertas);
     }
 }

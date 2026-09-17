@@ -19,18 +19,6 @@
         <div class="cabecera-seccion mb-3">
             <h4 style="margin-bottom: 25px">Datos Generales</h4>
             <div style="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease; width: stretch; justify-content: space-evenly">
-                <div style ="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease; width: stretch; justify-content: space-evenly; flex: 4">
-                    @await Component.InvokeAsync("InputField", new InputFieldModel
-                    {
-                        Label = "Folio:",
-                        Name = "Folio",
-                        Valor = Model.Folio,
-                        Error = ViewData.ModelState["Folio"]?.Errors.FirstOrDefault()?.ErrorMessage,
-                        Flexible = true
-                    })
-
-                    
-                </div>
                 <div style="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease; width: stretch; justify-content: space-evenly; flex: 6">
                     @await Component.InvokeAsync("SelectField", new SelectFieldModel
                     {
@@ -57,6 +45,13 @@
                         Label = "Fecha a ocupar vacantes:",
                         Name = "FechaVacantes",
                         Value = Model.FechaVacantes,
+                        Flexible = true
+                    })
+                    @await Component.InvokeAsync("DatePicker", new DatePickerModel
+                    {
+                        Label = "Fecha de publicación:",
+                        Name = "FechaPublicacion",
+                        Value = Model.FechaPublicacion,
                         Flexible = true
                     })
                 </div>
