@@ -9,8 +9,8 @@ namespace SGPla.Models.DTOs.Aviso
         public int IdEntidadAcademica { get; set; }
         public int IdPeriodo { get; set; }
         public int IdArticulo { get; set; }
-        public string Folio { get; set; }
         public DateOnly FechaCreacion{ get; set; } 
+        public DateOnly FechaPublicacion { get; set; }
         public DateOnly FechaCT { get; set; } 
         public DateOnly FechaVacantes { get; set; }
         public string Requisitos { get; set; }

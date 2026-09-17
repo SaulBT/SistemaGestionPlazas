@@ -13,13 +13,13 @@ public partial class Aviso
 
     public int IdArticulo { get; set; }
 
-    public string Folio { get; set; } = null!;
-
     public DateOnly FechaCt { get; set; }
 
     public DateOnly FechaVacantes { get; set; }
 
     public DateOnly FechaCreacion { get; set; }
+
+    public DateOnly? FechaPublicacion { get; set; }
 
     public string Requisitos { get; set; } = null!;
 

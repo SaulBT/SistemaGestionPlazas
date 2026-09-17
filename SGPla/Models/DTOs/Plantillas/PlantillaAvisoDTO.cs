@@ -2,7 +2,6 @@
 {
     public class PlantillaAvisoDTO
     {
-        public string Folio { get; set; } = "0";
         public string AreaAcademica { get; set; } = string.Empty;
         public string EntidadAcademica { get; set; } = string.Empty;
         public string Articulo { get; set; } = string.Empty;

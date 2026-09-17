@@ -33,9 +33,9 @@ namespace SGPla.Repositories.Implementations
             if (filtro.IdAreaAcademica > 0)
                 query = query.Where(a => a.IdEntidadAcademicaNavigation.IdAreaAcademica == filtro.IdAreaAcademica);
             if (filtro.SoloEnviadosDgaa)
-                query = query.Where(a => EstadosAviso.RecibidosDgaa.Contains(a.Estado));
+                query = query.Where(a => EstadosAviso.RecibidosDgaa.Contains(a.Estado) || a.Archivado == true);
             if (!string.IsNullOrWhiteSpace(filtro.Busqueda))
-                query = query.Where(a => a.Folio.Contains(filtro.Busqueda));
+                query = query.Where(a => a.IdEntidadAcademicaNavigation.Nombre.Contains(filtro.Busqueda));
             if (filtro.IdPeriodo > 0)
                 query = query.Where(a => a.IdPeriodo == filtro.IdPeriodo);
             if (filtro.FechaInicio.HasValue)
@@ -54,29 +54,6 @@ namespace SGPla.Repositories.Implementations
                 .FirstOrDefaultAsync(aviso => aviso.IdAviso == idAviso);
         }
 
-        public async Task<Aviso> CrearAsync(Aviso aviso)
-        {
-            if (aviso == null)
-                return null;
-            await _context.Aviso.AddAsync(aviso);
-            await _context.SaveChangesAsync();
-            return aviso;
-        }
-
-        public async Task EliminarAsync(int idAviso)
-        {
-            var aviso = await _context.Aviso
-                .FirstOrDefaultAsync(aviso => aviso.IdAviso == idAviso);
-            _context.Aviso.Remove(aviso);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task ActualizarAsync(Aviso aviso)
-        {
-            _context.Aviso.Update(aviso);
-            await _context.SaveChangesAsync();
-        }
-
         public async Task<int> ContarAsync(FiltroAvisosDTO filtro)
         {
             return await Filtrar(filtro).CountAsync();
@@ -84,13 +61,11 @@ namespace SGPla.Repositories.Implementations
 
         public async Task CambiarStatusArchivadoAsync(int idAviso, bool archivado)
         {
-            var aviso = _context.Aviso.FirstOrDefault(a => a.IdAviso == idAviso);
-            if (aviso is not null)
-            {
-                aviso.Archivado = archivado;
-                await _context.SaveChangesAsync();
-            }
-
+            var cambios = await _context.Aviso
+                .Where(a => a.IdAviso == idAviso && a.Archivado != archivado)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(a => a.Archivado, archivado));
+            if (cambios == 0)
+                throw new ValidacionExcepction("El aviso ya se encuentra en el estado solicitado. Actualice el listado.", "409");
         }
 
         public async Task EnviarARevisionAsync(int idAviso, string comentarios)
@@ -167,18 +142,31 @@ namespace SGPla.Repositories.Implementations
             return aviso is not null;
         }
 
-        public async Task AsociarOfertasPorAviso(List<int> idsOfertas, int idAviso)
+        public async Task CrearCompletoAsync(Aviso aviso, List<int> idsOfertas, List<Horario> horarios)
         {
-            foreach (int id in idsOfertas)
+            await using var transaccion = await _context.Database.BeginTransactionAsync();
+            try
             {
-                await _context.OfertaAviso.AddAsync(new OfertaAviso
-                {
-                    IdAviso = idAviso,
-                    IdOferta = id
-                });
+                await _context.Aviso.AddAsync(aviso);
+                await _context.SaveChangesAsync();
 
+                foreach (var horario in horarios)
+                    horario.IdAviso = aviso.IdAviso;
+
+                await _context.OfertaAviso.AddRangeAsync(idsOfertas.Select(idOferta => new OfertaAviso
+                {
+                    IdAviso = aviso.IdAviso,
+                    IdOferta = idOferta
+                }));
+                await _context.Horario.AddRangeAsync(horarios);
+                await _context.SaveChangesAsync();
+                await transaccion.CommitAsync();
             }
-            await _context.SaveChangesAsync();
+            catch
+            {
+                await transaccion.RollbackAsync();
+                throw;
+            }
         }
 
         public async Task ActualizarCompletoAsync(EditarAvisoDTO avisoDTO, int idArchivoOriginal, List<Horario> horarios)
@@ -187,17 +175,18 @@ namespace SGPla.Repositories.Implementations
 
             try
             {
-                var aviso = await _context.Aviso
-                    .FirstOrDefaultAsync(a => a.IdAviso == avisoDTO.IdAviso);
+                var aviso = await _context.Aviso.FirstOrDefaultAsync(a => a.IdAviso == avisoDTO.IdAviso
+                    && a.Archivado != true
+                    && (a.Estado == Constantes.CREADO || a.Estado == Constantes.DEVUELTO_POR_DGAA));
 
                 if (aviso is null)
-                    throw new InvalidOperationException("No existe el aviso que se desea actualizar.");
+                    throw new ValidacionExcepction("El aviso cambió de estado, fue archivado o ya no existe. Actualice el listado.", "409");
 
                 aviso.IdPeriodo = avisoDTO.IdPeriodo;
                 aviso.IdArticulo = avisoDTO.IdArticulo;
-                aviso.Folio = avisoDTO.Folio;
                 aviso.FechaCt = avisoDTO.FechaCT;
                 aviso.FechaVacantes = avisoDTO.FechaVacantes;
+                aviso.FechaPublicacion = avisoDTO.FechaPublicacion;
                 aviso.Requisitos = avisoDTO.Requisitos;
                 aviso.Lugar = avisoDTO.Lugar;
                 aviso.Correo = avisoDTO.Correo;
@@ -224,6 +213,33 @@ namespace SGPla.Repositories.Implementations
 
                 await _context.SaveChangesAsync();
                 await transaccion.CommitAsync();
+            }
+            catch
+            {
+                await transaccion.RollbackAsync();
+                throw;
+            }
+        }
+
+        public async Task<(int? idArchivoOriginal, int? idArchivoFirmado)> EliminarCompletoAsync(int idAviso)
+        {
+            await using var transaccion = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                var aviso = await _context.Aviso.FirstOrDefaultAsync(a => a.IdAviso == idAviso)
+                    ?? throw new ValidacionExcepction("No existe ese Aviso", "404");
+
+                if (await _context.Acta.AnyAsync(a => a.IdAviso == idAviso))
+                    throw new ValidacionExcepction("No se puede eliminar el aviso porque tiene actas relacionadas.", "409");
+
+                var relaciones = await _context.OfertaAviso.Where(oa => oa.IdAviso == idAviso).ToListAsync();
+                var horarios = await _context.Horario.Where(h => h.IdAviso == idAviso).ToListAsync();
+                _context.OfertaAviso.RemoveRange(relaciones);
+                _context.Horario.RemoveRange(horarios);
+                _context.Aviso.Remove(aviso);
+                await _context.SaveChangesAsync();
+                await transaccion.CommitAsync();
+                return (aviso.IdArchivoOriginal, aviso.IdArchivoFirmado);
             }
             catch
             {
