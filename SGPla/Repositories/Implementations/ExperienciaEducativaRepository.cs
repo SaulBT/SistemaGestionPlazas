@@ -94,19 +94,16 @@ namespace SGPla.Repositories.Implementations
 
         public async Task<Dictionary<string, int>> ObtenerIdsPorNombreAsync(List<string> nombres)
         {
-            return await _context.ExperienciaEducativa
+            var coincidencias = await _context.ExperienciaEducativa
                 .Where(e => nombres.Contains(e.Nombre))
-                .ToDictionaryAsync(
-                    e => e.Nombre,
-                    e => e.IdExperienciaEducativa
-                );
-        }
+                .AsNoTracking()
+                .Select(e => new { e.Nombre, e.IdExperienciaEducativa })
+                .ToListAsync();
 
-        public async Task<Dictionary<string, int>> ObtenerIdsPorNombreEnPlanAsync(int idPlanEstudios, List<string> nombres)
-        {
-            return await _context.ExperienciaEducativa
-                .Where(e => e.IdPlanEstudios == idPlanEstudios && nombres.Contains(e.Nombre))
-                .ToDictionaryAsync(e => e.Nombre, e => e.IdExperienciaEducativa);
+            // La primera coincidencia es siempre la de menor ID, incluso entre planes.
+            return coincidencias
+                .GroupBy(e => e.Nombre, StringComparer.Ordinal)
+                .ToDictionary(g => g.Key, g => g.Min(e => e.IdExperienciaEducativa), StringComparer.Ordinal);
         }
     }
 }

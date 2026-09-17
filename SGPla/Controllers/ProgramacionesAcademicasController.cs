@@ -10,7 +10,6 @@ using SGPla.Models.DTOs.Oferta;
 using SGPla.Models.DTOs.ProgramacionAcademica;
 using SGPla.Models.ViewModels.ProgramacionesAcademicas;
 using SGPla.Services.Interfaces;
-using SGPla.Repositories.Interfaces;
 using System.Text.Json;
 using static SGPla.Services.Implementations.ClavesEstado.ProgramacionAcademica;
 using ProgramacionClaves = SGPla.Services.Implementations.ClavesEstado.ProgramacionAcademica;
@@ -32,7 +31,6 @@ public class ProgramacionesAcademicasController : Controller
     private readonly IProgramacionAcademicaService _programacionAcademicaService;
     private readonly IPeriodoEscolarService _periodoEscolarService;
     private readonly IEstadoNavegacion _estado;
-    private readonly IPlanEstudiosRepository _planEstudiosRepository;
     private int _paginaActual = 1;
 
 
@@ -51,14 +49,12 @@ public class ProgramacionesAcademicasController : Controller
         ILogger<ProgramacionesAcademicasController> logger,
         IProgramacionAcademicaService programacionAcademicaService,
         IPeriodoEscolarService periodoEscolarService,
-        IEstadoNavegacion estado,
-        IPlanEstudiosRepository planEstudiosRepository)
+        IEstadoNavegacion estado)
     {
         _logger = logger;
         _programacionAcademicaService = programacionAcademicaService;
         _periodoEscolarService = periodoEscolarService;
         _estado = estado;
-        _planEstudiosRepository = planEstudiosRepository;
     }
 
     #region Índice y resumen de programaciones
@@ -165,19 +161,6 @@ public class ProgramacionesAcademicasController : Controller
         return Json(result);
     }
 
-    [HttpGet]
-    [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
-    public async Task<IActionResult> ObtenerPlanes(int entidad, string modalidad)
-    {
-        var planes = await _planEstudiosRepository.ObtenerTodosAsync();
-        var result = planes
-            .Where(plan => plan.IdProgramaEducativoNavigation.IdEntidadAcademica == entidad
-                && plan.Modalidad == modalidad
-                && !string.IsNullOrWhiteSpace(plan.CodigoPlan))
-            .Select(plan => new { value = plan.IdPlanEstudios, text = $"{plan.CodigoPlan} - {plan.Nombre}" });
-        return Json(result);
-    }
-
     #endregion
 
     #region Carga de programación académica (flujo multi-paso)
@@ -226,7 +209,6 @@ public class ProgramacionesAcademicasController : Controller
             foreach (var oferta in todas)
             {
                 oferta.IdPeriodo = modelo.IdPeriodo.Value;
-                oferta.IdPlanEstudios = modelo.IdPlanEstudios.Value;
             }
 
             _estado.Guardar(Ofertas, todas);
@@ -636,18 +618,6 @@ public class ProgramacionesAcademicasController : Controller
             })
             .ToList();
 
-        modelo.Modalidades = Constantes.MODALIDADES
-            .Select(modalidad => new OptionModel { Value = modalidad, Text = modalidad })
-            .ToList();
-
-        var planes = await _planEstudiosRepository.ObtenerTodosAsync();
-        modelo.Planes = planes
-            .Where(plan => modelo.IdEntidadAcademica.HasValue
-                && plan.IdProgramaEducativoNavigation.IdEntidadAcademica == modelo.IdEntidadAcademica.Value
-                && plan.Modalidad == modelo.Modalidad
-                && !string.IsNullOrWhiteSpace(plan.CodigoPlan))
-            .Select(plan => new OptionModel { Value = plan.IdPlanEstudios.ToString(), Text = $"{plan.CodigoPlan} - {plan.Nombre}" })
-            .ToList();
     }
 
     private List<OfertaDTO> ObtenerOfertasSesion() => _estado.Obtener<List<OfertaDTO>>(Ofertas) ?? [];

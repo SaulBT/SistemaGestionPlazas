@@ -102,7 +102,8 @@ namespace SGPla.Validations.Implementations
             if (noRegistradas.Any())
             {
                 throw new ArgumentException(
-                    "Las siguientes experiencias no corresponden al programa educativo:\n" +
+                    "No se encontraron experiencias registradas con estos nombres exactos (programa del archivo | nombre). " +
+                    "Revisa nombres abreviados o registra las materias faltantes:\n" +
                     string.Join("\n", noRegistradas));
             }
 

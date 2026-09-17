@@ -53,29 +53,22 @@ namespace SGPla.Repositories.Implementations
 
         public async Task<List<string>> ObtenerRelacionesValidasAsync(List<OfertaDTO> ofertas)
         {
-            var relacionesArchivo = ofertas
+            var nombresArchivo = ofertas.Select(x => x.ExperienciaEducativa).Distinct().ToList();
+            var nombresBd = await _context.ExperienciaEducativa
+                .AsNoTracking()
+                .Where(ee => nombresArchivo.Contains(ee.Nombre))
+                .Select(ee => ee.Nombre)
+                .ToListAsync();
+            var nombresRegistrados = nombresBd.ToHashSet(StringComparer.Ordinal);
+
+            // Se valida la misma búsqueda global por nombre usada al asociar la oferta.
+            // El programa se conserva en la clave sólo para identificar la fila del archivo.
+            return ofertas
                 .Where(x =>
                     !string.IsNullOrWhiteSpace(x.Programa) &&
-                    !string.IsNullOrWhiteSpace(x.ExperienciaEducativa))
+                    nombresRegistrados.Contains(x.ExperienciaEducativa))
                 .Select(x =>
                     $"{ObtenerClavePrograma(x.Programa)}|{x.ExperienciaEducativa}")
-                .Distinct()
-                .ToHashSet();
-
-            var relacionesBd = await _context.ExperienciaEducativa
-                .Select(ee => new
-                {
-                    Programa =
-                        ee.IdPlanEstudiosNavigation
-                          .IdProgramaEducativoNavigation.Nombre,
-                    Experiencia = ee.Nombre
-                })
-                .ToListAsync();
-
-            return relacionesBd
-                .Select(x =>
-                    $"{ObtenerClavePrograma(x.Programa)}|{x.Experiencia}")
-                .Where(relacionesArchivo.Contains)
                 .Distinct()
                 .ToList();
         }

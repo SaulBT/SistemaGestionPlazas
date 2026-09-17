@@ -4,12 +4,8 @@
     ViewData["Title"] = "Nuevo Personal Academico";
 }
 
-<<<<<<< HEAD
-<form method="post" action="@Url.Action("GuardarDocente", "Docentes")" enctype="multipart/form-data">
-    <input asp-for="IdOferta" type="hidden" />
-=======
 <form class="formulario-con-barra-acciones" method="post" action="@Url.Action("GuardarDocente", "Docentes")" enctype="multipart/form-data">
->>>>>>> develop
+    <input asp-for="IdOferta" type="hidden" />
     <input name="Recarga" type="hidden" value="@Model.Recarga.ToString().ToLower()" />
     <div class="d-flex row gap-3">
         <!-- Nombre -->

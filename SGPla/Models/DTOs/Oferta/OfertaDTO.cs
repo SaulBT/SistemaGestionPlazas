@@ -53,7 +53,6 @@
         public int IdPeriodo { get; set; }
 
         public int IdProgramaEducativo { get; set; }
-        public int IdPlanEstudios { get; set; }
 
         public string? Region { get; set; }
 

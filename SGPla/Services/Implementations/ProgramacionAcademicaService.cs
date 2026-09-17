@@ -87,12 +87,8 @@ namespace SGPla.Services.Implementations
             var docentesOfertas = await _docenteRepository
                 .ObtenerIdsPorNumeroPersonalAsync(numerosPersonalOfertas);
 
-            var idPlanEstudios = ofertas.Select(o => o.IdPlanEstudios).Distinct().SingleOrDefault();
-            if (idPlanEstudios <= 0)
-                throw new ArgumentException("Debe seleccionarse un plan de estudios para cargar la programación.");
-
             var experiencias = await _experienciaRepository
-                .ObtenerIdsPorNombreEnPlanAsync(idPlanEstudios, nombresExperiencia);
+                .ObtenerIdsPorNombreAsync(nombresExperiencia);
 
             var nombresProgramas = ofertas
                 .Where(o => !string.IsNullOrWhiteSpace(o.Programa))
