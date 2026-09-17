@@ -218,11 +218,11 @@
     Titulo = "Horario"
 })
 
-<form method="post" action="@Url.Action("Guardar", "ProgramacionesAcademicas")">
+<form class="formulario-con-barra-acciones" method="post" action="@Url.Action("Guardar", "ProgramacionesAcademicas")">
     @Html.AntiForgeryToken()
 
     <!-- Botones -->
-    <div style="display:flex; justify-content:flex-end; gap:var(--button-gap)">
+    <div class="barra-acciones-fija">
         <a href="@Url.Action("Index", "ProgramacionesAcademicas")" style="display: inline-block; text-decoration: none;">
             @await Component.InvokeAsync("Boton", new
             {

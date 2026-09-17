@@ -68,7 +68,7 @@ namespace SGPla.Services.Implementations
                     wordDoc.MainDocumentPart.Document.Save();
                 }
 
-                var nombreGuardado = $"{plantillaAvisoDTO.Folio}.docx";
+                var nombreGuardado = $"aviso-{Guid.NewGuid():N}.docx";
                 var id = await _archivoService.GuardarArchivoBytesAsync(stream.ToArray(), "aviso-original", nombreGuardado);
 
                 return id;

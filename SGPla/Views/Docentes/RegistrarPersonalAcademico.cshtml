@@ -4,8 +4,12 @@
     ViewData["Title"] = "Nuevo Personal Academico";
 }
 
+<<<<<<< HEAD
 <form method="post" action="@Url.Action("GuardarDocente", "Docentes")" enctype="multipart/form-data">
     <input asp-for="IdOferta" type="hidden" />
+=======
+<form class="formulario-con-barra-acciones" method="post" action="@Url.Action("GuardarDocente", "Docentes")" enctype="multipart/form-data">
+>>>>>>> develop
     <input name="Recarga" type="hidden" value="@Model.Recarga.ToString().ToLower()" />
     <div class="d-flex row gap-3">
         <!-- Nombre -->
@@ -84,7 +88,7 @@
             })
         </div>
 
-        <div class="d-flex column-gap-3 justify-content-end">
+        <div class="barra-acciones-fija">
             @await Component.InvokeAsync("Boton", new
             {
                 Accion = "Cancelar",

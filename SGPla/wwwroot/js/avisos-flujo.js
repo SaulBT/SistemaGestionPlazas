@@ -96,7 +96,7 @@ async function publicar() {
 }
 
 function mostrarComentariosAviso(boton) {
-    document.getElementById('comentariosAvisoTitulo').textContent = `Comentarios · ${boton.dataset.folio}`;
+    document.getElementById('comentariosAvisoTitulo').textContent = `Comentarios · Aviso ${boton.dataset.aviso}`;
     document.getElementById('comentariosAvisoTexto').textContent = boton.dataset.comentarios;
     document.getElementById('comentariosAviso').showModal();
 }

@@ -5,6 +5,7 @@ using SGPla.Validations.Implementations;
 using Xunit;
 using SGPla.Models.DTOs.Aviso;
 using SGPla.Models.DTOs.Archivo;
+using SGPla.Models.DTOs.Horario;
 
 namespace SGPla.Tests.Validators
 {
@@ -360,6 +361,31 @@ namespace SGPla.Tests.Validators
             Assert.NotNull(ex);
             Assert.IsType<ValidacionExcepction>(ex);
             Assert.Contains("No existe ese Aviso", ex.Message);
+        }
+
+        [Fact]
+        public async Task ValidarCrearAviso_RechazaCorreoHorarioYOfertaDuplicada()
+        {
+            var dto = new CrearAvisoDTO
+            {
+                IdEntidadAcademica = 1,
+                IdPeriodo = 2,
+                IdArticulo = 3,
+                FechaCreacion = new DateOnly(2026, 9, 1),
+                FechaPublicacion = new DateOnly(2026, 9, 2),
+                FechaCT = new DateOnly(2026, 9, 3),
+                FechaVacantes = new DateOnly(2026, 9, 4),
+                Requisitos = "Requisitos",
+                Modalidad = Constantes.MODALIDAD_AVISO_VIRTUAL,
+                Correo = "correo-invalido",
+                OfertasId = [7, 7],
+                Horarios = [new CrearHorarioAvisoDTO { Fecha = "2026-09-10", HoraInicio = "12:00", HoraTermino = "10:00" }]
+            };
+
+            var ex = await Assert.ThrowsAsync<ValidacionExcepction>(() => _avisoValidator.ValidarCrearAviso(dto));
+
+            Assert.Equal("400", ex.Codigo);
+            Assert.Contains("correo", ex.Message, StringComparison.OrdinalIgnoreCase);
         }
 
         

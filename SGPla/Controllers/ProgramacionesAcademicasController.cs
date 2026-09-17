@@ -470,9 +470,6 @@ public class ProgramacionesAcademicasController : Controller
             IdPeriodo = idPeriodo
         };
 
-        ViewBag.RegresarUrl = Url.Action("Ver", "ProgramacionesAcademicas",
-            new { idEntidadAcademica, idProgramaEducativo, idPeriodo });
-
         return View(model);
     }
 

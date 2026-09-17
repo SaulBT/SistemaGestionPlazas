@@ -5,7 +5,7 @@
 	<div class="aviso-tarjeta-contenido">
 		<div class="aviso-tarjeta-datos">
 			<div>
-				<strong>Folio: </strong>@Model.Folio
+                <strong>Aviso: </strong>@Model.IdAviso
                 @if (User.IsInRole(Constantes.COORDINADOR_DGAA))
                 {
                     <div><strong>Entidad: </strong>@Model.EntidadAcademica</div>
@@ -80,8 +80,13 @@
             }
             else
             {
+<<<<<<< HEAD
             <a class="btn btn-outline-primary" href="@Url.Action("ObtenerVistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })" target="_blank" rel="noopener">Ver aviso</a>
             <a class="btn btn-outline-secondary" href="@Url.Action("DescargarAviso", "Avisos", new { idAviso = Model.IdAviso })">Descargar aviso</a>
+=======
+            <a class="btn btn-outline-primary" href="@Url.Action("VistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })" target="_blank" rel="noopener">Ver aviso</a>
+            <a class="btn btn-outline-secondary" href="@Url.Action("DescargarAviso", "Avisos", new { idAviso = Model.IdAviso })">Descargar Word (.docx)</a>
+>>>>>>> develop
             @if (!Model.Archivado && Model.Estado == Constantes.EN_REVISION_POR_DGAA)
             {
                 <a class="btn btn-primary" href="@Url.Action("RevisarAviso", "Avisos", new { idAviso = Model.IdAviso })">Revisar aviso</a>
@@ -91,6 +96,11 @@
                 <a class="btn btn-outline-primary" href="@Url.Action("EditarRevision", "Avisos", new { idAviso = Model.IdAviso })">Editar comentarios de revisión</a>
             }
             }
+            <button type="button" class="btn btn-outline-secondary"
+                    aria-label="@(Model.Archivado ? "Desarchivar aviso" : "Archivar aviso")"
+                    onclick="archivarAsync(@Model.IdAviso, @Model.Archivado.ToString().ToLower())">
+                @(Model.Archivado ? "Desarchivar aviso" : "Archivar aviso")
+            </button>
         </div>
     }
     else if (User.IsInRole(Constantes.COORDINADOR_EA))
@@ -98,7 +108,11 @@
     <div class="aviso-tarjeta-acciones">
         @if (Model.Estado == Constantes.CREADO || Model.Estado == Constantes.DEVUELTO_POR_DGAA || Model.Estado == Constantes.EN_REVISION_POR_DGAA)
         {
+<<<<<<< HEAD
         <a class="btn btn-outline-primary" href="@Url.Action("ObtenerVistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })" target="_blank" rel="noopener">Ver aviso</a>
+=======
+        <a class="btn btn-outline-primary" href="@Url.Action("VistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })" target="_blank" rel="noopener">Ver aviso</a>
+>>>>>>> develop
         }
         @if (!Model.Archivado && User.IsInRole(Constantes.COORDINADOR_EA) &&
             (Model.Estado == Constantes.CREADO || Model.Estado == Constantes.DEVUELTO_POR_DGAA))
@@ -122,7 +136,11 @@
 					tipo = "terciario",
 					OnClick = $"abrirModalFirmar({Model.IdAviso})"
 				})
+<<<<<<< HEAD
 				<a href="@Url.Action("ObtenerVistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })" target="_blank" rel="noopener">
+=======
+				<a href="@Url.Action("VistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })" target="_blank" rel="noopener">
+>>>>>>> develop
 					@await Component.InvokeAsync("Boton", new { texto = "Ver Aviso", tipo = "secundario" })
 				</a>
 				break;
@@ -134,7 +152,7 @@
 					tipo = "publicar",
 					OnClick = $"abrirModalPublicar({Model.IdAviso})"
 				})
-				<a href="@Url.Action("ObtenerVistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })" target="_blank" rel="noopener">
+				<a href="@Url.Action("VistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })" target="_blank" rel="noopener">
 					@await Component.InvokeAsync("Boton", new { texto = "Ver Aviso", tipo = "secundario" })
 				</a>
 				break;
@@ -153,7 +171,11 @@
 					tipo = "terciario",
 					accion = "agregar"
 				})
+<<<<<<< HEAD
 				<a href="@Url.Action("ObtenerVistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })" target="_blank" rel="noopener">
+=======
+				<a href="@Url.Action("VistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })" target="_blank" rel="noopener">
+>>>>>>> develop
 					@await Component.InvokeAsync("Boton", new { texto = "Ver Aviso", tipo = "secundario" })
 				</a>
 				break;
@@ -185,7 +207,7 @@
         (Model.Estado == Constantes.FIRMADO || Model.Estado == Constantes.PUBLICADO || Model.Estado == Constantes.ACTA_DE_CT_CREADA))
     {
         <div class="aviso-tarjeta-acciones">
-            <a class="btn btn-outline-primary" href="@Url.Action("DescargarAviso", "Avisos", new { idAviso = Model.IdAviso })"><i class="bi bi-download" aria-hidden="true"></i> Descargar PDF firmado</a>
+            <a class="btn btn-outline-primary" href="@Url.Action("DescargarAviso", "Avisos", new { idAviso = Model.IdAviso })"><i class="bi bi-download" aria-hidden="true"></i> Descargar Word (.docx)</a>
             @if (Uri.TryCreate(Model.UrlPublicacion, UriKind.Absolute, out var publicacion) && (publicacion.Scheme == "https" || publicacion.Scheme == "http"))
             {
                 <a class="btn btn-outline-primary" href="@publicacion.AbsoluteUri" target="_blank" rel="noopener noreferrer">Ver publicación <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>
@@ -196,7 +218,7 @@
         !(User.IsInRole(Constantes.COORDINADOR_DGAA) && Model.Estado == Constantes.ACTA_DE_CT_CREADA))
     {
         <div class="aviso-comentarios">
-            <button type="button" class="aviso-comentarios-boton" data-comentarios="@Model.Comentarios" data-folio="@Model.Folio" onclick="mostrarComentariosAviso(this)">
+            <button type="button" class="aviso-comentarios-boton" data-comentarios="@Model.Comentarios" data-aviso="@Model.IdAviso" onclick="mostrarComentariosAviso(this)">
                 <i class="bi bi-chat-left-text" aria-hidden="true"></i>
                 <span>Ver comentarios</span><i class="bi bi-arrow-up-right" aria-hidden="true"></i>
             </button>

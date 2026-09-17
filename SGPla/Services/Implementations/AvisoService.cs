@@ -97,9 +97,10 @@ namespace SGPla.Services.Implementations
                 Region = aviso.IdEntidadAcademicaNavigation.Region,
                 NombreEntidadAcademica = aviso.IdEntidadAcademicaNavigation.Nombre,
                 Periodo = periodoDTO.PeriodoMostrar,
-                Folio = aviso.Folio,
+                FechaPublicacion = aviso.FechaPublicacion?.ToString("yyyy-MM-dd") ?? string.Empty,
                 Estado = aviso.Estado,
-                Sistema = "",
+                Archivado = aviso.Archivado ?? false,
+                Sistema = aviso.Sistema,
                 Ofertas = ofertas,
                 Requisitos = aviso.Requisitos,
                 Modalidad = aviso.Modalidad,
@@ -113,7 +114,7 @@ namespace SGPla.Services.Implementations
                     HoraInicio = d.HoraInicio,
                     HoraFin = d.HoraFin
                 }).ToList(),
-                UrlPublicacion = ""
+                UrlPublicacion = aviso.UrlPublicacion ?? ""
             };
         }
 
@@ -171,57 +172,46 @@ namespace SGPla.Services.Implementations
         //EA
         public async Task CrearAviso(CrearAvisoDTO aviso)
         {
-            //await _avisoValidator.ValidarCrearAviso(aviso);
+            ArgumentNullException.ThrowIfNull(aviso);
+            await _avisoValidator.ValidarCrearAviso(aviso);
+            await validarOfertasParaAvisoAsync(aviso);
+            aviso.Sistema = await obtenerSistemaDeOfertasAsync(aviso.OfertasId);
 
             int? idArchivoGenerado = null;
             try
             {
-                /*archivoGuardado = await _archivoService.GuardarAsync(aviso.archivo.RutaArchivo, aviso.archivo.NombreArchivo, "archivos-avisos");
-                archivoRegistrado = await _archivoRepository.CrearAsync(new Archivo
-                {
-                    Nombre = archivoGuardado.NombreOriginal,
-                    Ruta = archivoGuardado.Ruta,
-                    Tipo = archivoGuardado.Tipo,
-                    Tamanio = archivoGuardado.Tamanio
-                });*/
-
                 var avisoRegistrado = new Aviso
                 {
                     IdEntidadAcademica = aviso.IdEntidadAcademica,
                     IdPeriodo = aviso.IdPeriodo,
                     IdArticulo = aviso.IdArticulo,
-                    Folio = aviso.Folio,
                     FechaCreacion = aviso.FechaCreacion,
+                    FechaPublicacion = aviso.FechaPublicacion,
                     FechaCt = aviso.FechaCT,
                     FechaVacantes = aviso.FechaVacantes,
                     Requisitos = aviso.Requisitos,
                     Lugar = aviso.Lugar,
                     Correo = aviso.Correo,
                     Modalidad = aviso.Modalidad,
-                    Estado = "Creado",
-                    Sistema = "Escolarizado"
-                    //IdArchivoOriginal = archivoRegistrado.IdArchivo
+                    Estado = Constantes.CREADO,
+                    Sistema = aviso.Sistema
                 };
 
                 idArchivoGenerado = await generarArchivoAvisoAsync(aviso);
                 avisoRegistrado.IdArchivoOriginal = idArchivoGenerado;
 
-                avisoRegistrado = await _avisoRepository.CrearAsync(avisoRegistrado);
                 List<Horario> horarios = new List<Horario>();
                 foreach (var h in aviso.Horarios)
                 {
                     horarios.Add(new Horario
                     {
-                        IdAviso = avisoRegistrado.IdAviso,
+                        IdAviso = null,
                         Dia = h.Fecha,
                         HoraInicio = TimeOnly.Parse(h.HoraInicio),
                         HoraFin = TimeOnly.Parse(h.HoraTermino)
                     });
                 }
-                
-                
-                await _avisoRepository.AsociarOfertasPorAviso(aviso.OfertasId, avisoRegistrado.IdAviso);
-                await _horarioRepository.CrearHorarios(horarios);
+                await _avisoRepository.CrearCompletoAsync(avisoRegistrado, aviso.OfertasId, horarios);
                 await prepararVistaPreviaPdfAsync(idArchivoGenerado.Value);
 
             }
@@ -242,7 +232,6 @@ namespace SGPla.Services.Implementations
 
             var plantillaDTO = new PlantillaAvisoDTO
             {
-                Folio = aviso.Folio ?? "0",
                 AreaAcademica = entidad?.IdAreaAcademicaNavigation.Nombre ?? "Nombre del Área Académica",
                 EntidadAcademica = entidad?.Nombre.Substring(6) ?? "Nombre de la Entidad Académica",
                 Articulo = articulo?.Numero ?? "Número del Artículo",
@@ -250,12 +239,12 @@ namespace SGPla.Services.Implementations
                 PerfilArticulo = articulo?.Descripcion ?? "Perfil del Artículo",
                 Periodo = periodoDTO.PeriodoMostrar ?? "Periodo Escolar",
                 Campus = "Campus", //TODO: El campus depende del Programa Educativo
-                Sistema = "Sistema", //TODO: falta obtenerlo del formulario
+                Sistema = aviso.Sistema,
                 Programas = await generarListaProgramasPlantillaAsync(aviso.OfertasId),
                 Requisitos = aviso.Requisitos ?? "Requisitos",
-                HorarioAceptacion = generarHorarioAceptacion(aviso.Horarios) ?? "Horario de Aceptación", //Se puede mejorar para que también detecte cuando un sólo día tiene dos distintos horarios
-                FechaConsejoTecnico = generarFechaNormal(aviso.FechaCT) ?? "Fecha del Consejo Tecnico",
-                FechaPublicacion = generarFechaNormal(DateOnly.FromDateTime(DateTime.Now)) ?? "Fecha de publicación",
+                HorarioAceptacion = GenerarHorarioAceptacion(aviso.Horarios),
+                FechaConsejoTecnico = generarFechaNormal(aviso.FechaCT),
+                FechaPublicacion = generarFechaNormal(aviso.FechaPublicacion),
                 Titular = "Titular" //TODO: falta obtenerlo del formulario
             };
 
@@ -325,46 +314,34 @@ namespace SGPla.Services.Implementations
             return $"{horario.HoraInicio} - {horario.HoraFin}";
         }
 
-        private string generarHorarioAceptacion(List<CrearHorarioAvisoDTO> horariosDTO)
+        public static string GenerarHorarioAceptacion(IEnumerable<CrearHorarioAvisoDTO> horariosDTO)
         {
-            var cadena = "";
-            var listaMeses = new List<int>();
-            var listaDates = new List<DateTime>();
-
-            foreach (var horario in horariosDTO)
-            {
-                if (DateTime.TryParse(horario.Fecha, out DateTime fecha))
+            var cultura = CultureInfo.GetCultureInfo("es-MX");
+            var horarios = horariosDTO
+                .Select(h =>
                 {
-                    listaDates.Add(fecha);
-                    var mes = fecha.Month;
-                    if (!listaMeses.Contains(mes)) listaMeses.Add(mes);
-                }
-            }
-
-            foreach (var mes in listaMeses)
-            {
-                var cadenaActual = "";
-
-                foreach (var horario in horariosDTO)
+                    if (!DateOnly.TryParse(h.Fecha, out var fecha)) return null;
+                    var inicio = TimeOnly.TryParse(h.HoraInicio, out var horaInicio) ? horaInicio : TimeOnly.MinValue;
+                    return new { Horario = h, Fecha = fecha, Inicio = inicio };
+                })
+                .Where(h => h is not null)
+                .Select(h => h!)
+                .OrderBy(h => h.Fecha)
+                .ThenBy(h => h.Inicio)
+                .GroupBy(h => h.Fecha)
+                .Select(grupo =>
                 {
-                    if (DateTime.TryParse(horario.Fecha, out DateTime fecha))
-                    {
-                        if (fecha.Month == mes)
-                        {
-                            var horarioDia = $"{fecha.Day} de {horario.HoraInicio} a {horario.HoraTermino}, ";
-                            cadenaActual = $"{cadenaActual}{horarioDia}";
-                        }
-                    }
-                }
+                    var intervalos = grupo.Select(h => $"{h.Horario.HoraInicio} hrs. a {h.Horario.HoraTermino} hrs.").ToList();
+                    var textoIntervalos = intervalos.Count == 1
+                        ? intervalos[0]
+                        : string.Join(" y de ", intervalos);
+                    return $"El día {grupo.Key.Day} del mes {grupo.Key.ToString("MMMM", cultura)} de {textoIntervalos}";
+                });
 
-                var nombreMes = CultureInfo.GetCultureInfo("es-ES").DateTimeFormat.GetMonthName(mes);
-                cadena = $"{cadenaActual}de {nombreMes}, ";
-            }
-
-            return cadena;
+            return string.Join("; ", horarios);
         }
 
-        private string generarFechaNormal(DateOnly fecha)
+        private static string generarFechaNormal(DateOnly fecha)
         {
             return fecha.ToString("d 'de' MMMM 'de' yyyy", new CultureInfo("es-ES"));
         }
@@ -372,8 +349,13 @@ namespace SGPla.Services.Implementations
         public async Task EliminarAvisoPorId(int idAviso)
         {
             await _avisoValidator.ValidarIdAsync(idAviso);
-
-            await _avisoRepository.EliminarAsync(idAviso);
+            var archivos = await _avisoRepository.EliminarCompletoAsync(idAviso);
+            foreach (var idArchivo in new[] { archivos.idArchivoOriginal, archivos.idArchivoFirmado }
+                .Where(id => id.HasValue).Select(id => id!.Value).Distinct())
+            {
+                try { await eliminarArchivoGeneradoAsync(idArchivo); }
+                catch (Exception ex) { _logger.LogWarning(ex, "No se pudo limpiar el archivo {IdArchivo} del aviso eliminado.", idArchivo); }
+            }
         }
 
         public async Task ActualizarAvisoPorId(EditarAvisoDTO aviso)
@@ -386,16 +368,15 @@ namespace SGPla.Services.Implementations
             if (avisoActual.IdEntidadAcademica != aviso.IdEntidadAcademica)
                 throw new ValidacionExcepction("No tiene permisos para editar este Aviso.", "403");
 
+            if (avisoActual.Archivado == true)
+                throw new ValidacionExcepction("El aviso archivado no puede editarse.", "409");
+
             if (avisoActual.Estado != Constantes.CREADO && avisoActual.Estado != Constantes.DEVUELTO_POR_DGAA)
                 throw new ValidacionExcepction("El Aviso no se encuentra en un estado permitido para edición.", "409");
 
-            validarDatosEdicion(aviso);
-
-            if (!await _ofertaRepository.SonOfertasValidasParaAvisoAsync(
-                aviso.OfertasId, aviso.IdEntidadAcademica, aviso.IdPeriodo, aviso.IdArticulo))
-            {
-                throw new ValidacionExcepction("Las ofertas seleccionadas ya no son válidas para el aviso.", "400");
-            }
+            await _avisoValidator.ValidarCrearAviso(aviso);
+            await validarOfertasParaAvisoAsync(aviso);
+            aviso.Sistema = await obtenerSistemaDeOfertasAsync(aviso.OfertasId);
 
             var idArchivoAnterior = avisoActual.IdArchivoOriginal;
             int? idArchivoNuevo = null;
@@ -437,32 +418,17 @@ namespace SGPla.Services.Implementations
             await _archivoService.EliminarAsync($"aviso-preview/{idArchivo}.pdf");
         }
 
-        private static void validarDatosEdicion(EditarAvisoDTO aviso)
+        private async Task validarOfertasParaAvisoAsync(CrearAvisoDTO aviso)
         {
-            if (aviso.IdAviso <= 0 || aviso.IdEntidadAcademica <= 0 || aviso.IdPeriodo <= 0 || aviso.IdArticulo <= 0 ||
-                string.IsNullOrWhiteSpace(aviso.Folio) || string.IsNullOrWhiteSpace(aviso.Requisitos) ||
-                string.IsNullOrWhiteSpace(aviso.Modalidad) || string.IsNullOrWhiteSpace(aviso.Correo))
-            {
-                throw new ValidacionExcepction("Hay campos obligatorios sin completar.", "400");
-            }
+            if (!await _ofertaRepository.SonOfertasValidasParaAvisoAsync(
+                aviso.OfertasId, aviso.IdEntidadAcademica, aviso.IdPeriodo, aviso.IdArticulo))
+                throw new ValidacionExcepction("Las ofertas seleccionadas no existen, no pertenecen a la entidad, no corresponden al período o artículo, no están incluidas o están duplicadas.", "400");
+        }
 
-            if (!System.Net.Mail.MailAddress.TryCreate(aviso.Correo, out _))
-                throw new ValidacionExcepction("El correo electrónico no es válido.", "400");
-
-            if (aviso.Modalidad != Constantes.MODALIDAD_AVISO_PRESENCIAL && aviso.Modalidad != Constantes.MODALIDAD_AVISO_VIRTUAL)
-                throw new ValidacionExcepction("La modalidad no es válida.", "400");
-
-            if (aviso.Modalidad == Constantes.MODALIDAD_AVISO_PRESENCIAL && string.IsNullOrWhiteSpace(aviso.Lugar))
-                throw new ValidacionExcepction("El lugar es obligatorio para la modalidad presencial.", "400");
-
-            if (aviso.Horarios is null || aviso.Horarios.Count == 0)
-                throw new ValidacionExcepction("Llena la tabla de Horarios.", "400");
-
-            if (aviso.Horarios.Any(h => string.IsNullOrWhiteSpace(h.Fecha) ||
-                !TimeOnly.TryParse(h.HoraInicio, out var inicio) || !TimeOnly.TryParse(h.HoraTermino, out var fin) || inicio >= fin))
-            {
-                throw new ValidacionExcepction("Cada horario debe tener una fecha y hora de inicio menor a la hora de término.", "400");
-            }
+        private async Task<string> obtenerSistemaDeOfertasAsync(List<int> ofertasId)
+        {
+            return await _ofertaRepository.ObtenerSistemaParaAvisoAsync(ofertasId)
+                ?? throw new ValidacionExcepction("Las ofertas seleccionadas pertenecen a sistemas distintos o no tienen sistema definido.", "400");
         }
 
         public async Task EnviarARevisionAsync(RevisionDTO revisionDTO)
@@ -549,7 +515,6 @@ namespace SGPla.Services.Implementations
                 IdPeriodo = aviso.IdPeriodo,
                 IdArticulo = aviso.IdArticulo,
                 NombreEntidadAcademica = aviso.IdEntidadAcademicaNavigation.Nombre,
-                Folio = aviso.Folio,
                 Periodo = periodoDTO.PeriodoMostrar,
                 Articulo = aviso.IdArticuloNavigation.Numero,
                 FechaCreacion = aviso.FechaCreacion.ToString("dd/MM/yyyy"),

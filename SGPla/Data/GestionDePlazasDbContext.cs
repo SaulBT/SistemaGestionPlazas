@@ -213,12 +213,9 @@ public partial class GestionDePlazasDbContext : DbContext
                 .IsUnicode(false)
                 .HasColumnName("estado");
             entity.Property(e => e.FechaCreacion).HasColumnName("fechaCreacion");
+            entity.Property(e => e.FechaPublicacion).HasColumnName("fechaPublicacion");
             entity.Property(e => e.FechaCt).HasColumnName("fechaCT");
             entity.Property(e => e.FechaVacantes).HasColumnName("fechaVacantes");
-            entity.Property(e => e.Folio)
-                .HasMaxLength(50)
-                .IsUnicode(false)
-                .HasColumnName("folio");
             entity.Property(e => e.IdArchivoFirmado).HasColumnName("idArchivoFirmado");
             entity.Property(e => e.IdArchivoOriginal).HasColumnName("idArchivoOriginal");
             entity.Property(e => e.IdArticulo).HasColumnName("idArticulo");

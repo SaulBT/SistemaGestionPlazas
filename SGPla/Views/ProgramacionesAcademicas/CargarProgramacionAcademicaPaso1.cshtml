@@ -5,7 +5,6 @@
 
 @{
 	ViewData["Title"] = "Crear programación académica";
-	ViewBag.RegresarUrl = Url.Action("Index", "ProgramacionesAcademicas");
 }
 
 @await Component.InvokeAsync("Stepper", new StepperModel
@@ -15,7 +14,7 @@
 	Paso2Texto = "Programación Académica"
 })
 
-<form id="form" method="post" action="@Url.Action("RevisarListaDeExperienciasEducativas", "ProgramacionesAcademicas")" enctype="multipart/form-data">
+<form id="form" class="formulario-con-barra-acciones" method="post" action="@Url.Action("RevisarListaDeExperienciasEducativas", "ProgramacionesAcademicas")" enctype="multipart/form-data">
 	@Html.AntiForgeryToken()
 
 	<div class="d-flex flex-column gap-3">
@@ -116,7 +115,7 @@
 	</div>
 
 	<!-- BOTONES -->
-	<div style="display:flex; justify-content:flex-end; gap:var(--button-gap)">
+	<div class="barra-acciones-fija">
 		<a href="@Url.Action("Index", "ProgramacionesAcademicas")" style="display: inline-block; text-decoration: none;">
 			@await Component.InvokeAsync("Boton", new
 			{

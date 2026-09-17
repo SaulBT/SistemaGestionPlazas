@@ -23,7 +23,7 @@ public partial class EntidadAcademica
 
     public string Telefono { get; set; } = null!;
 
-    public string Extension { get; set; } = null!;
+    public string? Extension { get; set; }
 
     public string Region { get; set; } = null!;
 
