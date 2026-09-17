@@ -47,6 +47,21 @@ public class EntidadAcademicaValidatorTests
         Assert.Contains("El Nombre es obligatorio.", ex.Message);
     }
 
+    [Fact]
+    public async Task CrearEntidadAcademicaSinExtensionEsValida()
+    {
+        var dto = CrearEntidadAcademicaDTOValido();
+        dto.Extension = null;
+
+        _areaAcademicaRepositoryMock
+            .Setup(repository => repository.ExistePorIdAsync((int)dto.IdAreaAcademica!))
+            .ReturnsAsync(true);
+
+        var ex = await Record.ExceptionAsync(() => _entidadAcademicaValidator.ValidarCreacionAsync(dto));
+
+        Assert.Null(ex);
+    }
+
     //CP-04-03
     [Fact]
     public async Task CrearEntidadAcademicaConIdAreaAcademicaInvalida()
@@ -162,6 +177,25 @@ public class EntidadAcademicaValidatorTests
         Assert.NotNull(ex);
         Assert.IsType<ArgumentException>(ex);
         Assert.Contains("El Nombre es obligatorio.", ex.Message);
+    }
+
+    [Fact]
+    public async Task EditarEntidadAcademicaSinExtensionEsValida()
+    {
+        var dto = DatosEntidadAcademicaDTOValido();
+        dto.Extension = null;
+
+        _entidadAcademicaRepositoryMock
+            .Setup(repository => repository.ExistePorIdAsync(dto.IdEntidadAcademica))
+            .ReturnsAsync(true);
+
+        _areaAcademicaRepositoryMock
+            .Setup(repository => repository.ExistePorIdAsync(dto.IdAreaAcademica))
+            .ReturnsAsync(true);
+
+        var ex = await Record.ExceptionAsync(() => _entidadAcademicaValidator.ValidarEdicionAsync(dto));
+
+        Assert.Null(ex);
     }
 
     //CP-04-13

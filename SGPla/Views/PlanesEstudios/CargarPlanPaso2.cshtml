@@ -1,7 +1,6 @@
 ﻿@model SGPla.Models.ViewModels.PlanesEstudios.CargarPlanPaso2ViewModel
 @{
 	ViewData["Title"] = "Cargar Plan de Estudios";
-    ViewBag.RegresarOnClick = "regresarPaso1()";
 }
 
 @await Component.InvokeAsync("Stepper", new StepperModel
@@ -11,7 +10,7 @@
     Paso2Texto = "Visualización de Experiencias Educativas"
 })
 
-<form id="form" action="@Url.Action("GuardarPlanEstudios", "PlanesEstudios")" method="post" action="" enctype="multipart/form-data">
+<form id="form" class="formulario-con-barra-acciones" action="@Url.Action("GuardarPlanEstudios", "PlanesEstudios")" method="post" action="" enctype="multipart/form-data">
     <!-- BLOQUE SUPERIOR -->
     <div class="d-flex row gap-3" style="margin-block-end: 1em">
         <label class="fw-bold">Información del plan:</label>
@@ -120,15 +119,15 @@
     </div>
 
     <!-- BOTONES INFERIORES -->
-    <div class="d-flex row">
-        <div class="d-flex col-6">
+    <div class="barra-acciones-fija barra-acciones-fija--distribuida">
+        <div class="barra-acciones-fija__grupo">
             @await Component.InvokeAsync("Boton", new
             {
                 Accion = "Regresar",
                 OnClick = "regresarPaso1()"
             })
         </div>
-        <div class="d-flex col-6 column-gap-3 justify-content-end">
+        <div class="barra-acciones-fija__grupo">
             @await Component.InvokeAsync("Boton", new
             {
                 Accion = "Cancelar",

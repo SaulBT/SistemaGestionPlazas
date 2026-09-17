@@ -5,11 +5,10 @@
     Layout = "_LayoutEntidadAcademica";
     var esEdicion = Model.IdAviso.HasValue;
     ViewData["Title"] = esEdicion ? "Editar Aviso" : "Crear Aviso";
-    ViewBag.RegresarUrl = Url.Action("Index", "Avisos");
 }
 
 <div>
-    <form method="post" action="@Url.Action(esEdicion ? "EditarAviso" : "CrearAviso", "Avisos")" >
+    <form class="formulario-con-barra-acciones" method="post" action="@Url.Action(esEdicion ? "EditarAviso" : "CrearAviso", "Avisos")" >
         @Html.AntiForgeryToken()
         @if (esEdicion)
         {
@@ -161,7 +160,7 @@
         </div>
 
         <!-- Botones -->
-        <div style="display:flex; justify-content:flex-end; gap:var(--button-gap)">
+        <div class="barra-acciones-fija">
             <a href="@Url.Action("Index", "Avisos")" style="display: inline-block; text-decoration: none;">
                 @await Component.InvokeAsync("Boton", new
                 {

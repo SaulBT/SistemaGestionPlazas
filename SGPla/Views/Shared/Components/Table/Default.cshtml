@@ -83,9 +83,7 @@
 		{
 			<div class="pagination-container">
 				<div class="pagination-info">
-					Mostrando @((Model.Pagination.CurrentPage - 1) * Model.Pagination.PageSize + 1) a
-					@Math.Min(Model.Pagination.CurrentPage * Model.Pagination.PageSize, Model.Pagination.TotalItems) de
-					@Model.Pagination.TotalItems registros
+					Mostrando @((Model.Pagination.CurrentPage - 1) * Model.Pagination.PageSize + 1)–@Math.Min(Model.Pagination.CurrentPage * Model.Pagination.PageSize, Model.Pagination.TotalItems) de @Model.Pagination.TotalItems resultados
 				</div>
 
 				<div class="pagination-controls">
@@ -307,7 +305,7 @@
 				Math.min(fin, tabla.rows.length);
 
 			info.textContent =
-				`Mostrando ${inicioReal} a ${finReal} de ${tabla.rows.length} registros`;
+				`Mostrando ${inicioReal}–${finReal} de ${tabla.rows.length} resultados`;
 		}
 
 		// BOTONES NUMERADOS

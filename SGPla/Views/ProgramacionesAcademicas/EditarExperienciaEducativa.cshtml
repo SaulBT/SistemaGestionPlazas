@@ -4,10 +4,16 @@
 
 @{
 	ViewData["Title"] = "Editar Experiencia Educativa";
+	var regresarUrl = Url.Action("Ver", "ProgramacionesAcademicas", new
+	{
+		idEntidadAcademica = Model.IdEntidadAcademica,
+		idProgramaEducativo = Model.IdProgramaEducativo,
+		idPeriodo = Model.IdPeriodo
+	});
 }
 
 <!-- Campos -->
-<form method="post" action="@Url.Action("EditarExperienciaEducativa", "ProgramacionesAcademicas")">
+<form class="formulario-con-barra-acciones" method="post" action="@Url.Action("EditarExperienciaEducativa", "ProgramacionesAcademicas")">
 
 	@Html.AntiForgeryToken()
 	<input type="hidden" name="IdExperienciaEducativa" value="@Model.IdExperienciaEducativa" />
@@ -121,8 +127,8 @@
 		@await Component.InvokeAsync("Table", Model.Horarios)
 	</div>
 
-	<div style="display:flex; justify-content:flex-end; gap:var(--button-gap)">
-		<a href="@ViewBag.RegresarUrl" style="display: inline-block; text-decoration: none;">
+	<div class="barra-acciones-fija">
+		<a href="@regresarUrl" style="display: inline-block; text-decoration: none;">
 			@await Component.InvokeAsync("Boton", new
 			{
 				Accion = "Cancelar"

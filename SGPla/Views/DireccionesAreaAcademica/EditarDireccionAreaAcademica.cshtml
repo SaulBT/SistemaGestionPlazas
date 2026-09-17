@@ -4,11 +4,10 @@
 
 @{
     ViewData["Title"] = "Editar Dirección de Área Académica";
-    ViewBag.RegresarUrl = Url.Action("Index", "DireccionesAreaAcademica");
 }
 
 <!-- Campos -->
-<form method="post" action="@Url.Action("EditarDireccionAreaAcademica", "DireccionesAreaAcademica")">
+<form class="formulario-con-barra-acciones" method="post" action="@Url.Action("EditarDireccionAreaAcademica", "DireccionesAreaAcademica")">
 
     @Html.AntiForgeryToken()
     <input type="hidden" name="idAreaAcademica" value="@Model.IdAreaAcademica" />
@@ -57,7 +56,7 @@
     </div>
 
     <!-- Botones -->
-    <div style="display:flex; justify-content:flex-end; gap:var(--button-gap)">
+    <div class="barra-acciones-fija">
         <a href="@Url.Action("Index", "DireccionesAreaAcademica")" style="display: inline-block; text-decoration: none;">
             @await Component.InvokeAsync("Boton", new
             {
