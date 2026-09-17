@@ -127,7 +127,7 @@
 					tipo = "terciario",
 					OnClick = $"abrirModalFirmar({Model.IdAviso})"
 				})
-				<a href="@Url.Action("VistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })" target="_blank" rel="noopener">
+					<a href="@Url.Action("VistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })" target="_blank" rel="noopener">
 					@await Component.InvokeAsync("Boton", new { texto = "Ver Aviso", tipo = "secundario" })
 				</a>
 				break;
@@ -158,7 +158,7 @@
 					tipo = "terciario",
 					accion = "agregar"
 				})
-				<a href="@Url.Action("VistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })" target="_blank" rel="noopener">
+					<a href="@Url.Action("VistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })" target="_blank" rel="noopener">
 					@await Component.InvokeAsync("Boton", new { texto = "Ver Aviso", tipo = "secundario" })
 				</a>
 				break;
