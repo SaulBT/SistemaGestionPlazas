@@ -8,13 +8,14 @@
         public const string ID_AREA_ACADEMICA = "IdAreaAcademica";
 
         public const string MATERIA_EE = "MATERIA_EE";
+        public const string CODIGO_PLAN = "CODIGO_PLAN";
         public const string CURSO_EE = "CURSO_EE";
         public const string DESC_EE = "DESC_EE";
         public const string PERFIL_DOC = "PERFIL_DOC";
         public const string HT_EE = "HT_EE";
         public const string HP_EE = "HP_EE";
         public const string CREDITOS_EE = "CREDITOS_EE";
-        public static List<string> COLUMNAS_REQUERIDAS = [MATERIA_EE, CURSO_EE, DESC_EE, PERFIL_DOC, HT_EE, HP_EE, CREDITOS_EE];
+        public static List<string> COLUMNAS_REQUERIDAS = [CODIGO_PLAN, MATERIA_EE, CURSO_EE, DESC_EE, PERFIL_DOC, HT_EE, HP_EE, CREDITOS_EE];
 
         public const string SESSION_RUTA = "Ruta";
         public const string SESSION_NOMBRE_ARCHIVO = "NombreArchivo";

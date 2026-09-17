@@ -173,7 +173,6 @@
         localStorage.setItem(`tabs-${containerId}`, index);
     }
 </script>
-
 <script>
     document.addEventListener('shown.bs.tab', function(e) {
         const target = e.target.getAttribute('data-bs-target');
@@ -182,8 +181,6 @@
             .forEach(t => inicializarTablaCliente(t.id));
     });
 </script>
-
-
 
 <script>
     function abrirModalHorario(oferta) {
@@ -240,8 +237,6 @@
             });
     }
 </script>
-
-
 <script>
     function eliminarOferta(idOferta) {
         fetch('/ProgramacionesAcademicas/EliminarOferta', {
@@ -329,9 +324,3 @@
     }
 </script>
 
-<script>
-
-    function abrirAsignacionDocente(idOferta) {
-        window.location.href = `/ProgramacionesAcademicas/AsignarDocente?idOferta=${idOferta}`;
-    }
-</script>

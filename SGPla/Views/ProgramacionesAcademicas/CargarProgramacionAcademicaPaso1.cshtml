@@ -32,6 +32,26 @@
 
 		@await Component.InvokeAsync("SelectField", new SelectFieldModel
 		{
+			Id = "Modalidad",
+			Label = "Modalidad:",
+			Options = Model.Modalidades,
+			Name = "Modalidad",
+			SelectedValue = Model.Modalidad,
+			Error = ViewData.ModelState["Modalidad"]?.Errors.FirstOrDefault()?.ErrorMessage
+		})
+
+		@await Component.InvokeAsync("SelectField", new SelectFieldModel
+		{
+			Id = "PlanEstudios",
+			Label = "Plan de Estudios:",
+			Options = Model.Planes,
+			Name = "IdPlanEstudios",
+			SelectedValue = Model.IdPlanEstudios?.ToString(),
+			Error = ViewData.ModelState["IdPlanEstudios"]?.Errors.FirstOrDefault()?.ErrorMessage
+		})
+
+		@await Component.InvokeAsync("SelectField", new SelectFieldModel
+		{
 			Id = "Entidad",
 			Label = "Entidad Académica:",
 			Options = Model.Entidades,
@@ -162,6 +182,23 @@
 
 		const region = document.querySelector("[name='Region']");
 		const entidad = document.querySelector("[name='IdEntidadAcademica']");
+		const modalidad = document.querySelector("[name='Modalidad']");
+		const plan = document.querySelector("[name='IdPlanEstudios']");
+
+		async function cargarPlanes() {
+			if (!entidad || !modalidad || !plan || !entidad.value || !modalidad.value) return;
+			const response = await fetch(`/ProgramacionesAcademicas/ObtenerPlanes?entidad=${encodeURIComponent(entidad.value)}&modalidad=${encodeURIComponent(modalidad.value)}`);
+			const data = await response.json();
+			const opcionInicial = plan.options[0];
+			plan.innerHTML = "";
+			plan.appendChild(opcionInicial);
+			data.forEach(p => {
+				const option = document.createElement("option");
+				option.value = p.value;
+				option.text = p.text;
+				plan.appendChild(option);
+			});
+		}
 
 		async function cargarEntidades() {
 			if (!region || !entidad) return;
@@ -197,6 +234,8 @@
 		}
 
 		region?.addEventListener("change", cargarEntidades);
+		entidad?.addEventListener("change", cargarPlanes);
+		modalidad?.addEventListener("change", cargarPlanes);
 	});
 </script>
 

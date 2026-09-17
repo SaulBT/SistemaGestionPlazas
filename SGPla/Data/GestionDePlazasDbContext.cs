@@ -768,6 +768,10 @@ public partial class GestionDePlazasDbContext : DbContext
             entity.Property(e => e.IdPlanEstudios).HasColumnName("idPlanEstudios");
             entity.Property(e => e.IdArchivoPlan).HasColumnName("idArchivoPlan");
             entity.Property(e => e.IdProgramaEducativo).HasColumnName("idProgramaEducativo");
+            entity.Property(e => e.CodigoPlan)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("codigoPlan");
             entity.Property(e => e.Modalidad)
                 .HasMaxLength(100)
                 .IsUnicode(false)

@@ -525,6 +525,15 @@ namespace SGPla.Controllers
                     HttpContext.Session.SetString(Constantes.SESSION_RUTA, ruta);
                     HttpContext.Session.SetString(Constantes.SESSION_NOMBRE_ARCHIVO, nombre);
                     var listaEe = await ProcesarArchivoAsync(archivoDto);
+                    var codigosPlan = listaEe.Select(ee => ee.CodigoPlan.Trim())
+                        .Where(codigoPlan => !string.IsNullOrWhiteSpace(codigoPlan))
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .ToList();
+
+                    if (codigosPlan.Count != 1)
+                        throw new ValidacionExcepction("El archivo debe contener un único CODIGO_PLAN válido.", "400");
+
+                    modelo.CodigoPlan = codigosPlan[0];
 
                     HttpContext.Session.SetString(SESSION_EXPERIENCIAS, JsonSerializer.Serialize(listaEe));
                     var eeNuevas = new List<AgregarExperienciaEducativaDTO>();
@@ -632,6 +641,7 @@ namespace SGPla.Controllers
                 NombrePrograma = modelo.NombrePrograma,
                 NombreArea = modelo.NombreArea,
                 Plan = modelo.Plan,
+                CodigoPlan = modelo.CodigoPlan,
                 Sistema = modelo.Sistema,
                 Recarga = true
             };
@@ -665,6 +675,7 @@ namespace SGPla.Controllers
                             {
                                 IdProgramaEducativo = (int)modelo.IdProgramaEducativo,
                                 Nombre = modelo.Plan,
+                                CodigoPlan = modelo.CodigoPlan,
                                 Sistema = modelo.Sistema,
                                 Archivo = archivoDTO,
                                 ExperienciasEducativas = experiencias.Select(ee => new AgregarExperienciaEducativaDTO

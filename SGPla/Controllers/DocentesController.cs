@@ -121,7 +121,8 @@ namespace SGPla.Controllers
                 modelo.TabDocentes = new TabIndexViewModel
                 {
                     Tabla = await generarTablaAsignarDocentesAsync(busqueda, pagina, cantidad, idOferta),
-                    AccionBoton = Url.Action("IrARegistrarPersonalAcademico", "Docentes")
+                    AccionBoton = Url.Action("IrARegistrarPersonalAcademico", "Docentes", new { idOferta }),
+                    IdOferta = idOferta
                 };
 
                 return View(modelo);
@@ -137,10 +138,10 @@ namespace SGPla.Controllers
         }
 
         [HttpGet]
-        public IActionResult IrARegistrarPersonalAcademico()
+        public IActionResult IrARegistrarPersonalAcademico(int idOferta)
         {
-            _estado.PushRetorno(Url.Action("AsignarDocente", "Docentes")!);
-            return RedirectToAction("RegistrarPersonalAcademico");
+            _estado.PushRetorno(Url.Action("AsignarDocente", "Docentes", new { idOferta })!);
+            return RedirectToAction("RegistrarPersonalAcademico", new { idOferta });
         }
         [HttpPost]
         public async Task<IActionResult> AsignarDocenteAExperienciaAsync(int idOferta, int idDocente)
@@ -423,7 +424,7 @@ namespace SGPla.Controllers
                 }
 
                 ModelState.Clear();
-                return View("RegistrarPersonalAcademico", inicializarRegistroDocente());
+                return View("RegistrarPersonalAcademico", inicializarRegistroDocente(modelo.IdOferta));
             }
             catch (JsonException jx)
             {
@@ -432,7 +433,7 @@ namespace SGPla.Controllers
             }
         }
 
-        private RegistrarDocenteViewModel inicializarRegistroDocente()
+        private RegistrarDocenteViewModel inicializarRegistroDocente(int? idOferta = null)
         {
             var modelo = new RegistrarDocenteViewModel()
             {
@@ -442,7 +443,8 @@ namespace SGPla.Controllers
                 },
                 Tabla = TablaFactory.GenerarTablaConMensaje(HEADERS_TABLA_GRADOS, "No se han agregado grados."),
                 OpcionesPuesto = generarListaPuestos(""),
-                Recarga = true
+                Recarga = true,
+                IdOferta = idOferta
             };
 
             guardarEnSession<List<AgregarGradoDTO>>(SESSION_GRADOS_AGREGADOS, new List<AgregarGradoDTO>());
@@ -481,6 +483,11 @@ namespace SGPla.Controllers
 
                 await procesarGuardadoDocenteAsync(modelo, grados);
                 TempData["Success"] = string.Format(Constantes.TOAST_GUARDADO_EL, Constantes.PERSONAL_ACADEMICO);
+                if (modelo.IdOferta > 0)
+                {
+                    _estado.PopRetorno(Url.Action("AsignarDocente", "Docentes", new { idOferta = modelo.IdOferta })!);
+                    return RedirectToAction("AsignarDocente", new { idOferta = modelo.IdOferta });
+                }
                 return RedirectToAction("Index");
             }
             catch (ValidacionExcepction vx)

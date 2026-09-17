@@ -101,5 +101,12 @@ namespace SGPla.Repositories.Implementations
                     e => e.IdExperienciaEducativa
                 );
         }
+
+        public async Task<Dictionary<string, int>> ObtenerIdsPorNombreEnPlanAsync(int idPlanEstudios, List<string> nombres)
+        {
+            return await _context.ExperienciaEducativa
+                .Where(e => e.IdPlanEstudios == idPlanEstudios && nombres.Contains(e.Nombre))
+                .ToDictionaryAsync(e => e.Nombre, e => e.IdExperienciaEducativa);
+        }
     }
 }
