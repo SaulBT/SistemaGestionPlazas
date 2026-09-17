@@ -68,6 +68,7 @@ namespace SGPla.Validations.Implementations
 
             await validarIdProgramaEducativoAsync(crearPlanEstudiosDTO.IdProgramaEducativo);
             validarNombrePlanEstudios(crearPlanEstudiosDTO.Nombre);
+            validarCodigoPlan(crearPlanEstudiosDTO.CodigoPlan);
             validarModalidad(crearPlanEstudiosDTO.Sistema);
             validarExperienciasEducativasParaCreacion(crearPlanEstudiosDTO.ExperienciasEducativas);
 
@@ -76,9 +77,6 @@ namespace SGPla.Validations.Implementations
                 validarCamposExperienciaEducativaNueva(experienciaEducativa);
                 validarCodigoExperienciaEducativa(experienciaEducativa.Codigo, "El Código de una Experiencia Educativa es inválido.");
 
-                bool existeEnSistema = await _experienciaEducativaRepository.ExisteCodigoExperienciaEducativaEnSistemaAsync(experienciaEducativa.Codigo.Trim());
-                if (existeEnSistema)
-                    throw new ValidacionExcepction($"Ya hay una Experiencia Educativa con el Código {experienciaEducativa.Codigo.Trim()} en el sistema.", "409");
             }
         }
 
@@ -114,12 +112,6 @@ namespace SGPla.Validations.Implementations
                 if (!perteneceAPlan)
                     throw new ValidacionExcepction($"La Experiencia Educativa con Id {experienciaEducativa.IdExperienciaEducativa} no pertenece al Plan de Estudios.", "422");
 
-                bool existeEnOtroPlan = await _experienciaEducativaRepository.ExisteCodigoExperienciaEducativaEnOtroPlanAsync(
-                    editarPlanEstudiosDTO.IdPlanEstudios,
-                    experienciaEducativa.Codigo.Trim());
-
-                if (existeEnOtroPlan)
-                    throw new ValidacionExcepction($"Ya hay una Experiencia Educativa con el Código {experienciaEducativa.Codigo.Trim()} en el sistema.", "409");
             }
 
             foreach (var experienciaEducativa in editarPlanEstudiosDTO.ExperienciasNuevas)
@@ -127,12 +119,6 @@ namespace SGPla.Validations.Implementations
                 validarCamposExperienciaEducativaNueva(experienciaEducativa);
                 validarCodigoExperienciaEducativa(experienciaEducativa.Codigo, "El Código de una Experiencia Educativa nueva es inválido.");
 
-                bool existeEnOtroPlan = await _experienciaEducativaRepository.ExisteCodigoExperienciaEducativaEnOtroPlanAsync(
-                    editarPlanEstudiosDTO.IdPlanEstudios,
-                    experienciaEducativa.Codigo.Trim());
-
-                if (existeEnOtroPlan)
-                    throw new ValidacionExcepction($"Ya hay una Experiencia Educativa con el Código {experienciaEducativa.Codigo.Trim()} en el sistema.", "409");
             }
 
             await validarCodigosDuplicadosDentroDeLaEdicionAsync(editarPlanEstudiosDTO);
@@ -175,6 +161,14 @@ namespace SGPla.Validations.Implementations
                 throw new ValidacionExcepction("La Modalidad no puede exceder 100 caracteres.", "400");
             if (!Constantes.MODALIDADES.Contains(modalidad.Trim()))
                 throw new ValidacionExcepction("La Modalidad es inválida.", "400");
+        }
+
+        private void validarCodigoPlan(string codigoPlan)
+        {
+            if (string.IsNullOrWhiteSpace(codigoPlan))
+                throw new ValidacionExcepction("El Código de Plan es obligatorio.", "400");
+            if (codigoPlan.Trim().Length > 50)
+                throw new ValidacionExcepction("El Código de Plan no puede exceder 50 caracteres.", "400");
         }
 
         private void validarExperienciasEducativasParaCreacion(List<AgregarExperienciaEducativaDTO> experienciasEducativas)

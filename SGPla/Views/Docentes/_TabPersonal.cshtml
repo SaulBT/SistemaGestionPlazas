@@ -1,14 +1,26 @@
 ﻿@using SGPla.Models.ViewModels.Docentes
 @model TabIndexViewModel
+@{
+    var esAsignacion = Model.IdOferta > 0;
+    var accionBusqueda = esAsignacion
+        ? Url.Action("AsignarDocente", "Docentes", new { idOferta = Model.IdOferta })
+        : Url.Action("Index", "Docentes");
+}
 
-<form id="form" method="get" action="@Url.Action("Index", "Docentes")">
+<form id="filtrosForm" method="get" action="@accionBusqueda">
+    @if (esAsignacion)
+    {
+        <input type="hidden" name="idOferta" value="@Model.IdOferta" />
+    }
+    <input id="paginaHidden" type="hidden" name="pagina" value="1" />
+    <input id="cantidadHidden" type="hidden" name="cantidad" value="@(Context.Request.Query["cantidad"].FirstOrDefault() ?? "10")" />
     <div style="display:flex; gap:10px; padding-bottom:20px; padding-top:20px; align-items:center; justify-content:space-between">
         <!-- Barra de búsqueda -->
         @await Component.InvokeAsync("Buscador", new BuscadorModel
         {
             Name = "busqueda",
             Placeholder = "Buscar al Personal",
-            Action = Url.Action("Docentes", "Index"),
+            Action = accionBusqueda,
             Method = "get",
             Value = Context.Request.Query["busqueda"]
         })

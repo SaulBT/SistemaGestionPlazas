@@ -63,11 +63,13 @@ namespace SGPla.Services.Implementations
                         if (!string.IsNullOrWhiteSpace(encabezado))
                             columnas[encabezado] = i;
                     }
+                    _planEstudiosValidator.ValidarColumnas(columnas);
                     esPrimeraFila = false;
                     continue;
                 }
 
                 var materia = obtenerTextoCelda(reader, columnas[Constantes.MATERIA_EE]);
+                var codigoPlan = obtenerTextoCelda(reader, columnas[Constantes.CODIGO_PLAN]);
                 var curso = obtenerTextoCelda(reader, columnas[Constantes.CURSO_EE]);
                 var nombre = obtenerTextoCelda(reader, columnas[Constantes.DESC_EE]);
                 var horasTeoricas = obtenerTextoCelda(reader, columnas[Constantes.HT_EE]);
@@ -103,6 +105,7 @@ namespace SGPla.Services.Implementations
                     _logger.LogInformation($"Experiencia: {codigo} | {nombre} | {horas} | {creditos} | {perfilDocente}");
                     experienciasEducativas.Add(new DatosExperienciaEducativaDTO
                     {
+                        CodigoPlan = codigoPlan,
                         Codigo = codigo,
                         Nombre = nombre,
                         PerfilDocente = perfilDocente,
@@ -137,6 +140,7 @@ namespace SGPla.Services.Implementations
                 {
                     IdProgramaEducativo = crearPlanEstudiosDTO.IdProgramaEducativo,
                     Nombre = crearPlanEstudiosDTO.Nombre,
+                    CodigoPlan = crearPlanEstudiosDTO.CodigoPlan.Trim(),
                     Modalidad = crearPlanEstudiosDTO.Sistema,
                     IdArchivoPlan = archivoRegistrado.IdArchivo
                 };

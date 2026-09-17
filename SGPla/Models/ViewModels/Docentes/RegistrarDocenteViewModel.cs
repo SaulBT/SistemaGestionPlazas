@@ -17,6 +17,7 @@ namespace SGPla.Models.ViewModels.Docentes
         public List<OptionModel> OpcionesPuesto { get; set; } = [];
         [Required(ErrorMessage = "El Puesto es obligatorio.")]
         public string Puesto { get; set; } = string.Empty;
+        public int? IdOferta { get; set; }
         public bool Recarga { get; set; } = false;
     }
 }

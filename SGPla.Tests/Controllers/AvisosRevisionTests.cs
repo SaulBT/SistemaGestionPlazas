@@ -122,7 +122,9 @@ public class AvisosRevisionTests
             { IdAviso = 15, IdEntidadAcademica = 7, IdArchivoOriginal = 4 });
         var controller = Crear(Constantes.COORDINADOR_DGAA);
         controller.Url = Mock.Of<IUrlHelper>();
-        Assert.IsType<ViewResult>(await controller.VistaPreviaAvisoAsync(15));
+        var respuesta = Assert.IsType<RedirectToActionResult>(await controller.VistaPreviaAvisoAsync(15));
+        Assert.Equal("ObtenerVistaPreviaAviso", respuesta.ActionName);
+        Assert.Equal(15, respuesta.RouteValues!["idAviso"]);
     }
 
     [Theory]

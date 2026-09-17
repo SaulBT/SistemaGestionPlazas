@@ -80,8 +80,13 @@
             }
             else
             {
+<<<<<<< HEAD
+            <a class="btn btn-outline-primary" href="@Url.Action("ObtenerVistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })" target="_blank" rel="noopener">Ver aviso</a>
+            <a class="btn btn-outline-secondary" href="@Url.Action("DescargarAviso", "Avisos", new { idAviso = Model.IdAviso })">Descargar aviso</a>
+=======
             <a class="btn btn-outline-primary" href="@Url.Action("VistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })" target="_blank" rel="noopener">Ver aviso</a>
             <a class="btn btn-outline-secondary" href="@Url.Action("DescargarAviso", "Avisos", new { idAviso = Model.IdAviso })">Descargar Word (.docx)</a>
+>>>>>>> develop
             @if (!Model.Archivado && Model.Estado == Constantes.EN_REVISION_POR_DGAA)
             {
                 <a class="btn btn-primary" href="@Url.Action("RevisarAviso", "Avisos", new { idAviso = Model.IdAviso })">Revisar aviso</a>
@@ -103,7 +108,11 @@
     <div class="aviso-tarjeta-acciones">
         @if (Model.Estado == Constantes.CREADO || Model.Estado == Constantes.DEVUELTO_POR_DGAA || Model.Estado == Constantes.EN_REVISION_POR_DGAA)
         {
+<<<<<<< HEAD
+        <a class="btn btn-outline-primary" href="@Url.Action("ObtenerVistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })" target="_blank" rel="noopener">Ver aviso</a>
+=======
         <a class="btn btn-outline-primary" href="@Url.Action("VistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })" target="_blank" rel="noopener">Ver aviso</a>
+>>>>>>> develop
         }
         @if (!Model.Archivado && User.IsInRole(Constantes.COORDINADOR_EA) &&
             (Model.Estado == Constantes.CREADO || Model.Estado == Constantes.DEVUELTO_POR_DGAA))
@@ -127,7 +136,11 @@
 					tipo = "terciario",
 					OnClick = $"abrirModalFirmar({Model.IdAviso})"
 				})
+<<<<<<< HEAD
+				<a href="@Url.Action("ObtenerVistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })" target="_blank" rel="noopener">
+=======
 				<a href="@Url.Action("VistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })" target="_blank" rel="noopener">
+>>>>>>> develop
 					@await Component.InvokeAsync("Boton", new { texto = "Ver Aviso", tipo = "secundario" })
 				</a>
 				break;
@@ -158,7 +171,11 @@
 					tipo = "terciario",
 					accion = "agregar"
 				})
+<<<<<<< HEAD
+				<a href="@Url.Action("ObtenerVistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })" target="_blank" rel="noopener">
+=======
 				<a href="@Url.Action("VistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })" target="_blank" rel="noopener">
+>>>>>>> develop
 					@await Component.InvokeAsync("Boton", new { texto = "Ver Aviso", tipo = "secundario" })
 				</a>
 				break;

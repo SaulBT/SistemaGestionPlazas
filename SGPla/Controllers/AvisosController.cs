@@ -187,11 +187,15 @@ namespace SGPla.Controllers
                     return Forbid();
 
                 _avisoService.ObtenerIdArchivoVigente(aviso);
+<<<<<<< HEAD
+                return RedirectToAction("ObtenerVistaPreviaAviso", new { idAviso });
+=======
                 return View(new VistaPreviaAvisoViewModel
                 {
                     UrlVistaPrevia = Url.Action("ObtenerVistaPreviaAviso", new { idAviso }) ?? string.Empty,
                     UrlDescarga = Url.Action("DescargarAviso", new { idAviso }) ?? string.Empty
                 });
+>>>>>>> develop
             }
             catch (ValidacionExcepction)
             {
@@ -238,10 +242,15 @@ namespace SGPla.Controllers
                 if (!await PuedeConsultarAsync(idAviso))
                     return Forbid();
 
+<<<<<<< HEAD
+                var idArchivo = _avisoService.ObtenerIdArchivoVigente(aviso);
+                var archivo = await _archivoService.ObtenerVistaPreviaPdfAsync(idArchivo);
+=======
                 if (aviso.IdArchivoOriginal <= 0)
                     return NotFound("No se encontró el documento original del aviso.");
 
                 var archivo = await _archivoService.DescargarAsync(aviso.IdArchivoOriginal);
+>>>>>>> develop
                 return PhysicalFile(archivo.Ruta, archivo.Tipo, archivo.Nombre);
             }
             catch (ValidacionExcepction)
@@ -254,8 +263,13 @@ namespace SGPla.Controllers
             }
             catch (Exception ex)
             {
+<<<<<<< HEAD
+                _logger.LogError(ex, "No se pudo preparar la descarga PDF del aviso {IdAviso}.", idAviso);
+                return Problem("No se pudo preparar el PDF para descargar.");
+=======
                 _logger.LogError(ex, "No se pudo preparar la descarga del aviso {IdAviso}.", idAviso);
                 return Problem("No se pudo preparar el archivo para descargar.");
+>>>>>>> develop
             }
         }
 

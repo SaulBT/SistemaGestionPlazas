@@ -9,6 +9,8 @@ namespace SGPla.Models.ViewModels.ProgramacionesAcademicas
 
         public List<OptionModel>? Periodos { get; set; }
         public List<OptionModel>? Entidades { get; set; }
+        public List<OptionModel>? Modalidades { get; set; }
+        public List<OptionModel>? Planes { get; set; }
 
 
         [Required(ErrorMessage = "La región es requerida.")]
@@ -19,6 +21,12 @@ namespace SGPla.Models.ViewModels.ProgramacionesAcademicas
 
         [Required(ErrorMessage = "El periodo es requerido.")]
         public int? IdPeriodo { get; set; }
+
+        [Required(ErrorMessage = "La modalidad es requerida.")]
+        public string? Modalidad { get; set; }
+
+        [Required(ErrorMessage = "El plan de estudios es requerido.")]
+        public int? IdPlanEstudios { get; set; }
 
         [Required(ErrorMessage = "Seleccione un archivo de vacantes.")]
         public IFormFile? ArchivoVacantes { get; set; }

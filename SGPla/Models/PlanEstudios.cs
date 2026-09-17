@@ -11,6 +11,8 @@ public partial class PlanEstudios
 
     public string Nombre { get; set; } = null!;
 
+    public string? CodigoPlan { get; set; }
+
     public string Modalidad { get; set; } = null!;
 
     public int IdArchivoPlan { get; set; }
