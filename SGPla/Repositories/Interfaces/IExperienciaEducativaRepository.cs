@@ -14,6 +14,5 @@ namespace SGPla.Repositories.Interfaces
         Task ActualizarExperienciasEducativasAsync(List<ExperienciaEducativa> experienciasEducativas);
 
         Task<Dictionary<string, int>> ObtenerIdsPorNombreAsync(List<string> nombres);
-        Task<Dictionary<string, int>> ObtenerIdsPorNombreEnPlanAsync(int idPlanEstudios, List<string> nombres);
     }
 }

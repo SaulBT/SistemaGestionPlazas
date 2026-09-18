@@ -61,14 +61,11 @@ namespace SGPla.Validations.Implementations
             }
 
             var registrados = await _programaEducativoRepository
-    .ObtenerNombresProgramasRegistradosAsync(programas);
+                .ObtenerIdsProgramasAsync(programas);
 
-            var clavesRegistradas = registrados
-                .Select(ObtenerClavePrograma)
-                .ToHashSet();
-
+            // Usar los mismos códigos que al guardar: el nombre en BD ya no incluye el prefijo.
             var noRegistrados = programas
-                .Where(p => !clavesRegistradas.Contains(ObtenerClavePrograma(p)))
+                .Where(p => !registrados.ContainsKey(ObtenerClavePrograma(p)))
                 .ToList();
 
             if (noRegistrados.Any())
@@ -102,7 +99,8 @@ namespace SGPla.Validations.Implementations
             if (noRegistradas.Any())
             {
                 throw new ArgumentException(
-                    "Las siguientes experiencias no corresponden al programa educativo:\n" +
+                    "No se encontraron experiencias registradas con estos nombres exactos (programa del archivo | nombre). " +
+                    "Revisa nombres abreviados o registra las materias faltantes:\n" +
                     string.Join("\n", noRegistradas));
             }
 

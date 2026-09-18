@@ -7,7 +7,11 @@ public partial class CargaAcademica
 {
     public int IdCargaAcademica { get; set; }
 
-    public int IdDocente { get; set; }
+    public int? IdDocente { get; set; }
+
+    public string? NumeroPersonalImportado { get; set; }
+
+    public string? NombreDocenteImportado { get; set; }
 
     public int IdPeriodo { get; set; }
 
@@ -23,7 +27,7 @@ public partial class CargaAcademica
 
     public bool? Imparte { get; set; }
 
-    public virtual Docente IdDocenteNavigation { get; set; } = null!;
+    public virtual Docente? IdDocenteNavigation { get; set; }
 
     public virtual ExperienciaEducativa? IdExperienciaEducativaNavigation { get; set; }
 

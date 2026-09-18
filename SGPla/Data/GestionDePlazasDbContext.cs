@@ -272,6 +272,8 @@ public partial class GestionDePlazasDbContext : DbContext
         modelBuilder.Entity<CargaAcademica>(entity =>
         {
             entity.HasKey(e => e.IdCargaAcademica);
+            entity.Property(e => e.NumeroPersonalImportado).HasMaxLength(50).HasColumnName("numeroPersonalImportado");
+            entity.Property(e => e.NombreDocenteImportado).HasMaxLength(300).HasColumnName("nombreDocenteImportado");
 
             entity.Property(e => e.IdCargaAcademica).HasColumnName("idCargaAcademica");
             entity.Property(e => e.HorasPago).HasColumnName("horasPago");
@@ -666,6 +668,8 @@ public partial class GestionDePlazasDbContext : DbContext
         modelBuilder.Entity<Oferta>(entity =>
         {
             entity.HasKey(e => e.IdOferta);
+            entity.Property(e => e.NumeroPersonalImportado).HasMaxLength(50).HasColumnName("numeroPersonalImportado");
+            entity.Property(e => e.NombreDocenteImportado).HasMaxLength(300).HasColumnName("nombreDocenteImportado");
 
             entity.HasIndex(e => e.IdArticulo, "IX_Oferta_idArticulo");
 
