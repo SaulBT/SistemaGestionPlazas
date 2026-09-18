@@ -11,6 +11,8 @@ namespace SGPla.Mappers
             return new CargaAcademica
             {
                 IdDocente = dto.idDocente,
+                NumeroPersonalImportado = NormalizarOpcional(dto.NumeroPersonal),
+                NombreDocenteImportado = NormalizarOpcional(dto.NombreDocente),
                 IdPeriodo = dto.idPeriodo,
                 IdExperienciaEducativa = dto.idExperienciaEducativa,
                 Nrc = NormalizarOpcional(dto.Nrc),

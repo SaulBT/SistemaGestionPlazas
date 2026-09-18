@@ -23,7 +23,7 @@
 
         public int? idExperienciaEducativa { get; set; }
 
-        public int idDocente { get; set; }
+        public int? idDocente { get; set; }
     }
 
     public class CargaItemDTO

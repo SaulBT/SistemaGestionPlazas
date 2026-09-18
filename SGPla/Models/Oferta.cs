@@ -9,6 +9,10 @@ public partial class Oferta
 
     public int? IdDocente { get; set; }
 
+    public string? NumeroPersonalImportado { get; set; }
+
+    public string? NombreDocenteImportado { get; set; }
+
     public int IdExperienciaEducativa { get; set; }
 
     public int IdProgramaEducativo { get; set; }

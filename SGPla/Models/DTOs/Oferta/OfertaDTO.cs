@@ -33,6 +33,7 @@
 
         public string? NP { get; set; }
         public string? NombreDocente { get; set; }
+        public bool TieneDocente => !string.IsNullOrWhiteSpace(NP) || !string.IsNullOrWhiteSpace(NombreDocente);
         public string? TipoIngreso { get; set; }
 
 

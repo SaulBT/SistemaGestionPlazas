@@ -61,14 +61,11 @@ namespace SGPla.Validations.Implementations
             }
 
             var registrados = await _programaEducativoRepository
-    .ObtenerNombresProgramasRegistradosAsync(programas);
+                .ObtenerIdsProgramasAsync(programas);
 
-            var clavesRegistradas = registrados
-                .Select(ObtenerClavePrograma)
-                .ToHashSet();
-
+            // Usar los mismos códigos que al guardar: el nombre en BD ya no incluye el prefijo.
             var noRegistrados = programas
-                .Where(p => !clavesRegistradas.Contains(ObtenerClavePrograma(p)))
+                .Where(p => !registrados.ContainsKey(ObtenerClavePrograma(p)))
                 .ToList();
 
             if (noRegistrados.Any())

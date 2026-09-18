@@ -35,13 +35,13 @@ public class ProgramacionesAcademicasController : Controller
 
 
     private static readonly List<string> HEADERS_TABLA_ASIGNADAS =
-        ["Experiencia educativa", "NRC", "H/S/M", "Tipo contratación", "Horario", "Docente"];
+        ["NRC", "Experiencia educativa", "H/S/M", "Tipo contratación", "Horario", "Docente"];
     private static readonly List<string> HEADERS_TABLA_VACANTES =
-        ["Experiencia educativa", "NRC", "H/S/M", "Tipo contratación", "Horario"];
+        ["NRC", "Experiencia educativa", "H/S/M", "Tipo contratación", "Horario"];
     private static readonly List<string> HEADERS_TABLA_RESUMEN_OFERTA =
-        ["Entidad Academica", "Programa Educativo", "Periodo", "EE Asignadas", "EE Vacantes", "Acciones"];
+        ["Entidad Academica", "Programa Educativo", "Periodo", "EE Convocadas", "EE Vacantes", "Acciones"];
     private static readonly List<string> HEADERS_TABLA_CARGAS =
-        ["NP", "Docente", "Plaza", "NRC", "Experiencia Educativa", "Hrs Contacto", "Hrs Pago", "Imparte"];
+        ["NRC", "Experiencia Educativa", "NP", "Docente", "Plaza", "Hrs Contacto", "Hrs Pago", "Imparte"];
     private static readonly List<string> HEADERS_TABLA_HORARIOS =
         ["Dîa", "Horario", "Salon", "Acciones"];
 
@@ -211,6 +211,9 @@ public class ProgramacionesAcademicasController : Controller
                 oferta.IdPeriodo = modelo.IdPeriodo.Value;
             }
 
+            foreach (var carga in cargas)
+                carga.idPeriodo = modelo.IdPeriodo.Value;
+
             _estado.Guardar(Ofertas, todas);
             _estado.Guardar(Cargas, cargas);
 
@@ -344,8 +347,8 @@ public class ProgramacionesAcademicasController : Controller
         var ofertas = await _programacionAcademicaService
             .ObtenerOfertasExperienciasEducativasAsync(idEntidadAcademica, idProgramaEducativo, idPeriodo, busqueda);
 
-        var ofertasAsignadas = ofertas.Where(o => o.NP != null).ToList();
-        var ofertasVacantes = ofertas.Where(o => o.NP == null).ToList();
+        var ofertasAsignadas = ofertas.Where(o => o.TieneDocente).ToList();
+        var ofertasVacantes = ofertas.Where(o => !o.TieneDocente).ToList();
 
         var modelo = new VerProgramacionAcademicaViewModel(User)
         {
@@ -620,9 +623,11 @@ public class ProgramacionesAcademicasController : Controller
 
     }
 
-    private List<OfertaDTO> ObtenerOfertasSesion() => _estado.Obtener<List<OfertaDTO>>(Ofertas) ?? [];
+    private List<OfertaDTO> ObtenerOfertasSesion() => (_estado.Obtener<List<OfertaDTO>>(Ofertas) ?? [])
+        .Where(o => !string.IsNullOrWhiteSpace(o.NRC)).ToList();
 
-    private List<CargaConOfertaDTO> ObtenerCargasSesion() => _estado.Obtener<List<CargaConOfertaDTO>>(Cargas) ?? [];
+    private List<CargaConOfertaDTO> ObtenerCargasSesion() => (_estado.Obtener<List<CargaConOfertaDTO>>(Cargas) ?? [])
+        .Where(c => !string.IsNullOrWhiteSpace(c.Nrc)).ToList();
 
     private async Task<CargarProgramacionAcademica2ViewModel> ObtenerViewModelCompletoAsync(
       FiltroOfertaDTO? filtroOferta = null,
@@ -672,8 +677,8 @@ public class ProgramacionesAcademicasController : Controller
                  o.ExperienciaEducativa.Contains(filtroOferta.Busqueda, StringComparison.OrdinalIgnoreCase))
             );
 
-        var ofertasAsignadas = ofertasFiltradas.Where(o => o.NP != null).ToList();
-        var ofertasVacantes = ofertasFiltradas.Where(o => o.NP == null).ToList();
+        var ofertasAsignadas = ofertasFiltradas.Where(o => o.TieneDocente).ToList();
+        var ofertasVacantes = ofertasFiltradas.Where(o => !o.TieneDocente).ToList();
 
         var cargasFiltradas = cargas
             .Where(c =>
@@ -917,8 +922,8 @@ public class ProgramacionesAcademicasController : Controller
                 {
                     var cells = new List<TableCellModel>
                     {
-                        new() { Value = oferta.ExperienciaEducativa },
                         new() { Value = oferta.NRC },
+                        new() { Value = oferta.ExperienciaEducativa },
                         new() { Value = oferta.HorasPago.ToString() },
                         new() { Value = oferta.TC },
                         new() { Actions = new List<TableActionModel>
@@ -970,11 +975,11 @@ public class ProgramacionesAcademicasController : Controller
                 {
                     Cells = new List<TableCellModel>
                     {
+                        new() { Value = carga.Nrc ?? "—" },
+                        new() { Value = carga.ExperienciaEducativa },
                         new() { Value = carga.NumeroPersonal },
                         new() { Value = carga.NombreDocente },
                         new() { Value = carga.Plaza ?? "—" },
-                        new() { Value = carga.Nrc ?? "—"},
-                        new() { Value = carga.ExperienciaEducativa },
                         new() { Value = carga.HorasContacto.ToString() },
                         new() { Value = carga.HorasPago.ToString() },
                         new()

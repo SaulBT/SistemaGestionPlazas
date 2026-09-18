@@ -48,7 +48,8 @@ namespace SGPla.Services.Implementations
             ms.Position = 0;
             string tipoContratacion = tipoArchivo == TipoArchivoOferta.Vacantes ? "IOD" : "IPP";
 
-            var ofertas = DescargasParser.Parse(ms, archivo.FileName);
+            var ofertas = DescargasParser.Parse(ms, archivo.FileName)
+                .Where(o => !string.IsNullOrWhiteSpace(o.NRC)).ToList();
 
             var articuloPublicacion = await _articuloRepository.ObtenerArticuloPorNumero(ARTICULO_INICIAL);
 
@@ -67,9 +68,14 @@ namespace SGPla.Services.Implementations
 
         public async Task<bool> GuardarOfertasyCargasAsync(List<OfertaDTO> ofertas, List<CargaConOfertaDTO> cargas)
         {
+            // También filtrar al guardar para proteger sesiones iniciadas antes del cambio.
+            ofertas = ofertas.Where(o => !string.IsNullOrWhiteSpace(o.NRC)).ToList();
+            cargas = cargas.Where(c => !string.IsNullOrWhiteSpace(c.Nrc)).ToList();
+            if (ofertas.Count == 0)
+                throw new ArgumentException("No hay ofertas con NRC para guardar.");
+
             await _programacionAcademicaValidator.ValidarProgramas(ofertas);
             await _programacionAcademicaValidator.ValidarExperiencias(ofertas);
-            await _programacionAcademicaValidator.ValidarDocentes(ofertas);
 
 
             var numerosPersonalOfertas = ofertas
@@ -80,6 +86,7 @@ namespace SGPla.Services.Implementations
 
             var nombresExperiencia = ofertas
                 .Select(o => o.ExperienciaEducativa)
+                .Concat(cargas.Select(c => c.ExperienciaEducativa))
                 .Where(nombre => !string.IsNullOrWhiteSpace(nombre))
                 .Distinct()
                 .ToList();
@@ -91,8 +98,9 @@ namespace SGPla.Services.Implementations
                 .ObtenerIdsPorNombreAsync(nombresExperiencia);
 
             var nombresProgramas = ofertas
-                .Where(o => !string.IsNullOrWhiteSpace(o.Programa))
                 .Select(o => o.Programa)
+                .Concat(cargas.Select(c => c.Programa))
+                .Where(p => !string.IsNullOrWhiteSpace(p))
                 .Distinct()
                 .ToList();
 
@@ -134,11 +142,6 @@ namespace SGPla.Services.Implementations
                     {
                         oferta.IdDocente = idDocente;
                     }
-                    else
-                    {
-                        throw new ArgumentException(
-                            $"No existe un docente con NP '{dto.NP}'.");
-                    }
                 }
 
                 if (experiencias.TryGetValue(dto.ExperienciaEducativa, out var idExperiencia))
@@ -156,6 +159,12 @@ namespace SGPla.Services.Implementations
 
             foreach (var carga in cargas)
             {
+                carga.idDocente = !string.IsNullOrWhiteSpace(carga.NumeroPersonal)
+                    && docentesCargas.TryGetValue(carga.NumeroPersonal, out var docenteRegistrado)
+                    ? docenteRegistrado : null;
+                if (carga.idPeriodo <= 0)
+                    carga.idPeriodo = ofertasModel.Select(o => o.IdPeriodo).Distinct().Single();
+
                 if (!string.IsNullOrWhiteSpace(carga.Programa))
                 {
                     var clavePrograma = ObtenerClavePrograma(carga.Programa);
@@ -164,13 +173,6 @@ namespace SGPla.Services.Implementations
                         throw new ArgumentException(
                             $"No existe un programa con clave '{clavePrograma}'.");
                     }
-
-                    if (!docentesCargas.TryGetValue(carga.NumeroPersonal, out var idDocente))
-                    {
-                        throw new ArgumentException(
-                            $"No existe un docente con NP '{carga.NumeroPersonal}'.");
-                    }
-                    carga.idDocente = idDocente;
 
                     bool encontrada = experiencias.TryGetValue(carga.ExperienciaEducativa, out var idExperiencia);
 
@@ -182,8 +184,6 @@ namespace SGPla.Services.Implementations
 
                     carga.idExperienciaEducativa = encontrada ? idExperiencia : null;
 
-                    carga.idPeriodo = ofertasModel
-                        .FirstOrDefault(o => o.IdProgramaEducativo == idPrograma)?.IdPeriodo ?? 0;
                 }
 
                 var cargaModel = CargaAcademicaMapper.ToModel(carga);
@@ -215,6 +215,7 @@ namespace SGPla.Services.Implementations
             {
                 foreach (var experiencia in docente.Experiencias)
                 {
+                    if (string.IsNullOrWhiteSpace(experiencia.Nrc)) continue;
 
                     resultado.Add(new CargaConOfertaDTO
                     {

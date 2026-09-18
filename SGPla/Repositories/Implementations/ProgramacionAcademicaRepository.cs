@@ -29,7 +29,7 @@ namespace SGPla.Repositories.Implementations
                 var logs = ofertas.Select(o => new Log
                 {
                     IdOfertaNavigation = o,
-                    Mensaje = o.IdDocente == null ? Constantes.HISTORIAL_CREADO_VACANTE : Constantes.HISTORIAL_CREADO_ASIGNADA,
+                    Mensaje = o.IdDocente == null && string.IsNullOrWhiteSpace(o.NumeroPersonalImportado) && string.IsNullOrWhiteSpace(o.NombreDocenteImportado) ? Constantes.HISTORIAL_CREADO_VACANTE : Constantes.HISTORIAL_CREADO_ASIGNADA,
                     Fecha = DateTime.UtcNow
                 }).ToList();
 
@@ -114,8 +114,8 @@ namespace SGPla.Repositories.Implementations
                     EntidadAcademica = g.Key.Entidad,
                     IdPeriodo = g.Key.IdPeriodo,
                     CodigoPeriodo = g.Key.Periodo,
-                    EEAsignadas = g.Count(x => x.IdDocente != null),
-                    EEVacantes = g.Count(x => x.IdDocente == null),
+                    EEAsignadas = g.Count(x => x.IdDocente != null || x.NumeroPersonalImportado != null || x.NombreDocenteImportado != null),
+                    EEVacantes = g.Count(x => x.IdDocente == null && x.NumeroPersonalImportado == null && x.NombreDocenteImportado == null),
                     TotalEE = g.Count()
                 })
                 .OrderByDescending(g => g.CodigoPeriodo)
@@ -151,8 +151,8 @@ namespace SGPla.Repositories.Implementations
                 NRC = o.Nrc,
                 HorasPago = o.Hsm,
                 TC = o.TipoContratacion,
-                NombreDocente = o.IdDocenteNavigation?.Nombre,
-                NP = o.IdDocenteNavigation?.NumeroPersonal,
+                NombreDocente = o.IdDocenteNavigation?.Nombre ?? o.NombreDocenteImportado,
+                NP = o.IdDocenteNavigation?.NumeroPersonal ?? o.NumeroPersonalImportado,
                 Articulo = int.Parse(o.IdArticuloNavigation.Numero),
                 IdPeriodo = o.IdPeriodo,
                 Region = o.IdProgramaEducativoNavigation.IdEntidadAcademicaNavigation.Region,
@@ -189,8 +189,8 @@ namespace SGPla.Repositories.Implementations
                 NRC = oferta.Nrc,
                 HorasPago = oferta.Hsm,
                 TC = oferta.TipoContratacion,
-                NombreDocente = oferta.IdDocenteNavigation?.Nombre,
-                NP = oferta.IdDocenteNavigation?.NumeroPersonal,
+                NombreDocente = oferta.IdDocenteNavigation?.Nombre ?? oferta.NombreDocenteImportado,
+                NP = oferta.IdDocenteNavigation?.NumeroPersonal ?? oferta.NumeroPersonalImportado,
                 Articulo = oferta.IdArticulo,
                 IdPeriodo = oferta.IdPeriodo,
                 Region = oferta.IdProgramaEducativoNavigation.IdEntidadAcademicaNavigation.Region,
@@ -322,6 +322,8 @@ namespace SGPla.Repositories.Implementations
 
 
             oferta.IdDocente = null;
+            oferta.NumeroPersonalImportado = null;
+            oferta.NombreDocenteImportado = null;
             oferta.Incluida = true;
 
             var log = new Log
@@ -350,6 +352,8 @@ namespace SGPla.Repositories.Implementations
 
 
             oferta.IdDocente = idDocente;
+            oferta.NumeroPersonalImportado = null;
+            oferta.NombreDocenteImportado = null;
             oferta.Incluida = false;
 
             var log = new Log
@@ -387,8 +391,8 @@ namespace SGPla.Repositories.Implementations
                 NRC = o.Nrc,
                 HorasPago = o.Hsm,
                 TC = o.TipoContratacion,
-                NombreDocente = o.IdDocenteNavigation?.Nombre,
-                NP = o.IdDocenteNavigation?.NumeroPersonal,
+                NombreDocente = o.IdDocenteNavigation?.Nombre ?? o.NombreDocenteImportado,
+                NP = o.IdDocenteNavigation?.NumeroPersonal ?? o.NumeroPersonalImportado,
                 Articulo = int.Parse(o.IdArticuloNavigation.Numero),
                 IdPeriodo = o.IdPeriodo,
                 Region = o.IdProgramaEducativoNavigation.IdEntidadAcademicaNavigation.Region,
