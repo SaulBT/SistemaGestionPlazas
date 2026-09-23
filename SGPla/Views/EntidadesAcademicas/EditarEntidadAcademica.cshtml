@@ -1,169 +1,29 @@
-﻿@using SGPla.Models.ViewModels.EntidadesAcademicas
-
-@model CrearEntidadAcademicaViewModel
+@model SGPla.Models.ViewModels.EntidadesAcademicas.CrearEntidadAcademicaViewModel
 @{
+    Layout = "_LayoutSuperUsuario";
     ViewData["Title"] = "Editar Entidad Académica";
 }
 
-<!-- Campos -->
-<form class="formulario-con-barra-acciones" method="post" action="@Url.Action("EditarEntidadAcademica", "EntidadesAcademicas")">
+<form method="post" action="@Url.Action("EditarEntidadAcademica", "EntidadesAcademicas")" class="formulario-con-barra-acciones">
     @Html.AntiForgeryToken()
-
-    <input type="hidden" name="IdEntidadAcademica" value="@Model.IdEntidadAcademica" />
-
-    <div style="padding-bottom:var(--padding-end); ">
-        <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:flex-start; justify-content:space-evenly;">
-            <div style="width:100%">
-                @await Component.InvokeAsync("InputField", new InputFieldModel
-                {
-                    Id = "clave",
-                    Name = "clave",
-                    Label = "Clave:",
-                    Valor = Model.Clave,
-                    Flexible = true,
-                    Error = ViewData.ModelState["clave"]?.Errors.FirstOrDefault()?.ErrorMessage,
-                    MaximoCaracteres = 5
-                })
-            </div>
-            
-            <div style="width:300%">
-                @await Component.InvokeAsync("InputField", new InputFieldModel
-                {
-                    Id = "nombre",
-                    Name = "nombre",
-                    Label = "Nombre",
-                    Valor = Model.Nombre,
-                    Flexible = true,
-                    Error = ViewData.ModelState["nombre"]?.Errors.FirstOrDefault()?.ErrorMessage,
-                    MaximoCaracteres = 94
-                })
-            </div>
-        </div>
-
-        <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:flex-start; justify-content:space-evenly;">
-            <div style="width:200%">
-                @await Component.InvokeAsync("InputField", new InputFieldModel
-                {
-                    Id = "calleNumero",
-                    Name = "calleNumero",
-                    Label = "Domicilio (Calle y Número):",
-                    Valor = Model.CalleNumero,
-                    Flexible = true,
-                    Error = ViewData.ModelState["calleNumero"]?.Errors.FirstOrDefault()?.ErrorMessage,
-                    MaximoCaracteres = 150
-                })
-            </div>
-            
-            <div style="width:100%">
-                @await Component.InvokeAsync("InputField", new InputFieldModel
-                {
-                    Id = "colonia",
-                    Name = "colonia",
-                    Label = "Colonia:",
-                    Valor = Model.Colonia,
-                    Flexible = true,
-                    Error = ViewData.ModelState["colonia"]?.Errors.FirstOrDefault()?.ErrorMessage,
-                    MaximoCaracteres = 100
-                })
-            </div>
-            
-            <div style="width:50%">
-                @await Component.InvokeAsync("InputField", new InputFieldModel
-                {
-                    Id = "cp",
-                    Name = "cp",
-                    Label = "C.P. :",
-                    Valor = Model.Cp,
-                    Flexible = true,
-                    Error = ViewData.ModelState["cp"]?.Errors.FirstOrDefault()?.ErrorMessage,
-                    MaximoCaracteres = 5
-                })
-            </div>
-            
-            <div style="width:100%">
-                @await Component.InvokeAsync("InputField", new InputFieldModel
-                {
-                    Id = "municipio",
-                    Name = "municipio",
-                    Label = "Municipio:",
-                    Valor = Model.Municipio,
-                    Flexible = true,
-                    Error = ViewData.ModelState["municipio"]?.Errors.FirstOrDefault()?.ErrorMessage,
-                    MaximoCaracteres = 100
-                })
-            </div>
-            
-        </div>
-
-        <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:flex-start; justify-content:space-evenly;">
-            <div style="width:100%">
-                @await Component.InvokeAsync("InputField", new InputFieldModel
-                {
-                    Id = "telefono",
-                    Name = "telefono",
-                    Label = "Teléfono:",
-                    Valor = Model.Telefono,
-                    Flexible = true,
-                    Error = ViewData.ModelState["telefono"]?.Errors.FirstOrDefault()?.ErrorMessage,
-                    MaximoCaracteres = 10
-                })
-            </div>
-        
-            <div style="width:100%">
-                @await Component.InvokeAsync("InputField", new InputFieldModel
-                {
-                    Id = "extension",
-                    Name = "extension",
-                    Label = "Extensión (opcional):",
-                    Valor = Model.Extension ?? string.Empty,
-                    Flexible = true,
-                    Error = ViewData.ModelState["extension"]?.Errors.FirstOrDefault()?.ErrorMessage,
-                    MaximoCaracteres = 5
-                })
-            </div>
-        </div>
-
-        <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:flex-start; justify-content:space-evenly; width:100%;">
-            <div id="contenedorArea" style="flex:1 1 0; min-width:0;">
-                @await Component.InvokeAsync("SelectField", new SelectFieldModel
-                {
-                    Label = "Área Académica",
-                    Options = Model.Areas,
-                    Name = "IdAreaAcademica",
-                    SelectedValue = Model.IdAreaAcademica?.ToString(),
-                    Flexible = true,
-                    Error = ViewData.ModelState["areas"]?.Errors.FirstOrDefault()?.ErrorMessage
-                    
-                })
-            </div>
-
-            <div id="contenedorRegion" style="flex:1 1 0; min-width:0;">
-                @await Component.InvokeAsync("SelectField", new SelectFieldModel
-                {
-                    Label = "Región",
-                    Options = Model.Regiones,
-                    Name = "Region",
-                    SelectedValue = Model.Region?.ToString(),
-                    Flexible = true,
-                    Error = ViewData.ModelState["regiones"]?.Errors.FirstOrDefault()?.ErrorMessage
-                })
-            </div>
-        </div>
+    <input asp-for="IdEntidadAcademica" type="hidden" />
+    <input asp-for="Clave" type="hidden" />
+    <input asp-for="CampusId" type="hidden" />
+    <input asp-for="RegionId" type="hidden" />
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="row g-3 p-3">
+        <div class="col-md-3"><label class="form-label">Clave (inmutable)</label><input class="form-control" value="@Model.Clave" readonly /></div>
+        <div class="col-md-9"><label asp-for="Nombre" class="form-label">Nombre</label><input asp-for="Nombre" class="form-control" maxlength="200" /><span asp-validation-for="Nombre" class="text-danger"></span></div>
+        <div class="col-md-6"><label class="form-label">Campus (inmutable)</label><input class="form-control" value="@Model.Campus.FirstOrDefault(x => x.Selected)?.Text" readonly /></div>
+        <div class="col-md-6"><label class="form-label">Región</label><input class="form-control" value="@Model.Regiones.FirstOrDefault(x => x.Selected)?.Text" readonly /></div>
+        <div class="col-md-6"><label asp-for="AreaAcademicaId" class="form-label">Área académica</label><select asp-for="AreaAcademicaId" class="form-select"><option value="">Seleccione un área</option>@foreach (var item in Model.Areas) { <option value="@item.Value" selected="@item.Selected">@item.Text</option> }</select><span asp-validation-for="AreaAcademicaId" class="text-danger"></span></div>
+        <div class="col-md-6"><label asp-for="Calle" class="form-label">Calle</label><input asp-for="Calle" class="form-control" maxlength="200" /><span asp-validation-for="Calle" class="text-danger"></span></div>
+        <div class="col-md-3"><label asp-for="NumeroExterior" class="form-label">Número exterior</label><input asp-for="NumeroExterior" class="form-control" maxlength="20" /></div>
+        <div class="col-md-3"><label asp-for="Colonia" class="form-label">Colonia</label><input asp-for="Colonia" class="form-control" maxlength="150" /><span asp-validation-for="Colonia" class="text-danger"></span></div>
+        <div class="col-md-4"><label asp-for="MunicipioId" class="form-label">Municipio</label><select asp-for="MunicipioId" class="form-select"><option value="">Seleccione un municipio</option>@foreach (var item in Model.Municipios) { <option value="@item.Value" selected="@item.Selected">@item.Text</option> }</select><span asp-validation-for="MunicipioId" class="text-danger"></span></div>
+        <div class="col-md-4"><label asp-for="CodigoPostal" class="form-label">Código postal</label><input asp-for="CodigoPostal" class="form-control" inputmode="numeric" maxlength="5" /><span asp-validation-for="CodigoPostal" class="text-danger"></span></div>
+        <div class="col-md-4"><label asp-for="Telefono" class="form-label">Teléfono</label><input asp-for="Telefono" class="form-control" inputmode="numeric" maxlength="10" /><span asp-validation-for="Telefono" class="text-danger"></span></div>
+        <div class="col-md-4"><label asp-for="Extension" class="form-label">Extensión (opcional)</label><input asp-for="Extension" class="form-control" inputmode="numeric" maxlength="10" /></div>
     </div>
-
-    <!-- Botones -->
-    <div class="barra-acciones-fija">
-        <a href="@Url.Action("Index", "EntidadesAcademicas")" style="display: inline-block; text-decoration: none;">
-            @await Component.InvokeAsync("Boton", new
-            {
-                Accion = "Cancelar"
-            })
-        </a>
-        @await Component.InvokeAsync("Boton", new
-        {
-            Accion = "Guardar",
-            ButtonType = "submit"
-        })
-    </div>
-
+    <div class="barra-acciones-fija"><a class="btn btn-secondary" href="@Url.Action("Index")">Cancelar</a><button class="btn btn-primary" type="submit">Guardar cambios</button></div>
 </form>

@@ -30,11 +30,10 @@ public sealed class NormalizedArticuloRepository : IArticuloRepository
 
     public async Task<Articulo?> ActualizarArticuloAsync(Articulo articulo)
     {
-        var entity = await _db.Articulos.FirstOrDefaultAsync(x => x.Id == articulo.IdArticulo);
+        var entity = await _db.Articulos.AsTracking().FirstOrDefaultAsync(x => x.Id == articulo.IdArticulo);
         if (entity is null) return null;
         entity.Numero = articulo.Numero.Trim();
         entity.Descripcion = articulo.Descripcion;
-        _db.Entry(entity).State = EntityState.Modified;
         await _db.SaveChangesAsync();
         return ToLegacy(entity);
     }
@@ -42,7 +41,7 @@ public sealed class NormalizedArticuloRepository : IArticuloRepository
     public async Task<bool> EliminarArticuloAsync(int id)
     {
         if (await _db.Avisos.AsNoTracking().AnyAsync(x => x.ArticuloId == id)) return false;
-        var entity = await _db.Articulos.FirstOrDefaultAsync(x => x.Id == id);
+        var entity = await _db.Articulos.AsTracking().FirstOrDefaultAsync(x => x.Id == id);
         if (entity is null) return false;
         _db.Articulos.Remove(entity);
         await _db.SaveChangesAsync();

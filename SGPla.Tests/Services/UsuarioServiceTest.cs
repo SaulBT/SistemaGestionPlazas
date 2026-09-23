@@ -9,6 +9,7 @@ public class UsuarioServiceTests
 {
     private readonly Mock<ICoordinadorEaRepository> _coordinadorEaRepositoryMock;
     private readonly Mock<ICoordinadorDgaaRepository> _coordinadorDgaaRepositoryMock;
+    private readonly Mock<IUsuarioConsultaRepository> _usuarioConsultaRepositoryMock;
     private readonly Mock<IUsuarioValidator> _usuarioValidatorMock;
     private readonly UsuarioService _usuarioService;
 
@@ -16,12 +17,30 @@ public class UsuarioServiceTests
     {
         _coordinadorEaRepositoryMock = new Mock<ICoordinadorEaRepository>();
         _coordinadorDgaaRepositoryMock = new Mock<ICoordinadorDgaaRepository>();
+        _usuarioConsultaRepositoryMock = new Mock<IUsuarioConsultaRepository>();
         _usuarioValidatorMock = new Mock<IUsuarioValidator>();
 
         _usuarioService = new UsuarioService(
             _coordinadorEaRepositoryMock.Object,
             _coordinadorDgaaRepositoryMock.Object,
+            _usuarioConsultaRepositoryMock.Object,
             _usuarioValidatorMock.Object);
+    }
+
+    [Fact]
+    public async Task BuscarUsuariosPaginado_delega_la_paginacion_y_filtros_al_repositorio_normalizado()
+    {
+        var filtros = new FiltrosUsuarioDTO { Pagina = 3, Cantidad = 20, Busqueda = "docente" };
+        using var cancellation = new CancellationTokenSource();
+        var esperado = (new List<ListaUsuarioDTO> { new() { IdUsuario = 8, Nombre = "Ana" } }, 41);
+        _usuarioConsultaRepositoryMock
+            .Setup(r => r.BuscarPaginadoAsync(filtros, cancellation.Token))
+            .ReturnsAsync(esperado);
+
+        var resultado = await _usuarioService.BuscarPorFiltroPaginadoAsync(filtros, cancellation.Token);
+
+        Assert.Equal(esperado, resultado);
+        _usuarioConsultaRepositoryMock.Verify(r => r.BuscarPaginadoAsync(filtros, cancellation.Token), Times.Once);
     }
 
     //CP-01-01

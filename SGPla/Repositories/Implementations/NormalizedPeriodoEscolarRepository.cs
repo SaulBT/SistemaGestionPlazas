@@ -10,8 +10,13 @@ namespace SGPla.Repositories.Implementations;
 public sealed class NormalizedPeriodoEscolarRepository : IPeriodoEscolarRepository
 {
     private readonly SgplaDbContext _db;
+    private readonly TimeProvider _timeProvider;
 
-    public NormalizedPeriodoEscolarRepository(SgplaDbContext db) => _db = db;
+    public NormalizedPeriodoEscolarRepository(SgplaDbContext db, TimeProvider timeProvider)
+    {
+        _db = db;
+        _timeProvider = timeProvider;
+    }
 
     public async Task<List<Periodo>> ObtenerTodosAsync() =>
         await Query().OrderByDescending(x => x.Codigo).ToListAsync();
@@ -60,23 +65,19 @@ public sealed class NormalizedPeriodoEscolarRepository : IPeriodoEscolarReposito
 
     public async Task<Periodo?> ActualizarAsync(Periodo periodoEscolar)
     {
-        var entity = await _db.PeriodosEscolares.FirstOrDefaultAsync(x => x.Id == periodoEscolar.IdPeriodo && x.FechaEliminacion == null);
+        var entity = await _db.PeriodosEscolares.AsTracking().FirstOrDefaultAsync(x => x.Id == periodoEscolar.IdPeriodo && x.FechaEliminacion == null);
         if (entity is null) return null;
-        var fechas = Fechas(periodoEscolar.Codigo);
-        entity.Clave = periodoEscolar.Codigo;
-        entity.FechaInicio = fechas.Inicio;
-        entity.FechaFin = fechas.Fin;
-        _db.Entry(entity).State = EntityState.Modified;
+        if (!string.Equals(entity.Clave, periodoEscolar.Codigo, StringComparison.Ordinal))
+            throw new InvalidOperationException("La clave del periodo escolar es inmutable.");
         await _db.SaveChangesAsync();
         return ToLegacy(entity);
     }
 
     public async Task<bool> EliminarAsync(int id)
     {
-        var entity = await _db.PeriodosEscolares.FirstOrDefaultAsync(x => x.Id == id && x.FechaEliminacion == null);
+        var entity = await _db.PeriodosEscolares.AsTracking().FirstOrDefaultAsync(x => x.Id == id && x.FechaEliminacion == null);
         if (entity is null) return false;
-        entity.FechaEliminacion = DateTime.UtcNow;
-        _db.Entry(entity).State = EntityState.Modified;
+        entity.FechaEliminacion = _timeProvider.GetUtcNow().UtcDateTime;
         await _db.SaveChangesAsync();
         return true;
     }
