@@ -26,16 +26,6 @@
         </div>
 
         <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:flex-start; justify-content:space-evenly;">
-            @await Component.InvokeAsync("InputField", new InputFieldModel
-            {
-                Id = "cargo",
-                Name = "Cargo",
-                Label = "Cargo:",
-                Flexible = true,
-                Valor = Model.Cargo,
-                Error = ViewData.ModelState["Cargo"]?.Errors.FirstOrDefault()?.ErrorMessage,
-            })
-
             <div style="display:none">
                 @await Component.InvokeAsync("InputField", new InputFieldModel
                 {

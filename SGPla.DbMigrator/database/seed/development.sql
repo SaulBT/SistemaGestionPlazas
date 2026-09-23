@@ -1,102 +1,104 @@
--- Datos ficticios para desarrollo y pruebas funcionales.
--- Este script sólo se ejecuta cuando MIGRATOR_APPLY_DEVELOPMENT_SEED=true.
+-- Catálogos ficticios para desarrollo y pruebas del modelo nuevo.
+-- Se ejecuta únicamente cuando MIGRATOR_APPLY_DEVELOPMENT_SEED=true.
+-- No escribe en dbo: el modelo legacy permanece aislado para la migración paralela.
 
-IF NOT EXISTS (SELECT 1 FROM [dbo].[AreaAcademica])
+IF NOT EXISTS (SELECT 1 FROM [academico].[region])
 BEGIN
-    SET IDENTITY_INSERT [dbo].[AreaAcademica] ON;
-
-    INSERT INTO [dbo].[AreaAcademica]
-    ([idAreaAcademica],[nombre],[telefono],[extension])
-    VALUES
-        (1, N'Técnica',                  N'2288421700', N'1101'),
-        (2, N'Económico Administrativa', N'2288422700', N'2201'),
-        (3, N'Humanidades',              N'2288423700', N'3301');
-
-    SET IDENTITY_INSERT [dbo].[AreaAcademica] OFF;
-    DBCC CHECKIDENT ('dbo.AreaAcademica', RESEED, 3);
+    SET IDENTITY_INSERT [academico].[region] ON;
+    INSERT INTO [academico].[region] ([id], [clave], [nombre]) VALUES
+        (1, 1, N'Xalapa'),
+        (2, 2, N'Veracruz'),
+        (3, 3, N'Orizaba-Córdoba'),
+        (4, 4, N'Poza Rica-Túxpan'),
+        (5, 5, N'Coatzacoalcos-Minatitlán');
+    SET IDENTITY_INSERT [academico].[region] OFF;
+    DBCC CHECKIDENT ('academico.region', RESEED, 5);
 END
 GO
 
-IF NOT EXISTS (SELECT 1 FROM [dbo].[Region])
+IF NOT EXISTS (SELECT 1 FROM [academico].[campus])
 BEGIN
-    INSERT INTO [dbo].[Region] ([id], [nombre])
-    VALUES
-        (1, N'Xalapa'),
-        (2, N'Veracruz'),
-        (3, N'Orizaba-Córdoba'),
-        (4, N'Poza Rica-Túxpan'),
-        (5, N'Coatzacoalcos-Minatitlán');
+    INSERT INTO [academico].[campus] ([clave], [nombre], [region_id])
+    SELECT v.[clave], v.[nombre], r.[id]
+    FROM (VALUES
+        ('XALAPA', N'Campus Xalapa', 1),
+        ('VERACRUZ', N'Campus Veracruz', 2),
+        ('ORIZABACORDOBA', N'Campus Orizaba-Córdoba', 3),
+        ('POZARICATUXPAN', N'Campus Poza Rica-Túxpan', 4),
+        ('COATZACOALCOSMINATITLAN', N'Campus Coatzacoalcos-Minatitlán', 5)
+    ) AS v([clave], [nombre], [region_clave])
+    INNER JOIN [academico].[region] AS r ON r.[clave] = v.[region_clave];
 END
 GO
 
-IF NOT EXISTS (SELECT 1 FROM [dbo].[EntidadAcademica])
+IF NOT EXISTS (SELECT 1 FROM [academico].[area_academica])
+    INSERT INTO [academico].[area_academica] ([clave], [nombre]) VALUES
+        (1, N'Técnica'), (2, N'Económico Administrativa'), (3, N'Humanidades');
+GO
+
+IF NOT EXISTS (SELECT 1 FROM [academico].[sistema_educativo])
+    INSERT INTO [academico].[sistema_educativo] ([nombre]) VALUES
+        (N'Escolarizado'), (N'Virtual'), (N'Abierta');
+GO
+
+IF NOT EXISTS (SELECT 1 FROM [academico].[nivel_formacion])
+    INSERT INTO [academico].[nivel_formacion] ([clave], [nombre]) VALUES
+        ('TSU', N'Técnico Superior Universitario'),
+        ('LIC', N'Licenciatura'),
+        ('MAE', N'Maestría'),
+        ('DOC', N'Doctorado');
+GO
+
+IF NOT EXISTS (SELECT 1 FROM [academico].[area_formacion])
+    INSERT INTO [academico].[area_formacion] ([clave], [nombre]) VALUES
+        ('AFBG', N'Área de Formación Básica General'),
+        ('AFID', N'Área de Formación de Iniciación a la Disciplina'),
+        ('AFD', N'Área de Formación Disciplinaria'),
+        ('AFT', N'Área de Formación Terminal'),
+        ('AFEL', N'Área de Formación de Elección Libre');
+GO
+
+IF NOT EXISTS (SELECT 1 FROM [plazas].[grado_academico])
+    INSERT INTO [plazas].[grado_academico] ([nombre]) VALUES
+        (N'Licenciatura'), (N'Maestría'), (N'Doctorado'), (N'Especialidad');
+GO
+
+IF NOT EXISTS (SELECT 1 FROM [plazas].[tratamiento_academico])
 BEGIN
-    SET IDENTITY_INSERT [dbo].[EntidadAcademica] ON;
-
-    INSERT INTO [dbo].[EntidadAcademica]
-    (
-        [idEntidadAcademica], [idAreaAcademica], [idRegion], [clave], [nombre],
-        [calleNumero], [colonia], [cp], [municipio],
-        [telefono], [extension], [region]
-    )
-    VALUES
-        (1,2,1,N'11304',N'Facultad de Estadística e Informática',
-            N'Av. Xalapa S/N', N'Unidad Universitaria', N'91090', N'Xalapa',
-            N'2288421700', N'1110', N'1-Xalapa'),
-        (2,1,1,N'11305',N'Facultad de Ingeniería Civil',
-            N'Circuito Gonzalo Aguirre Beltrán S/N', N'Zona Universitaria', N'91090', N'Xalapa',
-            N'2288421711', N'1111', N'1-Xalapa'),
-        (3,2,1,N'22302',N'Facultad de Economía',
-            N'Av. Xalapa S/N', N'Unidad Universitaria', N'91090', N'Xalapa',
-            N'2288422711', N'2211', N'1-Xalapa'),
-        (4,3,1,N'33301',N'Facultad de Derecho',
-            N'Circuito Gonzalo Aguirre Beltrán S/N', N'Zona Universitaria', N'91090', N'Xalapa',
-            N'2288423700', N'3310', N'1-Xalapa'),
-        (5,3,1,N'33302',N'Facultad de Pedagogía',
-            N'Francisco Moreno S/N', N'Unidad Magisterial', N'91017', N'Xalapa',
-            N'2288423711', N'3311', N'1-Xalapa');
-
-    SET IDENTITY_INSERT [dbo].[EntidadAcademica] OFF;
-    DBCC CHECKIDENT ('dbo.EntidadAcademica', RESEED, 6);
+    INSERT INTO [plazas].[tratamiento_academico] ([nombre], [grado_academico_id])
+    SELECT v.[nombre], g.[id]
+    FROM (VALUES
+        (N'Lic.', N'Licenciatura'), (N'Mtro.', N'Maestría'), (N'Mtra.', N'Maestría'),
+        (N'Dr.', N'Doctorado'), (N'Dra.', N'Doctorado'), (N'Especialista', N'Especialidad')
+    ) AS v([nombre], [grado])
+    INNER JOIN [plazas].[grado_academico] AS g ON g.[nombre] = v.[grado];
 END
 GO
 
-IF NOT EXISTS (SELECT 1 FROM [dbo].[Periodo])
-BEGIN
-    INSERT INTO [dbo].[Periodo] ([codigo]) VALUES
-        ('202501'),('202551'),('202601'),('202651'),
-        ('202701'),('202751'),('202801'),('202851'),
-        ('202901'),('202951');
-END
+IF NOT EXISTS (SELECT 1 FROM [plazas].[articulo])
+    INSERT INTO [plazas].[articulo] ([numero], [descripcion]) VALUES
+        ('70', N'Personal académico adscrito que cubra el perfil requerido.'),
+        ('70 Y 73', N'Personal de la Universidad Veracruzana y público en general.'),
+        ('70 Y 73 A FIN', N'Perfil similar o afín al requerido.');
 GO
 
-IF NOT EXISTS (SELECT 1 FROM [dbo].[Articulo])
-BEGIN
-    SET IDENTITY_INSERT [dbo].[Articulo] ON;
-    INSERT INTO [dbo].[Articulo] ([idArticulo],[numero],[descripcion]) VALUES
-        (1, N'70', N'personal académico adscrito que cubra el perfil requerido y cumpla con los requisitos solicitados'),
-        (2, N'70 y 73', N'personal académico adscrito, al personal de la Universidad Veracruzana y público en general que cubra el perfil requerido y cumpla con los requisitos solicitados'),
-        (3, N'70 y 73 a fin', N'personal académico adscrito, así como al personal de la Universidad Veracruzana y público en general que cubra los requisitos solicitados, que ostente un perfil similar o afín al requerido y');
-    SET IDENTITY_INSERT [dbo].[Articulo] OFF;
-    DBCC CHECKIDENT ('dbo.Articulo', RESEED, 3);
-END
+IF NOT EXISTS (SELECT 1 FROM [plazas].[modalidad_recepcion])
+    INSERT INTO [plazas].[modalidad_recepcion] ([nombre], [requiere_lugar]) VALUES
+        (N'Presencial', 1), (N'Correo electrónico', 0);
 GO
 
-IF NOT EXISTS (SELECT 1 FROM [dbo].[ProgramaEducativo])
-BEGIN
-    SET IDENTITY_INSERT [dbo].[ProgramaEducativo] ON;
-    INSERT INTO [dbo].[ProgramaEducativo] ([idProgramaEducativo],[idEntidadAcademica],[codigo],[nombre],[campus]) VALUES
-        (1,  1, N'14143', N'Estadistica',                             N'Xalapa'),
-        (2,  1, N'14352', N'Ingeniería de Software',                  N'Xalapa'),
-        (3,  2, N'00003', N'Ingeniería Civil',                         N'Xalapa'),
-        (4,  2, N'00004', N'Ingeniería Ambiental',                     N'Xalapa'),
-        (7,  3, N'00007', N'Licenciatura en Economía',                 N'Xalapa'),
-        (8,  3, N'00008', N'Licenciatura en Relaciones Industriales',  N'Xalapa'),
-        (9,  4, N'00009', N'Licenciatura en Derecho',                  N'Xalapa'),
-        (10, 4, N'00010', N'Licenciatura en Ciencias Políticas',       N'Xalapa'),
-        (11, 5, N'00011', N'Licenciatura en Pedagogía',                N'Xalapa'),
-        (12, 5, N'00012', N'Licenciatura en Lengua y Literatura Hispánicas', N'Xalapa');
-    SET IDENTITY_INSERT [dbo].[ProgramaEducativo] OFF;
-    DBCC CHECKIDENT ('dbo.ProgramaEducativo', RESEED, 12);
-END
+IF NOT EXISTS (SELECT 1 FROM [plazas].[tipo_plaza])
+    INSERT INTO [plazas].[tipo_plaza] ([nombre]) VALUES
+        (N'Plaza de tiempo completo'), (N'Plaza por asignatura');
+GO
+
+IF NOT EXISTS (SELECT 1 FROM [plazas].[tipo_contratacion])
+    INSERT INTO [plazas].[tipo_contratacion] ([nombre]) VALUES
+        (N'Base'), (N'Interino');
+GO
+
+IF NOT EXISTS (SELECT 1 FROM [plazas].[tipo_documento_aspirante])
+    INSERT INTO [plazas].[tipo_documento_aspirante] ([nombre]) VALUES
+        (N'Identificación oficial'), (N'CURP'), (N'RFC'), (N'Comprobante de domicilio'),
+        (N'Título profesional'), (N'Cédula profesional'), (N'Currículum vitae'), (N'Constancia de situación fiscal');
 GO

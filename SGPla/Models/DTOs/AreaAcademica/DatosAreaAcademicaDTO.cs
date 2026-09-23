@@ -8,8 +8,7 @@ namespace SGPla.Models.DTOs.AreaAcademica
         public int IdAreaAcademica { get; set; } = 0;
         [Required(ErrorMessage = "Campo obligatorio")]
         public string Nombre { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Campo obligatorio")]
-        public string Telefono { get; set; } = string.Empty;
+        public string? Telefono { get; set; }
         public string? Extension { get; set; }
     }
 }

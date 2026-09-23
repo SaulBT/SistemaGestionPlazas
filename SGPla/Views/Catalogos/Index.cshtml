@@ -1,0 +1,87 @@
+@using SGPla.Models.ViewModels.Catalogos
+@model CatalogosViewModel
+
+@{
+    ViewData["Title"] = "Catálogos normalizados";
+    var grupos = new (string Titulo, IReadOnlyList<CatalogoOpcion> Items)[]
+    {
+        ("Regiones", Model.Regiones),
+        ("Campus", Model.Campus),
+        ("Áreas académicas", Model.AreasAcademicas),
+        ("Sistemas educativos", Model.SistemasEducativos),
+        ("Niveles de formación", Model.NivelesFormacion),
+        ("Áreas de formación", Model.AreasFormacion),
+        ("Grados académicos", Model.GradosAcademicos),
+        ("Tratamientos académicos", Model.TratamientosAcademicos),
+        ("Modalidades de recepción", Model.ModalidadesRecepcion),
+        ("Tipos de plaza", Model.TiposPlaza),
+        ("Tipos de contratación", Model.TiposContratacion),
+        ("Tipos de documento", Model.TiposDocumentoAspirante),
+        ("Artículos", Model.Articulos)
+    };
+}
+
+<div class="alert alert-info">
+    Estos valores provienen de <code>SgplaDbContext</code> y de las tablas normalizadas. Las vistas que migren a combos deben usar los identificadores, no texto libre.
+</div>
+
+<div class="row g-3">
+    @foreach (var grupo in grupos)
+    {
+        <div class="col-md-6 col-xl-4">
+            <section class="card h-100">
+                <div class="card-header d-flex justify-content-between">
+                    <span>@grupo.Titulo</span>
+                    <span class="badge text-bg-secondary">@grupo.Items.Count</span>
+                </div>
+                <div class="card-body p-0" style="max-height: 240px; overflow:auto">
+                    @if (grupo.Items.Count == 0)
+                    {
+                        <p class="text-muted p-3 mb-0">Sin registros activos.</p>
+                    }
+                    else
+                    {
+                        <table class="table table-sm mb-0">
+                            <tbody>
+                            @foreach (var item in grupo.Items)
+                            {
+                                <tr><td><code>@item.Clave</code></td><td>@item.Nombre</td></tr>
+                            }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+            </section>
+        </div>
+    }
+</div>
+
+<hr class="my-4" />
+<h5>Prueba de combos dependientes</h5>
+<div class="row g-3" id="catalogos-demo">
+    <div class="col-md-3"><label class="form-label" for="regionId">Región</label><select class="form-select" id="regionId"><option value="">Todas</option>@foreach (var item in Model.Regiones) { <option value="@item.Id">@item.Nombre</option> }</select></div>
+    <div class="col-md-3"><label class="form-label" for="campusId">Campus</label><select class="form-select" id="campusId"><option value="">Todos</option></select></div>
+    <div class="col-md-3"><label class="form-label" for="areaId">Área académica</label><select class="form-select" id="areaId"><option value="">Todas</option>@foreach (var item in Model.AreasAcademicas) { <option value="@item.Id">@item.Nombre</option> }</select></div>
+    <div class="col-md-3"><label class="form-label" for="entidadId">Entidad académica</label><select class="form-select" id="entidadId"><option value="">Todas</option></select></div>
+</div>
+
+<script>
+    const cargarOpciones = async (url, select, texto) => {
+        const respuesta = await fetch(url);
+        const datos = await respuesta.json();
+        select.innerHTML = `<option value="">${texto}</option>`;
+        datos.forEach(x => select.add(new Option(x.nombre, x.id)));
+    };
+    const region = document.getElementById('regionId');
+    const campus = document.getElementById('campusId');
+    const area = document.getElementById('areaId');
+    const entidad = document.getElementById('entidadId');
+    const query = (name, value) => value ? `${name}=${encodeURIComponent(value)}` : '';
+    region.addEventListener('change', async () => {
+        await cargarOpciones(`/Catalogos/Campus?${query('regionId', region.value)}`, campus, 'Todos');
+        entidad.innerHTML = '<option value="">Todas</option>';
+    });
+    const cargarEntidades = () => cargarOpciones(`/Catalogos/Entidades?${query('campusId', campus.value)}&${query('areaAcademicaId', area.value)}`, entidad, 'Todas');
+    campus.addEventListener('change', cargarEntidades);
+    area.addEventListener('change', cargarEntidades);
+</script>

@@ -68,7 +68,9 @@ for (var attempt = 1; attempt <= maxAttempts; attempt++)
             var seedResult = DeployChanges.To
                 .SqlDatabase(connectionString)
                 .WithScripts(new SqlScript(
-                    "development_seed.sql",
+                    // El sufijo versiona el seed: el nombre anterior quedó registrado
+                    // en entornos de desarrollo que cargaron el seed legacy sobre dbo.
+                    "development_seed_0020.sql",
                     File.ReadAllText(seedPath).TrimStart('\uFEFF')))
                 .WithPreprocessor(new StripBomPreprocessor())
                 .LogToConsole()
