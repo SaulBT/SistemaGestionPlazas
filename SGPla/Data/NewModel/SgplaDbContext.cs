@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using SGPla.Data.NewModel.Entities;
 
 namespace SGPla.Data.NewModel;
@@ -439,5 +440,34 @@ public sealed class SgplaDbContext : DbContext
             entity.ToTable("usuario_entidad_academica", "usuarios");
             entity.HasKey(e => e.UsuarioId);
         });
+
+        // The normalized DbUp schema uses snake_case column names. Keep the CLR
+        // model idiomatic while making every EF query target the published SQL
+        // contract (including FK columns such as programacion_academica_id).
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            foreach (var property in entityType.GetProperties())
+                property.SetColumnName(ToSnakeCase(property.Name));
+        }
+    }
+
+    private static string ToSnakeCase(string value)
+    {
+        var result = new System.Text.StringBuilder(value.Length + 8);
+        for (var index = 0; index < value.Length; index++)
+        {
+            var current = value[index];
+            if (char.IsUpper(current) && index > 0)
+            {
+                var previous = value[index - 1];
+                var nextIsLower = index + 1 < value.Length && char.IsLower(value[index + 1]);
+                if (char.IsLower(previous) || char.IsDigit(previous) || (char.IsUpper(previous) && nextIsLower))
+                    result.Append('_');
+            }
+
+            result.Append(char.ToLowerInvariant(current));
+        }
+
+        return result.ToString();
     }
 }

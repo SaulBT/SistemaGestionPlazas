@@ -1,25 +1,6 @@
-﻿@using SGPla.Models.ViewModels.ProgramasEducativos
-@model IndexViewModel
-
-<div id="filtrosContainer" style="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease;">
-    @await Component.InvokeAsync("SelectField", new SelectFieldModel
-    {
-        Label = "Región",
-        Options = Model.Regiones,
-        Name = "region"
-    })
-    @await Component.InvokeAsync("SelectField", new SelectFieldModel
-    {
-        Label = "Área Académica",
-        Options = Model.Areas,
-        Name = "idAreaAcademica"
-    })
-    <div id="contenedorEntidad">
-        @await Component.InvokeAsync("SelectField", new SelectFieldModel
-        {
-            Label = "Entidad Académica",
-            Options = Model.Entidades,
-            Name = "idEntidadAcademica"
-        })
-    </div>
+@model SGPla.Models.ViewModels.ProgramasEducativos.IndexViewModel
+<div id="filtrosContainer" class="d-flex gap-2 pb-3">
+    <select name="regionId" id="regionId" class="form-select"><option value="">Todas las regiones</option>@foreach (var item in Model.Regiones) { <option value="@item.Value" selected="@item.Selected">@item.Text</option> }</select>
+    <select name="idAreaAcademica" id="idAreaAcademica" class="form-select"><option value="">Todas las áreas</option>@foreach (var item in Model.Areas) { <option value="@item.Value" selected="@item.Selected">@item.Text</option> }</select>
+    <select name="idEntidadAcademica" id="idEntidadAcademica" class="form-select"><option value="">Todas las entidades</option>@foreach (var item in Model.Entidades) { <option value="@item.Value" selected="@item.Selected">@item.Text</option> }</select>
 </div>

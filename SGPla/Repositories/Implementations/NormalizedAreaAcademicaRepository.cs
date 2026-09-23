@@ -1,8 +1,11 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using SGPla.Data.NewModel;
 using SGPla.Models;
 using SGPla.Repositories.Interfaces;
 using LegacyAreaAcademica = SGPla.Models.AreaAcademica;
+using System.Data;
+using System.Globalization;
 
 namespace SGPla.Repositories.Implementations;
 
@@ -38,7 +41,7 @@ public sealed class NormalizedAreaAcademicaRepository : IAreaAcademicaRepository
     public async Task<LegacyAreaAcademica> CrearAsync(LegacyAreaAcademica areaAcademica)
     {
         ArgumentNullException.ThrowIfNull(areaAcademica);
-        var siguienteClave = (await _db.AreaAcademicas.AsNoTracking().MaxAsync(x => (int?)x.Clave) ?? 0) + 1;
+        var siguienteClave = await ObtenerSiguienteClaveAsync();
         var entity = new Data.NewModel.Entities.AreaAcademica
         {
             Clave = siguienteClave,
@@ -95,4 +98,28 @@ public sealed class NormalizedAreaAcademicaRepository : IAreaAcademicaRepository
         Telefono = string.Empty,
         FechaEliminacion = entity.FechaEliminacion
     };
+
+    private async Task<int> ObtenerSiguienteClaveAsync()
+    {
+        var connection = _db.Database.GetDbConnection();
+        var closeConnectionWhenDone = connection.State != ConnectionState.Open;
+        if (closeConnectionWhenDone)
+            await _db.Database.OpenConnectionAsync();
+
+        try
+        {
+            await using var command = connection.CreateCommand();
+            command.CommandText = "SELECT NEXT VALUE FOR [academico].[seq_area_academica_clave];";
+            if (_db.Database.CurrentTransaction is { } transaction)
+                command.Transaction = transaction.GetDbTransaction();
+
+            var result = await command.ExecuteScalarAsync();
+            return Convert.ToInt32(result, CultureInfo.InvariantCulture);
+        }
+        finally
+        {
+            if (closeConnectionWhenDone)
+                await _db.Database.CloseConnectionAsync();
+        }
+    }
 }

@@ -22,7 +22,7 @@ namespace SGPla.Models.ViewModels.Usuarios
         [Required(ErrorMessage = "Campo obligatorio")]
         public int? IdAreaAcademica { get; set; }
 
-        public string? Region { get; set; }
+        public int? RegionId { get; set; }
 
         public int? IdEntidadAcademica { get; set; }
         public int IdUsuario { get; set; }

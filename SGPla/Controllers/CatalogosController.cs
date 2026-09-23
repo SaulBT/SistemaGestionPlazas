@@ -21,8 +21,8 @@ public sealed class CatalogosController : Controller
         Opciones(_catalogos.ObtenerCampusAsync(regionId, cancellationToken));
 
     [HttpGet]
-    public Task<IActionResult> Entidades(int? campusId, int? areaAcademicaId, CancellationToken cancellationToken) =>
-        Opciones(_catalogos.ObtenerEntidadesAsync(campusId, areaAcademicaId, cancellationToken));
+    public Task<IActionResult> Entidades(int? campusId, int? areaAcademicaId, int? regionId, CancellationToken cancellationToken) =>
+        Opciones(_catalogos.ObtenerEntidadesAsync(campusId, areaAcademicaId, cancellationToken, regionId));
 
     [HttpGet]
     public Task<IActionResult> Programas(int? entidadAcademicaId, CancellationToken cancellationToken) =>

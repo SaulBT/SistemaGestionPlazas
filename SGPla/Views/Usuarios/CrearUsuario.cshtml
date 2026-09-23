@@ -66,10 +66,10 @@
                 {
                     Label = "Región",
                     Options = Model.Regiones,
-                    Name = "Region",
-                    SelectedValue = Model.Region?.ToString(),
+                    Name = "RegionId",
+                    SelectedValue = Model.RegionId?.ToString(),
                     Flexible = true,
-                    Error = ViewData.ModelState["Region"]?.Errors.FirstOrDefault()?.ErrorMessage
+                    Error = ViewData.ModelState["RegionId"]?.Errors.FirstOrDefault()?.ErrorMessage
                 })
             </div>
 
@@ -148,7 +148,7 @@
     document.addEventListener("DOMContentLoaded", function () {
 
         const area = document.querySelector("[name='IdAreaAcademica']");
-        const region = document.querySelector("[name='Region']");
+        const region = document.querySelector("[name='RegionId']");
         const entidad = document.querySelector("[name='IdEntidadAcademica']");
 
             async function cargarEntidades() {
@@ -168,7 +168,7 @@
         }
 
         try {
-            const response = await fetch(`/Usuarios/ObtenerEntidades?idAreaAcademica=${idArea}&region=${encodeURIComponent(reg)}`);
+            const response = await fetch(`/Usuarios/ObtenerEntidades?idAreaAcademica=${idArea}&regionId=${encodeURIComponent(reg)}`);
             const data = await response.json();
 
             entidad.innerHTML = "";

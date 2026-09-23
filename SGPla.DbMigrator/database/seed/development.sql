@@ -102,3 +102,21 @@ IF NOT EXISTS (SELECT 1 FROM [plazas].[tipo_documento_aspirante])
         (N'Identificación oficial'), (N'CURP'), (N'RFC'), (N'Comprobante de domicilio'),
         (N'Título profesional'), (N'Cédula profesional'), (N'Currículum vitae'), (N'Constancia de situación fiscal');
 GO
+
+-- El seed puede ejecutarse después de crear la secuencia en una base vacía.
+-- Reanudarla tras las claves fijas evita colisiones en la primera alta de desarrollo.
+IF OBJECT_ID(N'academico.seq_area_academica_clave', N'SO') IS NOT NULL
+BEGIN
+    DECLARE @siguiente_clave bigint =
+        COALESCE((SELECT MAX(CONVERT(bigint, [clave])) FROM [academico].[area_academica]), 0) + 1;
+
+    IF @siguiente_clave > 2147483647
+        THROW 51000, 'No hay claves enteras disponibles para áreas académicas.', 1;
+
+    DECLARE @reiniciar_secuencia nvarchar(max) =
+        N'ALTER SEQUENCE [academico].[seq_area_academica_clave] RESTART WITH '
+        + CONVERT(nvarchar(20), @siguiente_clave)
+        + N';';
+    EXEC sys.sp_executesql @reiniciar_secuencia;
+END;
+GO

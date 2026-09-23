@@ -4,6 +4,9 @@ using SGPla.Models.DTOs.Usuarios;
 using SGPla.Commons;
 using SGPla.Validations.Implementations;
 using SGPla.Models;
+using SGPla.Services.Interfaces;
+using SGPla.Models.ViewModels.Catalogos;
+using System.Threading;
 
 public class UsuarioValidatorTests
 {
@@ -11,6 +14,7 @@ public class UsuarioValidatorTests
     private readonly Mock<ICoordinadorDgaaRepository> _coordinadorDgaaRepositoryMock;
     private readonly Mock<IAreaAcademicaRepository> _areaAcademicaRepositoryMock;
     private readonly Mock<IEntidadAcademicaRepository> _entidadAcademicaRepositoryMock;
+    private readonly Mock<ICatalogosMvcService> _catalogosMvcServiceMock;
     private readonly UsuarioValidator _usuarioValidator;
 
     public UsuarioValidatorTests()
@@ -19,12 +23,18 @@ public class UsuarioValidatorTests
         _coordinadorDgaaRepositoryMock = new Mock<ICoordinadorDgaaRepository>();
         _areaAcademicaRepositoryMock = new Mock<IAreaAcademicaRepository>();
         _entidadAcademicaRepositoryMock = new Mock<IEntidadAcademicaRepository>();
+        _catalogosMvcServiceMock = new Mock<ICatalogosMvcService>();
+        _catalogosMvcServiceMock
+            .Setup(service => service.ObtenerEntidadesAsync(
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>(), It.IsAny<int?>()))
+            .ReturnsAsync(Array.Empty<CatalogoOpcion>());
 
         _usuarioValidator = new UsuarioValidator(
             _coordinadorEaRepositoryMock.Object,
             _coordinadorDgaaRepositoryMock.Object,
             _areaAcademicaRepositoryMock.Object,
-            _entidadAcademicaRepositoryMock.Object);
+            _entidadAcademicaRepositoryMock.Object,
+            _catalogosMvcServiceMock.Object);
     }
 
     //CP-01-03

@@ -11,6 +11,19 @@ public sealed class CatalogosMvcService : ICatalogosMvcService
 
     public CatalogosMvcService(SgplaDbContext db) => _db = db;
 
+    public async Task<CatalogosEntidadAcademicaViewModel> ObtenerCatalogosEntidadAcademicaAsync(
+        int? regionId, CancellationToken cancellationToken = default) => new()
+    {
+        Regiones = await _db.Regiones.AsNoTracking().Where(x => x.FechaEliminacion == null)
+            .OrderBy(x => x.Clave).Select(x => new CatalogoOpcion(x.Id, x.Clave.ToString(), x.Nombre))
+            .ToListAsync(cancellationToken),
+        Campus = await ObtenerCampusAsync(regionId, cancellationToken),
+        AreasAcademicas = await _db.AreaAcademicas.AsNoTracking().Where(x => x.FechaEliminacion == null)
+            .OrderBy(x => x.Clave).ThenBy(x => x.Nombre)
+            .Select(x => new CatalogoOpcion(x.Id, x.Clave.ToString(), x.Nombre)).ToListAsync(cancellationToken),
+        Municipios = await ObtenerMunicipiosAsync(cancellationToken)
+    };
+
     public async Task<CatalogosViewModel> ObtenerAsync(CancellationToken cancellationToken = default)
     {
         var regiones = await _db.Regiones.AsNoTracking()
@@ -36,6 +49,7 @@ public sealed class CatalogosMvcService : ICatalogosMvcService
             Regiones = regiones,
             Campus = campus,
             AreasAcademicas = areas,
+            Municipios = await ObtenerMunicipiosAsync(cancellationToken),
             SistemasEducativos = await _db.SistemasEducativos.AsNoTracking()
                 .Where(x => x.FechaEliminacion == null).OrderBy(x => x.Nombre)
                 .Select(x => new CatalogoOpcion(x.Id, x.Id.ToString(), x.Nombre)).ToListAsync(cancellationToken),
@@ -64,16 +78,29 @@ public sealed class CatalogosMvcService : ICatalogosMvcService
 
     public async Task<IReadOnlyList<CatalogoOpcion>> ObtenerCampusAsync(int? regionId, CancellationToken cancellationToken = default) =>
         await _db.Campuses.AsNoTracking()
-            .Where(x => x.FechaEliminacion == null && (!regionId.HasValue || x.RegionId == regionId.Value))
+            .Where(x => x.FechaEliminacion == null &&
+                _db.Regiones.Any(r => r.Id == x.RegionId && r.FechaEliminacion == null) &&
+                (!regionId.HasValue || x.RegionId == regionId.Value))
             .OrderBy(x => x.Nombre)
             .Select(x => new CatalogoOpcion(x.Id, x.Clave, x.Nombre))
             .ToListAsync(cancellationToken);
 
-    public async Task<IReadOnlyList<CatalogoOpcion>> ObtenerEntidadesAsync(int? campusId, int? areaAcademicaId, CancellationToken cancellationToken = default) =>
-        await _db.EntidadAcademicas.AsNoTracking()
-            .Where(x => x.FechaEliminacion == null && (!campusId.HasValue || x.CampusId == campusId.Value) && (!areaAcademicaId.HasValue || x.AreaAcademicaId == areaAcademicaId.Value))
-            .OrderBy(x => x.Nombre)
-            .Select(x => new CatalogoOpcion(x.Id, x.Clave, x.Nombre))
+    public async Task<IReadOnlyList<CatalogoOpcion>> ObtenerEntidadesAsync(int? campusId, int? areaAcademicaId, CancellationToken cancellationToken = default, int? regionId = null) =>
+        await (from entidad in _db.EntidadAcademicas.AsNoTracking()
+               join campus in _db.Campuses.AsNoTracking() on entidad.CampusId equals campus.Id
+               join region in _db.Regiones.AsNoTracking() on campus.RegionId equals region.Id
+               where entidad.FechaEliminacion == null && campus.FechaEliminacion == null && region.FechaEliminacion == null &&
+                     _db.AreaAcademicas.Any(area => area.Id == entidad.AreaAcademicaId && area.FechaEliminacion == null) &&
+                     (!campusId.HasValue || entidad.CampusId == campusId.Value) &&
+                     (!areaAcademicaId.HasValue || entidad.AreaAcademicaId == areaAcademicaId.Value) &&
+                     (!regionId.HasValue || campus.RegionId == regionId.Value)
+               orderby entidad.Nombre
+               select new CatalogoOpcion(entidad.Id, entidad.Clave, entidad.Nombre))
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<CatalogoOpcion>> ObtenerMunicipiosAsync(CancellationToken cancellationToken = default) =>
+        await _db.Municipios.AsNoTracking().OrderBy(x => x.Nombre)
+            .Select(x => new CatalogoOpcion(x.Id, x.Id.ToString(), x.Nombre))
             .ToListAsync(cancellationToken);
 
     public async Task<IReadOnlyList<CatalogoOpcion>> ObtenerProgramasAsync(int? entidadAcademicaId, CancellationToken cancellationToken = default) =>

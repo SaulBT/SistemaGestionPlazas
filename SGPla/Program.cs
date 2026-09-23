@@ -50,10 +50,12 @@ builder.Services.AddDbContext<GestionDePlazasDbContext>(options =>
 builder.Services.AddDbContext<SgplaDbContext>(options =>
     options.UseSqlServer(connectionString, sql =>
         sql.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
+builder.Services.AddSingleton(TimeProvider.System);
 
 //Clases
 builder.Services.AddScoped<ICoordinadorEaRepository, NormalizedCoordinadorEaRepository>();
 builder.Services.AddScoped<ICoordinadorDgaaRepository, NormalizedCoordinadorDgaaRepository>();
+builder.Services.AddScoped<IUsuarioConsultaRepository, NormalizedUsuarioConsultaRepository>();
 builder.Services.AddScoped<IUsuarioValidator, UsuarioValidator>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<ICatalogosMvcService, CatalogosMvcService>();
@@ -63,8 +65,12 @@ builder.Services.AddScoped<IAreaAcademicaValidator, AreaAcademicaValidator>();
 builder.Services.AddScoped<IAreaAcademicaService, AreaAcademicaService>();
 
 builder.Services.AddScoped<IEntidadAcademicaRepository, EntidadAcademicaRepository>();
+builder.Services.AddScoped<IEntidadAcademicaMvcRepository, NormalizedEntidadAcademicaMvcRepository>();
 builder.Services.AddScoped<IEntidadAcademicaValidator, EntidadAcademicaValidator>();
 builder.Services.AddScoped<IEntidadAcademicaService, EntidadAcademicaService>();
+builder.Services.AddScoped<IEntidadAcademicaMvcService, EntidadAcademicaMvcService>();
+builder.Services.AddScoped<IProgramaEducativoMvcRepository, NormalizedProgramaEducativoMvcRepository>();
+builder.Services.AddScoped<IProgramaEducativoMvcService, ProgramaEducativoMvcService>();
 
 builder.Services.AddScoped<IArticuloRepository, NormalizedArticuloRepository>();
 builder.Services.AddScoped<IArticuloService, ArticuloService>();
