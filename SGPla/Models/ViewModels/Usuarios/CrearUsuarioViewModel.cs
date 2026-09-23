@@ -10,8 +10,7 @@ namespace SGPla.Models.ViewModels.Usuarios
         [Required(ErrorMessage = "Campo obligatorio")]
         public string Nombre { get; set; }
 
-        [Required(ErrorMessage = "Campo obligatorio")]
-        public string Cargo { get; set; }
+        public string Cargo { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Campo obligatorio")]
         [EmailAddress(ErrorMessage = "El correo no es válido")]

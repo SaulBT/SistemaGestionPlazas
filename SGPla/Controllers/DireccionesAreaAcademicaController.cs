@@ -18,7 +18,7 @@ namespace SGPla.Controllers
         private readonly ILogger<DireccionesAreaAcademicaController> _logger;
         private int paginaActual = 1;
 
-        private static List<string> HEADERS_TABLA_INDEX = [ "Nombre de la Dirección", "Teléfono", "Acciones" ];
+        private static List<string> HEADERS_TABLA_INDEX = [ "Nombre de la Dirección", "Acciones" ];
 
         public DireccionesAreaAcademicaController(IAreaAcademicaService areaAcademicaService, ILogger<DireccionesAreaAcademicaController> logger)
         {
@@ -62,7 +62,6 @@ namespace SGPla.Controllers
                         Cells = new List<TableCellModel>
                     {
                         new TableCellModel { Value = a.Nombre},
-                        new TableCellModel { Value = a.Telefono},
                         new TableCellModel
                         {
                             Actions = new List<TableActionModel>
