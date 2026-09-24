@@ -22,16 +22,6 @@ public sealed class NormalizedUsuarioConsultaRepository : IUsuarioConsultaReposi
         if (filtro.Pagina < 1 || filtro.Cantidad is < 1 or > 100)
             throw new ArgumentOutOfRangeException(nameof(filtro), "La página o cantidad solicitada no son válidas.");
 
-        int? regionClave = null;
-        if (!string.IsNullOrWhiteSpace(filtro.Region))
-        {
-            var separator = filtro.Region.IndexOf('-');
-            var clave = separator > 0 ? filtro.Region[..separator] : filtro.Region;
-            if (!int.TryParse(clave, out var parsedClave))
-                return ([], 0);
-            regionClave = parsedClave;
-        }
-
         var consultaEa =
             from perfil in _db.UsuariosEntidadAcademica.AsNoTracking()
             join usuario in _db.Usuarios.AsNoTracking() on perfil.UsuarioId equals usuario.Id
@@ -52,6 +42,7 @@ public sealed class NormalizedUsuarioConsultaRepository : IUsuarioConsultaReposi
                 EntidadNombre = (string?)entidad.Nombre,
                 AreaId = area.Id,
                 AreaNombre = area.Nombre,
+                RegionId = (int?)region.Id,
                 RegionClave = (int?)region.Clave,
                 RegionNombre = (string?)region.Nombre
             };
@@ -60,8 +51,8 @@ public sealed class NormalizedUsuarioConsultaRepository : IUsuarioConsultaReposi
             consultaEa = consultaEa.Where(x => x.EntidadId == filtro.IdEntidadAcademica.Value);
         if (filtro.IdAreaAcademica.HasValue)
             consultaEa = consultaEa.Where(x => x.AreaId == filtro.IdAreaAcademica.Value);
-        if (regionClave.HasValue)
-            consultaEa = consultaEa.Where(x => x.RegionClave == regionClave.Value);
+        if (filtro.RegionId.HasValue)
+            consultaEa = consultaEa.Where(x => x.RegionId == filtro.RegionId.Value);
 
         var consultaDgaa =
             from perfil in _db.UsuariosDgaa.AsNoTracking()
@@ -78,12 +69,15 @@ public sealed class NormalizedUsuarioConsultaRepository : IUsuarioConsultaReposi
                 EntidadNombre = (string?)null,
                 AreaId = area.Id,
                 AreaNombre = area.Nombre,
+                RegionId = (int?)null,
                 RegionClave = (int?)null,
                 RegionNombre = (string?)null
             };
 
         if (filtro.IdAreaAcademica.HasValue)
             consultaDgaa = consultaDgaa.Where(x => x.AreaId == filtro.IdAreaAcademica.Value);
+        if (filtro.RegionId.HasValue)
+            consultaDgaa = consultaDgaa.Where(_ => false);
 
         var busqueda = filtro.Busqueda?.Trim();
         if (!string.IsNullOrWhiteSpace(busqueda))

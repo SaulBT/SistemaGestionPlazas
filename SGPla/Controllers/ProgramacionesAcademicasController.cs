@@ -22,6 +22,7 @@ enum TipoTablaOferta
     Vacantes
 }
 
+[NonController]
 [Authorize]
 public class ProgramacionesAcademicasController : Controller
 {

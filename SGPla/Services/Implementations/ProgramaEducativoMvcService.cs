@@ -32,6 +32,13 @@ public sealed class ProgramaEducativoMvcService : IProgramaEducativoMvcService
         {
             if (dto.Id.HasValue)
             {
+                var actual = await _repository.ObtenerAsync(dto.Id.Value, cancellationToken)
+                    ?? throw new KeyNotFoundException("El programa educativo no existe o está inactivo.");
+                if (actual.EntidadAcademicaId != dto.EntidadAcademicaId)
+                    throw new InvalidOperationException("La Entidad Académica de un programa educativo es inmutable.");
+                if ((actual.SistemaEducativoId != dto.SistemaEducativoId || actual.NivelFormacionId != dto.NivelFormacionId) &&
+                    await _repository.TienePlanesAsync(dto.Id.Value, cancellationToken))
+                    throw new InvalidOperationException("El sistema educativo y el nivel de formación no pueden cambiar porque el programa ya tuvo planes de estudio.");
                 if (!await _repository.ActualizarAsync(dto, cancellationToken)) throw new KeyNotFoundException("El programa educativo no existe o está inactivo.");
                 return dto.Id.Value;
             }

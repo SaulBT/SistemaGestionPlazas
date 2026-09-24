@@ -14,15 +14,16 @@ using System.Text.Json;
 
 namespace SGPla.Controllers
 {
+    [NonController]
     [Authorize(Policy = PoliticasAutorizacion.SuperUsuario)]
-    public class PlanesEstudiosController : Controller
+    public class PlanesEstudiosLegacyController : Controller
     {
         private readonly IPlanEstudiosService _planEstudiosService;
         private readonly IAreaAcademicaService _areaAcademicaService;
         private readonly IEntidadAcademicaService _entidadAcademicaService;
         private readonly IProgramaEducativoService _programaEducativoService;
         private readonly IArchivoService _archivoService;
-        private readonly ILogger<PlanesEstudiosController> _logger;
+        private readonly ILogger<PlanesEstudiosLegacyController> _logger;
         private readonly IWebHostEnvironment _environment;
         private int paginaActual = 1;
 
@@ -53,13 +54,13 @@ namespace SGPla.Controllers
         private static List<string> HEADERS_TABLA_VER = ["Codigo", "Experiencia Educativa", "Horas", "Créditos", "Perfil Docente"];
         private static List<string> HEADERS_TABLA_EXPERIENCIAS = ["Codigo", "Experiencia Educativa", "Horas", "Créditos", "Perfil Docente", "Acciones"];
 
-        public PlanesEstudiosController(
+        public PlanesEstudiosLegacyController(
             IPlanEstudiosService planEstudiosService,
             IAreaAcademicaService areaAcademicaService,
             IEntidadAcademicaService entidadAcademicaService,
             IProgramaEducativoService programaEducativoService,
             IArchivoService archivoService,
-            ILogger<PlanesEstudiosController> logger,
+            ILogger<PlanesEstudiosLegacyController> logger,
             IWebHostEnvironment environment)
         {
             _planEstudiosService = planEstudiosService;

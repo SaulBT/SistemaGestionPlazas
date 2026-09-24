@@ -501,4 +501,3 @@ public sealed class UsuarioEntidadAcademica
     public int UsuarioId { get; set; }
     public int EntidadAcademicaId { get; set; }
 }
-

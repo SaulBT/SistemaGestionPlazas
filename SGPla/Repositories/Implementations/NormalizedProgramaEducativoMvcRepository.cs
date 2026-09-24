@@ -76,6 +76,12 @@ public sealed class NormalizedProgramaEducativoMvcRepository : IProgramaEducativ
         return true;
     }
 
+    // Incluye planes dados de baja: el esquema permite cambiar sistema/nivel
+    // únicamente si el programa nunca tuvo un plan.
+    public Task<bool> TienePlanesAsync(int programaEducativoId, CancellationToken cancellationToken = default) =>
+        _db.PlanesEstudios.AsNoTracking()
+            .AnyAsync(x => x.ProgramaEducativoId == programaEducativoId, cancellationToken);
+
     public async Task<bool> EliminarAsync(int id, DateTime instanteUtc, CancellationToken cancellationToken = default)
     {
         await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);

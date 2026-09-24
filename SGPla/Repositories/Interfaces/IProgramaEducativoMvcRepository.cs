@@ -8,6 +8,7 @@ public interface IProgramaEducativoMvcRepository
     Task<ProgramaEducativoMvcDto?> ObtenerAsync(int id, CancellationToken cancellationToken = default);
     Task<int> CrearAsync(GuardarProgramaEducativoMvcDto dto, CancellationToken cancellationToken = default);
     Task<bool> ActualizarAsync(GuardarProgramaEducativoMvcDto dto, CancellationToken cancellationToken = default);
+    Task<bool> TienePlanesAsync(int programaEducativoId, CancellationToken cancellationToken = default);
     Task<bool> EliminarAsync(int id, DateTime instanteUtc, CancellationToken cancellationToken = default);
     Task<bool> CatalogosActivosAsync(int entidadAcademicaId, int sistemaEducativoId, int nivelFormacionId, CancellationToken cancellationToken = default);
 }

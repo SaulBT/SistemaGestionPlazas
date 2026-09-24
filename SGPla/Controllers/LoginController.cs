@@ -24,6 +24,9 @@ namespace SGPla.Controllers
         {
             if (User.Identity?.IsAuthenticated == true)
             {
+                if (User.FindFirst("DebeCambiarContrasena")?.Value == "true")
+                    return RedirectToAction("CambiarContrasena", "Cuenta");
+
                 string? rol = User.FindFirst(ClaimTypes.Role)?.Value;
 
                 return rol switch
@@ -40,7 +43,7 @@ namespace SGPla.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Index(LoginViewModel model)
+        public async Task<IActionResult> Index(LoginViewModel model, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
                 return View(model);
@@ -48,10 +51,12 @@ namespace SGPla.Controllers
 
             if (User.Identity?.IsAuthenticated == true)
             {
+                if (User.FindFirst("DebeCambiarContrasena")?.Value == "true")
+                    return RedirectToAction("CambiarContrasena", "Cuenta");
                 return RedirectToAction("Index", "Home");
             }
 
-            var resultado = await _authService.LoginAsync(model.Correo, model.Contrasena);
+            var resultado = await _authService.LoginAsync(model.Correo, model.Contrasena, cancellationToken);
 
             if (!resultado.Exitoso)
             {
@@ -72,6 +77,10 @@ namespace SGPla.Controllers
 
             if (usuario.EntidadAcademicaId is not null)
                 claims.Add(new Claim("EntidadAcademicaId", usuario.EntidadAcademicaId.ToString()!));
+            if (usuario.AreaAcademicaId is not null)
+                claims.Add(new Claim(Constantes.ID_AREA_ACADEMICA, usuario.AreaAcademicaId.ToString()!));
+            if (usuario.Rol == Constantes.SUPERUSUARIO)
+                claims.Add(new Claim("DebeCambiarContrasena", usuario.RequiereCambioContrasena ? "true" : "false"));
 
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var principal = new ClaimsPrincipal(identity);
@@ -83,6 +92,9 @@ namespace SGPla.Controllers
                  {
                      IsPersistent = false
                  });
+
+            if (usuario.RequiereCambioContrasena)
+                return RedirectToAction("CambiarContrasena", "Cuenta");
 
             // El inicio depende del único rol efectivo de la sesión. No se reutiliza
             // ReturnUrl porque podría apuntar a una ruta de otro rol.

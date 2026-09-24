@@ -7,6 +7,7 @@ using NewEntidadAcademica = SGPla.Data.NewModel.Entities.EntidadAcademica;
 
 namespace SGPla.Tests.Integration;
 
+[Collection("SQL Server integration")]
 public sealed class NormalizedCatalogRepositoriesSqlServerTests
 {
     private const string ConnectionEnvironmentVariable = "SGPLA_SQLSERVER_TEST_CONNECTION";
@@ -78,6 +79,19 @@ public sealed class NormalizedCatalogRepositoriesSqlServerTests
             await eaRepo.ActualizarAsync(new CoordinadorEa { IdCoordinadorEa = eaId, Nombre = $"EA editado {token}", IdEntidadAcademica = entity.Id });
             Assert.Equal($"DGAA editado {token}", (await dgaaRepo.ObtenerPorIdAsync(dgaaId))?.Nombre);
             Assert.Equal($"EA editado {token}", (await eaRepo.ObtenerPorIdAsync(eaId))?.Nombre);
+
+            entity.FechaEliminacion = TimeProvider.System.GetUtcNow().UtcDateTime;
+            await db.SaveChangesAsync();
+            await Assert.ThrowsAsync<InvalidOperationException>(() => eaRepo.ActualizarAsync(new CoordinadorEa
+            {
+                IdCoordinadorEa = eaId, Nombre = $"EA inválida {token}", IdEntidadAcademica = entity.Id
+            }));
+            var storedUser = await db.Usuarios.AsNoTracking().SingleAsync(x => x.Id == eaId);
+            var storedProfile = await db.UsuariosEntidadAcademica.AsNoTracking()
+                .SingleAsync(x => x.UsuarioId == eaId);
+            Assert.Equal($"EA editado {token}", storedUser.Nombre);
+            Assert.Equal(entity.Id, storedProfile.EntidadAcademicaId);
+
             await dgaaRepo.EliminarAsync(new CoordinadorDgaa { IdCoordinadorDgaa = dgaaId });
             await eaRepo.EliminarAsync(new CoordinadorEa { IdCoordinadorEa = eaId });
             Assert.Null(await dgaaRepo.ObtenerPorIdAsync(dgaaId));

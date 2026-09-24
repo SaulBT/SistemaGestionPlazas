@@ -6,6 +6,7 @@ using SGPla.Repositories.Implementations;
 
 namespace SGPla.Tests.Integration;
 
+[Collection("SQL Server integration")]
 public sealed class NormalizedUsuarioConsultaSqlServerTests
 {
     private const string ConnectionEnvironmentVariable = "SGPLA_SQLSERVER_TEST_CONNECTION";
@@ -20,8 +21,6 @@ public sealed class NormalizedUsuarioConsultaSqlServerTests
 
         var campus = await db.Campuses.AsNoTracking().Where(x => x.FechaEliminacion == null)
             .OrderBy(x => x.Id).FirstAsync();
-        var region = await db.Regiones.AsNoTracking().Where(x => x.Id == campus.RegionId)
-            .Select(x => new { x.Clave, x.Nombre }).SingleAsync();
         var areaId = await db.AreaAcademicas.AsNoTracking().Where(x => x.FechaEliminacion == null)
             .OrderBy(x => x.Id).Select(x => x.Id).FirstAsync();
         var municipioId = await db.Municipios.AsNoTracking().OrderBy(x => x.Id).Select(x => x.Id).FirstAsync();
@@ -80,15 +79,15 @@ public sealed class NormalizedUsuarioConsultaSqlServerTests
         var filtradoPorAmbito = await repository.BuscarPaginadoAsync(new FiltrosUsuarioDTO
         {
             Busqueda = token,
-            Region = $"{region.Clave}-{region.Nombre}",
+            RegionId = campus.RegionId,
             IdAreaAcademica = areaId,
             IdEntidadAcademica = entidad.Id,
             Pagina = 1,
             Cantidad = 10
         });
-        Assert.Equal(2, filtradoPorAmbito.TotalCount);
+        Assert.Equal(1, filtradoPorAmbito.TotalCount);
         Assert.Contains(filtradoPorAmbito.Items, x => x.Nombre == $"A {token}");
-        Assert.Contains(filtradoPorAmbito.Items, x => x.Nombre == $"B {token}");
+        Assert.DoesNotContain(filtradoPorAmbito.Items, x => x.Nombre == $"B {token}");
         await transaction.RollbackAsync();
     }
 
