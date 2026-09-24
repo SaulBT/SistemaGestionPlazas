@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using SGPla.Repositories.Interfaces;
-using Microsoft.AspNetCore.Mvc;
 using SGPla.Commons;
 using SGPla.Models;
 using SGPla.Models.Components;
@@ -22,6 +22,7 @@ using System.Text.Json;
 
 namespace SGPla.Controllers
 {
+    [NonController]
     [Authorize]
     public class AvisosController : Controller
     {

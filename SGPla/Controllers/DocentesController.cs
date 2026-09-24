@@ -14,6 +14,7 @@ using System.Text.Json;
 
 namespace SGPla.Controllers
 {
+    [NonController]
     [Authorize(Policy = PoliticasAutorizacion.EntidadAcademica)]
     public class DocentesController : Controller
     {

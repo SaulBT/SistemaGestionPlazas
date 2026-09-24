@@ -103,6 +103,14 @@ public sealed class CatalogosMvcService : ICatalogosMvcService
             .Select(x => new CatalogoOpcion(x.Id, x.Id.ToString(), x.Nombre))
             .ToListAsync(cancellationToken);
 
+    public Task<int?> ObtenerRegionEntidadAsync(int entidadAcademicaId, CancellationToken cancellationToken = default) =>
+        (from entidad in _db.EntidadAcademicas.AsNoTracking()
+         join campus in _db.Campuses.AsNoTracking() on entidad.CampusId equals campus.Id
+         join region in _db.Regiones.AsNoTracking() on campus.RegionId equals region.Id
+         where entidad.Id == entidadAcademicaId && entidad.FechaEliminacion == null &&
+               campus.FechaEliminacion == null && region.FechaEliminacion == null
+         select (int?)campus.RegionId).FirstOrDefaultAsync(cancellationToken);
+
     public async Task<IReadOnlyList<CatalogoOpcion>> ObtenerProgramasAsync(int? entidadAcademicaId, CancellationToken cancellationToken = default) =>
         await _db.ProgramasEducativos.AsNoTracking()
             .Where(x => x.FechaEliminacion == null && (!entidadAcademicaId.HasValue || x.EntidadAcademicaId == entidadAcademicaId.Value))

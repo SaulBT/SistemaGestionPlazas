@@ -8,10 +8,20 @@ namespace SGPla.Parsers
 
     public static class DescargasParser
     {
-        public static List<OfertaDTO> Parse(Stream stream, string fileName)
+        public static List<OfertaDTO> Parse(Stream stream, string fileName, CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!stream.CanSeek)
+                throw new InvalidDataException("El archivo de Descargas debe permitir lectura desde el inicio.");
             Span<byte> magic = stackalloc byte[8];
-            stream.ReadExactly(magic);
+            try
+            {
+                stream.ReadExactly(magic);
+            }
+            catch (EndOfStreamException ex)
+            {
+                throw new InvalidDataException("El archivo de Descargas está vacío o incompleto.", ex);
+            }
             stream.Position = 0;
 
 
@@ -19,7 +29,7 @@ namespace SGPla.Parsers
                                (magic[0] == 0x50 && magic[1] == 0x4B);
 
             if (isRealExcel)
-                return ParseExcel(stream);
+                return ParseExcel(stream, cancellationToken);
 
             using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, leaveOpen: true);
             var html = reader.ReadToEnd();
@@ -29,10 +39,11 @@ namespace SGPla.Parsers
                     "El archivo fue guardado por Excel como 'Página web con marcos'. " +
                     "Por favor, guárdalo como .xlsx (Libro de Excel) e inténtalo de nuevo.");
 
-            return ParseHtml(html);
+            cancellationToken.ThrowIfCancellationRequested();
+            return ParseHtml(html, cancellationToken);
         }
 
-        public static List<OfertaDTO> ParseHtml(string html)
+        public static List<OfertaDTO> ParseHtml(string html, CancellationToken cancellationToken = default)
         {
             var doc = new HtmlDocument();
             doc.LoadHtml(html);
@@ -46,6 +57,7 @@ namespace SGPla.Parsers
 
             foreach (var tr in dataTable.SelectNodes(".//tr") ?? Enumerable.Empty<HtmlNode>())
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 var cells = tr.SelectNodes(".//td|.//th");
                 if (cells == null) continue;
 
@@ -74,7 +86,7 @@ namespace SGPla.Parsers
             return result;
         }
 
-        private static List<OfertaDTO> ParseExcel(Stream stream)
+        private static List<OfertaDTO> ParseExcel(Stream stream, CancellationToken cancellationToken)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
@@ -87,6 +99,7 @@ namespace SGPla.Parsers
             {
                 while (excelReader.Read())
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     var vals = Enumerable.Range(0, excelReader.FieldCount)
                         .Select(i => excelReader.GetValue(i)?.ToString()?.Trim() ?? "")
                         .ToArray();
@@ -109,7 +122,7 @@ namespace SGPla.Parsers
 
                     if (colMap.Count == 0) continue;
 
-                    if (!int.TryParse(vals[0], out _)) continue;
+                    if (string.IsNullOrWhiteSpace(Get(colMap, vals, "NRC"))) continue;
 
                     result.Add(BuildClase(currentProg, colMap, vals));
                 }

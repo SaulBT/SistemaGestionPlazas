@@ -9,11 +9,17 @@ public sealed class NormalizedCoordinadorEaRepository : ICoordinadorEaRepository
 {
     private const byte RolEntidad = 3;
     private readonly SgplaDbContext _db;
-    public NormalizedCoordinadorEaRepository(SgplaDbContext db) => _db = db;
+    private readonly TimeProvider _timeProvider;
+    public NormalizedCoordinadorEaRepository(SgplaDbContext db, TimeProvider? timeProvider = null)
+    {
+        _db = db;
+        _timeProvider = timeProvider ?? TimeProvider.System;
+    }
 
     public async Task<int> CrearAsync(CoordinadorEa value)
     {
         await using var transaction = await _db.Database.BeginTransactionAsync();
+        await ValidarEntidadAcademicaVigenteAsync(value.IdEntidadAcademica);
         var user = new SGPla.Data.NewModel.Entities.Usuario { Nombre = value.Nombre.Trim(), Correo = value.Correo.Trim().ToLowerInvariant(), RolId = RolEntidad };
         _db.Usuarios.Add(user);
         await _db.SaveChangesAsync();
@@ -47,23 +53,46 @@ public sealed class NormalizedCoordinadorEaRepository : ICoordinadorEaRepository
 
     public async Task ActualizarAsync(CoordinadorEa value)
     {
+        await using var transaction = await _db.Database.BeginTransactionAsync();
+        await ValidarEntidadAcademicaVigenteAsync(value.IdEntidadAcademica);
         var user = await _db.Usuarios.AsTracking().FirstOrDefaultAsync(x => x.Id == value.IdCoordinadorEa && x.RolId == RolEntidad && x.FechaEliminacion == null)
             ?? throw new InvalidOperationException("No se encontró el coordinador de entidad académica.");
         user.Nombre = value.Nombre.Trim();
-        var link = await _db.UsuariosEntidadAcademica.AsTracking().FirstAsync(x => x.UsuarioId == user.Id);
+        var link = await _db.UsuariosEntidadAcademica.AsTracking().FirstOrDefaultAsync(x => x.UsuarioId == user.Id)
+            ?? throw new InvalidOperationException("El coordinador no tiene perfil de Entidad Académica.");
         link.EntidadAcademicaId = value.IdEntidadAcademica;
         _db.Entry(user).State = EntityState.Modified;
         _db.Entry(link).State = EntityState.Modified;
         await _db.SaveChangesAsync();
+        await transaction.CommitAsync();
     }
 
     public async Task EliminarAsync(CoordinadorEa value)
     {
         var user = await _db.Usuarios.AsTracking().FirstOrDefaultAsync(x => x.Id == value.IdCoordinadorEa && x.RolId == RolEntidad && x.FechaEliminacion == null);
         if (user is null) return;
-        user.FechaEliminacion = DateTime.UtcNow;
+        user.FechaEliminacion = _timeProvider.GetUtcNow().UtcDateTime;
         _db.Entry(user).State = EntityState.Modified;
         await _db.SaveChangesAsync();
+    }
+
+    private async Task ValidarEntidadAcademicaVigenteAsync(int entidadAcademicaId)
+    {
+        var vigente = await (from entidad in _db.EntidadAcademicas.AsNoTracking()
+                             join area in _db.AreaAcademicas.AsNoTracking()
+                                 on entidad.AreaAcademicaId equals area.Id
+                             join campus in _db.Campuses.AsNoTracking()
+                                 on entidad.CampusId equals campus.Id
+                             join region in _db.Regiones.AsNoTracking()
+                                 on campus.RegionId equals region.Id
+                             where entidad.Id == entidadAcademicaId
+                                   && entidad.FechaEliminacion == null
+                                   && area.FechaEliminacion == null
+                                   && campus.FechaEliminacion == null
+                                   && region.FechaEliminacion == null
+                             select entidad.Id).AnyAsync();
+        if (!vigente)
+            throw new InvalidOperationException("La Entidad Académica seleccionada no está vigente.");
     }
 
     private IQueryable<Row> Consulta(int? regionClave = null, int? idAreaAcademica = null, int? idEntidadAcademica = null,

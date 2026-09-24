@@ -29,7 +29,7 @@ namespace SGPla.Validations.Implementations
             if (!string.IsNullOrWhiteSpace(buscarPeriodoEscolarDTO.Anio) &&
                     !Regex.IsMatch(buscarPeriodoEscolarDTO.Anio, @"^\d{4}$"))
             {
-                throw new ArgumentException("Ingrese un año válido.");
+                throw new ArgumentException("El año debe ser un número positivo.");
             }
 
             if (!string.IsNullOrWhiteSpace(buscarPeriodoEscolarDTO.Anio) &&
@@ -58,7 +58,7 @@ namespace SGPla.Validations.Implementations
             if (!string.IsNullOrWhiteSpace(periodoEscolarDTO.Anio) &&
                     !Regex.IsMatch(periodoEscolarDTO.Anio, @"^\d{4}$"))
             {
-                throw new ArgumentException("Ingrese un año válido.");
+                throw new ArgumentException("El año debe ser un número positivo.");
             }
 
             if (!string.IsNullOrWhiteSpace(periodoEscolarDTO.Anio) &&

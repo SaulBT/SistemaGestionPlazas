@@ -7,6 +7,7 @@ using SGPla.Services.Implementations;
 
 namespace SGPla.Tests.Integration;
 
+[Collection("SQL Server integration")]
 public sealed class NormalizedProgramaEducativoCrudSqlServerTests
 {
     private const string ConnectionEnvironmentVariable = "SGPLA_SQLSERVER_TEST_CONNECTION";
@@ -26,7 +27,13 @@ public sealed class NormalizedProgramaEducativoCrudSqlServerTests
         var municipioId = await db.Municipios.AsNoTracking().OrderBy(x => x.Id).Select(x => x.Id).FirstAsync();
         var sistemaId = await db.SistemasEducativos.AsNoTracking().Where(x => x.FechaEliminacion == null)
             .OrderBy(x => x.Id).Select(x => x.Id).FirstAsync();
+        var sistemaAlternoId = await db.SistemasEducativos.AsNoTracking()
+            .Where(x => x.FechaEliminacion == null && x.Id != sistemaId)
+            .OrderBy(x => x.Id).Select(x => x.Id).FirstAsync();
         var nivelId = await db.NivelesFormacion.AsNoTracking().Where(x => x.FechaEliminacion == null)
+            .OrderBy(x => x.Id).Select(x => x.Id).FirstAsync();
+        var nivelAlternoId = await db.NivelesFormacion.AsNoTracking()
+            .Where(x => x.FechaEliminacion == null && x.Id != nivelId)
             .OrderBy(x => x.Id).Select(x => x.Id).FirstAsync();
         var areaFormacionId = await db.AreaFormaciones.AsNoTracking().Where(x => x.FechaEliminacion == null)
             .OrderBy(x => x.Id).Select(x => x.Id).FirstAsync();
@@ -40,6 +47,15 @@ public sealed class NormalizedProgramaEducativoCrudSqlServerTests
         db.Entry(entidad).State = EntityState.Added;
         await db.SaveChangesAsync();
         var entidadId = entidad.Id;
+        var entidadAlterna = new EntidadAcademica
+        {
+            Clave = $"IT{token[10..20]}".ToUpperInvariant(), Nombre = $"Entidad alterna {token}",
+            Calle = "Calle de integración", Colonia = "Centro", CodigoPostal = "91000", Telefono = "2281234567",
+            CampusId = campus.Id, AreaAcademicaId = areaAcademicaId, MunicipioId = municipioId
+        };
+        db.Entry(entidadAlterna).State = EntityState.Added;
+        await db.SaveChangesAsync();
+        var entidadAlternaId = entidadAlterna.Id;
         var repo = new NormalizedProgramaEducativoMvcRepository(db);
         var service = new ProgramaEducativoMvcService(repo, new CatalogosMvcService(db), TimeProvider.System);
         var programaId = 0;
@@ -67,6 +83,31 @@ public sealed class NormalizedProgramaEducativoCrudSqlServerTests
             Assert.NotNull(detail);
             Assert.Equal(entidadId, detail.EntidadAcademicaId);
             Assert.Contains((await service.BuscarAsync(new ProgramaEducativoMvcFiltro { Nombre = token })).Items, x => x.Id == programaId);
+
+            var cambioDeEntidad = new GuardarProgramaEducativoMvcDto
+            {
+                Id = programaId, Nombre = $"Programa integración {token}", EntidadAcademicaId = entidadAlternaId,
+                SistemaEducativoId = sistemaId, NivelFormacionId = nivelId
+            };
+            await Assert.ThrowsAsync<InvalidOperationException>(() => service.GuardarAsync(cambioDeEntidad));
+            Assert.Equal(entidadId, (await service.ObtenerAsync(programaId))?.EntidadAcademicaId);
+
+            plan.FechaEliminacion = DateTime.UtcNow;
+            db.Entry(plan).State = EntityState.Modified;
+            await db.SaveChangesAsync();
+            await Assert.ThrowsAsync<InvalidOperationException>(() => service.GuardarAsync(new GuardarProgramaEducativoMvcDto
+            {
+                Id = programaId, Nombre = $"Programa integración {token}", EntidadAcademicaId = entidadId,
+                SistemaEducativoId = sistemaAlternoId, NivelFormacionId = nivelId
+            }));
+            await Assert.ThrowsAsync<InvalidOperationException>(() => service.GuardarAsync(new GuardarProgramaEducativoMvcDto
+            {
+                Id = programaId, Nombre = $"Programa integración {token}", EntidadAcademicaId = entidadId,
+                SistemaEducativoId = sistemaId, NivelFormacionId = nivelAlternoId
+            }));
+            plan.FechaEliminacion = null;
+            db.Entry(plan).State = EntityState.Modified;
+            await db.SaveChangesAsync();
 
             await service.GuardarAsync(new GuardarProgramaEducativoMvcDto
             {
@@ -97,6 +138,7 @@ public sealed class NormalizedProgramaEducativoCrudSqlServerTests
                 await db.ProgramasEducativos.IgnoreQueryFilters().Where(x => x.Id == programaId).ExecuteDeleteAsync();
             }
             await db.EntidadAcademicas.IgnoreQueryFilters().Where(x => x.Id == entidadId).ExecuteDeleteAsync();
+            await db.EntidadAcademicas.IgnoreQueryFilters().Where(x => x.Id == entidadAlternaId).ExecuteDeleteAsync();
         }
     }
 

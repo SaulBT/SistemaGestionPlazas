@@ -9,11 +9,17 @@ public sealed class NormalizedCoordinadorDgaaRepository : ICoordinadorDgaaReposi
 {
     private const byte RolDgaa = 2;
     private readonly SgplaDbContext _db;
-    public NormalizedCoordinadorDgaaRepository(SgplaDbContext db) => _db = db;
+    private readonly TimeProvider _timeProvider;
+    public NormalizedCoordinadorDgaaRepository(SgplaDbContext db, TimeProvider? timeProvider = null)
+    {
+        _db = db;
+        _timeProvider = timeProvider ?? TimeProvider.System;
+    }
 
     public async Task<int> CrearAsync(CoordinadorDgaa value)
     {
         await using var transaction = await _db.Database.BeginTransactionAsync();
+        await ValidarAreaAcademicaVigenteAsync(value.IdAreaAcademica);
         var user = new SGPla.Data.NewModel.Entities.Usuario { Nombre = value.Nombre.Trim(), Correo = value.Correo.Trim().ToLowerInvariant(), RolId = RolDgaa };
         _db.Usuarios.Add(user);
         await _db.SaveChangesAsync();
@@ -37,23 +43,34 @@ public sealed class NormalizedCoordinadorDgaaRepository : ICoordinadorDgaaReposi
 
     public async Task ActualizarAsync(CoordinadorDgaa value)
     {
+        await using var transaction = await _db.Database.BeginTransactionAsync();
+        await ValidarAreaAcademicaVigenteAsync(value.IdAreaAcademica);
         var user = await _db.Usuarios.AsTracking().FirstOrDefaultAsync(x => x.Id == value.IdCoordinadorDgaa && x.RolId == RolDgaa && x.FechaEliminacion == null)
             ?? throw new InvalidOperationException("No se encontró el coordinador DGAA.");
         user.Nombre = value.Nombre.Trim();
-        var link = await _db.UsuariosDgaa.AsTracking().FirstAsync(x => x.UsuarioId == user.Id);
+        var link = await _db.UsuariosDgaa.AsTracking().FirstOrDefaultAsync(x => x.UsuarioId == user.Id)
+            ?? throw new InvalidOperationException("El coordinador no tiene perfil DGAA.");
         link.AreaAcademicaId = value.IdAreaAcademica;
         _db.Entry(user).State = EntityState.Modified;
         _db.Entry(link).State = EntityState.Modified;
         await _db.SaveChangesAsync();
+        await transaction.CommitAsync();
     }
 
     public async Task EliminarAsync(CoordinadorDgaa value)
     {
         var user = await _db.Usuarios.AsTracking().FirstOrDefaultAsync(x => x.Id == value.IdCoordinadorDgaa && x.RolId == RolDgaa && x.FechaEliminacion == null);
         if (user is null) return;
-        user.FechaEliminacion = DateTime.UtcNow;
+        user.FechaEliminacion = _timeProvider.GetUtcNow().UtcDateTime;
         _db.Entry(user).State = EntityState.Modified;
         await _db.SaveChangesAsync();
+    }
+
+    private async Task ValidarAreaAcademicaVigenteAsync(int areaAcademicaId)
+    {
+        if (areaAcademicaId < 1 || !await _db.AreaAcademicas.AsNoTracking()
+                .AnyAsync(x => x.Id == areaAcademicaId && x.FechaEliminacion == null))
+            throw new InvalidOperationException("El Área Académica seleccionada no está vigente.");
     }
 
     public async Task<SuperUsuario?> ObtenerSuperUsuarioPorCorreoAsync(string correo)

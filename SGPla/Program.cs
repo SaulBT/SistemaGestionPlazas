@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using SGPla.Data;
@@ -59,6 +60,24 @@ builder.Services.AddScoped<IUsuarioConsultaRepository, NormalizedUsuarioConsulta
 builder.Services.AddScoped<IUsuarioValidator, UsuarioValidator>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<ICatalogosMvcService, CatalogosMvcService>();
+builder.Services.AddScoped<IRegionCampusMvcRepository, NormalizedRegionCampusMvcRepository>();
+builder.Services.AddScoped<IRegionCampusMvcService, RegionCampusMvcService>();
+builder.Services.AddScoped<IProgramacionAcademicaMvcRepository, NormalizedProgramacionAcademicaMvcRepository>();
+builder.Services.AddScoped<IProgramacionAcademicaMvcService, ProgramacionAcademicaMvcService>();
+builder.Services.AddScoped<IDocenteDirectorioMvcRepository, NormalizedDocenteDirectorioMvcRepository>();
+builder.Services.AddScoped<IDocenteDirectorioMvcService, DocenteDirectorioMvcService>();
+builder.Services.AddScoped<IOfertaMvcRepository, NormalizedOfertaMvcRepository>();
+builder.Services.AddScoped<IOfertaMvcService, OfertaMvcService>();
+builder.Services.AddScoped<IAvisoMvcRepository, NormalizedAvisoMvcRepository>();
+builder.Services.AddScoped<IAvisoMvcService, AvisoMvcService>();
+builder.Services.AddSingleton<IAlmacenDocumentos, AlmacenDocumentosLocal>();
+builder.Services.AddScoped<IDocumentoAvisoMvcRepository, NormalizedDocumentoAvisoMvcRepository>();
+builder.Services.AddScoped<IDocumentoAvisoMvcService, DocumentoAvisoMvcService>();
+builder.Services.AddScoped<IIntegranteConsejoTecnicoMvcRepository, NormalizedIntegranteConsejoTecnicoMvcRepository>();
+builder.Services.AddScoped<IIntegranteConsejoTecnicoMvcService, IntegranteConsejoTecnicoMvcService>();
+builder.Services.AddHttpClient<IPlaneaClient, PlaneaClient>(cliente => cliente.Timeout = TimeSpan.FromMinutes(2));
+builder.Services.AddScoped<IPlaneaSnapshotValidator, PlaneaSnapshotValidator>();
+builder.Services.AddScoped<ISincronizacionPlaneaService, SincronizacionPlaneaService>();
 
 builder.Services.AddScoped<IAreaAcademicaRepository, NormalizedAreaAcademicaRepository>();
 builder.Services.AddScoped<IAreaAcademicaValidator, AreaAcademicaValidator>();
@@ -71,6 +90,9 @@ builder.Services.AddScoped<IEntidadAcademicaService, EntidadAcademicaService>();
 builder.Services.AddScoped<IEntidadAcademicaMvcService, EntidadAcademicaMvcService>();
 builder.Services.AddScoped<IProgramaEducativoMvcRepository, NormalizedProgramaEducativoMvcRepository>();
 builder.Services.AddScoped<IProgramaEducativoMvcService, ProgramaEducativoMvcService>();
+builder.Services.AddScoped<IPlanEstudiosMvcRepository, NormalizedPlanEstudiosMvcRepository>();
+builder.Services.AddScoped<IPlanEstudiosMvcService, PlanEstudiosMvcService>();
+builder.Services.AddScoped<IPlanEstudiosExcelImportador, PlanEstudiosExcelImportador>();
 
 builder.Services.AddScoped<IArticuloRepository, NormalizedArticuloRepository>();
 builder.Services.AddScoped<IArticuloService, ArticuloService>();
@@ -146,6 +168,23 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
             context.Response.Redirect(context.RedirectUri);
             return Task.CompletedTask;
         };
+        options.Events.OnValidatePrincipal = async context =>
+        {
+            // El MVC normalizado revalida rol y ámbito contra usuarios.* en cada
+            // solicitud. Se conserva la validación anterior del API legacy.
+            if (context.Request.Path.StartsWithSegments("/api"))
+                return;
+
+            var validator = context.HttpContext.RequestServices.GetRequiredService<IUsuarioSesionValidator>();
+            var vigente = await validator.EsSesionVigenteAsync(
+                context.Principal,
+                context.HttpContext.RequestAborted);
+            if (vigente)
+                return;
+
+            context.RejectPrincipal();
+            await context.HttpContext.SignOutAsync(context.Scheme.Name);
+        };
     });
 
 builder.Services.AddAuthorization(options =>
@@ -173,6 +212,8 @@ builder.Services.AddProgramasEducativosModule();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ILdapAuthService, LdapAuthService>();
+builder.Services.AddSingleton<IArgon2idPasswordHasher, Argon2idPasswordHasher>();
+builder.Services.AddScoped<IUsuarioSesionValidator, NormalizedUsuarioSesionValidator>();
 
 builder.Services.AddScoped<IAvisoService, AvisoService>();
 builder.Services.AddScoped<IAvisoRepository, AvisoRepository>();
@@ -262,6 +303,7 @@ if (app.Environment.IsDevelopment()
     });
 }
 
+app.UseMiddleware<CambioContrasenaObligatorioMiddleware>();
 app.UseAuthorization();  // 4. ¿qué puedes hacer?
 
 app.MapStaticAssets().AllowAnonymous();

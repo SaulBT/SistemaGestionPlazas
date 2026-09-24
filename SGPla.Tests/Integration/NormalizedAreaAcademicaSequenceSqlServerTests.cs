@@ -5,6 +5,7 @@ using SGPla.Repositories.Implementations;
 
 namespace SGPla.Tests.Integration;
 
+[Collection("SQL Server integration")]
 public sealed class NormalizedAreaAcademicaSequenceSqlServerTests
 {
     private const string ConnectionEnvironmentVariable = "SGPLA_SQLSERVER_TEST_CONNECTION";

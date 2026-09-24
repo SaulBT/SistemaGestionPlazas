@@ -84,11 +84,6 @@ namespace SGPla.Controllers
                         {
                             new TableActionModel()
                             {
-                                Accion = "Editar",
-                                OnClick = $"abrirModalEditarPeriodoEscolar({a.IdPeriodoEscolar}, '{a.Anio}', '{a.Periodo}')"
-                            },
-                            new TableActionModel()
-                            {
                                 Accion = "Eliminar",
                                 OnClick = $"abrirModalConfirmacion('¿Desea eliminar este periodo?', function() {{ eliminarPeriodoEscolar({a.IdPeriodoEscolar}); }})"
                             }
@@ -154,6 +149,7 @@ namespace SGPla.Controllers
 
        
 
+        [NonAction]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Editar(EditarPeriodoEscolarDTO dto)

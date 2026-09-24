@@ -11,6 +11,7 @@ using static Azure.Core.HttpHeader;
 namespace SGPla.Controllers
 {
     [Authorize(Policy = PoliticasAutorizacion.EntidadAcademica)]
+    [NonController]
     public class IntegranteCtController : Controller
     {
         private readonly IIntegranteCtService _integranteCtService;
