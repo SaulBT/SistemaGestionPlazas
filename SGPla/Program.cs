@@ -59,7 +59,9 @@ builder.Services.AddScoped<ICoordinadorDgaaRepository, NormalizedCoordinadorDgaa
 builder.Services.AddScoped<IUsuarioConsultaRepository, NormalizedUsuarioConsultaRepository>();
 builder.Services.AddScoped<IUsuarioValidator, UsuarioValidator>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+builder.Services.AddScoped<ISuperusuarioAdminService, SuperusuarioAdminService>();
 builder.Services.AddScoped<ICatalogosMvcService, CatalogosMvcService>();
+builder.Services.AddScoped<IAdministracionCatalogosMvcService, AdministracionCatalogosMvcService>();
 builder.Services.AddScoped<IRegionCampusMvcRepository, NormalizedRegionCampusMvcRepository>();
 builder.Services.AddScoped<IRegionCampusMvcService, RegionCampusMvcService>();
 builder.Services.AddScoped<IProgramacionAcademicaMvcRepository, NormalizedProgramacionAcademicaMvcRepository>();
@@ -75,6 +77,8 @@ builder.Services.AddScoped<IDocumentoAvisoMvcRepository, NormalizedDocumentoAvis
 builder.Services.AddScoped<IDocumentoAvisoMvcService, DocumentoAvisoMvcService>();
 builder.Services.AddScoped<IIntegranteConsejoTecnicoMvcRepository, NormalizedIntegranteConsejoTecnicoMvcRepository>();
 builder.Services.AddScoped<IIntegranteConsejoTecnicoMvcService, IntegranteConsejoTecnicoMvcService>();
+builder.Services.AddScoped<ISolicitudMvcRepository, NormalizedSolicitudMvcRepository>();
+builder.Services.AddScoped<ISolicitudMvcService, SolicitudMvcService>();
 builder.Services.AddHttpClient<IPlaneaClient, PlaneaClient>(cliente => cliente.Timeout = TimeSpan.FromMinutes(2));
 builder.Services.AddScoped<IPlaneaSnapshotValidator, PlaneaSnapshotValidator>();
 builder.Services.AddScoped<ISincronizacionPlaneaService, SincronizacionPlaneaService>();
