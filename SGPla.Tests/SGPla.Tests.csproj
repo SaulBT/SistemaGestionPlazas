@@ -28,4 +28,8 @@
     <ProjectReference Include="..\SGPla\SGPla.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Fixtures\202701_muestra.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

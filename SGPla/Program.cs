@@ -92,7 +92,7 @@ builder.Logging.AddFilter("System.Net.Http.HttpClient.IPlaneaClient", LogLevel.W
 builder.Services.AddHttpClient<IPlaneaClient, PlaneaClient>()
     .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
     {
-        AutomaticDecompression = DecompressionMethods.All
+        AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli
     });
 builder.Services.AddScoped<IPlaneaSnapshotValidator, PlaneaSnapshotValidator>();
 builder.Services.AddScoped<ISincronizacionPlaneaService, SincronizacionPlaneaService>();

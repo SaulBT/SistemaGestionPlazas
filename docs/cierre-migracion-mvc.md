@@ -84,20 +84,44 @@ verificar al ejecutar la sincronización desde esa red.
 
 ## Dimensionamiento de sincronización PLANEA
 
+- El ejemplo local `Endpoint.json` de `202701` devuelve un objeto JSON con
+  `periodo`, `total`, `resultado` y `horarios`. `resultado` tiene 18 203 filas
+  administrativas que no se usan por ahora; `horarios` contiene 22 623 filas
+  con sesiones/docentes. El archivo mide 68 129 596 bytes sin comprimir. El
+  lector busca `periodo` y `horarios` sin depender del orden observado, recorre
+  `resultado` token a token sin guardar sus valores y materializa cada objeto de
+  `horarios` al terminar de leerlo. `total` se ignora: en el ejemplo corresponde
+  a `resultado`, no al número de filas de `horarios`, y no se conoce un contrato
+  adicional para validarlo.
+- Estas reglas del validador son **pendientes de confirmación de negocio**:
+  omitir NRC sin programación MVC local, elegir docente por `IND_PRINCIPAL`,
+  menor `IND_DOCENTE` y menor `ID_DOCENTE`, mantener sesiones aunque la
+  identidad docente venga incompleta y elegir el nombre más frecuente cuando
+  un identificador presenta variantes. El periodo, formato de NRC, fechas,
+  horas, pares inicio/fin y rangos inversos mantienen validación estricta.
+- No se agregó columna al esquema. El validador devuelve el contador
+  `NrcSinProgramacion`, pero la bitácora SQL lo incluye en
+  `RegistrosIgnorados`, junto con las filas localizables que no tienen ninguna
+  sesión. Por tanto, `RegistrosIgnorados = NrcSinProgramacion + localizables
+  sin sesiones`; la bitácora histórica no permite separar esos dos conteos.
 - `Planea:TamanoMaximoMb` tiene default `200` y acepta de `1` a `2048`. El
-  cliente verifica el primer token para rechazar una raíz que no sea arreglo
-  antes de consumir el resto; los registros se deserializan desde el stream.
+  límite cuenta bytes descomprimidos; se conserva el rechazo temprano por
+  `Content-Length`. El cliente rechaza una raíz que no sea objeto tras leer solo
+  el primer token y procesa la sección `horarios` registro por registro.
   El `SocketsHttpHandler` activa descompresión automática para gzip/deflate/br;
   el límite de lectura aplica a los bytes entregados al cliente después de esa
   descompresión. Se conserva el rechazo temprano por `Content-Length` declarado.
-- Medición de la prueba generada de 100 000 registros: body de `1 900 001`
-  bytes; heap administrado antes `5 440 744` bytes; pico observado por muestras
-  durante lectura/procesamiento `71 134 784` bytes; heap retenido después de GC
-  `72 174 912` bytes. Es una medida del heap administrado con DTOs retenidos,
-  no un muestreo del pico RSS del proceso ni una comparación con un payload real
-  de 50–70 MB.
+- Medición de la muestra local de 22 623 registros: `Endpoint.json` ocupa
+  `68 129 596` bytes; parser en `442–500 ms`; heap administrado antes de leer
+  `5.5–6.8 MB` y después de GC con los DTOs retenidos `48.2–49.2 MB`.
+  No es una medición de RSS ni se ejecutó `AplicarSnapshotAsync` con esa muestra.
+  La prueba sintética de 100 000 registros (3 500 048 bytes) observó heap antes
+  `5 861 848`, pico muestreado `86 579 440` y heap después de GC `87 806 000`
+  bytes; el conjunto de DTOs retenido domina esa cifra. La prueba adicional
+  recorrió `46 200 135` bytes de `resultado` y asignó `198 568` bytes en el hilo
+  medido, sin almacenar esas filas.
 - La prueba SQL reemplazó 20 000 sesiones: `AplicarSnapshotAsync` reportó
-  `412 ms`; el ciclo completo desde el servicio tomó `461 ms` en el contenedor
+  `399 ms`; el ciclo completo desde el servicio tomó `405 ms` en el contenedor
   local. El fixture es sintético y pequeño fuera de las sesiones (un solo
   programa destino); no predice latencia de producción.
 - El POST ahora registra y encola en un canal acotado de capacidad 10. El worker
@@ -114,14 +138,26 @@ verificar al ejecutar la sincronización desde esa red.
   el conjunto de programaciones durante el reemplazo. La descarga y validación
   permanecen antes de abrir la transacción; el error revierte el snapshot.
 - Validación final después de estos cambios en el SQL Server desechable:
-  **280 correctas, 0 con error, 1 omitida, 281 total**. La omitida es LDAP
+  **287 correctas, 0 con error, 1 omitida, 288 total**. La omitida es LDAP
   STARTTLS por falta de host/puerto. `dotnet build` termina con 0 errores
   (238 advertencias).
-- No se hizo ninguna llamada real a PLANEA. El payload de producción y el
-  soporte gzip del servidor real no se pudieron verificar; la prueba gzip usa
-  un servidor local que devuelve una respuesta comprimida y el mismo tipo de
-  `SocketsHttpHandler` configurado en la aplicación. La sincronización real aún
-  requiere red institucional.
+- No se hizo ninguna llamada real a PLANEA. El archivo local es un ejemplo real
+  aportado por el proyecto, no una respuesta obtenida en esta ejecución. No se
+  confirmó que el servidor negocie gzip; la prueba gzip local solo verifica el
+  cliente. Tampoco se confirmó que el orden de propiedades sea estable (el
+  parser no depende de ese orden). `total` se interpreta únicamente como el
+  conteo de `resultado` en el ejemplo. La sincronización real aún requiere red
+  institucional.
+- La prueba de humo con el archivo real procesó 22 623 filas, 17 991 NRC
+  distintos, 38 801 franjas horarias informadas y 1 144 filas sin sesión, sin
+  llamar a PLANEA. No pudo producir
+  contadores de validación/snapshot: las bases Docker de prueba y desarrollo
+  disponibles no contienen un periodo `202701`. El número de NRC que coincide
+  con programación MVC local, por tanto, sigue pendiente de medir con una base
+  que tenga cargado ese periodo. El archivo también contiene una fila con hora
+  informada y fechas ausentes; si su NRC coincide con programación local, la
+  validación estricta de fechas la marcará como fallida. Esa relación no pudo
+  comprobarse en estas bases y queda para revisión con el periodo cargado.
 
 No se hizo un recorrido manual end-to-end por la interfaz. El inicio LDAP
 depende de infraestructura no disponible en esta ejecución; el usuario

@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using System.Buffers;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
 using SGPla.Models.DTOs.Integracion;
@@ -8,12 +9,6 @@ namespace SGPla.Services.Implementations;
 
 public sealed class PlaneaClient : IPlaneaClient
 {
-    private static readonly (byte Dia, string Prefijo)[] Dias =
-    [
-        (1, "LUN"), (2, "MAR"), (3, "MIE"), (4, "JUE"), (5, "VIE"), (6, "SAB")
-    ];
-    private static readonly JsonSerializerOptions JsonOptions = new() { MaxDepth = 32 };
-
     private readonly HttpClient _httpClient;
     private readonly PlaneaOptions _options;
 
@@ -73,30 +68,68 @@ public sealed class PlaneaClient : IPlaneaClient
             var primerByte = await LeerPrimerNoEspacioAsync(limitado, cancellationToken);
             if (primerByte == 0)
                 throw new InvalidDataException("PLANEA devolvió JSON malformado.");
-            if (primerByte != (byte)'[')
-                throw new InvalidDataException("PLANEA debe devolver un arreglo JSON directo.");
+            if (primerByte != (byte)'{')
+                throw new InvalidDataException("PLANEA debe devolver un objeto JSON con la sección horarios.");
 
             await using var conPrefijo = new StreamConPrefijo(limitado, primerByte);
-            var registros = new List<PlaneaRegistro>();
             try
             {
-                await foreach (var elemento in JsonSerializer.DeserializeAsyncEnumerable<JsonElement>(
-                                   conPrefijo, JsonOptions, cancellationToken))
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    if (elemento.ValueKind != JsonValueKind.Object)
-                        throw new InvalidDataException("La respuesta de PLANEA contiene un elemento que no es objeto.");
-                    registros.Add(LeerRegistro(elemento));
-                }
+                var parser = new PlaneaJsonReader(clavePeriodo);
+                var registros = await LeerEnvoltorioAsync(conPrefijo, parser, cancellationToken);
+                if (!parser.PeriodoEncontrado)
+                    throw new InvalidDataException("PLANEA no devolvió el periodo solicitado.");
+                if (!parser.HorariosEncontrados)
+                    throw new InvalidDataException("PLANEA no devolvió la sección horarios.");
+                if (!parser.HorariosTerminados)
+                    throw new InvalidDataException("PLANEA devolvió JSON malformado.");
+                if (registros.Count == 0)
+                    throw new InvalidDataException("PLANEA devolvió una sección horarios vacía; el snapshot vigente se conserva.");
+                return registros;
             }
             catch (JsonException ex)
             {
                 throw new InvalidDataException("PLANEA devolvió JSON malformado.", ex);
             }
+        }
+    }
 
-            if (registros.Count == 0)
-                throw new InvalidDataException("PLANEA devolvió un arreglo vacío; el snapshot vigente se conserva.");
-            return registros;
+    private static async Task<IReadOnlyList<PlaneaRegistro>> LeerEnvoltorioAsync(Stream stream,
+        PlaneaJsonReader parser, CancellationToken cancellationToken)
+    {
+        const int tamanoInicial = 64 * 1024;
+        var buffer = ArrayPool<byte>.Shared.Rent(tamanoInicial);
+        var longitud = 0;
+        try
+        {
+            while (true)
+            {
+                if (longitud == buffer.Length)
+                {
+                    var ampliado = ArrayPool<byte>.Shared.Rent(checked(buffer.Length * 2));
+                    buffer.AsSpan(0, longitud).CopyTo(ampliado);
+                    ArrayPool<byte>.Shared.Return(buffer);
+                    buffer = ampliado;
+                }
+                var leidos = await stream.ReadAsync(buffer.AsMemory(longitud), cancellationToken);
+                var final = leidos == 0;
+                longitud += leidos;
+                var consumidos = parser.Procesar(buffer.AsSpan(0, longitud), final, out var incompleto);
+                if (consumidos > 0)
+                {
+                    buffer.AsSpan(consumidos, longitud - consumidos).CopyTo(buffer);
+                    longitud -= consumidos;
+                }
+                if (final)
+                {
+                    if (longitud != 0 || incompleto)
+                        throw new JsonException("El documento terminó antes de completar un token JSON.");
+                    return parser.Registros;
+                }
+            }
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
         }
     }
 
@@ -109,27 +142,6 @@ public sealed class PlaneaClient : IPlaneaClient
                 return buffer[0];
         }
         return 0;
-    }
-
-    private static PlaneaRegistro LeerRegistro(JsonElement objeto)
-    {
-        var horarios = Dias.Select(dia => new PlaneaHorarioDia(dia.Dia,
-            ObtenerEscalar(objeto, $"{dia.Prefijo}_INI"), ObtenerEscalar(objeto, $"{dia.Prefijo}_FIN"))).ToArray();
-        return new PlaneaRegistro(ObtenerEscalar(objeto, "PERIODO"), ObtenerEscalar(objeto, "NRC"),
-            ObtenerEscalar(objeto, "ID_DOCENTE"), ObtenerEscalar(objeto, "NOMBRE"),
-            ObtenerEscalar(objeto, "EDIFICIO"), ObtenerEscalar(objeto, "AULA"),
-            ObtenerEscalar(objeto, "FECHA_INICIO"), ObtenerEscalar(objeto, "FECHA_FIN"), horarios);
-    }
-
-    private static string? ObtenerEscalar(JsonElement objeto, string propiedad)
-    {
-        if (!objeto.TryGetProperty(propiedad, out var valor) || valor.ValueKind == JsonValueKind.Null) return null;
-        return valor.ValueKind switch
-        {
-            JsonValueKind.String => valor.GetString(),
-            JsonValueKind.Number => valor.GetRawText(),
-            _ => throw new InvalidDataException($"PLANEA devolvió un valor no escalar para {propiedad}.")
-        };
     }
 
     private static bool EsJson(string? mediaType) =>

@@ -1,6 +1,6 @@
-using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Globalization;
 using SGPla.Models.DTOs.Integracion;
 using SGPla.Services.Interfaces;
 
@@ -18,12 +18,13 @@ public sealed class PlaneaSnapshotValidator : IPlaneaSnapshotValidator
         ArgumentNullException.ThrowIfNull(registros);
         if (registros.Count == 0) throw new InvalidDataException("PLANEA devolvió un arreglo vacío; el snapshot vigente se conserva.");
 
-        var sesionesPorClave = new Dictionary<SesionClave, PlaneaSesionValidada>();
-        var docentePorProgramacion = new Dictionary<int, PlaneaDocenteValidado>();
-        var nombrePorNumeroPersonal = new Dictionary<string, string>(StringComparer.Ordinal);
+        var docentesPorProgramacion = new Dictionary<int, List<(PlaneaRegistro Registro, string Numero, string Nombre, DateOnly Inicio, DateOnly Fin)>>();
+        var nombresPorNumero = new Dictionary<string, Dictionary<string, (string Nombre, int Conteo)>>(StringComparer.Ordinal);
+        var sesiones = new Dictionary<SesionClave, PlaneaSesionValidada>();
         var ignorados = 0;
         var duplicados = 0;
         var advertencias = 0;
+        var nrcSinProgramacion = 0;
 
         foreach (var registro in registros)
         {
@@ -32,19 +33,35 @@ public sealed class PlaneaSnapshotValidator : IPlaneaSnapshotValidator
                 throw new InvalidDataException("La respuesta contiene registros de un periodo distinto al solicitado.");
 
             var nrc = Requerido(registro.Nrc, "NRC").ToUpperInvariant();
-            if (!NrcValido.IsMatch(nrc) || !programacionesPorNrc.TryGetValue(nrc, out var programacionId))
-                throw new InvalidDataException($"El NRC {nrc} no tiene una programación activa y única en el periodo solicitado.");
-
-            var fechaInicio = ParsearFecha(registro.FechaInicio, "FECHA_INICIO");
-            var fechaFin = ParsearFecha(registro.FechaFin, "FECHA_FIN");
-            if (fechaInicio > fechaFin) throw new InvalidDataException($"El NRC {nrc} tiene un rango de fechas inverso.");
+            if (!NrcValido.IsMatch(nrc))
+                throw new InvalidDataException($"El NRC {nrc} tiene un formato no válido.");
+            if (!programacionesPorNrc.TryGetValue(nrc, out var programacionId))
+            {
+                nrcSinProgramacion++;
+                ignorados++;
+                continue;
+            }
 
             var numeroPersonal = NormalizarNumeroPersonal(registro.NumeroPersonal);
             var nombre = NormalizarNombre(registro.Nombre);
-            if ((numeroPersonal is null) != (nombre is null))
-                throw new InvalidDataException($"El NRC {nrc} debe informar ID_DOCENTE y NOMBRE juntos o dejar ambos nulos.");
+            // PLANEA envía algunos identificadores reservados sin nombre; se conserva el horario
+            // y se trata ese docente como desconocido.
+            if (numeroPersonal is null || nombre is null)
+            {
+                numeroPersonal = null;
+                nombre = null;
+            }
 
-            var totalSesionesRegistro = 0;
+            if (numeroPersonal is not null && nombre is not null)
+            {
+                var claveNombre = NormalizarTexto(nombre);
+                if (!nombresPorNumero.TryGetValue(numeroPersonal, out var variantes))
+                    nombresPorNumero[numeroPersonal] = variantes = new Dictionary<string, (string, int)>(StringComparer.Ordinal);
+                if (variantes.TryGetValue(claveNombre, out var existente)) variantes[claveNombre] = (existente.Nombre, existente.Conteo + 1);
+                else variantes[claveNombre] = (nombre, 1);
+            }
+
+            var horariosValidos = new List<(byte Dia, TimeOnly Inicio, TimeOnly Fin)>();
             foreach (var horario in registro.Horarios)
             {
                 if (horario.DiaSemana is < 1 or > 6)
@@ -60,12 +77,26 @@ public sealed class PlaneaSnapshotValidator : IPlaneaSnapshotValidator
                 if (horaInicio >= horaFin)
                     throw new InvalidDataException($"El NRC {nrc} contiene horas inválidas o un horario que cruza medianoche.");
 
-                var sesion = new PlaneaSesionValidada(programacionId, horario.DiaSemana, horaInicio, horaFin,
+                horariosValidos.Add((horario.DiaSemana, horaInicio, horaFin));
+            }
+
+            if (horariosValidos.Count == 0)
+            {
+                ignorados++;
+                continue;
+            }
+
+            var fechaInicio = ParsearFecha(registro.FechaInicio, "FECHA_INICIO");
+            var fechaFin = ParsearFecha(registro.FechaFin, "FECHA_FIN");
+            if (fechaInicio > fechaFin) throw new InvalidDataException($"El NRC {nrc} tiene un rango de fechas inverso.");
+
+            foreach (var horario in horariosValidos)
+            {
+                var sesion = new PlaneaSesionValidada(programacionId, horario.Dia, horario.Inicio, horario.Fin,
                     fechaInicio, fechaFin, NormalizarLugar(registro.Edificio, 100), NormalizarLugar(registro.Aula, 100));
-                var clave = new SesionClave(programacionId, horario.DiaSemana, horaInicio, horaFin, fechaInicio,
+                var clave = new SesionClave(programacionId, horario.Dia, horario.Inicio, horario.Fin, fechaInicio,
                     fechaFin, NormalizarTexto(sesion.Edificio), NormalizarTexto(sesion.Aula));
-                totalSesionesRegistro++;
-                if (!sesionesPorClave.TryAdd(clave, sesion))
+                if (!sesiones.TryAdd(clave, sesion))
                     duplicados++;
                 else
                 {
@@ -73,38 +104,43 @@ public sealed class PlaneaSnapshotValidator : IPlaneaSnapshotValidator
                 }
             }
 
-            if (totalSesionesRegistro == 0)
+            if (numeroPersonal is not null && nombre is not null)
             {
-                ignorados++;
-                continue;
+                var claveNombre = NormalizarTexto(nombre);
+                if (!nombresPorNumero.TryGetValue(numeroPersonal, out var variantes))
+                    nombresPorNumero[numeroPersonal] = variantes = new Dictionary<string, (string, int)>(StringComparer.Ordinal);
+                if (variantes.TryGetValue(claveNombre, out var existente)) variantes[claveNombre] = (existente.Nombre, existente.Conteo + 1);
+                else variantes[claveNombre] = (nombre, 1);
             }
 
             if (numeroPersonal is not null && nombre is not null)
             {
-                if (nombrePorNumeroPersonal.TryGetValue(numeroPersonal, out var nombreAnterior)
-                    && !string.Equals(NormalizarTexto(nombreAnterior), NormalizarTexto(nombre), StringComparison.Ordinal))
-                    throw new InvalidDataException("PLANEA devolvió nombres distintos para el mismo ID_DOCENTE.");
-                nombrePorNumeroPersonal[numeroPersonal] = nombre;
-
-                if (docentePorProgramacion.TryGetValue(programacionId, out var docenteAnterior)
-                    && !string.Equals(docenteAnterior.NumeroPersonal, numeroPersonal, StringComparison.Ordinal))
-                    throw new InvalidDataException($"El NRC {nrc} identifica más de un docente.");
-                if (docenteAnterior is null)
-                    docentePorProgramacion[programacionId] = new PlaneaDocenteValidado(programacionId,
-                        numeroPersonal, nombre, fechaInicio, fechaFin);
-                else
-                    docentePorProgramacion[programacionId] = docenteAnterior with
-                    {
-                        FechaInicio = fechaInicio < docenteAnterior.FechaInicio ? fechaInicio : docenteAnterior.FechaInicio,
-                        FechaFin = fechaFin > docenteAnterior.FechaFin ? fechaFin : docenteAnterior.FechaFin
-                    };
+                if (!docentesPorProgramacion.TryGetValue(programacionId, out var lista))
+                    docentesPorProgramacion[programacionId] = lista = [];
+                lista.Add((registro, numeroPersonal, nombre, fechaInicio, fechaFin));
             }
         }
 
-        var sesiones = sesionesPorClave.Values.ToArray();
-        advertencias += ContarSesionesConTraslape(sesiones);
-        return new PlaneaSnapshotValidado(sesiones, docentePorProgramacion.Values.ToArray(), ignorados,
-            duplicados, advertencias);
+        var docentesValidados = new List<PlaneaDocenteValidado>();
+        foreach (var (programacionId, candidatos) in docentesPorProgramacion)
+        {
+            var ids = candidatos.Select(x => x.Numero).Distinct(StringComparer.Ordinal).ToArray();
+            if (ids.Length > 1) advertencias++;
+            var elegido = candidatos.OrderByDescending(x => string.Equals(x.Registro.IndPrincipal?.Trim(), "SI", StringComparison.OrdinalIgnoreCase))
+                .ThenBy(x => int.TryParse(x.Registro.IndDocente, NumberStyles.Integer, CultureInfo.InvariantCulture, out var indice) ? indice : int.MaxValue)
+                .ThenBy(x => x.Numero, StringComparer.Ordinal).First();
+            var variante = nombresPorNumero[elegido.Numero].OrderByDescending(x => x.Value.Conteo)
+                .ThenBy(x => x.Key, StringComparer.Ordinal).First().Value.Nombre;
+            docentesValidados.Add(new PlaneaDocenteValidado(programacionId, elegido.Numero, variante,
+                candidatos.Min(x => x.Inicio), candidatos.Max(x => x.Fin)));
+        }
+
+        advertencias += nombresPorNumero.Values.Count(x => x.Count > 1);
+
+        var listaSesiones = sesiones.Values.ToArray();
+        advertencias += ContarSesionesConTraslape(listaSesiones);
+        return new PlaneaSnapshotValidado(listaSesiones, docentesValidados, ignorados, duplicados,
+            advertencias, nrcSinProgramacion);
     }
 
     private static int ContarSesionesConTraslape(IReadOnlyList<PlaneaSesionValidada> sesiones)

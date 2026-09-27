@@ -75,7 +75,7 @@ public sealed class NormalizedPlaneaSyncSqlServerTests
             try
             {
                 var cliente = new FakePlaneaClient(fixture.Periodo.Clave,
-                    [Registro(fixture.Periodo.Clave, "NRC-DESCONOCIDO", null, null, 1, "0800", "0859")]);
+                    [Registro(fixture.Periodo.Clave, "NRC INVALIDO", null, null, 1, "0800", "0859")]);
                 var sincronizador = CrearServicio(db, cliente);
 
                 await Assert.ThrowsAsync<InvalidDataException>(() => sincronizador.SincronizarAsync(fixture.Periodo.Id));
@@ -85,7 +85,7 @@ public sealed class NormalizedPlaneaSyncSqlServerTests
                     .SingleAsync();
                 Assert.Equal("FALLIDA", intento.Estado);
                 Assert.NotNull(intento.FinalizadaEn);
-                Assert.Contains("NRC-DESCONOCIDO", intento.MensajeError);
+                Assert.Contains("NRC INVALIDO", intento.MensajeError);
                 var horarioVigente = await db.HorariosProgramacion.AsNoTracking()
                     .Where(x => x.ProgramacionAcademicaId == fixture.ProgramacionConOferta.Id).SingleAsync();
                 Assert.Equal(fixture.SincronizacionAnterior.Id, horarioVigente.SincronizacionPlaneaId);
