@@ -12,21 +12,18 @@ namespace SGPla.Validations.Implementations
         private readonly ICoordinadorEaRepository _coordinadorEaRepository;
         private readonly ICoordinadorDgaaRepository _coordinadorDgaaRepository;
         private readonly IAreaAcademicaRepository _areaAcademicaRepository;
-        private readonly IEntidadAcademicaRepository _entidadAcademicaRepository;
-        private readonly ICatalogosMvcService _catalogosMvcService;
+        private readonly IEntidadAcademicaMvcRepository _entidadAcademicaRepository;
 
         public UsuarioValidator(
             ICoordinadorEaRepository coordinadorEaRepository,
             ICoordinadorDgaaRepository coordinadorDgaaRepository,
             IAreaAcademicaRepository areaAcademicaRepository,
-            IEntidadAcademicaRepository entidadAcademicaRepository,
-            ICatalogosMvcService catalogosMvcService)
+            IEntidadAcademicaMvcRepository entidadAcademicaRepository)
         {
             _coordinadorEaRepository = coordinadorEaRepository;
             _coordinadorDgaaRepository = coordinadorDgaaRepository;
             _areaAcademicaRepository = areaAcademicaRepository;
             _entidadAcademicaRepository = entidadAcademicaRepository;
-            _catalogosMvcService = catalogosMvcService;
         }
 
         public async Task ValidarCreacionAsync(CrearUsuarioDTO crearUsuarioDTO)
@@ -177,8 +174,8 @@ namespace SGPla.Validations.Implementations
             if (!crearUsuarioDTO.IdEntidadAcademica.HasValue || crearUsuarioDTO.IdEntidadAcademica.Value <= 0)
                 throw new ArgumentException("La Entidad Académica es obligatoria.");
 
-            bool existeEntidadAcademica = (await _catalogosMvcService.ObtenerEntidadesAsync(null, null))
-                .Any(x => x.Id == crearUsuarioDTO.IdEntidadAcademica.Value);
+            bool existeEntidadAcademica = await _entidadAcademicaRepository
+                .ObtenerPorIdAsync(crearUsuarioDTO.IdEntidadAcademica.Value) is not null;
 
             if (!existeEntidadAcademica)
                 throw new ArgumentException("No existe esa Entidad Académica.");
@@ -209,8 +206,8 @@ namespace SGPla.Validations.Implementations
                 if (editarUsuarioDTO.IdEntidadAcademica.Value <= 0)
                     throw new ArgumentException("La Entidad Académica es obligatoria.");
 
-                bool existeEntidadAcademica = (await _catalogosMvcService.ObtenerEntidadesAsync(null, null))
-                    .Any(x => x.Id == editarUsuarioDTO.IdEntidadAcademica.Value);
+                bool existeEntidadAcademica = await _entidadAcademicaRepository
+                    .ObtenerPorIdAsync(editarUsuarioDTO.IdEntidadAcademica.Value) is not null;
 
                 if (!existeEntidadAcademica)
                     throw new ArgumentException("No existe esa Entidad Académica.");

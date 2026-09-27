@@ -79,7 +79,16 @@ builder.Services.AddScoped<IIntegranteConsejoTecnicoMvcRepository, NormalizedInt
 builder.Services.AddScoped<IIntegranteConsejoTecnicoMvcService, IntegranteConsejoTecnicoMvcService>();
 builder.Services.AddScoped<ISolicitudMvcRepository, NormalizedSolicitudMvcRepository>();
 builder.Services.AddScoped<ISolicitudMvcService, SolicitudMvcService>();
-builder.Services.AddHttpClient<IPlaneaClient, PlaneaClient>(cliente => cliente.Timeout = TimeSpan.FromMinutes(2));
+builder.Services.AddSingleton<Microsoft.Extensions.Options.IValidateOptions<PlaneaOptions>, PlaneaOptions>();
+builder.Services.AddOptions<PlaneaOptions>()
+    .BindConfiguration(PlaneaOptions.Seccion)
+    .Validate(options => builder.Environment.IsDevelopment() || !string.IsNullOrWhiteSpace(options.ApiKey),
+        "Planea:ApiKey es obligatoria fuera de Development.")
+    .ValidateOnStart();
+// El modo Query incluye la credencial en la URI. Se desactivan los logs de
+// transporte informativos para evitar que un handler registre ese valor.
+builder.Logging.AddFilter("System.Net.Http.HttpClient.IPlaneaClient", LogLevel.Warning);
+builder.Services.AddHttpClient<IPlaneaClient, PlaneaClient>();
 builder.Services.AddScoped<IPlaneaSnapshotValidator, PlaneaSnapshotValidator>();
 builder.Services.AddScoped<ISincronizacionPlaneaService, SincronizacionPlaneaService>();
 
@@ -87,10 +96,7 @@ builder.Services.AddScoped<IAreaAcademicaRepository, NormalizedAreaAcademicaRepo
 builder.Services.AddScoped<IAreaAcademicaValidator, AreaAcademicaValidator>();
 builder.Services.AddScoped<IAreaAcademicaService, AreaAcademicaService>();
 
-builder.Services.AddScoped<IEntidadAcademicaRepository, EntidadAcademicaRepository>();
 builder.Services.AddScoped<IEntidadAcademicaMvcRepository, NormalizedEntidadAcademicaMvcRepository>();
-builder.Services.AddScoped<IEntidadAcademicaValidator, EntidadAcademicaValidator>();
-builder.Services.AddScoped<IEntidadAcademicaService, EntidadAcademicaService>();
 builder.Services.AddScoped<IEntidadAcademicaMvcService, EntidadAcademicaMvcService>();
 builder.Services.AddScoped<IProgramaEducativoMvcRepository, NormalizedProgramaEducativoMvcRepository>();
 builder.Services.AddScoped<IProgramaEducativoMvcService, ProgramaEducativoMvcService>();
@@ -102,43 +108,11 @@ builder.Services.AddScoped<IArticuloRepository, NormalizedArticuloRepository>();
 builder.Services.AddScoped<IArticuloService, ArticuloService>();
 builder.Services.AddScoped<IArticuloValidator, ArticuloValidator>();
 
-builder.Services.AddScoped<IProgramaEducativoRepository, ProgramaEducativoRepository>();
-builder.Services.AddScoped<IProgramaEducativoService,  ProgramaEducativoService>();
-builder.Services.AddScoped<IProgramaEducativoValidator, ProgramaEducativoValidator>();
-builder.Services.AddScoped<IPlanEstudiosRepository, PlanEstudiosRepository>();
-builder.Services.AddScoped<IExperienciaEducativaRepository, ExperienciaEducativaRepository>();
-builder.Services.AddScoped<IPlanEstudiosValidator, PlanEstudiosValidator>();
-builder.Services.AddScoped<IPlanEstudiosService, PlanEstudiosService>();
-
 builder.Services.AddScoped<IPeriodoEscolarRepository, NormalizedPeriodoEscolarRepository>();
 builder.Services.AddScoped<IPeriodoEscolarService, PeriodoEscolarService>();
 builder.Services.AddScoped<IPeriodoEscolarValidator, PeriodoEscolarValidator>();
 
-builder.Services.AddScoped<IArchivoRepository, ArchivoRepository>();
-builder.Services.AddScoped<IArchivoService, ArchivoService>();
-
-builder.Services.AddScoped<IIntegranteCtService, IntegranteCtService>();
-builder.Services.AddScoped<IIntegranteCtRepository, IntegranteCtRepository>();
-builder.Services.AddScoped<IIntegranteCtValidator, IntegranteCtValidator>();
-
-builder.Services.AddScoped<IDocenteService, DocenteService>();
-builder.Services.AddScoped<IDocenteRepository, DocenteRepository>();
-builder.Services.AddScoped<IDocenteValidator, DocenteValidator>();
-builder.Services.AddScoped<IAspiranteService, AspiranteService>();
-builder.Services.AddScoped<IAspiranteRepository, AspiranteRepository>();
-builder.Services.AddScoped<IAspiranteValidator, AspiranteValidator>();
-builder.Services.AddScoped<IGradoRepository, GradoRepository>();
-
-builder.Services.AddScoped<IProgramacionAcademicaRepository, ProgramacionAcademicaRepository>();
-builder.Services.AddScoped<IDocenteRepository, DocenteRepository>();
-
-builder.Services.AddScoped<IProgramacionAcademicaValidator, ProgramacionAcademicaValidator>();
-builder.Services.AddScoped<IProgramacionAcademicaService, ProgramacionAcademicaService>();
-
-builder.Services.AddScoped<IPlantillaService, PlantillaService>();
-
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<IEstadoNavegacion, EstadoNavegacion>();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -218,12 +192,6 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ILdapAuthService, LdapAuthService>();
 builder.Services.AddSingleton<IArgon2idPasswordHasher, Argon2idPasswordHasher>();
 builder.Services.AddScoped<IUsuarioSesionValidator, NormalizedUsuarioSesionValidator>();
-
-builder.Services.AddScoped<IAvisoService, AvisoService>();
-builder.Services.AddScoped<IAvisoRepository, AvisoRepository>();
-builder.Services.AddScoped<IOfertaRepository, OfertaRepository>();
-builder.Services.AddScoped<IHorarioRepository, HorarioRepository>();
-builder.Services.AddScoped<IAvisoValidator, AvisoValidator>();
 
 var app = builder.Build();
 

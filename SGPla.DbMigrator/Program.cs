@@ -20,6 +20,8 @@ catch (InvalidOperationException exception)
 
 if (args.Contains("--bootstrap-superusuario", StringComparer.OrdinalIgnoreCase))
     return await BootstrapSuperusuarioAsync(connectionString);
+if (args.Contains("--preflight", StringComparer.OrdinalIgnoreCase))
+    return await PreflightAsync(connectionString);
 
 var databasePath = Path.Combine(AppContext.BaseDirectory, "database");
 var baselinePath = Path.Combine(databasePath, "baseline_schema.sql");
@@ -258,6 +260,56 @@ static async Task<int> BootstrapSuperusuarioAsync(string connectionString)
     catch (Exception exception)
     {
         Console.Error.WriteLine($"No fue posible completar el bootstrap: {exception.GetType().Name}.");
+        return 1;
+    }
+}
+
+static async Task<int> PreflightAsync(string connectionString)
+{
+    try
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+        await using (var target = new SqlCommand(
+                         "SELECT CONVERT(nvarchar(128), SERVERPROPERTY('ServerName')), DB_NAME();", connection))
+        await using (var reader = await target.ExecuteReaderAsync())
+        {
+            await reader.ReadAsync();
+            Console.WriteLine($"Destino confirmado: {reader.GetString(0)} / {reader.GetString(1)}");
+        }
+
+        await using var existeCommand = new SqlCommand(
+            "SELECT CONVERT(bit, CASE WHEN OBJECT_ID(N'dbo.SchemaVersions', N'U') IS NULL THEN 0 ELSE 1 END);", connection);
+        var existe = Convert.ToBoolean(await existeCommand.ExecuteScalarAsync(), System.Globalization.CultureInfo.InvariantCulture);
+        var cantidad = 0;
+        if (existe)
+        {
+            await using var journal = new SqlCommand(
+                "SELECT ScriptName, Applied FROM dbo.SchemaVersions ORDER BY Applied, ScriptName;", connection);
+            await using var rows = await journal.ExecuteReaderAsync();
+            while (await rows.ReadAsync())
+            {
+                cantidad++;
+                Console.WriteLine($"DbUp: {rows.GetString(0)} ({rows.GetDateTime(1):O})");
+            }
+        }
+        Console.WriteLine($"Journal dbo.SchemaVersions: {(existe ? $"presente, {cantidad} entradas" : "ausente")}");
+        if (existe)
+        {
+            await using var users = new SqlCommand(
+                "SELECT COUNT_BIG(*) FROM [usuarios].[usuario] WHERE [rol_id] = 1;", connection);
+            Console.WriteLine($"Cuentas Superusuario: {Convert.ToInt64(await users.ExecuteScalarAsync(), System.Globalization.CultureInfo.InvariantCulture)}");
+        }
+        return existe ? 0 : 1;
+    }
+    catch (SqlException exception)
+    {
+        Console.Error.WriteLine($"Preflight fallido (SqlException {exception.Number}, estado {exception.State}); no se muestran detalles de conexión.");
+        return 1;
+    }
+    catch (Exception exception)
+    {
+        Console.Error.WriteLine($"Preflight fallido ({exception.GetType().Name}); no se muestran detalles de conexión.");
         return 1;
     }
 }

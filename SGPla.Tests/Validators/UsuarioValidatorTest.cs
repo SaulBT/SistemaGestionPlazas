@@ -6,6 +6,7 @@ using SGPla.Validations.Implementations;
 using SGPla.Models;
 using SGPla.Services.Interfaces;
 using SGPla.Models.ViewModels.Catalogos;
+using SGPla.Models.DTOs.EntidadAcademica;
 using System.Threading;
 
 public class UsuarioValidatorTests
@@ -13,8 +14,7 @@ public class UsuarioValidatorTests
     private readonly Mock<ICoordinadorEaRepository> _coordinadorEaRepositoryMock;
     private readonly Mock<ICoordinadorDgaaRepository> _coordinadorDgaaRepositoryMock;
     private readonly Mock<IAreaAcademicaRepository> _areaAcademicaRepositoryMock;
-    private readonly Mock<IEntidadAcademicaRepository> _entidadAcademicaRepositoryMock;
-    private readonly Mock<ICatalogosMvcService> _catalogosMvcServiceMock;
+    private readonly Mock<IEntidadAcademicaMvcRepository> _entidadAcademicaRepositoryMock;
     private readonly UsuarioValidator _usuarioValidator;
 
     public UsuarioValidatorTests()
@@ -22,19 +22,13 @@ public class UsuarioValidatorTests
         _coordinadorEaRepositoryMock = new Mock<ICoordinadorEaRepository>();
         _coordinadorDgaaRepositoryMock = new Mock<ICoordinadorDgaaRepository>();
         _areaAcademicaRepositoryMock = new Mock<IAreaAcademicaRepository>();
-        _entidadAcademicaRepositoryMock = new Mock<IEntidadAcademicaRepository>();
-        _catalogosMvcServiceMock = new Mock<ICatalogosMvcService>();
-        _catalogosMvcServiceMock
-            .Setup(service => service.ObtenerEntidadesAsync(
-                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>(), It.IsAny<int?>()))
-            .ReturnsAsync(Array.Empty<CatalogoOpcion>());
+        _entidadAcademicaRepositoryMock = new Mock<IEntidadAcademicaMvcRepository>();
 
         _usuarioValidator = new UsuarioValidator(
             _coordinadorEaRepositoryMock.Object,
             _coordinadorDgaaRepositoryMock.Object,
             _areaAcademicaRepositoryMock.Object,
-            _entidadAcademicaRepositoryMock.Object,
-            _catalogosMvcServiceMock.Object);
+            _entidadAcademicaRepositoryMock.Object);
     }
 
     //CP-01-03
@@ -181,8 +175,8 @@ public class UsuarioValidatorTests
             .ReturnsAsync(false);
 
         _entidadAcademicaRepositoryMock
-            .Setup(r => r.ExistePorIdAsync(dto.IdEntidadAcademica.Value))
-            .ReturnsAsync(false);
+            .Setup(r => r.ObtenerPorIdAsync(dto.IdEntidadAcademica.Value, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((EntidadAcademicaMvcDto?)null);
 
         var ex = await Record.ExceptionAsync(() => _usuarioValidator.ValidarCreacionAsync(dto));
 
@@ -375,8 +369,8 @@ public class UsuarioValidatorTests
             .ReturnsAsync(new CoordinadorEa { IdCoordinadorEa = 534, IdEntidadAcademica = 200, Nombre = "Ángel Bocanegra", Correo = "angel@uv.mx", Cargo = "Jefe de Unidad" });
 
         _entidadAcademicaRepositoryMock
-            .Setup(repository => repository.ExistePorIdAsync(76))
-            .ReturnsAsync(false);
+            .Setup(repository => repository.ObtenerPorIdAsync(76, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((EntidadAcademicaMvcDto?)null);
 
         var ex = await Record.ExceptionAsync(() => _usuarioValidator.ValidarEdicionAsync(dto));
 

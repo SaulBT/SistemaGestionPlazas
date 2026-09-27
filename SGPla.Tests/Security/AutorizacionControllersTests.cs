@@ -12,26 +12,11 @@ public class AutorizacionControllersTests
     [Theory]
     [InlineData(typeof(UsuariosController), PoliticasAutorizacion.SuperUsuario)]
     [InlineData(typeof(ArticulosController), PoliticasAutorizacion.SuperUsuario)]
-    [InlineData(typeof(DocentesController), PoliticasAutorizacion.EntidadAcademica)]
-    [InlineData(typeof(IntegranteCtController), PoliticasAutorizacion.EntidadAcademica)]
+    [InlineData(typeof(DocentesMvcController), PoliticasAutorizacion.EntidadAcademica)]
+    [InlineData(typeof(IntegranteConsejoTecnicoMvcController), PoliticasAutorizacion.EntidadAcademica)]
     public void ControladoresDeRolExclusivo_ExigenLaPoliticaCorrecta(Type controller, string policy)
     {
         var attribute = controller.GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true)
-            .Cast<AuthorizeAttribute>()
-            .Single();
-
-        Assert.Equal(policy, attribute.Policy);
-    }
-
-    [Theory]
-    [InlineData(nameof(ProgramacionesAcademicasController.CargarProgramacionAcademicaPaso1), PoliticasAutorizacion.Dgaa)]
-    [InlineData(nameof(ProgramacionesAcademicasController.Ver), PoliticasAutorizacion.EntidadAcademica)]
-    [InlineData(nameof(ProgramacionesAcademicasController.CambiarInclusionOferta), PoliticasAutorizacion.EntidadAcademica)]
-    public void AccionesDeProgramacion_ExigenElRolDefinido(string action, string policy)
-    {
-        var method = typeof(ProgramacionesAcademicasController).GetMethods()
-            .Single(m => m.Name == action);
-        var attribute = method.GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true)
             .Cast<AuthorizeAttribute>()
             .Single();
 
@@ -70,15 +55,13 @@ public class AutorizacionControllersTests
     }
 
     [Fact]
-    public void ProgramacionAcademicaUsaRutaMvcNuevaYDesactivaElControladorLegacy()
+    public void ProgramacionAcademicaUsaRutaMvcNormalizada()
     {
         var route = typeof(ProgramacionesAcademicasMvcController)
             .GetCustomAttributes(typeof(RouteAttribute), inherit: true)
             .Cast<RouteAttribute>()
             .Single();
         Assert.Equal("ProgramacionesAcademicas", route.Template);
-        Assert.NotNull(typeof(ProgramacionesAcademicasController)
-            .GetCustomAttributes(typeof(NonControllerAttribute), inherit: true).SingleOrDefault());
 
         var importar = typeof(ProgramacionesAcademicasMvcController).GetMethod("Importar", [typeof(CancellationToken)]);
         Assert.NotNull(importar);
@@ -93,12 +76,11 @@ public class AutorizacionControllersTests
     }
 
     [Fact]
-    public void DirectorioDocentesUsaControladorNormalizadoYDesactivaLasEscriturasLegacy()
+    public void DirectorioDocentesUsaControladorNormalizado()
     {
         var ruta = typeof(DocentesMvcController).GetCustomAttributes(typeof(RouteAttribute), inherit: true)
             .Cast<RouteAttribute>().Single();
         Assert.Equal("Docentes", ruta.Template);
-        Assert.NotNull(typeof(DocentesController).GetCustomAttributes(typeof(NonControllerAttribute), inherit: true).SingleOrDefault());
         var policy = Assert.Single(typeof(DocentesMvcController).GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true)
             .Cast<AuthorizeAttribute>());
         Assert.Equal(PoliticasAutorizacion.EntidadAcademica, policy.Policy);
@@ -124,8 +106,6 @@ public class AutorizacionControllersTests
         var policy = Assert.Single(typeof(AvisosMvcController)
             .GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true).Cast<AuthorizeAttribute>());
         Assert.Equal(PoliticasAutorizacion.OperadorAcademico, policy.Policy);
-        Assert.NotNull(typeof(AvisosController)
-            .GetCustomAttributes(typeof(NonControllerAttribute), inherit: true).SingleOrDefault());
 
         var createPolicy = Assert.Single(typeof(AvisosMvcController).GetMethod("Nuevo",
                 [typeof(CrearAvisoMvcViewModel), typeof(CancellationToken)])!
@@ -192,8 +172,6 @@ public class AutorizacionControllersTests
         var policy = Assert.Single(typeof(IntegranteConsejoTecnicoMvcController)
             .GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true).Cast<AuthorizeAttribute>());
         Assert.Equal(PoliticasAutorizacion.EntidadAcademica, policy.Policy);
-        Assert.NotNull(typeof(IntegranteCtController)
-            .GetCustomAttributes(typeof(NonControllerAttribute), inherit: true).SingleOrDefault());
 
         foreach (var actionName in new[] { "Crear", "NuevaVigencia", "EliminarCapturaErronea" })
         {

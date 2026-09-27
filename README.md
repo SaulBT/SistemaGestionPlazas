@@ -247,3 +247,28 @@ Si se agregan, eliminan o modifican tablas en SQL Server:
 7. Configurar `Program.cs`.
 8. Verificar archivos generados.
 9. Probar la conexión.
+
+## Integración PLANEA
+
+La clave de PLANEA no se guarda en este repositorio. En desarrollo se configura
+con User Secrets (el proyecto ya define `UserSecretsId`):
+
+```sh
+dotnet user-secrets set "Planea:ApiKey" "<clave-proporcionada-por-el-responsable>" --project SGPla
+```
+
+En servidores configura `Planea__ApiKey` en el entorno del proceso o en el
+gestor de secretos del hosting. No registres la clave ni la URI si se configura
+autenticación por query string.
+
+`Planea:BaseUrl` debe ser una URL absoluta HTTPS y `Planea:TimeoutSegundos` debe
+estar entre 1 y 600. `Planea:ModoAutenticacion` acepta `Header` o `Query`, y
+`Planea:NombreParametro` determina el nombre del header o parámetro. PLANEA no
+publica documentación localizable que confirme el mecanismo o su nombre; los
+valores actuales son configurables y deben confirmarse con el responsable del
+servicio antes de operación. En Development, sin clave, la sincronización falla
+antes de enviar una petición; fuera de Development la aplicación exige la clave
+al arrancar.
+
+Las decisiones pendientes del cierre MVC y la clasificación de pruebas legacy
+están en [docs/cierre-migracion-mvc.md](docs/cierre-migracion-mvc.md).
