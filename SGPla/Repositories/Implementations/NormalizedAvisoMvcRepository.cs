@@ -153,6 +153,8 @@ public sealed class NormalizedAvisoMvcRepository : IAvisoMvcRepository
             x.Aviso.Id, x.Aviso.PeriodoEscolarId, x.Aviso.SistemaEducativoId,
             x.Entidad, x.Periodo, x.Sistema, x.Articulo,
             x.Aviso.TipoComunicado, x.Aviso.Estado, x.Aviso.CreadoEn,
+            x.Aviso.FechaPublicacion, x.Aviso.UrlPublicacion, x.Aviso.CanceladoEn,
+            x.Aviso.MotivoCancelacion, x.Aviso.ArchivadoEn,
             x.Aviso.ModalidadRecepcionId, x.Aviso.Requisitos, x.Aviso.LugarRecepcion,
             ModalidadRecepcion = _db.ModalidadesRecepcion.AsNoTracking()
                 .Where(m => m.Id == x.Aviso.ModalidadRecepcionId).Select(m => m.Nombre).SingleOrDefault(),
@@ -195,7 +197,9 @@ public sealed class NormalizedAvisoMvcRepository : IAvisoMvcRepository
         return new AvisoMvcDetalle(avisoData.Id, avisoData.PeriodoEscolarId, avisoData.SistemaEducativoId,
             avisoData.Entidad, avisoData.Periodo,
             avisoData.Sistema, avisoData.Articulo, avisoData.TipoComunicado, avisoData.Estado,
-            avisoData.CreadoEn, ofertas, documentos, avisoData.ModalidadRecepcionId,
+            avisoData.CreadoEn, avisoData.FechaPublicacion, avisoData.UrlPublicacion,
+            avisoData.CanceladoEn, avisoData.MotivoCancelacion, avisoData.ArchivadoEn,
+            ofertas, documentos, avisoData.ModalidadRecepcionId,
             avisoData.ModalidadRecepcion, avisoData.Requisitos, avisoData.LugarRecepcion, avisoData.CorreoContacto,
             avisoData.NombreTitular, avisoData.FechaConsejoTecnico, avisoData.FechaVacantes,
             horarios, revisiones);
@@ -447,6 +451,128 @@ public sealed class NormalizedAvisoMvcRepository : IAvisoMvcRepository
         revision.Comentarios = comentarios;
         aviso.Estado = avalar ? "AVALADO_DGAA" : "DEVUELTO_DGAA";
         await _db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+    }
+
+    public async Task PublicarAsync(int usuarioId, int entidadAcademicaId, int avisoId,
+        PublicarAvisoMvcDatos datos, CancellationToken cancellationToken = default)
+    {
+        await using var transaction = await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
+        var scope = await ObtenerAmbitoAsync(usuarioId, permitirDgaa: false, cancellationToken);
+        if (scope.RolId != RolEntidadAcademica || scope.EntidadAcademicaId != entidadAcademicaId)
+            throw new UnauthorizedAccessException("Sólo la Entidad Académica propietaria puede publicar este Aviso.");
+
+        var avisoExiste = await _db.Avisos.AsNoTracking().AnyAsync(x => x.Id == avisoId
+            && x.EntidadAcademicaId == entidadAcademicaId, cancellationToken);
+        if (!avisoExiste) throw new UnauthorizedAccessException("El Aviso no pertenece a tu Entidad Académica.");
+        var estado = await _db.Avisos.AsNoTracking().Where(x => x.Id == avisoId)
+            .Select(x => x.Estado).SingleAsync(cancellationToken);
+        if (estado != "FIRMADO")
+            throw new InvalidOperationException("Sólo se puede publicar un Aviso firmado.");
+        if (!await _db.DocumentoAvisos.AsNoTracking().AnyAsync(x => x.AvisoId == avisoId
+                && x.Tipo == "FIRMADO" && x.EsVigente, cancellationToken))
+            throw new InvalidOperationException("El Aviso debe tener un documento firmado vigente.");
+
+        var primeraRecepcion = await _db.HorarioRecepcionRequisitos.AsNoTracking()
+            .Where(x => x.AvisoId == avisoId).Select(x => (DateOnly?)x.Fecha).MinAsync(cancellationToken);
+        if (primeraRecepcion is null || datos.FechaPublicacion >= primeraRecepcion.Value)
+            throw new ArgumentException("La fecha de publicación debe ser anterior al primer día de recepción.");
+        if (!Uri.TryCreate(datos.UrlPublicacion, UriKind.Absolute, out var uri)
+            || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
+            throw new ArgumentException("La URL de publicación debe usar HTTP o HTTPS.");
+
+        var actualizados = await _db.Avisos.Where(x => x.Id == avisoId
+                && x.EntidadAcademicaId == entidadAcademicaId && x.Estado == "FIRMADO")
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(x => x.FechaPublicacion, datos.FechaPublicacion)
+                .SetProperty(x => x.UrlPublicacion, datos.UrlPublicacion)
+                .SetProperty(x => x.Estado, "PUBLICADO"), cancellationToken);
+        if (actualizados != 1) throw new InvalidOperationException("El Aviso dejó de estar firmado antes de publicar.");
+        await transaction.CommitAsync(cancellationToken);
+    }
+
+    public async Task CancelarAsync(int usuarioId, int avisoId, CancelarAvisoMvcDatos datos,
+        CancellationToken cancellationToken = default)
+    {
+        await using var transaction = await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
+        var scope = await ObtenerAmbitoAsync(usuarioId, permitirDgaa: true, cancellationToken);
+        if (scope.RolId != RolDgaa)
+            throw new UnauthorizedAccessException("Sólo DGAA puede cancelar un Aviso.");
+
+        var aviso = await (from item in _db.Avisos.AsNoTracking()
+                           join entidad in _db.EntidadAcademicas.AsNoTracking()
+                               on item.EntidadAcademicaId equals entidad.Id
+                           where item.Id == avisoId && entidad.FechaEliminacion == null
+                                 && entidad.AreaAcademicaId == scope.AreaAcademicaId
+                           select new { item.Id, item.Estado }).SingleOrDefaultAsync(cancellationToken);
+        if (aviso is null) throw new UnauthorizedAccessException("El Aviso está fuera del ámbito DGAA o no existe.");
+        if (aviso.Estado is not ("DEVUELTO_DGAA" or "AVALADO_DGAA" or "FIRMADO"))
+            throw new InvalidOperationException("Sólo se pueden cancelar Avisos devueltos, avalados o firmados.");
+        if (await _db.RevisionAvisos.AsNoTracking().AnyAsync(x => x.AvisoId == avisoId && x.ResueltoEn == null, cancellationToken))
+            throw new InvalidOperationException("No se puede cancelar un Aviso durante una revisión abierta.");
+
+        var enlaces = await _db.AvisoOfertas.AsNoTracking().Where(x => x.AvisoId == avisoId && x.CerradoEn == null)
+            .Select(x => new { x.Id, x.OfertaId }).ToListAsync(cancellationToken);
+        var ofertaIds = enlaces.Select(x => x.OfertaId).Distinct().ToArray();
+        if (ofertaIds.Length > 0)
+        {
+            var ofertasEnPublicacion = await _db.Ofertas.AsNoTracking()
+                .Where(x => ofertaIds.Contains(x.Id) && x.Estado == "EN_PUBLICACION" && x.CerradaEn == null)
+                .Select(x => x.Id).ToListAsync(cancellationToken);
+            if (ofertasEnPublicacion.Count != ofertaIds.Length)
+                throw new InvalidOperationException("Una Oferta vinculada ya no está en publicación; no se canceló el Aviso.");
+        }
+
+        var ahora = _timeProvider.GetUtcNow().UtcDateTime;
+        if (enlaces.Count > 0)
+        {
+            var enlacesCerrados = await _db.AvisoOfertas
+                .Where(x => x.AvisoId == avisoId && x.CerradoEn == null)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(x => x.CerradoEn, ahora)
+                    .SetProperty(x => x.CausaCierre, "CANCELADO"), cancellationToken);
+            if (enlacesCerrados != enlaces.Count)
+                throw new InvalidOperationException("Cambió la lista de Ofertas; no se canceló el Aviso.");
+            var ofertasLiberadas = await _db.Ofertas.Where(x => ofertaIds.Contains(x.Id)
+                    && x.Estado == "EN_PUBLICACION" && x.CerradaEn == null)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.Estado, "DISPONIBLE"), cancellationToken);
+            if (ofertasLiberadas != ofertaIds.Length)
+                throw new InvalidOperationException("No se pudieron liberar todas las Ofertas del Aviso.");
+        }
+
+        var avisosCancelados = await _db.Avisos.Where(x => x.Id == avisoId && x.Estado == aviso.Estado)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(x => x.Estado, "CANCELADO")
+                .SetProperty(x => x.CanceladoEn, ahora)
+                .SetProperty(x => x.CanceladoPorUsuarioId, usuarioId)
+                .SetProperty(x => x.MotivoCancelacion, datos.Motivo), cancellationToken);
+        if (avisosCancelados != 1) throw new InvalidOperationException("El estado del Aviso cambió durante la cancelación.");
+        await transaction.CommitAsync(cancellationToken);
+    }
+
+    public async Task ArchivarAsync(int usuarioId, int avisoId, CancellationToken cancellationToken = default)
+    {
+        await using var transaction = await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
+        var scope = await ObtenerAmbitoAsync(usuarioId, permitirDgaa: true, cancellationToken);
+        var aviso = await (from item in _db.Avisos.AsNoTracking()
+                           join entidad in _db.EntidadAcademicas.AsNoTracking()
+                               on item.EntidadAcademicaId equals entidad.Id
+                           where item.Id == avisoId && entidad.FechaEliminacion == null
+                                 && (scope.RolId == RolEntidadAcademica
+                                     ? entidad.Id == scope.EntidadAcademicaId
+                                     : scope.RolId == RolDgaa && entidad.AreaAcademicaId == scope.AreaAcademicaId)
+                           select new { item.Id, item.Estado, item.ArchivadoEn }).SingleOrDefaultAsync(cancellationToken);
+        if (aviso is null) throw new UnauthorizedAccessException("El Aviso está fuera del ámbito autorizado o no existe.");
+        if (aviso.Estado is not ("PUBLICADO" or "CANCELADO"))
+            throw new InvalidOperationException("Sólo se pueden archivar Avisos publicados o cancelados.");
+        if (aviso.ArchivadoEn.HasValue) throw new InvalidOperationException("El Aviso ya está archivado.");
+
+        var ahora = _timeProvider.GetUtcNow().UtcDateTime;
+        var archivados = await _db.Avisos.Where(x => x.Id == avisoId && x.Estado == aviso.Estado && x.ArchivadoEn == null)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(x => x.ArchivadoEn, ahora)
+                .SetProperty(x => x.ArchivadoPorUsuarioId, usuarioId), cancellationToken);
+        if (archivados != 1) throw new InvalidOperationException("El Aviso cambió durante el archivado.");
         await transaction.CommitAsync(cancellationToken);
     }
 

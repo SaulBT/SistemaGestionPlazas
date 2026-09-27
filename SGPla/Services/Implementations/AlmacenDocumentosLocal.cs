@@ -9,6 +9,9 @@ public sealed class AlmacenDocumentosLocal : IAlmacenDocumentos
     private const string MimePermitido = "application/pdf";
     private readonly string _raiz;
     private readonly string _directorioAvisos;
+    private readonly string _directorioAspirantes;
+    private readonly string _directorioActas;
+    private readonly string _directorioCuarentena;
 
     public AlmacenDocumentosLocal(IConfiguration configuration, IHostEnvironment environment)
     {
@@ -20,11 +23,32 @@ public sealed class AlmacenDocumentosLocal : IAlmacenDocumentos
                 : Path.Combine(environment.ContentRootPath, configurado);
         _raiz = Path.GetFullPath(raiz);
         _directorioAvisos = Path.Combine(_raiz, "avisos");
+        _directorioAspirantes = Path.Combine(_raiz, "aspirantes");
+        _directorioActas = Path.Combine(_raiz, "actas");
+        _directorioCuarentena = Path.Combine(_raiz, ".cuarentena-eliminacion");
     }
 
     public async Task<DocumentoAlmacenado> GuardarOriginalAsync(
         Stream contenido, string nombreOriginal, string mime, long tamanoDeclarado,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        await GuardarEnCategoriaAsync(contenido, nombreOriginal, mime, tamanoDeclarado,
+            "avisos", _directorioAvisos, cancellationToken);
+
+    public async Task<DocumentoAlmacenado> GuardarAspiranteAsync(
+        Stream contenido, string nombreOriginal, string mime, long tamanoDeclarado,
+        CancellationToken cancellationToken = default) =>
+        await GuardarEnCategoriaAsync(contenido, nombreOriginal, mime, tamanoDeclarado,
+            "aspirantes", _directorioAspirantes, cancellationToken);
+
+    public async Task<DocumentoAlmacenado> GuardarActaAsync(
+        Stream contenido, string nombreOriginal, string mime, long tamanoDeclarado,
+        CancellationToken cancellationToken = default) =>
+        await GuardarEnCategoriaAsync(contenido, nombreOriginal, mime, tamanoDeclarado,
+            "actas", _directorioActas, cancellationToken);
+
+    private static async Task<DocumentoAlmacenado> GuardarEnCategoriaAsync(
+        Stream contenido, string nombreOriginal, string mime, long tamanoDeclarado,
+        string categoria, string directorioCategoria, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(contenido);
         if (!contenido.CanRead) throw new ArgumentException("El documento no se puede leer.", nameof(contenido));
@@ -34,11 +58,11 @@ public sealed class AlmacenDocumentosLocal : IAlmacenDocumentos
             throw new ArgumentException("El documento debe tener entre 1 byte y 25 MB.", nameof(tamanoDeclarado));
 
         var nombre = NormalizarNombre(nombreOriginal);
-        Directory.CreateDirectory(_directorioAvisos);
+        Directory.CreateDirectory(directorioCategoria);
         var id = Guid.NewGuid().ToString("N");
-        var temporal = Path.Combine(_directorioAvisos, $".{id}.tmp");
-        var destino = Path.Combine(_directorioAvisos, $"{id}.pdf");
-        var clave = $"avisos/{id}.pdf";
+        var temporal = Path.Combine(directorioCategoria, $".{id}.tmp");
+        var destino = Path.Combine(directorioCategoria, $"{id}.pdf");
+        var clave = $"{categoria}/{id}.pdf";
         long escrito = 0;
         byte[] checksum;
         try
@@ -93,18 +117,78 @@ public sealed class AlmacenDocumentosLocal : IAlmacenDocumentos
         return Task.CompletedTask;
     }
 
+    public Task<DocumentoEnCuarentena?> PrepararEliminacionAsync(string claveRelativa,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var origen = ResolverClave(claveRelativa);
+        if (!File.Exists(origen)) return Task.FromResult<DocumentoEnCuarentena?>(null);
+        Directory.CreateDirectory(_directorioCuarentena);
+        var identificador = Guid.NewGuid().ToString("N");
+        var destino = RutaCuarentena(identificador);
+        File.Move(origen, destino);
+        return Task.FromResult<DocumentoEnCuarentena?>(new DocumentoEnCuarentena(claveRelativa, identificador));
+    }
+
+    public Task RestaurarEliminacionAsync(DocumentoEnCuarentena documento,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        ArgumentNullException.ThrowIfNull(documento);
+        var original = ResolverClave(documento.ClaveRelativa);
+        var cuarentena = RutaCuarentena(documento.Identificador);
+        if (!File.Exists(cuarentena)) return Task.CompletedTask;
+        if (File.Exists(original)) throw new IOException("No se puede restaurar el documento porque la clave original ya existe.");
+        Directory.CreateDirectory(Path.GetDirectoryName(original)!);
+        File.Move(cuarentena, original);
+        return Task.CompletedTask;
+    }
+
+    public Task CompletarEliminacionAsync(DocumentoEnCuarentena documento,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        ArgumentNullException.ThrowIfNull(documento);
+        var cuarentena = RutaCuarentena(documento.Identificador);
+        if (File.Exists(cuarentena)) File.Delete(cuarentena);
+        return Task.CompletedTask;
+    }
+
     private string ResolverClave(string clave)
     {
-        if (string.IsNullOrWhiteSpace(clave) || clave.Length != 43
-            || !clave.StartsWith("avisos/", StringComparison.Ordinal)
+        var (categoria, longitudPrefijo) = clave?.StartsWith("avisos/", StringComparison.Ordinal) == true
+            ? ("avisos", 7)
+            : clave?.StartsWith("aspirantes/", StringComparison.Ordinal) == true
+                ? ("aspirantes", 11)
+                : clave?.StartsWith("actas/", StringComparison.Ordinal) == true
+                    ? ("actas", 6)
+                    : (string.Empty, 0);
+        if (string.IsNullOrWhiteSpace(clave) || categoria.Length == 0 || clave.Length != longitudPrefijo + 36
             || !clave.EndsWith(".pdf", StringComparison.Ordinal)
-            || clave.AsSpan(7, 32).ContainsAnyExcept("0123456789abcdef"))
+            || clave.AsSpan(longitudPrefijo, 32).ContainsAnyExcept("0123456789abcdef"))
             throw new ArgumentException("La clave de almacenamiento no es válida.", nameof(clave));
 
         var ruta = Path.GetFullPath(Path.Combine(_raiz, clave.Replace('/', Path.DirectorySeparatorChar)));
-        var prefijo = _directorioAvisos + Path.DirectorySeparatorChar;
+        var directorioCategoria = categoria switch
+        {
+            "avisos" => _directorioAvisos,
+            "aspirantes" => _directorioAspirantes,
+            _ => _directorioActas
+        };
+        var prefijo = directorioCategoria + Path.DirectorySeparatorChar;
         if (!ruta.StartsWith(prefijo, OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal))
             throw new ArgumentException("La clave de almacenamiento no es válida.", nameof(clave));
+        return ruta;
+    }
+
+    private string RutaCuarentena(string identificador)
+    {
+        if (identificador.Length != 32 || identificador.AsSpan().ContainsAnyExcept("0123456789abcdef"))
+            throw new ArgumentException("El identificador de cuarentena no es válido.", nameof(identificador));
+        var ruta = Path.GetFullPath(Path.Combine(_directorioCuarentena, identificador + ".pending"));
+        var prefijo = _directorioCuarentena + Path.DirectorySeparatorChar;
+        if (!ruta.StartsWith(prefijo, OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal))
+            throw new ArgumentException("El identificador de cuarentena no es válido.", nameof(identificador));
         return ruta;
     }
 

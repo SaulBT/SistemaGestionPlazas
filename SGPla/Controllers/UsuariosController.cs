@@ -19,8 +19,7 @@ namespace SGPla.Controllers
     {
         private readonly IUsuarioService _usuarioService;
         private readonly ILogger<UsuariosController> _logger;
-        private readonly IAreaAcademicaRepository _areaAcademicaRepository;
-        private readonly IAreaAcademicaService _areaAcademicaService; //TODO: Reemplazar los métodos que usan el repository
+        private readonly IAreaAcademicaService _areaAcademicaService;
         private readonly ICatalogosMvcService _catalogosMvcService;
         private int paginaActual = 1;
 
@@ -29,13 +28,11 @@ namespace SGPla.Controllers
         public UsuariosController(
             IUsuarioService usuarioService,
             ILogger<UsuariosController> logger,
-            IAreaAcademicaRepository areaAcademicaRepository,
             IAreaAcademicaService areaAcademicaService,
             ICatalogosMvcService catalogosMvcService)
         {
             _usuarioService = usuarioService;
             _logger = logger;
-            _areaAcademicaRepository = areaAcademicaRepository;
             _areaAcademicaService = areaAcademicaService;
             _catalogosMvcService = catalogosMvcService;
         }
@@ -240,7 +237,7 @@ namespace SGPla.Controllers
 
             var regionesCombo = await ObtenerRegionesComboAsync(regionId);
 
-            var areas = await _areaAcademicaRepository.ObtenerTodosAsync();
+            var areas = await _areaAcademicaService.ObtenerTodasAsync();
 
             var areasCombo = areas
                 .Select(a => new OptionModel
@@ -379,7 +376,7 @@ namespace SGPla.Controllers
             model.Regiones = await ObtenerRegionesComboAsync(model.RegionId);
 
 
-            var areas = await _areaAcademicaRepository.ObtenerTodosAsync();
+            var areas = await _areaAcademicaService.ObtenerTodasAsync();
 
             model.Areas = areas.Select(a => new OptionModel
             {

@@ -57,6 +57,10 @@ public sealed class NormalizedDocumentoAvisoSqlServerTests
         {
             Correo = $"docs.{token[..12].ToLowerInvariant()}@example.test", Nombre = "Usuario integración", RolId = rolId
         };
+        var usuarioDgaa = new Usuario
+        {
+            Correo = $"docs.dgaa.{token[..10].ToLowerInvariant()}@example.test", Nombre = "Usuario DGAA integración", RolId = 2
+        };
         var usuarioAjeno = new Usuario
         {
             Correo = $"docs.ajeno.{token[..10].ToLowerInvariant()}@example.test", Nombre = "Usuario ajeno", RolId = rolId
@@ -64,11 +68,13 @@ public sealed class NormalizedDocumentoAvisoSqlServerTests
         var articulo = new Articulo { Numero = $"DOC-{token[..16]}", Descripcion = "Fixture de integración" };
         db.Entry(entidadAjena).State = EntityState.Added;
         db.Entry(usuario).State = EntityState.Added;
+        db.Entry(usuarioDgaa).State = EntityState.Added;
         db.Entry(usuarioAjeno).State = EntityState.Added;
         db.Entry(articulo).State = EntityState.Added;
         await db.SaveChangesAsync();
         var perfil = new UsuarioEntidadAcademica { UsuarioId = usuario.Id, EntidadAcademicaId = entidad.Id };
         var perfilAjeno = new UsuarioEntidadAcademica { UsuarioId = usuarioAjeno.Id, EntidadAcademicaId = entidadAjena.Id };
+        var perfilDgaa = new UsuarioDgaa { UsuarioId = usuarioDgaa.Id, AreaAcademicaId = areaId };
         var aviso = new Aviso
         {
             EntidadAcademicaId = entidad.Id, PeriodoEscolarId = periodoId, SistemaEducativoId = sistemaId,
@@ -77,6 +83,7 @@ public sealed class NormalizedDocumentoAvisoSqlServerTests
         };
         db.Entry(perfil).State = EntityState.Added;
         db.Entry(perfilAjeno).State = EntityState.Added;
+        db.Entry(perfilDgaa).State = EntityState.Added;
         db.Entry(aviso).State = EntityState.Added;
         await db.SaveChangesAsync();
 
@@ -110,6 +117,15 @@ public sealed class NormalizedDocumentoAvisoSqlServerTests
                 await download.Contenido.CopyToAsync(downloaded);
                 Assert.Equal(bytes, downloaded.ToArray());
             }
+            var historicalDownload = await service.AbrirParaDescargaAsync(aviso.Id, versions[0].Id, usuario.Id);
+            Assert.NotNull(historicalDownload);
+            Assert.Equal("original.pdf", historicalDownload.Nombre);
+            await using (historicalDownload.Contenido)
+            using (var historicalBytes = new MemoryStream())
+            {
+                await historicalDownload.Contenido.CopyToAsync(historicalBytes);
+                Assert.Equal(bytes, historicalBytes.ToArray());
+            }
             Assert.Null(await service.AbrirParaDescargaAsync(aviso.Id, versions[1].Id, usuarioAjeno.Id));
 
             await using var foreign = new MemoryStream(bytes);
@@ -117,19 +133,60 @@ public sealed class NormalizedDocumentoAvisoSqlServerTests
                 service.GuardarOriginalAsync(aviso.Id, entidadAjena.Id, usuario.Id, foreign, "ajeno.pdf", "application/pdf", bytes.Length));
             Assert.Equal(2, await db.DocumentoAvisos.AsNoTracking().CountAsync(x => x.AvisoId == aviso.Id));
             Assert.Equal(2, Directory.GetFiles(Path.Combine(root, "avisos"), "*.pdf").Length);
+
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+                service.EliminarBorradorAsync(aviso.Id, entidadAjena.Id, usuario.Id));
+            var revisionProtectora = new RevisionAviso
+            {
+                AvisoId = aviso.Id, NumeroRevision = 1, DocumentoOriginalId = versions[1].Id,
+                EnviadoPorUsuarioId = usuario.Id, EnviadoEn = DateTime.UtcNow
+            };
+            db.Entry(revisionProtectora).State = EntityState.Added;
+            await db.SaveChangesAsync();
+            foreach (var estado in new[] { "EN_REVISION_DGAA", "DEVUELTO_DGAA", "AVALADO_DGAA", "FIRMADO", "PUBLICADO" })
+            {
+                aviso.Estado = estado;
+                await db.SaveChangesAsync();
+                var dgaaDownload = await service.AbrirParaDescargaAsync(aviso.Id, versions[1].Id, usuarioDgaa.Id);
+                Assert.NotNull(dgaaDownload);
+                await dgaaDownload.Contenido.DisposeAsync();
+            }
+            aviso.Estado = "CREADO";
+            await db.SaveChangesAsync();
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                service.EliminarBorradorAsync(aviso.Id, entidad.Id, usuario.Id));
+            Assert.Equal(2, Directory.GetFiles(Path.Combine(root, "avisos"), "*.pdf").Length);
+            await storage.EliminarAsync(versions[0].ClaveAlmacenamiento);
+            await Assert.ThrowsAsync<FileNotFoundException>(() =>
+                service.AbrirParaDescargaAsync(aviso.Id, versions[0].Id, usuario.Id));
+            var rutaVigente = Path.Combine(root, versions[1].ClaveAlmacenamiento.Replace('/', Path.DirectorySeparatorChar));
+            await File.WriteAllTextAsync(rutaVigente, "contenido alterado");
+            await Assert.ThrowsAsync<InvalidDataException>(() =>
+                service.AbrirParaDescargaAsync(aviso.Id, versions[1].Id, usuario.Id));
+            db.Entry(revisionProtectora).State = EntityState.Deleted;
+            await db.SaveChangesAsync();
+            await service.EliminarBorradorAsync(aviso.Id, entidad.Id, usuario.Id);
+            Assert.False(await db.Avisos.AsNoTracking().AnyAsync(x => x.Id == aviso.Id));
+            Assert.False(await db.DocumentoAvisos.AsNoTracking().AnyAsync(x => x.AvisoId == aviso.Id));
+            Assert.Empty(Directory.GetFiles(Path.Combine(root, "avisos"), "*.pdf"));
         }
         finally
         {
             try
             {
+                db.RevisionAvisos.RemoveRange(await db.RevisionAvisos.AsTracking().Where(x => x.AvisoId == aviso.Id).ToListAsync());
+                await db.SaveChangesAsync();
                 db.DocumentoAvisos.RemoveRange(await db.DocumentoAvisos.AsTracking().Where(x => x.AvisoId == aviso.Id).ToListAsync());
                 await db.SaveChangesAsync();
-                db.Avisos.Remove(await db.Avisos.AsTracking().SingleAsync(x => x.Id == aviso.Id));
+                var avisoRestante = await db.Avisos.AsTracking().SingleOrDefaultAsync(x => x.Id == aviso.Id);
+                if (avisoRestante is not null) db.Avisos.Remove(avisoRestante);
                 db.UsuariosEntidadAcademica.Remove(await db.UsuariosEntidadAcademica.AsTracking().SingleAsync(x => x.UsuarioId == usuario.Id));
                 db.UsuariosEntidadAcademica.Remove(await db.UsuariosEntidadAcademica.AsTracking().SingleAsync(x => x.UsuarioId == usuarioAjeno.Id));
+                db.UsuariosDgaa.Remove(await db.UsuariosDgaa.AsTracking().SingleAsync(x => x.UsuarioId == usuarioDgaa.Id));
                 await db.SaveChangesAsync();
                 db.Usuarios.Remove(await db.Usuarios.AsTracking().SingleAsync(x => x.Id == usuario.Id));
                 db.Usuarios.Remove(await db.Usuarios.AsTracking().SingleAsync(x => x.Id == usuarioAjeno.Id));
+                db.Usuarios.Remove(await db.Usuarios.AsTracking().SingleAsync(x => x.Id == usuarioDgaa.Id));
                 db.Articulos.Remove(await db.Articulos.AsTracking().SingleAsync(x => x.Id == articulo.Id));
                 db.PeriodosEscolares.Remove(await db.PeriodosEscolares.AsTracking().SingleAsync(x => x.Id == periodoId));
                 db.EntidadAcademicas.RemoveRange(await db.EntidadAcademicas.AsTracking()

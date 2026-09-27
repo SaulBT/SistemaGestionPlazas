@@ -1,28 +1,118 @@
 @using SGPla.Models.ViewModels.Catalogos
-@model CatalogosViewModel
+@using SGPla.Models.DTOs.Catalogos
+@model CatalogosAdministracionIndexViewModel
 
 @{
     ViewData["Title"] = "Catálogos normalizados";
     var grupos = new (string Titulo, IReadOnlyList<CatalogoOpcion> Items)[]
     {
-        ("Regiones", Model.Regiones),
-        ("Campus", Model.Campus),
-        ("Áreas académicas", Model.AreasAcademicas),
-        ("Sistemas educativos", Model.SistemasEducativos),
-        ("Niveles de formación", Model.NivelesFormacion),
-        ("Áreas de formación", Model.AreasFormacion),
-        ("Grados académicos", Model.GradosAcademicos),
-        ("Tratamientos académicos", Model.TratamientosAcademicos),
-        ("Modalidades de recepción", Model.ModalidadesRecepcion),
-        ("Tipos de plaza", Model.TiposPlaza),
-        ("Tipos de contratación", Model.TiposContratacion),
-        ("Tipos de documento", Model.TiposDocumentoAspirante),
-        ("Artículos", Model.Articulos)
+        ("Regiones", Model.Catalogos.Regiones),
+        ("Campus", Model.Catalogos.Campus),
+        ("Áreas académicas", Model.Catalogos.AreasAcademicas),
+        ("Sistemas educativos", Model.Catalogos.SistemasEducativos),
+        ("Niveles de formación", Model.Catalogos.NivelesFormacion),
+        ("Áreas de formación", Model.Catalogos.AreasFormacion),
+        ("Grados académicos", Model.Catalogos.GradosAcademicos),
+        ("Tratamientos académicos", Model.Catalogos.TratamientosAcademicos),
+        ("Modalidades de recepción", Model.Catalogos.ModalidadesRecepcion),
+        ("Tipos de plaza", Model.Catalogos.TiposPlaza),
+        ("Tipos de contratación", Model.Catalogos.TiposContratacion),
+        ("Tipos de documento", Model.Catalogos.TiposDocumentoAspirante),
+        ("Artículos", Model.Catalogos.Articulos)
     };
 }
 
 <div class="alert alert-info">
     Estos valores provienen de <code>SgplaDbContext</code> y de las tablas normalizadas. Las vistas que migren a combos deben usar los identificadores, no texto libre.
+</div>
+
+<hr class="my-4" />
+<h4>Administrar catálogos</h4>
+<p class="text-muted">Los nombres de catálogos permanentes sólo se pueden corregir antes de que tengan referencias. Las clasificaciones académicas conservan sus claves y admiten baja lógica sin alterar sus registros relacionados.</p>
+
+<form asp-action="CrearClasificacion" method="post" class="card card-body mb-3">
+    @Html.AntiForgeryToken()
+    <h5>Nueva clasificación académica</h5>
+    <div class="row g-2 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label" for="tipoNueva">Catálogo</label>
+            <select class="form-select" id="tipoNueva" name="Tipo" required>
+                <option value="1">Sistema educativo</option>
+                <option value="2">Nivel de formación</option>
+                <option value="3">Área de formación</option>
+            </select>
+        </div>
+        <div class="col-md-2" id="claveNuevaContenedor">
+            <label class="form-label" for="claveNueva">Clave</label>
+            <input class="form-control" id="claveNueva" name="Clave" maxlength="50" pattern="[A-Za-z0-9]+" />
+        </div>
+        <div class="col-md-5">
+            <label class="form-label" for="nombreNuevo">Nombre</label>
+            <input class="form-control" id="nombreNuevo" name="Nombre" maxlength="200" required />
+        </div>
+        <div class="col-md-2"><button class="btn btn-primary" type="submit">Crear</button></div>
+    </div>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-sm table-striped align-middle">
+        <thead><tr><th>Catálogo</th><th>Clave / ID</th><th>Nombre</th><th>Referencias</th><th>Detalle</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <tbody>
+        @foreach (var item in Model.Administrables)
+        {
+            var puedeEditar = item.Clasificacion || item.Referencias == 0;
+            var longitudNombre = item.Tipo switch
+            {
+                TipoCatalogoNormalizado.TratamientoAcademico => 30,
+                TipoCatalogoNormalizado.ModalidadRecepcion => 100,
+                TipoCatalogoNormalizado.GradoAcademico or TipoCatalogoNormalizado.TipoPlaza
+                    or TipoCatalogoNormalizado.TipoContratacion or TipoCatalogoNormalizado.TipoDocumentoAspirante => 150,
+                _ => 200
+            };
+            <tr>
+                <td>@item.Categoria</td>
+                <td><code>@(item.Clave ?? item.Id.ToString())</code></td>
+                <td>
+                    @if (puedeEditar)
+                    {
+                        <form asp-action="EditarNombre" method="post" class="d-flex gap-2">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="Tipo" value="@((int)item.Tipo)" />
+                            <input type="hidden" name="Id" value="@item.Id" />
+                            <input class="form-control form-control-sm" name="Nombre" value="@item.Nombre" maxlength="@longitudNombre" required />
+                            <button class="btn btn-sm btn-outline-primary" type="submit">Guardar</button>
+                        </form>
+                    }
+                    else
+                    {
+                        @item.Nombre
+                    }
+                </td>
+                <td>@item.Referencias</td>
+                <td>@item.Detalle</td>
+                <td>@(item.Activo ? "Activo" : "Inactivo")</td>
+                <td>
+                    @if (item.Clasificacion)
+                    {
+                        <form asp-action="CambiarActivo" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="Tipo" value="@((int)item.Tipo)" />
+                            <input type="hidden" name="Id" value="@item.Id" />
+                            <input type="hidden" name="Activo" value="@(!item.Activo)" />
+                            <button class="btn btn-sm @(item.Activo ? "btn-outline-danger" : "btn-outline-success")" type="submit">
+                                @(item.Activo ? "Dar de baja" : "Reactivar")
+                            </button>
+                        </form>
+                    }
+                    else if (!puedeEditar)
+                    {
+                        <span class="text-muted">Nombre congelado por referencias</span>
+                    }
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
 </div>
 
 <p><a asp-controller="RegionesCampus" asp-action="Index" class="btn btn-outline-primary">Administrar Regiones y Campus</a></p>
@@ -61,9 +151,9 @@
 <hr class="my-4" />
 <h5>Prueba de combos dependientes</h5>
 <div class="row g-3" id="catalogos-demo">
-    <div class="col-md-3"><label class="form-label" for="regionId">Región</label><select class="form-select" id="regionId"><option value="">Todas</option>@foreach (var item in Model.Regiones) { <option value="@item.Id">@item.Nombre</option> }</select></div>
+    <div class="col-md-3"><label class="form-label" for="regionId">Región</label><select class="form-select" id="regionId"><option value="">Todas</option>@foreach (var item in Model.Catalogos.Regiones) { <option value="@item.Id">@item.Nombre</option> }</select></div>
     <div class="col-md-3"><label class="form-label" for="campusId">Campus</label><select class="form-select" id="campusId"><option value="">Todos</option></select></div>
-    <div class="col-md-3"><label class="form-label" for="areaId">Área académica</label><select class="form-select" id="areaId"><option value="">Todas</option>@foreach (var item in Model.AreasAcademicas) { <option value="@item.Id">@item.Nombre</option> }</select></div>
+    <div class="col-md-3"><label class="form-label" for="areaId">Área académica</label><select class="form-select" id="areaId"><option value="">Todas</option>@foreach (var item in Model.Catalogos.AreasAcademicas) { <option value="@item.Id">@item.Nombre</option> }</select></div>
     <div class="col-md-3"><label class="form-label" for="entidadId">Entidad académica</label><select class="form-select" id="entidadId"><option value="">Todas</option></select></div>
 </div>
 
@@ -86,4 +176,18 @@
     const cargarEntidades = () => cargarOpciones(`/Catalogos/Entidades?${query('campusId', campus.value)}&${query('areaAcademicaId', area.value)}`, entidad, 'Todas');
     campus.addEventListener('change', cargarEntidades);
     area.addEventListener('change', cargarEntidades);
+</script>
+
+<script>
+    const tipoNueva = document.getElementById('tipoNueva');
+    const claveNueva = document.getElementById('claveNueva');
+    const claveNuevaContenedor = document.getElementById('claveNuevaContenedor');
+    const actualizarClave = () => {
+        const requiereClave = tipoNueva.value !== '1';
+        claveNueva.required = requiereClave;
+        claveNueva.disabled = !requiereClave;
+        claveNuevaContenedor.hidden = !requiereClave;
+    };
+    tipoNueva.addEventListener('change', actualizarClave);
+    actualizarClave();
 </script>

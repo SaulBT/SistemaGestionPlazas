@@ -107,6 +107,37 @@ public sealed class AvisoMvcService : IAvisoMvcService
         return _repository.ResolverRevisionAsync(usuarioId, avisoId, avalar, texto, cancellationToken);
     }
 
+    public Task PublicarAsync(int usuarioId, int entidadAcademicaId, int avisoId,
+        PublicarAvisoMvcDatos datos, CancellationToken cancellationToken = default)
+    {
+        ValidarAmbito(usuarioId, entidadAcademicaId, avisoId);
+        ArgumentNullException.ThrowIfNull(datos);
+        var url = datos.UrlPublicacion?.Trim();
+        if (datos.FechaPublicacion == default || string.IsNullOrWhiteSpace(url)
+            || url.Length > 2048 || !Uri.TryCreate(url, UriKind.Absolute, out var uri)
+            || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
+            throw new ArgumentException("Indica una fecha de publicación y una URL HTTP o HTTPS válida.");
+        return _repository.PublicarAsync(usuarioId, entidadAcademicaId, avisoId,
+            datos with { UrlPublicacion = url }, cancellationToken);
+    }
+
+    public Task CancelarAsync(int usuarioId, int avisoId, CancelarAvisoMvcDatos datos,
+        CancellationToken cancellationToken = default)
+    {
+        if (usuarioId < 1 || avisoId < 1) throw new UnauthorizedAccessException("La cuenta y el Aviso deben ser válidos.");
+        ArgumentNullException.ThrowIfNull(datos);
+        var motivo = datos.Motivo?.Trim();
+        if (string.IsNullOrWhiteSpace(motivo) || motivo.Length > 1000)
+            throw new ArgumentException("Indica un motivo de cancelación de hasta 1000 caracteres.");
+        return _repository.CancelarAsync(usuarioId, avisoId, datos with { Motivo = motivo }, cancellationToken);
+    }
+
+    public Task ArchivarAsync(int usuarioId, int avisoId, CancellationToken cancellationToken = default)
+    {
+        if (usuarioId < 1 || avisoId < 1) throw new UnauthorizedAccessException("La cuenta y el Aviso deben ser válidos.");
+        return _repository.ArchivarAsync(usuarioId, avisoId, cancellationToken);
+    }
+
     private static void ValidarAmbito(int usuarioId, int entidadAcademicaId, int avisoId)
     {
         if (usuarioId < 1 || entidadAcademicaId < 1 || avisoId < 1)

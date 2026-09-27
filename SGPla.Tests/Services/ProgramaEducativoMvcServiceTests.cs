@@ -12,6 +12,38 @@ public sealed class ProgramaEducativoMvcServiceTests
     private readonly Mock<IProgramaEducativoMvcRepository> _repository = new();
     private readonly Mock<ICatalogosMvcService> _catalogos = new();
 
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task Guardar_rechaza_nombre_invalido_antes_de_consultar_catalogos(string nombre)
+    {
+        var dto = new GuardarProgramaEducativoMvcDto
+        {
+            Nombre = nombre,
+            EntidadAcademicaId = 7,
+            SistemaEducativoId = 5,
+            NivelFormacionId = 6
+        };
+
+        var error = await Assert.ThrowsAsync<ArgumentException>(() => CreateService().GuardarAsync(dto));
+
+        Assert.Contains("nombre", error.Message, StringComparison.OrdinalIgnoreCase);
+        _repository.Verify(x => x.CatalogosActivosAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Guardar_rechaza_nombre_mayor_a_200_caracteres()
+    {
+        var dto = new GuardarProgramaEducativoMvcDto
+        {
+            Nombre = new string('x', 201), EntidadAcademicaId = 7,
+            SistemaEducativoId = 5, NivelFormacionId = 6
+        };
+
+        await Assert.ThrowsAsync<ArgumentException>(() => CreateService().GuardarAsync(dto));
+        _repository.Verify(x => x.CatalogosActivosAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     [Fact]
     public async Task Actualizar_rechaza_cambiar_entidad_academica()
     {

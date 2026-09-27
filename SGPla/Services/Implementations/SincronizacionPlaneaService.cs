@@ -1,5 +1,8 @@
 using System.Data;
+using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Data.SqlClient;
 using SGPla.Data.NewModel;
 using SGPla.Data.NewModel.Entities;
 using SGPla.Models.DTOs.Integracion;
@@ -14,19 +17,40 @@ public sealed class SincronizacionPlaneaService : ISincronizacionPlaneaService
     private readonly IPlaneaSnapshotValidator _validator;
     private readonly TimeProvider _timeProvider;
     private readonly ILogger<SincronizacionPlaneaService> _logger;
+    private readonly CanalSincronizacionPlanea? _canal;
 
     public SincronizacionPlaneaService(SgplaDbContext db, IPlaneaClient planeaClient,
         IPlaneaSnapshotValidator validator, TimeProvider timeProvider,
-        ILogger<SincronizacionPlaneaService> logger)
+        ILogger<SincronizacionPlaneaService> logger, CanalSincronizacionPlanea? canal = null)
     {
         _db = db;
         _planeaClient = planeaClient;
         _validator = validator;
         _timeProvider = timeProvider;
         _logger = logger;
+        _canal = canal;
     }
 
     public async Task<int> SincronizarAsync(int periodoEscolarId, CancellationToken cancellationToken = default)
+    {
+        var bitacoraId = await RegistrarAsync(periodoEscolarId, cancellationToken);
+        await EjecutarRegistradaAsync(bitacoraId, cancellationToken);
+        return bitacoraId;
+    }
+
+    public async Task<int> SolicitarAsync(int periodoEscolarId, CancellationToken cancellationToken = default)
+    {
+        var bitacoraId = await RegistrarAsync(periodoEscolarId, cancellationToken);
+        if (_canal is null || !_canal.TryEnqueue(new SolicitudSincronizacionPlanea(bitacoraId)))
+        {
+            await MarcarFallidaAsync(bitacoraId,
+                new InvalidOperationException("La cola de sincronización PLANEA está llena; vuelve a intentar."));
+            throw new InvalidOperationException("La cola de sincronización PLANEA está llena; vuelve a intentar.");
+        }
+        return bitacoraId;
+    }
+
+    private async Task<int> RegistrarAsync(int periodoEscolarId, CancellationToken cancellationToken)
     {
         var periodo = await _db.PeriodosEscolares.AsNoTracking()
             .Where(x => x.Id == periodoEscolarId && x.FechaEliminacion == null)
@@ -62,12 +86,32 @@ public sealed class SincronizacionPlaneaService : ISincronizacionPlaneaService
             throw;
         }
 
+        return bitacora.Id;
+    }
+
+    public async Task EjecutarRegistradaAsync(int sincronizacionId, CancellationToken cancellationToken = default)
+    {
+        var bitacora = await _db.SincronizacionesPlanea.AsTracking()
+            .SingleOrDefaultAsync(x => x.Id == sincronizacionId, cancellationToken)
+            ?? throw new ArgumentException("La sincronización PLANEA no existe.");
+        if (bitacora.Estado != "EN_PROCESO") return;
+
+        var periodo = await _db.PeriodosEscolares.AsNoTracking()
+            .Where(x => x.Id == bitacora.PeriodoEscolarId && x.FechaEliminacion == null)
+            .Select(x => new { x.Id, x.Clave, x.FechaInicio, x.FechaFin })
+            .SingleOrDefaultAsync(cancellationToken);
+        if (periodo is null)
+        {
+            var errorPeriodo = new ArgumentException("El periodo seleccionado no existe o está dado de baja.");
+            await MarcarFallidaAsync(bitacora.Id, errorPeriodo);
+            throw errorPeriodo;
+        }
+
         try
         {
             var registros = await _planeaClient.ObtenerProgramacionesAsync(periodo.Clave, cancellationToken);
             await AplicarSnapshotAsync(periodo.Id, periodo.Clave, periodo.FechaInicio, periodo.FechaFin,
                 bitacora, registros, cancellationToken);
-            return bitacora.Id;
         }
         catch (Exception ex)
         {
@@ -77,10 +121,42 @@ public sealed class SincronizacionPlaneaService : ISincronizacionPlaneaService
         }
     }
 
+    public async Task<EstadoSincronizacionPlanea?> ObtenerEstadoAsync(int sincronizacionId,
+        CancellationToken cancellationToken = default) => await _db.SincronizacionesPlanea.AsNoTracking()
+        .Where(x => x.Id == sincronizacionId)
+        .Select(x => new EstadoSincronizacionPlanea(x.Id, x.PeriodoEscolarId, x.Estado, x.IniciadaEn,
+            x.FinalizadaEn, x.RegistrosRecibidos, x.RegistrosIgnorados, x.SesionesGeneradas,
+            x.DuplicadosDescartados, x.Advertencias, x.MensajeError))
+        .SingleOrDefaultAsync(cancellationToken);
+
+    public async Task MarcarEnProcesoHuerfanasAsync(CancellationToken cancellationToken = default)
+    {
+        var huerfanas = await _db.SincronizacionesPlanea.AsTracking()
+            .Where(x => x.Estado == "EN_PROCESO").ToListAsync(cancellationToken);
+        if (huerfanas.Count == 0) return;
+        var finalizada = AhoraUtcSegundo();
+        foreach (var bitacora in huerfanas)
+        {
+            bitacora.Estado = "FALLIDA";
+            bitacora.FinalizadaEn = Max(finalizada, bitacora.IniciadaEn);
+            bitacora.MensajeError = "La sincronización quedó interrumpida porque la aplicación se reinició.";
+        }
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
     private async Task AplicarSnapshotAsync(int periodoId, string clavePeriodo, DateOnly inicioPeriodo,
         DateOnly finPeriodo, SincronizacionPlanea bitacora, IReadOnlyList<PlaneaRegistro> registros,
         CancellationToken cancellationToken)
     {
+        var cronometroAplicacion = Stopwatch.StartNew();
+        // Serializable evita que cambie el conjunto de programaciones/asignaciones del periodo
+        // mientras se reemplaza el snapshot; la bitácora tiene además un índice único EN_PROCESO.
+        var timeoutAnterior = _db.Database.GetCommandTimeout();
+        var detectarCambiosAnterior = _db.ChangeTracker.AutoDetectChangesEnabled;
+        _db.Database.SetCommandTimeout(300);
+        _db.ChangeTracker.AutoDetectChangesEnabled = false;
+        try
+        {
         await using var transaccion = await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
 
         var programaciones = await (from programacion in _db.ProgramacionAcademicas.AsNoTracking()
@@ -101,6 +177,10 @@ public sealed class SincronizacionPlaneaService : ISincronizacionPlaneaService
         var programacionesPorNrc = programaciones.ToDictionary(x => x.Nrc, x => x.Id, StringComparer.Ordinal);
         var snapshot = _validator.Validar(clavePeriodo, inicioPeriodo, finPeriodo, programacionesPorNrc, registros);
         var docentesSnapshot = snapshot.Docentes;
+        var docentesPorProgramacion = new Dictionary<int, PlaneaDocenteValidado>(docentesSnapshot.Count);
+        foreach (var docente in docentesSnapshot)
+            if (!docentesPorProgramacion.TryAdd(docente.ProgramacionAcademicaId, docente))
+                throw new InvalidDataException("PLANEA devolvió más de un docente para una programación.");
         var ofertas = await _db.Ofertas.AsNoTracking().Where(x => _db.ProgramacionAcademicas.Any(p =>
                 p.Id == x.ProgramacionAcademicaId && p.PeriodoEscolarId == periodoId && p.FechaEliminacion == null))
             .Select(x => x.ProgramacionAcademicaId).Distinct().ToListAsync(cancellationToken);
@@ -130,12 +210,13 @@ public sealed class SincronizacionPlaneaService : ISincronizacionPlaneaService
         }
 
         var idsConOferta = ofertas.ToHashSet();
+        var asignacionesPorProgramacion = asignaciones.ToLookup(x => x.ProgramacionAcademicaId);
         var asignacionesNuevas = new List<AsignacionDocente>();
         var discrepancias = 0;
         foreach (var programacionId in idsConOferta)
         {
-            var docentePlanea = docentesSnapshot.SingleOrDefault(x => x.ProgramacionAcademicaId == programacionId);
-            var local = BuscarAsignacionEnPeriodo(asignaciones, programacionId, inicioPeriodo, finPeriodo);
+            docentesPorProgramacion.TryGetValue(programacionId, out var docentePlanea);
+            var local = BuscarAsignacionEnPeriodo(asignacionesPorProgramacion[programacionId], inicioPeriodo, finPeriodo);
             var numLocal = local is null ? null : numerosPorDocenteId.GetValueOrDefault(local.DocenteId);
             if (!string.Equals(numLocal, docentePlanea?.NumeroPersonal, StringComparison.Ordinal)) discrepancias++;
         }
@@ -144,7 +225,7 @@ public sealed class SincronizacionPlaneaService : ISincronizacionPlaneaService
             .Where(x => x.Origen == "SGPLA" && !idsConOferta.Contains(x.ProgramacionAcademicaId)).ToArray();
         foreach (var asignacionLocal in asignacionesLocalesSinOferta)
         {
-            var docentePlanea = docentesSnapshot.SingleOrDefault(x => x.ProgramacionAcademicaId == asignacionLocal.ProgramacionAcademicaId);
+            docentesPorProgramacion.TryGetValue(asignacionLocal.ProgramacionAcademicaId, out var docentePlanea);
             if (docentePlanea is null || !string.Equals(
                     numerosPorDocenteId.GetValueOrDefault(asignacionLocal.DocenteId),
                     docentePlanea.NumeroPersonal, StringComparison.Ordinal))
@@ -196,22 +277,7 @@ public sealed class SincronizacionPlaneaService : ISincronizacionPlaneaService
         await _db.HorariosProgramacion.Where(h => _db.ProgramacionAcademicas.Any(p =>
                 p.Id == h.ProgramacionAcademicaId && p.PeriodoEscolarId == periodoId))
             .ExecuteDeleteAsync(cancellationToken);
-        foreach (var sesion in snapshot.Sesiones)
-        {
-            var horario = new HorarioProgramacion
-            {
-                ProgramacionAcademicaId = sesion.ProgramacionAcademicaId,
-                SincronizacionPlaneaId = bitacora.Id,
-                DiaSemana = sesion.DiaSemana,
-                HoraInicio = sesion.HoraInicio,
-                HoraFin = sesion.HoraFin,
-                FechaInicio = sesion.FechaInicio,
-                FechaFin = sesion.FechaFin,
-                Edificio = sesion.Edificio,
-                Aula = sesion.Aula
-            };
-            _db.Entry(horario).State = EntityState.Added;
-        }
+        await InsertarHorariosEnBloqueAsync(snapshot.Sesiones, bitacora.Id, cancellationToken);
 
         bitacora.Estado = "EXITOSA";
         bitacora.FinalizadaEn = Max(AhoraUtcSegundo(), bitacora.IniciadaEn);
@@ -224,10 +290,40 @@ public sealed class SincronizacionPlaneaService : ISincronizacionPlaneaService
         _db.Entry(bitacora).State = EntityState.Modified;
         await _db.SaveChangesAsync(cancellationToken);
         await transaccion.CommitAsync(cancellationToken);
+        cronometroAplicacion.Stop();
+        _logger.LogInformation("Aplicación de snapshot PLANEA {SincronizacionId}: {Sesiones} sesiones en {DuracionMs} ms.",
+            bitacora.Id, snapshot.Sesiones.Count, cronometroAplicacion.ElapsedMilliseconds);
 
         if (bitacora.Advertencias > 0)
             _logger.LogWarning("La sincronización PLANEA {SincronizacionId} terminó con {Advertencias} advertencias.",
                 bitacora.Id, bitacora.Advertencias);
+        }
+        finally
+        {
+            _db.ChangeTracker.AutoDetectChangesEnabled = detectarCambiosAnterior;
+            _db.Database.SetCommandTimeout(timeoutAnterior);
+        }
+    }
+
+    private async Task InsertarHorariosEnBloqueAsync(IReadOnlyList<PlaneaSesionValidada> sesiones,
+        int sincronizacionId, CancellationToken cancellationToken)
+    {
+        if (sesiones.Count == 0) return;
+        var conexion = (SqlConnection)_db.Database.GetDbConnection();
+        var transaccionEf = _db.Database.CurrentTransaction
+            ?? throw new InvalidOperationException("La carga masiva requiere una transacción activa.");
+        var transaccionSql = (SqlTransaction)transaccionEf.GetDbTransaction();
+        using var carga = new SqlBulkCopy(conexion, SqlBulkCopyOptions.CheckConstraints, transaccionSql)
+        {
+            DestinationTableName = "[academico].[horario_programacion]",
+            BatchSize = 10000,
+            BulkCopyTimeout = 300,
+            EnableStreaming = true
+        };
+        foreach (var columna in HorarioSesionDataReader.Columnas)
+            carga.ColumnMappings.Add(columna, columna);
+        using var reader = new HorarioSesionDataReader(sesiones, sincronizacionId);
+        await carga.WriteToServerAsync(reader, cancellationToken);
     }
 
     private async Task MarcarFallidaAsync(int sincronizacionId, Exception error)
@@ -253,11 +349,11 @@ public sealed class SincronizacionPlaneaService : ISincronizacionPlaneaService
         }
     }
 
-    private static AsignacionDocente? BuscarAsignacionEnPeriodo(IReadOnlyList<AsignacionDocente> asignaciones,
-        int programacionId, DateOnly inicioPeriodo, DateOnly finPeriodo)
+    private static AsignacionDocente? BuscarAsignacionEnPeriodo(IEnumerable<AsignacionDocente> asignaciones,
+        DateOnly inicioPeriodo, DateOnly finPeriodo)
     {
-        var vigentes = asignaciones.Where(x => x.ProgramacionAcademicaId == programacionId
-            && x.FechaInicio <= finPeriodo && (!x.FechaFin.HasValue || x.FechaFin.Value >= inicioPeriodo)).ToArray();
+        var vigentes = asignaciones.Where(x => x.FechaInicio <= finPeriodo
+            && (!x.FechaFin.HasValue || x.FechaFin.Value >= inicioPeriodo)).Take(2).ToArray();
         if (vigentes.Length > 1)
             throw new InvalidDataException("Existe más de una asignación docente traslapada para una programación.");
         return vigentes.SingleOrDefault();

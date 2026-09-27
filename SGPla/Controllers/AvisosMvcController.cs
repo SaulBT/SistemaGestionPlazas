@@ -265,6 +265,121 @@ public sealed class AvisosMvcController : Controller
         return RedirectToAction(nameof(Detalle), new { avisoId });
     }
 
+    [HttpPost("{avisoId:int}/DocumentoFirmado")]
+    [Authorize(Policy = PoliticasAutorizacion.EntidadAcademica)]
+    [ValidateAntiForgeryToken]
+    [RequestSizeLimit(AlmacenDocumentosLocal.TamanoMaximo + 1024 * 1024)]
+    [RequestFormLimits(MultipartBodyLengthLimit = AlmacenDocumentosLocal.TamanoMaximo + 1024 * 1024)]
+    public async Task<IActionResult> SubirDocumentoFirmado(int avisoId, IFormFile? archivo,
+        CancellationToken cancellationToken)
+    {
+        var userId = GetUsuarioId();
+        var entidadId = GetEntidadAcademicaId();
+        if (!userId.HasValue || !entidadId.HasValue) return Forbid();
+        if (archivo is null || archivo.Length <= 0)
+        {
+            TempData["Error"] = "Selecciona el PDF firmado.";
+            return RedirectToAction(nameof(Detalle), new { avisoId });
+        }
+
+        try
+        {
+            await using var contenido = archivo.OpenReadStream();
+            await _documentos.GuardarFirmadoAsync(avisoId, entidadId.Value, userId.Value,
+                contenido, archivo.FileName, archivo.ContentType, archivo.Length, cancellationToken);
+            TempData["Success"] = "Se guardó el documento firmado y el Aviso pasó a FIRMADO.";
+        }
+        catch (UnauthorizedAccessException) { return Forbid(); }
+        catch (Exception exception) when (exception is ArgumentException or InvalidDataException or InvalidOperationException)
+        {
+            TempData["Error"] = exception.Message;
+        }
+        return RedirectToAction(nameof(Detalle), new { avisoId });
+    }
+
+    [HttpPost("{avisoId:int}/Publicar")]
+    [Authorize(Policy = PoliticasAutorizacion.EntidadAcademica)]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Publicar(int avisoId, DateOnly fechaPublicacion, string urlPublicacion,
+        CancellationToken cancellationToken)
+    {
+        var userId = GetUsuarioId();
+        var entidadId = GetEntidadAcademicaId();
+        if (!userId.HasValue || !entidadId.HasValue) return Forbid();
+        try
+        {
+            await _service.PublicarAsync(userId.Value, entidadId.Value, avisoId,
+                new PublicarAvisoMvcDatos(fechaPublicacion, urlPublicacion), cancellationToken);
+            TempData["Success"] = "El Aviso quedó publicado.";
+        }
+        catch (UnauthorizedAccessException) { return Forbid(); }
+        catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
+        {
+            TempData["Error"] = exception.Message;
+        }
+        return RedirectToAction(nameof(Detalle), new { avisoId });
+    }
+
+    [HttpPost("{avisoId:int}/Cancelar")]
+    [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Cancelar(int avisoId, string? motivo,
+        CancellationToken cancellationToken)
+    {
+        var userId = GetUsuarioId();
+        if (!userId.HasValue) return Forbid();
+        try
+        {
+            await _service.CancelarAsync(userId.Value, avisoId, new CancelarAvisoMvcDatos(motivo ?? string.Empty), cancellationToken);
+            TempData["Success"] = "El Aviso se canceló y sus Ofertas volvieron a estar disponibles.";
+        }
+        catch (UnauthorizedAccessException) { return Forbid(); }
+        catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
+        {
+            TempData["Error"] = exception.Message;
+        }
+        return RedirectToAction(nameof(Detalle), new { avisoId });
+    }
+
+    [HttpPost("{avisoId:int}/Archivar")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Archivar(int avisoId, CancellationToken cancellationToken)
+    {
+        var userId = GetUsuarioId();
+        if (!userId.HasValue) return Forbid();
+        try
+        {
+            await _service.ArchivarAsync(userId.Value, avisoId, cancellationToken);
+            TempData["Success"] = "El Aviso se archivó.";
+        }
+        catch (UnauthorizedAccessException) { return Forbid(); }
+        catch (InvalidOperationException exception) { TempData["Error"] = exception.Message; }
+        return RedirectToAction(nameof(Detalle), new { avisoId });
+    }
+
+    [HttpPost("{avisoId:int}/EliminarBorrador")]
+    [Authorize(Policy = PoliticasAutorizacion.EntidadAcademica)]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EliminarBorrador(int avisoId, CancellationToken cancellationToken)
+    {
+        var userId = GetUsuarioId();
+        var entidadId = GetEntidadAcademicaId();
+        if (!userId.HasValue || !entidadId.HasValue) return Forbid();
+        try
+        {
+            await _documentos.EliminarBorradorAsync(avisoId, entidadId.Value, userId.Value, cancellationToken);
+            TempData["Success"] = "Se eliminó el borrador y sus documentos; las Ofertas volvieron a estar disponibles.";
+            return RedirectToAction(nameof(Index));
+        }
+        catch (UnauthorizedAccessException) { return Forbid(); }
+        catch (Exception exception) when (exception is ArgumentException or InvalidOperationException
+            or IOException or AggregateException)
+        {
+            TempData["Error"] = exception.Message;
+        }
+        return RedirectToAction(nameof(Detalle), new { avisoId });
+    }
+
     [HttpGet("{avisoId:int}/Documentos/{documentoId:int}")]
     public async Task<IActionResult> DescargarDocumento(int avisoId, int documentoId,
         CancellationToken cancellationToken)
