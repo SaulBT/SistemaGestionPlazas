@@ -146,9 +146,9 @@ verificar al ejecutar la sincronización desde esa red.
   el conjunto de programaciones durante el reemplazo. La descarga y validación
   permanecen antes de abrir la transacción; el error revierte el snapshot.
 - Validación final después de estos cambios en el SQL Server desechable:
-  **287 correctas, 0 con error, 1 omitida, 288 total**. La omitida es LDAP
-  STARTTLS por falta de host/puerto. `dotnet build` termina con 0 errores
-  (238 advertencias).
+  **290 correctas, 0 con error, 1 omitida, 291 total**. La omitida es LDAP
+  STARTTLS por falta de host/puerto. `dotnet build` termina con 0 errores y
+  sin advertencias en los archivos de PLANEA.
 - No se hizo ninguna llamada real a PLANEA. El archivo local es un ejemplo real
   aportado por el proyecto, no una respuesta obtenida en esta ejecución. No se
   confirmó que el servidor negocie gzip; la prueba gzip local solo verifica el

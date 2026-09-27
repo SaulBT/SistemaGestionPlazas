@@ -102,15 +102,7 @@ public sealed class PlaneaSnapshotValidator : IPlaneaSnapshotValidator
                 }
             }
 
-            if (numeroPersonal is not null && nombre is not null)
-            {
-                var claveNombre = NormalizarTexto(nombre);
-                if (!nombresPorNumero.TryGetValue(numeroPersonal, out var variantes))
-                    nombresPorNumero[numeroPersonal] = variantes = new Dictionary<string, (string, int)>(StringComparer.Ordinal);
-                if (variantes.TryGetValue(claveNombre, out var existente)) variantes[claveNombre] = (existente.Nombre, existente.Conteo + 1);
-                else variantes[claveNombre] = (nombre, 1);
-            }
-
+            // Solo los candidatos a docente (con sesiones y fechas válidas) cuentan para elegir el nombre.
             if (numeroPersonal is not null && nombre is not null)
             {
                 var claveNombre = NormalizarTexto(nombre);

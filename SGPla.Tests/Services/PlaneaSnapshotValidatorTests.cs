@@ -58,6 +58,8 @@ public sealed class PlaneaSnapshotValidatorTests
         Assert.Equal(TimeOnly.Parse("08:00"), snapshot.Sesiones[0].HoraInicio);
         Assert.Equal(1, snapshot.RegistrosIgnorados);
         Assert.Equal(1, snapshot.Advertencias);
+        Assert.Equal(0, snapshot.NrcSinProgramacion);
+        Assert.Equal(0, snapshot.DuplicadosDescartados);
         Assert.Equal("P123", Assert.Single(snapshot.Docentes).NumeroPersonal);
     }
 
