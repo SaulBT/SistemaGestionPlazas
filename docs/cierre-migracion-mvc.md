@@ -46,13 +46,14 @@ Estas decisiones se documentan sin cambiar el comportamiento:
 4. Revisar la política de contraseña del superusuario y los parámetros/rotación
    del hash Argon2id.
 
-## PLANEA: confirmación requerida
+## PLANEA: autenticación confirmada
 
-La búsqueda de documentación disponible no confirmó si el endpoint acepta una
-credencial en header o query string, ni el nombre del campo. La implementación
-deja ambos configurables mediante `Planea:ModoAutenticacion` y
-`Planea:NombreParametro`. Se debe confirmar el mecanismo con el responsable o
-validarlo en una llamada manual antes de declarar operativa la sincronización.
+El responsable confirmó que el endpoint recibe la API key mediante el header
+`X-API-KEY`. `Planea:ModoAutenticacion` está configurado como `Header` y
+`Planea:NombreParametro` como `X-API-KEY`; ambos caminos (header y query) siguen
+siendo configurables para mantener el cliente adaptable. La llamada real para
+el periodo `202701` requiere conectividad con la red institucional y se valida
+desde allí.
 
 ## Estado de validación real
 
@@ -74,14 +75,12 @@ de `dotnet test SGPla.Tests/SGPla.Tests.csproj --no-restore`: **267 correctas,
 `SGPLA_LDAP_STARTTLS_HOST` y `SGPLA_LDAP_STARTTLS_PORT`.
 
 La credencial PLANEA está configurada en User Secrets y la aplicación compila y
-prueba los caminos de encabezado y query con credenciales falsas. No se pudo
-confirmar en documentación disponible ni contactar de forma autorizada el
-mecanismo que acepta el servicio remoto. Por eso no se envió la clave real con
-un mecanismo supuesto y no se ejecutó la sincronización real de `202701`; los
-registros de `integracion.sincronizacion_planea`,
+prueba el header confirmado `X-API-KEY` y el modo query configurable con claves
+falsas. La llamada real para `202701` no se ejecutó porque esta sesión no tenía
+conectividad a la red institucional; los registros de
+`integracion.sincronizacion_planea`,
 `academico.horario_programacion` y `academico.asignacion_docente` quedan por
-verificar cuando el responsable confirme el mecanismo. La configuración deja
-seleccionable el modo y nombre del parámetro.
+verificar al ejecutar la sincronización desde esa red.
 
 No se hizo un recorrido manual end-to-end por la interfaz. El inicio LDAP
 depende de infraestructura no disponible en esta ejecución; el usuario
