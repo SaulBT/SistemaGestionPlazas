@@ -27,3 +27,9 @@ public sealed class CatalogosViewModel
     public IReadOnlyList<CatalogoOpcion> TiposDocumentoAspirante { get; init; } = [];
     public IReadOnlyList<CatalogoOpcion> Articulos { get; init; } = [];
 }
+
+public sealed class CatalogosAdministracionIndexViewModel
+{
+    public CatalogosViewModel Catalogos { get; init; } = new();
+    public IReadOnlyList<SGPla.Models.DTOs.Catalogos.CatalogoAdministracionMvcFila> Administrables { get; init; } = [];
+}

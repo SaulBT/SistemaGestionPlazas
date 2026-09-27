@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Reflection;
 using SGPla.Commons;
 using SGPla.Controllers;
 using SGPla.Models.ViewModels.Avisos;
@@ -52,6 +53,20 @@ public class AutorizacionControllersTests
         var post = Assert.Single(typeof(CuentaController).GetMethods(), x =>
             x.Name == "CambiarContrasena" && x.GetParameters().Length == 2);
         Assert.NotNull(post.GetCustomAttributes(typeof(ValidateAntiForgeryTokenAttribute), inherit: true).SingleOrDefault());
+    }
+
+    [Fact]
+    public void AdministracionSuperusuarios_ExigeSesionLocalYProtegeSusEscrituras()
+    {
+        var policy = Assert.Single(typeof(AdministracionSuperusuariosController)
+            .GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true).Cast<AuthorizeAttribute>());
+        Assert.Equal(PoliticasAutorizacion.SuperUsuario, policy.Policy);
+        foreach (var actionName in new[] { "Restablecer", "Desactivar" })
+        {
+            var action = typeof(AdministracionSuperusuariosController).GetMethods().Single(x => x.Name == actionName);
+            Assert.NotNull(action.GetCustomAttributes(typeof(HttpPostAttribute), inherit: true).SingleOrDefault());
+            Assert.NotNull(action.GetCustomAttributes(typeof(ValidateAntiForgeryTokenAttribute), inherit: true).SingleOrDefault());
+        }
     }
 
     [Fact]
@@ -125,6 +140,32 @@ public class AutorizacionControllersTests
             Assert.Single(upload.GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true)
                 .Cast<AuthorizeAttribute>()).Policy);
         Assert.NotNull(upload.GetCustomAttributes(typeof(ValidateAntiForgeryTokenAttribute), inherit: true).SingleOrDefault());
+        var uploadSigned = typeof(AvisosMvcController).GetMethod("SubirDocumentoFirmado")!;
+        Assert.Equal(PoliticasAutorizacion.EntidadAcademica,
+            Assert.Single(uploadSigned.GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true)
+                .Cast<AuthorizeAttribute>()).Policy);
+        Assert.NotNull(uploadSigned.GetCustomAttributes(typeof(ValidateAntiForgeryTokenAttribute), inherit: true).SingleOrDefault());
+        var publish = typeof(AvisosMvcController).GetMethod("Publicar",
+            [typeof(int), typeof(DateOnly), typeof(string), typeof(CancellationToken)])!;
+        Assert.Equal(PoliticasAutorizacion.EntidadAcademica,
+            Assert.Single(publish.GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true)
+                .Cast<AuthorizeAttribute>()).Policy);
+        Assert.NotNull(publish.GetCustomAttributes(typeof(ValidateAntiForgeryTokenAttribute), inherit: true).SingleOrDefault());
+        var cancel = typeof(AvisosMvcController).GetMethod("Cancelar",
+            [typeof(int), typeof(string), typeof(CancellationToken)])!;
+        Assert.Equal(PoliticasAutorizacion.Dgaa,
+            Assert.Single(cancel.GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true)
+                .Cast<AuthorizeAttribute>()).Policy);
+        Assert.NotNull(cancel.GetCustomAttributes(typeof(ValidateAntiForgeryTokenAttribute), inherit: true).SingleOrDefault());
+        var archive = typeof(AvisosMvcController).GetMethod("Archivar",
+            [typeof(int), typeof(CancellationToken)])!;
+        Assert.NotNull(archive.GetCustomAttributes(typeof(ValidateAntiForgeryTokenAttribute), inherit: true).SingleOrDefault());
+        var deleteDraft = typeof(AvisosMvcController).GetMethod("EliminarBorrador",
+            [typeof(int), typeof(CancellationToken)])!;
+        Assert.Equal(PoliticasAutorizacion.EntidadAcademica,
+            Assert.Single(deleteDraft.GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true)
+                .Cast<AuthorizeAttribute>()).Policy);
+        Assert.NotNull(deleteDraft.GetCustomAttributes(typeof(ValidateAntiForgeryTokenAttribute), inherit: true).SingleOrDefault());
         var submit = typeof(AvisosMvcController).GetMethod("EnviarARevision",
             [typeof(int), typeof(AvisoMvcDetalleViewModel), typeof(CancellationToken)])!;
         Assert.Equal(PoliticasAutorizacion.EntidadAcademica,
@@ -158,6 +199,49 @@ public class AutorizacionControllersTests
         {
             var action = typeof(IntegranteConsejoTecnicoMvcController).GetMethod(actionName)!;
             Assert.NotNull(action.GetCustomAttributes(typeof(ValidateAntiForgeryTokenAttribute), inherit: true).SingleOrDefault());
+        }
+    }
+
+    [Fact]
+    public void ControladoresMvcNormalizados_ProtegenTodasLasAccionesYPosts()
+    {
+        Type[] controladores =
+        [
+            typeof(UsuariosController),
+            typeof(RegionesCampusController),
+            typeof(CatalogosController),
+            typeof(EntidadesAcademicasController),
+            typeof(ProgramasEducativosController),
+            typeof(PlanesEstudiosController),
+            typeof(ProgramacionesAcademicasMvcController),
+            typeof(OfertasMvcController),
+            typeof(AvisosMvcController),
+            typeof(DocentesMvcController),
+            typeof(IntegranteConsejoTecnicoMvcController),
+            typeof(SolicitudesMvcController),
+            typeof(AdministracionSuperusuariosController),
+            typeof(CuentaController)
+        ];
+
+        foreach (var controlador in controladores)
+        {
+            var politicaDeControlador = controlador.GetCustomAttributes<AuthorizeAttribute>(inherit: true).Any();
+            var metodosAccion = controlador.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly)
+                .Where(metodo => metodo.ReturnType == typeof(Task<IActionResult>)
+                    || typeof(IActionResult).IsAssignableFrom(metodo.ReturnType));
+
+            Assert.NotEmpty(metodosAccion);
+            foreach (var accion in metodosAccion)
+            {
+                Assert.True(politicaDeControlador || accion.GetCustomAttributes<AuthorizeAttribute>(inherit: true).Any(),
+                    $"{controlador.Name}.{accion.Name} no exige autenticación/autorización.");
+
+                if (accion.GetCustomAttributes<HttpPostAttribute>(inherit: true).Any())
+                {
+                    Assert.True(accion.GetCustomAttributes<ValidateAntiForgeryTokenAttribute>(inherit: true).Any(),
+                        $"{controlador.Name}.{accion.Name} acepta POST sin antiforgery.");
+                }
+            }
         }
     }
 }

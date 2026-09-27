@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SGPla.Commons;
+using SGPla.Models.DTOs.Catalogos;
+using SGPla.Models.ViewModels.Catalogos;
 using SGPla.Services.Interfaces;
 
 namespace SGPla.Controllers;
@@ -9,12 +11,70 @@ namespace SGPla.Controllers;
 public sealed class CatalogosController : Controller
 {
     private readonly ICatalogosMvcService _catalogos;
+    private readonly IAdministracionCatalogosMvcService _administracion;
 
-    public CatalogosController(ICatalogosMvcService catalogos) => _catalogos = catalogos;
+    public CatalogosController(ICatalogosMvcService catalogos, IAdministracionCatalogosMvcService administracion)
+    {
+        _catalogos = catalogos;
+        _administracion = administracion;
+    }
 
     [HttpGet]
     public async Task<IActionResult> Index(CancellationToken cancellationToken) =>
-        View(await _catalogos.ObtenerAsync(cancellationToken));
+        View(new CatalogosAdministracionIndexViewModel
+        {
+            Catalogos = await _catalogos.ObtenerAsync(cancellationToken),
+            Administrables = await _administracion.ListarAsync(cancellationToken)
+        });
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CrearClasificacion(CrearCatalogoClasificacionMvcDto datos, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _administracion.CrearClasificacionAsync(datos, cancellationToken);
+            TempData["Success"] = "La clasificación se creó correctamente.";
+        }
+        catch (Exception exception) when (exception is ArgumentException or InvalidOperationException or Microsoft.EntityFrameworkCore.DbUpdateException)
+        {
+            TempData["Error"] = exception.Message;
+        }
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditarNombre(EditarNombreCatalogoMvcDto datos, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _administracion.EditarNombreAsync(datos, cancellationToken);
+            TempData["Success"] = "El catálogo se actualizó correctamente.";
+        }
+        catch (Exception exception) when (exception is ArgumentException or KeyNotFoundException or InvalidOperationException or Microsoft.EntityFrameworkCore.DbUpdateException)
+        {
+            TempData["Error"] = exception.Message;
+        }
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CambiarActivo(TipoCatalogoNormalizado tipo, int id, bool activo,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _administracion.CambiarActivoAsync(tipo, id, activo, cancellationToken);
+            TempData["Success"] = activo ? "La clasificación se reactivó." : "La clasificación se dio de baja.";
+        }
+        catch (Exception exception) when (exception is ArgumentException or KeyNotFoundException or InvalidOperationException)
+        {
+            TempData["Error"] = exception.Message;
+        }
+        return RedirectToAction(nameof(Index));
+    }
 
     [HttpGet]
     public Task<IActionResult> Campus(int? regionId, CancellationToken cancellationToken) =>
