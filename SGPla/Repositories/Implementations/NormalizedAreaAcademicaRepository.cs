@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 using SGPla.Data.NewModel;
 using SGPla.Models;
 using SGPla.Repositories.Interfaces;
+using System.Data;
 using LegacyAreaAcademica = SGPla.Models.AreaAcademica;
 using System.Data;
 using System.Globalization;
@@ -16,8 +17,13 @@ namespace SGPla.Repositories.Implementations;
 public sealed class NormalizedAreaAcademicaRepository : IAreaAcademicaRepository
 {
     private readonly SgplaDbContext _db;
+    private readonly TimeProvider _timeProvider;
 
-    public NormalizedAreaAcademicaRepository(SgplaDbContext db) => _db = db;
+    public NormalizedAreaAcademicaRepository(SgplaDbContext db, TimeProvider timeProvider)
+    {
+        _db = db;
+        _timeProvider = timeProvider;
+    }
 
     public async Task<List<LegacyAreaAcademica>> ObtenerTodosAsync() =>
         await Query().OrderBy(x => x.Nombre).ToListAsync();
@@ -65,11 +71,26 @@ public sealed class NormalizedAreaAcademicaRepository : IAreaAcademicaRepository
     public async Task EliminarAsync(LegacyAreaAcademica areaAcademica)
     {
         ArgumentNullException.ThrowIfNull(areaAcademica);
+        await using var transaction = await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable);
         var entity = await _db.AreaAcademicas.FirstOrDefaultAsync(x => x.Id == areaAcademica.IdAreaAcademica && x.FechaEliminacion == null)
             ?? throw new KeyNotFoundException("El área académica no existe.");
-        entity.FechaEliminacion = DateTime.UtcNow;
+        var tieneEntidadesActivas = await _db.EntidadAcademicas.AsNoTracking()
+            .AnyAsync(x => x.AreaAcademicaId == entity.Id && x.FechaEliminacion == null);
+        if (tieneEntidadesActivas)
+            throw new InvalidOperationException("No se puede dar de baja un Área Académica con Entidades Académicas vigentes.");
+
+        var tieneUsuariosDgaaActivos = await (from perfil in _db.UsuariosDgaa.AsNoTracking()
+                                              join usuario in _db.Usuarios.AsNoTracking()
+                                                  on perfil.UsuarioId equals usuario.Id
+                                              where perfil.AreaAcademicaId == entity.Id && usuario.FechaEliminacion == null
+                                              select usuario.Id).AnyAsync();
+        if (tieneUsuariosDgaaActivos)
+            throw new InvalidOperationException("No se puede dar de baja un Área Académica con coordinadores DGAA vigentes.");
+
+        entity.FechaEliminacion = _timeProvider.GetUtcNow().UtcDateTime;
         _db.Entry(entity).State = EntityState.Modified;
         await _db.SaveChangesAsync();
+        await transaction.CommitAsync();
     }
 
     public Task<int> ContarPorFiltroAsync(string busqueda) =>

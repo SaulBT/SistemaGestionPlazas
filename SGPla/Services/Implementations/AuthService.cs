@@ -1,5 +1,4 @@
 using System.Data;
-using System.Text;
 using SGPla.Commons;
 using Microsoft.EntityFrameworkCore;
 using SGPla.Data.NewModel;
@@ -15,7 +14,6 @@ public sealed class AuthService : IAuthService
     private const byte RolDgaa = 2;
     private const byte RolEntidadAcademica = 3;
     private const string MensajeCredencialesInvalidas = "Usuario o contraseña incorrectos.";
-    private static readonly UTF8Encoding Utf8Estricto = new(false, true);
 
     private readonly SgplaDbContext _db;
     private readonly IArgon2idPasswordHasher _hasher;
@@ -87,7 +85,7 @@ public sealed class AuthService : IAuthService
     public async Task<bool> CambiarContrasenaSuperusuarioAsync(int usuarioId, string contrasenaActual,
         string contrasenaNueva, CancellationToken cancellationToken = default)
     {
-        if (usuarioId <= 0 || string.IsNullOrEmpty(contrasenaActual) || !EsContrasenaNuevaValida(contrasenaNueva))
+        if (usuarioId <= 0 || string.IsNullOrEmpty(contrasenaActual) || !PoliticaContrasenaSuperusuario.EsValida(contrasenaNueva))
             return false;
 
         await using var transaction = await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
@@ -163,22 +161,6 @@ public sealed class AuthService : IAuthService
         await _db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return true;
-    }
-
-    private static bool EsContrasenaNuevaValida(string? password)
-    {
-        if (string.IsNullOrEmpty(password) || password.Length is < 8 or > 128 ||
-            !password.Any(char.IsUpper) || !password.Any(char.IsLower) ||
-            !password.Any(char.IsDigit) || !password.Any(c => !char.IsLetterOrDigit(c)))
-            return false;
-        try
-        {
-            return Utf8Estricto.GetByteCount(password) <= 1024;
-        }
-        catch (EncoderFallbackException)
-        {
-            return false;
-        }
     }
 
     private static string NormalizarCorreo(string username)

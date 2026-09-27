@@ -44,6 +44,81 @@ public sealed class AlmacenDocumentosLocalTests : IDisposable
         Assert.Null(await _storage.AbrirLecturaAsync(saved.ClaveRelativa));
     }
 
+    [Fact]
+    public async Task GuardarAspirante_UsaEspacioSeparadoYClaveRelativaValidada()
+    {
+        var bytes = "%PDF-1.7\naspirante fixture"u8.ToArray();
+        await using var input = new MemoryStream(bytes);
+
+        var saved = await _storage.GuardarAspiranteAsync(input, "titulo.pdf", "application/pdf", bytes.Length);
+
+        Assert.StartsWith("aspirantes/", saved.ClaveRelativa, StringComparison.Ordinal);
+        Assert.Equal(System.Security.Cryptography.SHA256.HashData(bytes), saved.ChecksumSha256);
+        await using var stream = await _storage.AbrirLecturaAsync(saved.ClaveRelativa);
+        Assert.NotNull(stream);
+        await stream!.DisposeAsync();
+        var cuarentena = await _storage.PrepararEliminacionAsync(saved.ClaveRelativa);
+        Assert.NotNull(cuarentena);
+        Assert.Null(await _storage.AbrirLecturaAsync(saved.ClaveRelativa));
+        await _storage.RestaurarEliminacionAsync(cuarentena!);
+        Assert.NotNull(await _storage.AbrirLecturaAsync(saved.ClaveRelativa));
+        await _storage.EliminarAsync(saved.ClaveRelativa);
+        Assert.Null(await _storage.AbrirLecturaAsync(saved.ClaveRelativa));
+        await Assert.ThrowsAsync<ArgumentException>(() => _storage.AbrirLecturaAsync(
+            "aspirantes/../../avisos/file.pdf"));
+    }
+
+    [Fact]
+    public async Task GuardarActa_UsaEspacioSeparadoYClaveRelativaValidada()
+    {
+        var bytes = "%PDF-1.7\\nacta fixture"u8.ToArray();
+        await using var input = new MemoryStream(bytes);
+
+        var saved = await _storage.GuardarActaAsync(input, "acta.pdf", "application/pdf", bytes.Length);
+
+        Assert.StartsWith("actas/", saved.ClaveRelativa, StringComparison.Ordinal);
+        Assert.Equal(System.Security.Cryptography.SHA256.HashData(bytes), saved.ChecksumSha256);
+        await using var stream = await _storage.AbrirLecturaAsync(saved.ClaveRelativa);
+        Assert.NotNull(stream);
+        await stream!.DisposeAsync();
+        await _storage.EliminarAsync(saved.ClaveRelativa);
+        Assert.Null(await _storage.AbrirLecturaAsync(saved.ClaveRelativa));
+    }
+
+    [Fact]
+    public async Task CuarentenaDeEliminacion_PuedeRestaurarseOConfirmarse()
+    {
+        var bytes = "%PDF-1.7\nquarantine fixture"u8.ToArray();
+        await using var input = new MemoryStream(bytes);
+        var saved = await _storage.GuardarOriginalAsync(input, "aviso.pdf", "application/pdf", bytes.Length);
+
+        var pendingRestore = await _storage.PrepararEliminacionAsync(saved.ClaveRelativa);
+        Assert.NotNull(pendingRestore);
+        Assert.Null(await _storage.AbrirLecturaAsync(saved.ClaveRelativa));
+        await _storage.RestaurarEliminacionAsync(pendingRestore!);
+        await using (var restored = await _storage.AbrirLecturaAsync(saved.ClaveRelativa))
+        using (var copy = new MemoryStream())
+        {
+            Assert.NotNull(restored);
+            await restored!.CopyToAsync(copy);
+            Assert.Equal(bytes, copy.ToArray());
+        }
+
+        var pendingDelete = await _storage.PrepararEliminacionAsync(saved.ClaveRelativa);
+        Assert.NotNull(pendingDelete);
+        await _storage.CompletarEliminacionAsync(pendingDelete!);
+        Assert.Null(await _storage.AbrirLecturaAsync(saved.ClaveRelativa));
+        Assert.Empty(Directory.GetFiles(Path.Combine(_root, ".cuarentena-eliminacion")));
+    }
+
+    [Fact]
+    public async Task CuarentenaDeEliminacion_RechazaIdentificadoresArbitrarios()
+    {
+        var fake = new SGPla.Services.Interfaces.DocumentoEnCuarentena("avisos/0123456789abcdef0123456789abcdef.pdf", "../escape");
+        await Assert.ThrowsAsync<ArgumentException>(() => _storage.RestaurarEliminacionAsync(fake));
+        await Assert.ThrowsAsync<ArgumentException>(() => _storage.CompletarEliminacionAsync(fake));
+    }
+
     [Theory]
     [InlineData("text/html", "%PDF-x")]
     [InlineData("application/pdf", "not a pdf")]

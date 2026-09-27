@@ -25,7 +25,7 @@ public sealed class NormalizedAreaAcademicaSequenceSqlServerTests
             var created = await Task.WhenAll(nombres.Select(async nombre =>
             {
                 await using var db = new SgplaDbContext(options);
-                var repository = new NormalizedAreaAcademicaRepository(db);
+                var repository = new NormalizedAreaAcademicaRepository(db, TimeProvider.System);
                 return await repository.CrearAsync(new AreaAcademica { Nombre = nombre });
             }));
 
@@ -47,6 +47,24 @@ public sealed class NormalizedAreaAcademicaSequenceSqlServerTests
                 .Where(x => nombres.Contains(x.Nombre))
                 .ExecuteDeleteAsync();
         }
+    }
+
+    [SqlServerFact]
+    public async Task Eliminar_bloquea_area_con_entidades_academicas_vigentes()
+    {
+        var options = new DbContextOptionsBuilder<SgplaDbContext>()
+            .UseSqlServer(Environment.GetEnvironmentVariable(ConnectionEnvironmentVariable)!).Options;
+        await using var db = new SgplaDbContext(options);
+        Assert.Equal("GestionDePlazasBD", db.Database.GetDbConnection().Database);
+        var areaId = await db.EntidadAcademicas.AsNoTracking()
+            .Where(x => x.FechaEliminacion == null).Select(x => x.AreaAcademicaId).FirstAsync();
+        var repository = new NormalizedAreaAcademicaRepository(db, TimeProvider.System);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => repository.EliminarAsync(
+            new AreaAcademica { IdAreaAcademica = areaId }));
+
+        Assert.True(await db.AreaAcademicas.AsNoTracking()
+            .AnyAsync(x => x.Id == areaId && x.FechaEliminacion == null));
     }
 
     private sealed class SqlServerFactAttribute : FactAttribute

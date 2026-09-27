@@ -79,4 +79,36 @@ public sealed class AvisoMvcServiceTests
 
         repository.VerifyNoOtherCalls();
     }
+
+    [Theory]
+    [InlineData("ftp://example.org/aviso")]
+    [InlineData("/avisos/123")]
+    [InlineData("")]
+    public async Task Publicar_RechazaUrlNoHttpAntesDePersistir(string url)
+    {
+        var repository = new Mock<IAvisoMvcRepository>(MockBehavior.Strict);
+        var service = new AvisoMvcService(repository.Object);
+
+        await Assert.ThrowsAsync<ArgumentException>(() => service.PublicarAsync(7, 12, 81,
+            new PublicarAvisoMvcDatos(new DateOnly(2026, 10, 1), url)));
+
+        repository.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task Cancelar_ExigeMotivoYLoNormalizaAntesDePersistir()
+    {
+        var repository = new Mock<IAvisoMvcRepository>(MockBehavior.Strict);
+        repository.Setup(x => x.CancelarAsync(7, 81,
+                It.Is<CancelarAvisoMvcDatos>(d => d.Motivo == "Retiro autorizado"), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        var service = new AvisoMvcService(repository.Object);
+
+        await Assert.ThrowsAsync<ArgumentException>(() => service.CancelarAsync(7, 81,
+            new CancelarAvisoMvcDatos("  ")));
+        await service.CancelarAsync(7, 81, new CancelarAvisoMvcDatos("  Retiro autorizado  "));
+
+        repository.Verify(x => x.CancelarAsync(7, 81,
+            It.Is<CancelarAvisoMvcDatos>(d => d.Motivo == "Retiro autorizado"), It.IsAny<CancellationToken>()), Times.Once);
+    }
 }

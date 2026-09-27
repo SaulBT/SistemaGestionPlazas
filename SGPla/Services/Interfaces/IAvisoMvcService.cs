@@ -27,4 +27,12 @@ public interface IAvisoMvcService
 
     Task ResolverRevisionAsync(int usuarioId, int avisoId, bool avalar, string? comentarios,
         CancellationToken cancellationToken = default);
+
+    Task PublicarAsync(int usuarioId, int entidadAcademicaId, int avisoId,
+        PublicarAvisoMvcDatos datos, CancellationToken cancellationToken = default);
+
+    Task CancelarAsync(int usuarioId, int avisoId, CancelarAvisoMvcDatos datos,
+        CancellationToken cancellationToken = default);
+
+    Task ArchivarAsync(int usuarioId, int avisoId, CancellationToken cancellationToken = default);
 }
