@@ -68,8 +68,8 @@ La base compartida no tiene los catálogos completos que requieren las pruebas
 de integración (por ejemplo, no había municipios ni sistemas educativos). Para
 no sembrar datos de prueba en ella, se levantó un SQL Server desechable aparte,
 se aplicó la cadena completa de migraciones con semilla de desarrollo y se
-añadió el mínimo catálogo faltante para los casos que lo necesitaban. Resultado
-de `dotnet test SGPla.Tests/SGPla.Tests.csproj --no-restore`: **267 correctas,
+añadió el mínimo catálogo faltante para los casos que lo necesitaban. En la
+validación inicial de esta entrega, `dotnet test` terminó con **267 correctas,
 0 con error, 1 omitida, 268 total**. La única omitida es
 `LdapStartTlsIntegrationTests`, porque no se proporcionaron
 `SGPLA_LDAP_STARTTLS_HOST` y `SGPLA_LDAP_STARTTLS_PORT`.
@@ -81,6 +81,47 @@ conectividad a la red institucional; los registros de
 `integracion.sincronizacion_planea`,
 `academico.horario_programacion` y `academico.asignacion_docente` quedan por
 verificar al ejecutar la sincronización desde esa red.
+
+## Dimensionamiento de sincronización PLANEA
+
+- `Planea:TamanoMaximoMb` tiene default `200` y acepta de `1` a `2048`. El
+  cliente verifica el primer token para rechazar una raíz que no sea arreglo
+  antes de consumir el resto; los registros se deserializan desde el stream.
+  El `SocketsHttpHandler` activa descompresión automática para gzip/deflate/br;
+  el límite de lectura aplica a los bytes entregados al cliente después de esa
+  descompresión. Se conserva el rechazo temprano por `Content-Length` declarado.
+- Medición de la prueba generada de 100 000 registros: body de `1 900 001`
+  bytes; heap administrado antes `5 440 744` bytes; pico observado por muestras
+  durante lectura/procesamiento `71 134 784` bytes; heap retenido después de GC
+  `72 174 912` bytes. Es una medida del heap administrado con DTOs retenidos,
+  no un muestreo del pico RSS del proceso ni una comparación con un payload real
+  de 50–70 MB.
+- La prueba SQL reemplazó 20 000 sesiones: `AplicarSnapshotAsync` reportó
+  `412 ms`; el ciclo completo desde el servicio tomó `461 ms` en el contenedor
+  local. El fixture es sintético y pequeño fuera de las sesiones (un solo
+  programa destino); no predice latencia de producción.
+- El POST ahora registra y encola en un canal acotado de capacidad 10. El worker
+  ejecuta en un scope propio y el GET
+  `/ProgramacionesAcademicas/EstadoSincronizacionPlanea/{id}` devuelve la
+  bitácora. Al arranque se cierran como `FALLIDA` las filas `EN_PROCESO` que
+  hayan sobrevivido un reinicio. El canal es en memoria; la aplicación debe
+  correr como instancia única para no invalidar trabajos de otra instancia.
+- La aplicación SQL configura timeout de comandos de 300 segundos únicamente
+  durante la transacción y restaura la configuración previa. Los horarios se
+  escriben con `SqlBulkCopy` y un `IDataReader` sobre la lista validada, sin
+  materializar una segunda tabla completa. Se conserva `Serializable`: además
+  del índice único de bitácoras en curso, evita cambios concurrentes/phantom en
+  el conjunto de programaciones durante el reemplazo. La descarga y validación
+  permanecen antes de abrir la transacción; el error revierte el snapshot.
+- Validación final después de estos cambios en el SQL Server desechable:
+  **280 correctas, 0 con error, 1 omitida, 281 total**. La omitida es LDAP
+  STARTTLS por falta de host/puerto. `dotnet build` termina con 0 errores
+  (238 advertencias).
+- No se hizo ninguna llamada real a PLANEA. El payload de producción y el
+  soporte gzip del servidor real no se pudieron verificar; la prueba gzip usa
+  un servidor local que devuelve una respuesta comprimida y el mismo tipo de
+  `SocketsHttpHandler` configurado en la aplicación. La sincronización real aún
+  requiere red institucional.
 
 No se hizo un recorrido manual end-to-end por la interfaz. El inicio LDAP
 depende de infraestructura no disponible en esta ejecución; el usuario

@@ -1,4 +1,8 @@
 using System.Net;
+using System.IO.Compression;
+using System.Text;
+using System.Net.Sockets;
+using Xunit.Abstractions;
 using Microsoft.Extensions.Options;
 using SGPla.Services.Implementations;
 
@@ -6,6 +10,10 @@ namespace SGPla.Tests.Services;
 
 public sealed class PlaneaClientTests
 {
+    private readonly ITestOutputHelper _output;
+
+    public PlaneaClientTests(ITestOutputHelper output) => _output = output;
+
     [Fact]
     public async Task ObtenerProgramaciones_lee_arreglo_json_y_ignora_campos_desconocidos()
     {
@@ -96,6 +104,121 @@ public sealed class PlaneaClientTests
         Assert.DoesNotContain("test-key", error.ToString(), StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task ObtenerProgramaciones_lee_stream_sin_content_length_y_respeta_limite_despues_de_descomprimir()
+    {
+        var bodyStream = new GeneratedRecordsStream(100_000);
+        var content = new StreamContent(bodyStream);
+        content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+        var contentLength = content.Headers.ContentLength;
+        var client = CrearCliente(new ContenidoHandler(content));
+
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        var antes = GC.GetTotalMemory(forceFullCollection: true);
+        var registros = await client.ObtenerProgramacionesAsync("202701");
+        var picoObservado = Math.Max(bodyStream.PicoHeapObservado, GC.GetTotalMemory(forceFullCollection: false));
+        var despues = GC.GetTotalMemory(forceFullCollection: true);
+        _output.WriteLine($"PlaneaClient 100000: heap antes={antes:N0}, pico observado={picoObservado:N0}, retenido después de GC={despues:N0} bytes; body={bodyStream.BytesRead:N0} bytes.");
+
+        Assert.Equal(100_000, registros.Count);
+        Assert.Null(contentLength);
+    }
+
+    [Fact]
+    public async Task ObtenerProgramaciones_limita_respuesta_stream_sin_content_length()
+    {
+        var options = Opciones();
+        options.TamanoMaximoMb = 1;
+        var content = new StreamContent(new GeneratedOversizeStream(2 * 1024 * 1024));
+        content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+        var client = CrearCliente(new ContenidoHandler(content), options);
+
+        var error = await Assert.ThrowsAsync<InvalidDataException>(() => client.ObtenerProgramacionesAsync("202701"));
+
+        Assert.Equal("La respuesta de PLANEA excede el tamaño permitido.", error.Message);
+    }
+
+    [Fact]
+    public async Task ObtenerProgramaciones_rechaza_content_length_superior_al_limite()
+    {
+        var options = Opciones();
+        options.TamanoMaximoMb = 1;
+        using var content = new StringContent("[]", null, "application/json");
+        content.Headers.ContentLength = 2 * 1024 * 1024;
+        var client = CrearCliente(new ContenidoHandler(content), options);
+
+        var error = await Assert.ThrowsAsync<InvalidDataException>(() => client.ObtenerProgramacionesAsync("202701"));
+
+        Assert.Equal("La respuesta de PLANEA excede el tamaño permitido.", error.Message);
+    }
+
+    [Theory]
+    [InlineData("", "PLANEA devolvió JSON malformado.")]
+    [InlineData("[{\"PERIODO\":{}}]", "PLANEA devolvió un valor no escalar para PERIODO.")]
+    [InlineData("[{", "PLANEA devolvió JSON malformado.")]
+    public async Task ObtenerProgramaciones_conserva_errores_de_json(string body, string mensaje)
+    {
+        var client = CrearCliente(new RespuestaHandler(HttpStatusCode.OK, "application/json", body));
+
+        var error = await Assert.ThrowsAsync<InvalidDataException>(() => client.ObtenerProgramacionesAsync("202701"));
+
+        Assert.Equal(mensaje, error.Message);
+    }
+
+    [Fact]
+    public async Task ObtenerProgramaciones_rechaza_raiz_no_arreglo_antes_de_leer_el_cuerpo()
+    {
+        var stream = new RootThenLargeStream();
+        var content = new StreamContent(stream);
+        content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+        var client = CrearCliente(new ContenidoHandler(content));
+
+        var error = await Assert.ThrowsAsync<InvalidDataException>(() => client.ObtenerProgramacionesAsync("202701"));
+
+        Assert.Equal("PLANEA debe devolver un arreglo JSON directo.", error.Message);
+        Assert.Equal(1, stream.BytesRead);
+    }
+
+    [Fact]
+    public async Task ObtenerProgramaciones_acepta_respuesta_gzip_despues_de_descompresion_http()
+    {
+        var original = Encoding.UTF8.GetBytes("[{\"PERIODO\":202701}]");
+        using var comprimido = new MemoryStream();
+        await using (var gzip = new GZipStream(comprimido, CompressionLevel.Fastest, leaveOpen: true))
+            await gzip.WriteAsync(original);
+        var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        var port = ((IPEndPoint)listener.LocalEndpoint).Port;
+        var servidor = Task.Run(async () =>
+        {
+            using var socket = await listener.AcceptTcpClientAsync();
+            await using var stream = socket.GetStream();
+            var request = new List<byte>();
+            var buffer = new byte[1];
+            while (request.Count < 4 || !request.TakeLast(4).SequenceEqual("\r\n\r\n"u8.ToArray()))
+            {
+                if (await stream.ReadAsync(buffer) == 0) break;
+                request.Add(buffer[0]);
+            }
+            var headers = Encoding.ASCII.GetBytes($"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Encoding: gzip\r\nContent-Length: {comprimido.Length}\r\nConnection: close\r\n\r\n");
+            await stream.WriteAsync(headers);
+            await stream.WriteAsync(comprimido.ToArray());
+        });
+        var options = Opciones();
+        options.BaseUrl = $"http://127.0.0.1:{port}/api/periodo";
+        var http = new HttpClient(new SocketsHttpHandler { AutomaticDecompression = DecompressionMethods.All });
+        var client = new PlaneaClient(http, Options.Create(options));
+        try
+        {
+            var registros = await client.ObtenerProgramacionesAsync("202701");
+            Assert.Single(registros);
+            Assert.Equal("202701", registros[0].Periodo);
+            await servidor;
+        }
+        finally { listener.Stop(); }
+    }
+
     private static PlaneaClient CrearCliente(HttpMessageHandler handler, PlaneaOptions? options = null) =>
         new(new HttpClient(handler), Options.Create(options ?? Opciones()));
 
@@ -130,5 +253,123 @@ public sealed class PlaneaClientTests
                 Content = new StringContent(body, null, new System.Net.Http.Headers.MediaTypeHeaderValue(mediaType))
             });
         }
+    }
+
+    private sealed class ContenidoHandler(HttpContent content) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
+            Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = content });
+    }
+
+    private sealed class GeneratedRecordsStream(int count) : Stream
+    {
+        private static readonly byte[] Record = Encoding.UTF8.GetBytes("{\"PERIODO\":202701}");
+        private int _record = -1;
+        private int _offset;
+        private bool _finished;
+        private bool _separadorPendiente;
+        public long PicoHeapObservado { get; private set; }
+        public long BytesRead { get; private set; }
+        public override bool CanRead => true;
+        public override bool CanSeek => false;
+        public override bool CanWrite => false;
+        public override long Length => throw new NotSupportedException();
+        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+        public override void Flush() => throw new NotSupportedException();
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override void SetLength(long value) => throw new NotSupportedException();
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+        public override int Read(byte[] buffer, int offset, int count) => Read(buffer.AsSpan(offset, count));
+        public override int Read(Span<byte> buffer)
+        {
+            if (buffer.IsEmpty || _finished) return 0;
+            var written = 0;
+            while (written < buffer.Length && !_finished)
+            {
+                if (_record == -1)
+                {
+                    buffer[written++] = (byte)'[';
+                    _record = 0;
+                    continue;
+                }
+                if (_record < count)
+                {
+                    if (_separadorPendiente)
+                    {
+                        buffer[written++] = (byte)',';
+                        _separadorPendiente = false;
+                    }
+                    else
+                    {
+                        var copied = Math.Min(buffer.Length - written, Record.Length - _offset);
+                        Record.AsSpan(_offset, copied).CopyTo(buffer[written..]);
+                        _offset += copied;
+                        written += copied;
+                        if (_offset == Record.Length) { _offset = 0; _record++; _separadorPendiente = _record < count; }
+                    }
+                    continue;
+                }
+                buffer[written++] = (byte)']';
+                _finished = true;
+            }
+            BytesRead += written;
+            PicoHeapObservado = Math.Max(PicoHeapObservado, GC.GetTotalMemory(forceFullCollection: false));
+            return written;
+        }
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) =>
+            ValueTask.FromResult(Read(buffer.Span));
+    }
+
+    private sealed class GeneratedOversizeStream(int bytes) : Stream
+    {
+        private int _read;
+        public override bool CanRead => true;
+        public override bool CanSeek => false;
+        public override bool CanWrite => false;
+        public override long Length => throw new NotSupportedException();
+        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+        public override void Flush() => throw new NotSupportedException();
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override void SetLength(long value) => throw new NotSupportedException();
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+        public override int Read(byte[] buffer, int offset, int count) => Read(buffer.AsSpan(offset, count));
+        public override int Read(Span<byte> buffer)
+        {
+            var count = Math.Min(Math.Min(buffer.Length, 8192), bytes - _read);
+            if (count <= 0) return 0;
+            buffer[..count].Fill((byte)' ');
+            if (_read == 0) buffer[0] = (byte)'[';
+            _read += count;
+            if (_read == bytes) buffer[count - 1] = (byte)']';
+            return count;
+        }
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) =>
+            ValueTask.FromResult(Read(buffer.Span));
+    }
+
+    private sealed class RootThenLargeStream : Stream
+    {
+        public int BytesRead { get; private set; }
+        private bool _first = true;
+        public override bool CanRead => true;
+        public override bool CanSeek => false;
+        public override bool CanWrite => false;
+        public override long Length => throw new NotSupportedException();
+        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+        public override void Flush() => throw new NotSupportedException();
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override void SetLength(long value) => throw new NotSupportedException();
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+        public override int Read(byte[] buffer, int offset, int count) => Read(buffer.AsSpan(offset, count));
+        public override int Read(Span<byte> buffer)
+        {
+            if (!_first || buffer.IsEmpty) return 0;
+            _first = false;
+            BytesRead++;
+            buffer[0] = (byte)'{';
+            return 1;
+        }
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) =>
+            ValueTask.FromResult(Read(buffer.Span));
     }
 }

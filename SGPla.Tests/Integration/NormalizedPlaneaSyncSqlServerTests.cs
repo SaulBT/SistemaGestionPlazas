@@ -1,5 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Logging;
+using System.Diagnostics;
+using System.Globalization;
+using Xunit.Abstractions;
 using SGPla.Data.NewModel;
 using SGPla.Data.NewModel.Entities;
 using SGPla.Models.DTOs.Integracion;
@@ -12,6 +16,9 @@ namespace SGPla.Tests.Integration;
 public sealed class NormalizedPlaneaSyncSqlServerTests
 {
     private const string ConnectionEnvironmentVariable = "SGPLA_SQLSERVER_TEST_CONNECTION";
+    private readonly ITestOutputHelper _output;
+
+    public NormalizedPlaneaSyncSqlServerTests(ITestOutputHelper output) => _output = output;
 
     [SqlServerFact]
     public async Task Sincroniza_atomico_y_no_sobrescribe_asignacion_con_Oferta()
@@ -87,6 +94,68 @@ public sealed class NormalizedPlaneaSyncSqlServerTests
             {
                 await LimpiarAsync(db, fixture);
             }
+        }
+    }
+
+    [SqlServerFact]
+    public async Task Solicitud_se_registra_sin_descargar_rechaza_concurrente_y_publica_estado_final()
+    {
+        var (db, fixture) = await CrearFixtureAsync();
+        await using (db)
+        {
+            try
+            {
+                var cliente = new FakePlaneaClient(fixture.Periodo.Clave,
+                    [Registro(fixture.Periodo.Clave, fixture.ProgramacionSinOferta.Nrc, "ASYNC01", "Docente async", 1, "0900", "0959")]);
+                var canal = new CanalSincronizacionPlanea();
+                var sincronizador = new SincronizacionPlaneaService(db, cliente,
+                    new PlaneaSnapshotValidator(), TimeProvider.System,
+                    NullLogger<SincronizacionPlaneaService>.Instance, canal);
+
+                var id = await sincronizador.SolicitarAsync(fixture.Periodo.Id);
+                Assert.Equal(0, cliente.Llamadas);
+                Assert.Equal("EN_PROCESO", (await sincronizador.ObtenerEstadoAsync(id))!.Estado);
+                await Assert.ThrowsAsync<InvalidOperationException>(() => sincronizador.SolicitarAsync(fixture.Periodo.Id));
+
+                await sincronizador.EjecutarRegistradaAsync(id);
+
+                Assert.Equal("EXITOSA", (await sincronizador.ObtenerEstadoAsync(id))!.Estado);
+                Assert.Equal(1, cliente.Llamadas);
+            }
+            finally { await LimpiarAsync(db, fixture); }
+        }
+    }
+
+    [SqlServerFact]
+    public async Task Aplicacion_masiva_reemplaza_veinte_mil_sesiones()
+    {
+        var (db, fixture) = await CrearFixtureAsync();
+        await using (db)
+        {
+            try
+            {
+                const int cantidad = 20_000;
+                var registros = Enumerable.Range(0, cantidad).Select(i => RegistroVolumen(
+                    fixture.Periodo.Clave, fixture.ProgramacionSinOferta.Nrc, i)).ToArray();
+                var cliente = new FakePlaneaClient(fixture.Periodo.Clave, registros);
+                var logger = new OutputLogger<SincronizacionPlaneaService>(_output);
+                var sincronizador = new SincronizacionPlaneaService(db, cliente,
+                    new PlaneaSnapshotValidator(), TimeProvider.System, logger);
+                var cronometro = Stopwatch.StartNew();
+
+                var id = await sincronizador.SincronizarAsync(fixture.Periodo.Id);
+
+                cronometro.Stop();
+                var bitacora = await db.SincronizacionesPlanea.AsNoTracking().SingleAsync(x => x.Id == id);
+                Assert.Equal("EXITOSA", bitacora.Estado);
+                Assert.Equal(cantidad, bitacora.RegistrosRecibidos);
+                Assert.Equal(cantidad, bitacora.SesionesGeneradas);
+                Assert.Equal(cantidad, await db.HorariosProgramacion.AsNoTracking()
+                    .CountAsync(x => x.ProgramacionAcademicaId == fixture.ProgramacionSinOferta.Id
+                        && x.SincronizacionPlaneaId == id));
+                _output.WriteLine($"AplicarSnapshotAsync procesa {cantidad:N0} sesiones; sincronización completa: {cronometro.ElapsedMilliseconds:N0} ms.");
+            }
+            finally { await LimpiarAsync(db, fixture); }
         }
     }
 
@@ -213,6 +282,19 @@ public sealed class NormalizedPlaneaSyncSqlServerTests
         return new PlaneaRegistro(periodo, nrc, numPersonal, nombre, "Edificio", "Aula", "2026-01-01", "2026-12-31", horarios);
     }
 
+    private static PlaneaRegistro RegistroVolumen(string periodo, string nrc, int indice)
+    {
+        var dia = (byte)(indice % 6 + 1);
+        var minuto = indice / 6 % 1439;
+        var fecha = new DateOnly(2026, 1, 1).AddDays(indice / (6 * 1439) * 30);
+        var inicio = TimeOnly.MinValue.AddMinutes(minuto).ToString("HHmm", CultureInfo.InvariantCulture);
+        var fin = TimeOnly.MinValue.AddMinutes(minuto + 1).ToString("HHmm", CultureInfo.InvariantCulture);
+        var horarios = Enumerable.Range(1, 6).Select(x => new PlaneaHorarioDia((byte)x,
+            x == dia ? inicio : null, x == dia ? fin : null)).ToArray();
+        return new PlaneaRegistro(periodo, nrc, "VOLUMEN01", "Docente volumen", "Edificio", "Aula",
+            fecha.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), "2026-12-31", horarios);
+    }
+
     private static async Task LimpiarAsync(SgplaDbContext db, Fixture fixture)
     {
         var ids = new[] { fixture.ProgramacionConOferta.Id, fixture.ProgramacionSinOferta.Id };
@@ -239,12 +321,22 @@ public sealed class NormalizedPlaneaSyncSqlServerTests
 
     private sealed class FakePlaneaClient(string clavePeriodo, IReadOnlyList<PlaneaRegistro> registros) : IPlaneaClient
     {
+        public int Llamadas { get; private set; }
         public Task<IReadOnlyList<PlaneaRegistro>> ObtenerProgramacionesAsync(string clave, CancellationToken cancellationToken = default)
         {
+            Llamadas++;
             Assert.Equal(clavePeriodo, clave);
             cancellationToken.ThrowIfCancellationRequested();
             return Task.FromResult(registros);
         }
+    }
+
+    private sealed class OutputLogger<T>(ITestOutputHelper output) : ILogger<T>
+    {
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+        public bool IsEnabled(LogLevel logLevel) => true;
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception,
+            Func<TState, Exception?, string> formatter) => output.WriteLine(formatter(state, exception));
     }
 
     private sealed class SqlServerFactAttribute : FactAttribute

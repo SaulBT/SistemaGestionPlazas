@@ -82,14 +82,21 @@ public sealed class ProgramacionesAcademicasMvcController : Controller
     {
         try
         {
-            var id = await _sincronizacionPlanea.SincronizarAsync(periodoEscolarId, cancellationToken);
-            TempData["Success"] = $"La sincronización PLANEA {id} terminó correctamente.";
+            var id = await _sincronizacionPlanea.SolicitarAsync(periodoEscolarId, cancellationToken);
+            TempData["Success"] = $"La sincronización PLANEA {id} fue encolada. Puedes consultar su estado en unos momentos.";
         }
         catch (ArgumentException ex) { TempData["Error"] = ex.Message; }
         catch (InvalidOperationException ex) { TempData["Error"] = ex.Message; }
-        catch (HttpRequestException ex) { TempData["Error"] = ex.Message; }
-        catch (InvalidDataException ex) { TempData["Error"] = ex.Message; }
         return RedirectToAction(nameof(Index), new { PeriodoEscolarId = periodoEscolarId });
+    }
+
+    [HttpGet("EstadoSincronizacionPlanea/{sincronizacionId:int}")]
+    [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
+    public async Task<IActionResult> EstadoSincronizacionPlanea(int sincronizacionId,
+        CancellationToken cancellationToken)
+    {
+        var estado = await _sincronizacionPlanea.ObtenerEstadoAsync(sincronizacionId, cancellationToken);
+        return estado is null ? NotFound() : Json(estado);
     }
 
     private int? GetEntidadAcademicaAutorizadaId()

@@ -9,6 +9,7 @@ public sealed class PlaneaOptions : IValidateOptions<PlaneaOptions>
     public string BaseUrl { get; set; } = string.Empty;
     public string ApiKey { get; set; } = string.Empty;
     public int TimeoutSegundos { get; set; } = 120;
+    public int TamanoMaximoMb { get; set; } = 200;
     public string ModoAutenticacion { get; set; } = "Header";
     public string NombreParametro { get; set; } = "X-API-KEY";
 
@@ -19,6 +20,8 @@ public sealed class PlaneaOptions : IValidateOptions<PlaneaOptions>
             return ValidateOptionsResult.Fail("Planea:BaseUrl debe ser una URL absoluta HTTPS.");
         if (options.TimeoutSegundos is < 1 or > 600)
             return ValidateOptionsResult.Fail("Planea:TimeoutSegundos debe estar entre 1 y 600.");
+        if (options.TamanoMaximoMb is < 1 or > 2048)
+            return ValidateOptionsResult.Fail("Planea:TamanoMaximoMb debe estar entre 1 y 2048.");
         if (!string.Equals(options.ModoAutenticacion, "Header", StringComparison.OrdinalIgnoreCase)
             && !string.Equals(options.ModoAutenticacion, "Query", StringComparison.OrdinalIgnoreCase))
             return ValidateOptionsResult.Fail("Planea:ModoAutenticacion debe ser Header o Query.");

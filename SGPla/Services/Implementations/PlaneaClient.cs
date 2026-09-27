@@ -8,11 +8,11 @@ namespace SGPla.Services.Implementations;
 
 public sealed class PlaneaClient : IPlaneaClient
 {
-    private const int TamanoMaximoRespuesta = 50 * 1024 * 1024;
     private static readonly (byte Dia, string Prefijo)[] Dias =
     [
         (1, "LUN"), (2, "MAR"), (3, "MIE"), (4, "JUE"), (5, "VIE"), (6, "SAB")
     ];
+    private static readonly JsonSerializerOptions JsonOptions = new() { MaxDepth = 32 };
 
     private readonly HttpClient _httpClient;
     private readonly PlaneaOptions _options;
@@ -44,6 +44,7 @@ public sealed class PlaneaClient : IPlaneaClient
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         if (string.Equals(_options.ModoAutenticacion, "Header", StringComparison.OrdinalIgnoreCase))
             request.Headers.TryAddWithoutValidation(_options.NombreParametro, _options.ApiKey);
+
         HttpResponseMessage response;
         try
         {
@@ -53,52 +54,61 @@ public sealed class PlaneaClient : IPlaneaClient
         {
             throw new HttpRequestException("No fue posible comunicarse con PLANEA.", null, ex.StatusCode);
         }
+
         using (response)
         {
-        if (response.StatusCode is System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.Forbidden)
-            throw new InvalidOperationException("PLANEA rechazó la credencial configurada.");
-        if (!response.IsSuccessStatusCode)
-            throw new HttpRequestException($"PLANEA respondió HTTP {(int)response.StatusCode}.", null, response.StatusCode);
-        if (!EsJson(response.Content.Headers.ContentType?.MediaType))
-            throw new InvalidDataException("PLANEA no devolvió contenido JSON.");
-        if (response.Content.Headers.ContentLength > TamanoMaximoRespuesta)
-            throw new InvalidDataException("La respuesta de PLANEA excede el tamaño permitido.");
+            if (response.StatusCode is System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.Forbidden)
+                throw new InvalidOperationException("PLANEA rechazó la credencial configurada.");
+            if (!response.IsSuccessStatusCode)
+                throw new HttpRequestException($"PLANEA respondió HTTP {(int)response.StatusCode}.", null, response.StatusCode);
+            if (!EsJson(response.Content.Headers.ContentType?.MediaType))
+                throw new InvalidDataException("PLANEA no devolvió contenido JSON.");
 
-        await using var origen = await response.Content.ReadAsStreamAsync(cancellationToken);
-        using var memoria = new MemoryStream();
-        var buffer = new byte[81920];
-        while (true)
-        {
-            var leidos = await origen.ReadAsync(buffer, cancellationToken);
-            if (leidos == 0) break;
-            if (memoria.Length + leidos > TamanoMaximoRespuesta)
+            var limiteBytes = checked((long)_options.TamanoMaximoMb * 1024 * 1024);
+            if (response.Content.Headers.ContentLength > limiteBytes)
                 throw new InvalidDataException("La respuesta de PLANEA excede el tamaño permitido.");
-            await memoria.WriteAsync(buffer.AsMemory(0, leidos), cancellationToken);
-        }
-        memoria.Position = 0;
 
-        try
-        {
-            using var json = await JsonDocument.ParseAsync(memoria, new JsonDocumentOptions { MaxDepth = 32 }, cancellationToken);
-            if (json.RootElement.ValueKind != JsonValueKind.Array)
+            await using var origen = await response.Content.ReadAsStreamAsync(cancellationToken);
+            await using var limitado = new LimiteBytesStream(origen, limiteBytes);
+            var primerByte = await LeerPrimerNoEspacioAsync(limitado, cancellationToken);
+            if (primerByte == 0)
+                throw new InvalidDataException("PLANEA devolvió JSON malformado.");
+            if (primerByte != (byte)'[')
                 throw new InvalidDataException("PLANEA debe devolver un arreglo JSON directo.");
+
+            await using var conPrefijo = new StreamConPrefijo(limitado, primerByte);
             var registros = new List<PlaneaRegistro>();
-            foreach (var elemento in json.RootElement.EnumerateArray())
+            try
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                if (elemento.ValueKind != JsonValueKind.Object)
-                    throw new InvalidDataException("La respuesta de PLANEA contiene un elemento que no es objeto.");
-                registros.Add(LeerRegistro(elemento));
+                await foreach (var elemento in JsonSerializer.DeserializeAsyncEnumerable<JsonElement>(
+                                   conPrefijo, JsonOptions, cancellationToken))
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    if (elemento.ValueKind != JsonValueKind.Object)
+                        throw new InvalidDataException("La respuesta de PLANEA contiene un elemento que no es objeto.");
+                    registros.Add(LeerRegistro(elemento));
+                }
             }
+            catch (JsonException ex)
+            {
+                throw new InvalidDataException("PLANEA devolvió JSON malformado.", ex);
+            }
+
             if (registros.Count == 0)
                 throw new InvalidDataException("PLANEA devolvió un arreglo vacío; el snapshot vigente se conserva.");
             return registros;
         }
-        catch (JsonException ex)
-        {
-            throw new InvalidDataException("PLANEA devolvió JSON malformado.", ex);
-        }
     }
+
+    private static async Task<byte> LeerPrimerNoEspacioAsync(Stream stream, CancellationToken cancellationToken)
+    {
+        var buffer = new byte[1];
+        while (await stream.ReadAsync(buffer, cancellationToken) != 0)
+        {
+            if (buffer[0] is not ((byte)' ') and not ((byte)'\t') and not ((byte)'\r') and not ((byte)'\n'))
+                return buffer[0];
+        }
+        return 0;
     }
 
     private static PlaneaRegistro LeerRegistro(JsonElement objeto)
@@ -125,4 +135,64 @@ public sealed class PlaneaClient : IPlaneaClient
     private static bool EsJson(string? mediaType) =>
         string.Equals(mediaType, "application/json", StringComparison.OrdinalIgnoreCase)
         || mediaType?.EndsWith("+json", StringComparison.OrdinalIgnoreCase) == true;
+
+    private sealed class LimiteBytesStream(Stream inner, long limit) : Stream
+    {
+        private long _read;
+        public override bool CanRead => true;
+        public override bool CanSeek => false;
+        public override bool CanWrite => false;
+        public override long Length => throw new NotSupportedException();
+        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+        public override void Flush() => throw new NotSupportedException();
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override void SetLength(long value) => throw new NotSupportedException();
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+        public override int Read(byte[] buffer, int offset, int count) => Cuenta(inner.Read(buffer, offset, count));
+        public override int Read(Span<byte> buffer) => Cuenta(inner.Read(buffer));
+        public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) =>
+            Cuenta(await inner.ReadAsync(buffer, cancellationToken));
+        public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) =>
+            Cuenta(await inner.ReadAsync(buffer.AsMemory(offset, count), cancellationToken));
+        protected override void Dispose(bool disposing) => base.Dispose(disposing);
+        public override ValueTask DisposeAsync() { GC.SuppressFinalize(this); return ValueTask.CompletedTask; }
+
+        private int Cuenta(int bytes)
+        {
+            _read += bytes;
+            if (_read > limit) throw new InvalidDataException("La respuesta de PLANEA excede el tamaño permitido.");
+            return bytes;
+        }
+    }
+
+    private sealed class StreamConPrefijo(Stream inner, byte prefix) : Stream
+    {
+        private bool _pendiente = true;
+        public override bool CanRead => true;
+        public override bool CanSeek => false;
+        public override bool CanWrite => false;
+        public override long Length => throw new NotSupportedException();
+        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+        public override void Flush() => throw new NotSupportedException();
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override void SetLength(long value) => throw new NotSupportedException();
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+        public override int Read(byte[] buffer, int offset, int count) => Read(buffer.AsSpan(offset, count));
+        public override int Read(Span<byte> buffer)
+        {
+            if (buffer.IsEmpty) return 0;
+            if (_pendiente) { buffer[0] = prefix; _pendiente = false; return 1; }
+            return inner.Read(buffer);
+        }
+        public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            if (buffer.IsEmpty) return 0;
+            if (_pendiente) { buffer.Span[0] = prefix; _pendiente = false; return 1; }
+            return await inner.ReadAsync(buffer, cancellationToken);
+        }
+        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) =>
+            ReadAsync(buffer.AsMemory(offset, count), cancellationToken).AsTask();
+        protected override void Dispose(bool disposing) => base.Dispose(disposing);
+        public override ValueTask DisposeAsync() { GC.SuppressFinalize(this); return ValueTask.CompletedTask; }
+    }
 }

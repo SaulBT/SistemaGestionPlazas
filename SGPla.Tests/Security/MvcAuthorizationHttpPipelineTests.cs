@@ -34,6 +34,7 @@ public sealed class MvcAuthorizationHttpPipelineTests
     [InlineData("GET", "/ProgramacionesAcademicas", Constantes.SUPERUSUARIO)]
     [InlineData("GET", "/ProgramacionesAcademicas/Importar", Constantes.COORDINADOR_EA)]
     [InlineData("POST", "/ProgramacionesAcademicas/SincronizarPlanea", Constantes.COORDINADOR_EA)]
+    [InlineData("GET", "/ProgramacionesAcademicas/EstadoSincronizacionPlanea/7", Constantes.COORDINADOR_EA)]
     [InlineData("POST", "/ProgramacionesAcademicas/123/Ofertas/Nueva", Constantes.COORDINADOR_DGAA)]
     [InlineData("GET", "/Avisos", Constantes.SUPERUSUARIO)]
     [InlineData("GET", "/Avisos/123/Solicitudes", Constantes.COORDINADOR_DGAA)]

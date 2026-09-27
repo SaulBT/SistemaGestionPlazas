@@ -1,6 +1,6 @@
 namespace SGPla.Models.DTOs.Integracion;
 
-public sealed record PlaneaHorarioDia(byte DiaSemana, string? Inicio, string? Fin);
+public readonly record struct PlaneaHorarioDia(byte DiaSemana, string? Inicio, string? Fin);
 
 public sealed record PlaneaRegistro(string? Periodo, string? Nrc, string? NumeroPersonal, string? Nombre,
     string? Edificio, string? Aula, string? FechaInicio, string? FechaFin,

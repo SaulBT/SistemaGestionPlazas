@@ -262,13 +262,20 @@ gestor de secretos del hosting. No registres la clave ni la URI si se configura
 autenticación por query string.
 
 `Planea:BaseUrl` debe ser una URL absoluta HTTPS y `Planea:TimeoutSegundos` debe
-estar entre 1 y 600. `Planea:ModoAutenticacion` acepta `Header` o `Query`, y
-`Planea:NombreParametro` determina el nombre del header o parámetro. PLANEA no
-publica documentación localizable que confirme el mecanismo o su nombre; los
-valores actuales son configurables y deben confirmarse con el responsable del
-servicio antes de operación. En Development, sin clave, la sincronización falla
-antes de enviar una petición; fuera de Development la aplicación exige la clave
-al arrancar.
+estar entre 1 y 600. `Planea:TamanoMaximoMb` limita los bytes descomprimidos y
+acepta de 1 a 2048 (default 200). PLANEA confirmó el header `X-API-KEY`; la
+configuración actual usa `Planea:ModoAutenticacion=Header` y
+`Planea:NombreParametro=X-API-KEY`. El modo y nombre siguen configurables. En
+Development, sin clave, la sincronización falla antes de enviar una petición;
+fuera de Development la aplicación exige la clave al arrancar.
+
+La descarga JSON se procesa por streaming. El POST registra la bitácora y pone
+la solicitud en una cola acotada; el worker descarga y aplica el snapshot fuera
+del request. La bitácora queda consultable mediante
+`GET /ProgramacionesAcademicas/EstadoSincronizacionPlanea/{id}`. Al iniciar la
+aplicación se cierran como `FALLIDA` las bitácoras que sigan `EN_PROCESO` por un
+reinicio. Esta cola vive en memoria: ejecutar una sola instancia de la aplicación
+para estas sincronizaciones.
 
 Las decisiones pendientes del cierre MVC y la clasificación de pruebas legacy
 están en [docs/cierre-migracion-mvc.md](docs/cierre-migracion-mvc.md).

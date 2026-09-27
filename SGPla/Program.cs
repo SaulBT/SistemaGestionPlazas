@@ -18,6 +18,7 @@ using SGPla.Modules.EntidadesAcademicas;
 using SGPla.Modules.ProgramasEducativos;
 using SGPla.Commons;
 using System.Security.Claims;
+using System.Net;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -88,9 +89,15 @@ builder.Services.AddOptions<PlaneaOptions>()
 // El modo Query incluye la credencial en la URI. Se desactivan los logs de
 // transporte informativos para evitar que un handler registre ese valor.
 builder.Logging.AddFilter("System.Net.Http.HttpClient.IPlaneaClient", LogLevel.Warning);
-builder.Services.AddHttpClient<IPlaneaClient, PlaneaClient>();
+builder.Services.AddHttpClient<IPlaneaClient, PlaneaClient>()
+    .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+    {
+        AutomaticDecompression = DecompressionMethods.All
+    });
 builder.Services.AddScoped<IPlaneaSnapshotValidator, PlaneaSnapshotValidator>();
 builder.Services.AddScoped<ISincronizacionPlaneaService, SincronizacionPlaneaService>();
+builder.Services.AddSingleton<CanalSincronizacionPlanea>();
+builder.Services.AddHostedService<SincronizacionPlaneaWorker>();
 
 builder.Services.AddScoped<IAreaAcademicaRepository, NormalizedAreaAcademicaRepository>();
 builder.Services.AddScoped<IAreaAcademicaValidator, AreaAcademicaValidator>();
