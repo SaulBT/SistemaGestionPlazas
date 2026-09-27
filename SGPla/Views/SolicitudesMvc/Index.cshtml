@@ -1,0 +1,50 @@
+@using SGPla.Models.ViewModels.Solicitudes
+@model SolicitudMvcListadoViewModel
+
+@{
+    ViewData["Title"] = "Solicitudes del Aviso";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div><h2>Solicitudes del Aviso #@Model.AvisoId</h2><p class="text-muted mb-0">Estado del Aviso: @Model.EstadoAviso</p></div>
+    <a asp-controller="AvisosMvc" asp-action="Detalle" asp-route-avisoId="@Model.AvisoId" class="btn btn-outline-secondary">Volver al Aviso</a>
+</div>
+
+@if (Model.VacantesDisponibles.Count > 0)
+{
+    <section class="card mb-4">
+        <div class="card-header">Registrar Solicitud en recepción abierta</div>
+        <div class="list-group list-group-flush">
+            @foreach (var vacante in Model.VacantesDisponibles)
+            {
+                <a class="list-group-item list-group-item-action" asp-action="Nueva" asp-route-avisoId="@Model.AvisoId" asp-route-avisoOfertaId="@vacante.AvisoOfertaId">
+                    @vacante.ClavePlaza · NRC @vacante.Nrc · @vacante.Materia @vacante.Curso
+                </a>
+            }
+        </div>
+    </section>
+}
+else if (Model.EstadoAviso == "PUBLICADO")
+{
+    <div class="alert alert-info">No hay vacantes en recepción en este momento.</div>
+}
+
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead><tr><th>Aspirante</th><th>Correo</th><th>Estado</th><th>Registro UTC</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var solicitud in Model.Solicitudes)
+        {
+            <tr>
+                <td>@solicitud.Nombre</td><td>@solicitud.Correo</td><td>@solicitud.Estado</td>
+                <td>@solicitud.RegistradaEn.ToString("yyyy-MM-dd HH:mm")</td>
+                <td><a asp-action="Detalle" asp-route-avisoId="@Model.AvisoId" asp-route-solicitudId="@solicitud.Id" class="btn btn-sm btn-outline-primary">Ver expediente de esta Solicitud</a></td>
+            </tr>
+        }
+        @if (Model.Solicitudes.Count == 0)
+        {
+            <tr><td colspan="5" class="text-muted">Este Aviso aún no tiene Solicitudes.</td></tr>
+        }
+        </tbody>
+    </table>
+</div>

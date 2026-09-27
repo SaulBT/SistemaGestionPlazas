@@ -1,0 +1,64 @@
+@using SGPla.Models.ViewModels.Solicitudes
+@model SolicitudMvcRegistroViewModel
+
+@{
+    ViewData["Title"] = "Registrar Solicitud";
+}
+
+<h2>Registrar Solicitud</h2>
+<p class="text-muted">@Model.Vacante</p>
+<form asp-action="Nueva" asp-route-avisoId="@Model.AvisoId" asp-route-avisoOfertaId="@Model.AvisoOfertaId" method="post">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <input asp-for="AvisoId" type="hidden" /><input asp-for="AvisoOfertaId" type="hidden" />
+    <div class="row g-3">
+        <div class="col-md-6"><label asp-for="Nombre" class="form-label">Nombre completo</label><input asp-for="Nombre" class="form-control" /><span asp-validation-for="Nombre" class="text-danger"></span></div>
+        <div class="col-md-6"><label asp-for="Correo" class="form-label">Correo</label><input asp-for="Correo" class="form-control" /><span asp-validation-for="Correo" class="text-danger"></span></div>
+        <div class="col-md-6"><label asp-for="PuestoActual" class="form-label">Puesto actual</label><input asp-for="PuestoActual" class="form-control" /></div>
+        <div class="col-12"><label asp-for="DescripcionPerfil" class="form-label">Descripción del perfil</label><textarea asp-for="DescripcionPerfil" class="form-control" rows="4"></textarea><span asp-validation-for="DescripcionPerfil" class="text-danger"></span></div>
+        <div class="col-12">
+            <label asp-for="Observaciones" class="form-label">Observaciones de esta Solicitud</label><textarea asp-for="Observaciones" class="form-control" rows="2"></textarea>
+        </div>
+    </div>
+    <hr />
+    <div class="d-flex justify-content-between align-items-center"><h4>Formaciones académicas</h4><button class="btn btn-sm btn-outline-secondary" type="button" id="agregar-formacion">Agregar formación</button></div>
+    <div id="formaciones">
+    @for (var i = 0; i < Model.Formaciones.Count; i++)
+    {
+        <div class="row g-2 align-items-end mb-2 formacion">
+            <div class="col-md-4"><label class="form-label">Grado</label><select asp-for="Formaciones[i].GradoAcademicoId" data-name="GradoAcademicoId" class="form-select"><option value="">Seleccione</option>@foreach (var grado in Model.GradosAcademicos) { <option value="@grado.Id">@grado.Nombre</option> }</select></div>
+            <div class="col-md-7"><label class="form-label">Institución y detalle</label><input asp-for="Formaciones[i].Descripcion" data-name="Descripcion" class="form-control" maxlength="500" /></div>
+            <div class="col-md-1"><button type="button" class="btn btn-outline-danger quitar-formacion" aria-label="Quitar formación">×</button></div>
+        </div>
+    }
+    </div>
+    <span asp-validation-for="Formaciones" class="text-danger"></span>
+    <div class="mt-4 d-flex gap-2"><button class="btn btn-primary" type="submit">Registrar Solicitud</button><a asp-action="Index" asp-route-avisoId="@Model.AvisoId" class="btn btn-outline-secondary">Cancelar</a></div>
+</form>
+
+<template id="fila-formacion">
+    <div class="row g-2 align-items-end mb-2 formacion">
+        <div class="col-md-4"><label class="form-label">Grado</label><select class="form-select" data-name="GradoAcademicoId"><option value="">Seleccione</option>@foreach (var grado in Model.GradosAcademicos) { <option value="@grado.Id">@grado.Nombre</option> }</select></div>
+        <div class="col-md-7"><label class="form-label">Institución y detalle</label><input class="form-control" maxlength="500" data-name="Descripcion" /></div>
+        <div class="col-md-1"><button type="button" class="btn btn-outline-danger quitar-formacion" aria-label="Quitar formación">×</button></div>
+    </div>
+</template>
+
+<script>
+    const contenedorFormaciones = document.getElementById('formaciones');
+    const renumerarFormaciones = () => contenedorFormaciones.querySelectorAll('.formacion').forEach((fila, indice) => {
+        fila.querySelectorAll('[data-name]').forEach(campo => {
+            campo.name = `Formaciones[${indice}].${campo.dataset.name}`;
+            campo.id = `Formaciones_${indice}__${campo.dataset.name}`;
+        });
+    });
+    document.getElementById('agregar-formacion').addEventListener('click', () => {
+        contenedorFormaciones.append(document.getElementById('fila-formacion').content.cloneNode(true));
+        renumerarFormaciones();
+    });
+    contenedorFormaciones.addEventListener('click', evento => {
+        if (!evento.target.classList.contains('quitar-formacion')) return;
+        if (contenedorFormaciones.querySelectorAll('.formacion').length > 1) evento.target.closest('.formacion').remove();
+        renumerarFormaciones();
+    });
+</script>
