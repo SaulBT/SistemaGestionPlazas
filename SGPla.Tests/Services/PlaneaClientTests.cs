@@ -11,6 +11,7 @@ using SGPla.Models.DTOs.Integracion;
 
 namespace SGPla.Tests.Services;
 
+[Collection(nameof(PlaneaMemoryCollection))]
 public sealed class PlaneaClientTests
 {
     private readonly ITestOutputHelper _output;
@@ -34,7 +35,7 @@ public sealed class PlaneaClientTests
         var casos = new (string Body, string Mensaje)[]
         {
             ("{\"periodo\":\"202701\"}", "PLANEA no devolvió la sección horarios."),
-            ("{\"periodo\":\"202701\",\"horarios\":{}}", "PLANEA no devolvió la sección horarios."),
+            ("{\"periodo\":\"202701\",\"horarios\":{}}", "PLANEA devolvió la sección horarios con un formato distinto de arreglo."),
             ("{\"periodo\":\"202601\",\"horarios\":[]}", "PLANEA devolvió un periodo distinto al solicitado.")
         };
         foreach (var (body, mensaje) in casos)
@@ -166,11 +167,12 @@ public sealed class PlaneaClientTests
         var content = new StreamContent(bodyStream);
         content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
         var client = CrearCliente(new ContenidoHandler(content));
-        var asignadoAntes = GC.GetAllocatedBytesForCurrentThread();
+        var asignadoAntes = GC.GetTotalAllocatedBytes(precise: true);
         var registros = await client.ObtenerProgramacionesAsync("202701");
-        var asignado = GC.GetAllocatedBytesForCurrentThread() - asignadoAntes;
+        var asignado = GC.GetTotalAllocatedBytes(precise: true) - asignadoAntes;
         _output.WriteLine($"resultado grande ignorado: {bodyStream.BytesRead:N0} bytes leídos; asignado durante la lectura={asignado:N0} bytes.");
         Assert.Single(registros);
+        // 15 MiB deja margen para buffers y runtime, pero queda muy por debajo de los ~44 MiB descartados.
         Assert.True(asignado < 15 * 1024 * 1024,
             $"El parser asignó {asignado:N0} bytes al saltar un resultado de {bodyStream.BytesRead:N0} bytes.");
     }
@@ -194,6 +196,14 @@ public sealed class PlaneaClientTests
         var sinSesiones = registros.Count(x => x.Horarios.All(h => string.IsNullOrWhiteSpace(h.Inicio) && string.IsNullOrWhiteSpace(h.Fin)));
         var sesionesInformadas = registros.Sum(x => x.Horarios.Count(h => !string.IsNullOrWhiteSpace(h.Inicio) && !string.IsNullOrWhiteSpace(h.Fin)));
         _output.WriteLine($"PLANEA sample parsed: registros={registros.Count}; NRC distintos={nrcs}; franjas horarias informadas={sesionesInformadas}; sin sesión={sinSesiones}; tiempo={sw.ElapsedMilliseconds} ms; heap antes={heapAntes:N0}; heap después GC={heapDespues:N0} bytes.");
+
+        var programacionesSinteticas = registros.Select(x => x.Nrc).Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => x!.ToUpperInvariant()).Distinct(StringComparer.Ordinal)
+            .Select((nrc, id) => new { Nrc = nrc, Id = id + 1 })
+            .ToDictionary(x => x.Nrc, x => x.Id, StringComparer.Ordinal);
+        var smokeCompleto = new PlaneaSnapshotValidator().Validar("202701", new(2026, 1, 1), new(2027, 12, 31),
+            programacionesSinteticas, registros);
+        _output.WriteLine($"PLANEA humo con todos los NRC programados sintéticamente: sesiones={smokeCompleto.Sesiones.Count}; docentes={smokeCompleto.Docentes.Count}; ignorados={smokeCompleto.RegistrosIgnorados}; NRC sin programación={smokeCompleto.NrcSinProgramacion}; duplicados={smokeCompleto.DuplicadosDescartados}; advertencias={smokeCompleto.Advertencias}.");
 
         var cadena = Environment.GetEnvironmentVariable("SGPLA_SQLSERVER_TEST_CONNECTION");
         if (string.IsNullOrWhiteSpace(cadena))
@@ -544,4 +554,9 @@ public sealed class PlaneaClientTests
         public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) =>
             ValueTask.FromResult(Read(buffer.Span));
     }
+}
+
+[CollectionDefinition(nameof(PlaneaMemoryCollection), DisableParallelization = true)]
+public sealed class PlaneaMemoryCollection
+{
 }

@@ -52,15 +52,6 @@ public sealed class PlaneaSnapshotValidator : IPlaneaSnapshotValidator
                 nombre = null;
             }
 
-            if (numeroPersonal is not null && nombre is not null)
-            {
-                var claveNombre = NormalizarTexto(nombre);
-                if (!nombresPorNumero.TryGetValue(numeroPersonal, out var variantes))
-                    nombresPorNumero[numeroPersonal] = variantes = new Dictionary<string, (string, int)>(StringComparer.Ordinal);
-                if (variantes.TryGetValue(claveNombre, out var existente)) variantes[claveNombre] = (existente.Nombre, existente.Conteo + 1);
-                else variantes[claveNombre] = (nombre, 1);
-            }
-
             var horariosValidos = new List<(byte Dia, TimeOnly Inicio, TimeOnly Fin)>();
             foreach (var horario in registro.Horarios)
             {
@@ -83,6 +74,13 @@ public sealed class PlaneaSnapshotValidator : IPlaneaSnapshotValidator
             if (horariosValidos.Count == 0)
             {
                 ignorados++;
+                continue;
+            }
+
+            if (string.IsNullOrWhiteSpace(registro.FechaInicio) || string.IsNullOrWhiteSpace(registro.FechaFin))
+            {
+                ignorados++;
+                advertencias++;
                 continue;
             }
 
@@ -115,6 +113,12 @@ public sealed class PlaneaSnapshotValidator : IPlaneaSnapshotValidator
 
             if (numeroPersonal is not null && nombre is not null)
             {
+                var claveNombre = NormalizarTexto(nombre);
+                if (!nombresPorNumero.TryGetValue(numeroPersonal, out var variantes))
+                    nombresPorNumero[numeroPersonal] = variantes = new Dictionary<string, (string, int)>(StringComparer.Ordinal);
+                if (variantes.TryGetValue(claveNombre, out var existente)) variantes[claveNombre] = (existente.Nombre, existente.Conteo + 1);
+                else variantes[claveNombre] = (nombre, 1);
+
                 if (!docentesPorProgramacion.TryGetValue(programacionId, out var lista))
                     docentesPorProgramacion[programacionId] = lista = [];
                 lista.Add((registro, numeroPersonal, nombre, fechaInicio, fechaFin));

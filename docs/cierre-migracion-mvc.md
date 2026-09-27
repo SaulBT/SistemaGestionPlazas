@@ -97,13 +97,20 @@ verificar al ejecutar la sincronización desde esa red.
   omitir NRC sin programación MVC local, elegir docente por `IND_PRINCIPAL`,
   menor `IND_DOCENTE` y menor `ID_DOCENTE`, mantener sesiones aunque la
   identidad docente venga incompleta y elegir el nombre más frecuente cuando
-  un identificador presenta variantes. El periodo, formato de NRC, fechas,
-  horas, pares inicio/fin y rangos inversos mantienen validación estricta.
+  un identificador presenta variantes. También queda **pendiente de confirmar
+  con negocio** omitir el registro con sesión válida pero fechas vacías,
+  contarlo como ignorado y sumar una advertencia. Una fecha presente con formato
+  distinto de `yyyy-MM-dd` y los rangos inversos siguen rechazándose. El periodo,
+  formato de NRC, horas y pares inicio/fin mantienen validación estricta.
 - No se agregó columna al esquema. El validador devuelve el contador
   `NrcSinProgramacion`, pero la bitácora SQL lo incluye en
-  `RegistrosIgnorados`, junto con las filas localizables que no tienen ninguna
-  sesión. Por tanto, `RegistrosIgnorados = NrcSinProgramacion + localizables
-  sin sesiones`; la bitácora histórica no permite separar esos dos conteos.
+  `RegistrosIgnorados`, junto con filas sin sesiones y filas con sesión pero
+  fechas vacías. `RegistrosIgnorados = NrcSinProgramacion + registros sin
+  sesiones + registros con sesión sin fechas`; el esquema no persiste esos
+  componentes por separado. `Advertencias` suma sesiones fuera del periodo,
+  traslapes, co-docencia (una por NRC), variantes de nombre (una por ID),
+  registros con sesión y fechas vacías (una por registro) y discrepancias de
+  asignación detectadas durante la sincronización.
 - `Planea:TamanoMaximoMb` tiene default `200` y acepta de `1` a `2048`. El
   límite cuenta bytes descomprimidos; se conserva el rechazo temprano por
   `Content-Length`. El cliente rechaza una raíz que no sea objeto tras leer solo
@@ -118,8 +125,9 @@ verificar al ejecutar la sincronización desde esa red.
   La prueba sintética de 100 000 registros (3 500 048 bytes) observó heap antes
   `5 861 848`, pico muestreado `86 579 440` y heap después de GC `87 806 000`
   bytes; el conjunto de DTOs retenido domina esa cifra. La prueba adicional
-  recorrió `46 200 135` bytes de `resultado` y asignó `198 568` bytes en el hilo
-  medido, sin almacenar esas filas.
+  recorrió `46 200 135` bytes de `resultado` y asignó `198 728` bytes en el
+  proceso, sin almacenar esas filas. La prueba está en una colección xUnit sin
+  paralelismo y usa `GC.GetTotalAllocatedBytes`.
 - La prueba SQL reemplazó 20 000 sesiones: `AplicarSnapshotAsync` reportó
   `399 ms`; el ciclo completo desde el servicio tomó `405 ms` en el contenedor
   local. El fixture es sintético y pequeño fuera de las sesiones (un solo
@@ -148,16 +156,20 @@ verificar al ejecutar la sincronización desde esa red.
   parser no depende de ese orden). `total` se interpreta únicamente como el
   conteo de `resultado` en el ejemplo. La sincronización real aún requiere red
   institucional.
-- La prueba de humo con el archivo real procesó 22 623 filas, 17 991 NRC
-  distintos, 38 801 franjas horarias informadas y 1 144 filas sin sesión, sin
-  llamar a PLANEA. No pudo producir
-  contadores de validación/snapshot: las bases Docker de prueba y desarrollo
-  disponibles no contienen un periodo `202701`. El número de NRC que coincide
-  con programación MVC local, por tanto, sigue pendiente de medir con una base
-  que tenga cargado ese periodo. El archivo también contiene una fila con hora
-  informada y fechas ausentes; si su NRC coincide con programación local, la
-  validación estricta de fechas la marcará como fallida. Esa relación no pudo
-  comprobarse en estas bases y queda para revisión con el periodo cargado.
+- La prueba de humo con el archivo real y mapeo sintético de todos los NRC
+  procesó 22 623 filas, 17 991 NRC distintos y 38 801 franjas informadas. El
+  validador produjo 38 800 sesiones, 11 526 docentes, 1 145 ignorados, 0 NRC
+  sin programación, 0 duplicados y 119 advertencias. Respecto a la referencia
+  sin el NRC `24155` (38 798 sesiones, 11 525 docentes y 1 146 ignorados), el
+  registro válido adicional de ese NRC aporta dos sesiones y un docente; su
+  registro con sesión y fechas vacías se ignora con una advertencia. Las
+  advertencias netas quedan en 119 porque al contar solo candidatos a docente
+  se excluye también una variante de nombre que aparecía únicamente en filas
+  sin sesión. Esta simulación verifica la regla sobre todos los NRC, no su
+  coincidencia con programas locales. Las bases Docker disponibles no tienen
+  un periodo `202701`, por lo que queda pendiente el recuento contra datos
+  locales. Esta ejecución tardó `495 ms`; el heap fue `5 572 528` bytes antes
+  y `48 277 272` bytes después de GC.
 
 No se hizo un recorrido manual end-to-end por la interfaz. El inicio LDAP
 depende de infraestructura no disponible en esta ejecución; el usuario

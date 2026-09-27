@@ -44,6 +44,33 @@ public sealed class PlaneaSnapshotValidatorTests
     }
 
     [Fact]
+    public void Validar_ignora_sesion_con_fechas_vacias_y_suma_un_ignorado_y_una_advertencia()
+    {
+        var registros = new[]
+        {
+            Registro("A12B3", "P123", "Docente Uno", "0800", "0859", null, null),
+            Registro("A12B3", "P456", "Docente Dos", null, null, "0900", "0959", fechaInicio: " ", fechaFin: "")
+        };
+
+        var snapshot = _validator.Validar("202601", new(2026, 1, 1), new(2026, 6, 30), Programaciones, registros);
+
+        Assert.Single(snapshot.Sesiones);
+        Assert.Equal(TimeOnly.Parse("08:00"), snapshot.Sesiones[0].HoraInicio);
+        Assert.Equal(1, snapshot.RegistrosIgnorados);
+        Assert.Equal(1, snapshot.Advertencias);
+        Assert.Equal("P123", Assert.Single(snapshot.Docentes).NumeroPersonal);
+    }
+
+    [Fact]
+    public void Validar_rechaza_fecha_con_formato_distinto_a_iso()
+    {
+        var registro = Registro("A12B3", "P123", "Docente Uno", "0800", "0859", null, null,
+            fechaInicio: "27/01/2026");
+        Assert.Throws<InvalidDataException>(() => _validator.Validar("202601", new(2026, 1, 1), new(2026, 6, 30),
+            Programaciones, [registro]));
+    }
+
+    [Fact]
     public void Validar_cuenta_sesiones_fuera_del_periodo_y_traslapes_sin_descartar_sesiones()
     {
         var registros = new[]
@@ -113,17 +140,33 @@ public sealed class PlaneaSnapshotValidatorTests
     }
 
     [Fact]
-    public void Validar_cuenta_nombres_inconsistentes_y_elige_el_mas_frecuente()
+    public void Validar_elige_nombre_mas_frecuente_y_suma_una_advertencia()
     {
         var filas = new[]
         {
-            Registro("A12B3", "P123", "Nombre Alfa", "0800", "0859", null, null),
-            Registro("A12B3", "P123", "Nombre Alfa", null, null, "0900", "0959"),
-            Registro("A12B3", "P123", "Nombre Beta", null, null, null, null)
+            Registro("A12B3", "P123", "A", "0800", "0859", null, null),
+            Registro("A12B3", "P123", "A", null, null, "0900", "0959"),
+            Registro("A12B3", "P123", "B", null, null, "1000", "1059")
         };
         var resultado = _validator.Validar("202601", new(2026, 1, 1), new(2026, 6, 30), Programaciones, filas);
-        Assert.Equal("Nombre Alfa", Assert.Single(resultado.Docentes).Nombre);
+        Assert.Equal("A", Assert.Single(resultado.Docentes).Nombre);
         Assert.Equal(1, resultado.Advertencias);
+    }
+
+    [Fact]
+    public void Validar_no_cuenta_nombres_de_registros_sin_sesiones_al_elegir_nombre()
+    {
+        var filas = new[]
+        {
+            Registro("A12B3", "P123", "A", "0800", "0859", null, null),
+            Registro("A12B3", "P123", "B", null, null, null, null),
+            Registro("A12B3", "P123", "B", null, null, null, null),
+            Registro("A12B3", "P123", "B", null, null, null, null)
+        };
+        var resultado = _validator.Validar("202601", new(2026, 1, 1), new(2026, 6, 30), Programaciones, filas);
+        Assert.Equal("A", Assert.Single(resultado.Docentes).Nombre);
+        Assert.Equal(0, resultado.Advertencias);
+        Assert.Equal(3, resultado.RegistrosIgnorados);
     }
 
     private static PlaneaRegistro Registro(string nrc, string? numeroPersonal, string? nombre,

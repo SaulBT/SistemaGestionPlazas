@@ -74,6 +74,10 @@ internal sealed class PlaneaJsonReader(string periodoSolicitado)
                 continue;
             }
 
+            if (!_horariosEncontrados && reader.CurrentDepth == 1 && _propiedadActual == "horarios"
+                && reader.TokenType != JsonTokenType.PropertyName)
+                throw new InvalidDataException("PLANEA devolvió la sección horarios con un formato distinto de arreglo.");
+
             if (_horariosEncontrados && !_horariosTerminados && reader.CurrentDepth == 2
                 && reader.TokenType == JsonTokenType.StartObject)
             {
