@@ -59,7 +59,6 @@ public sealed class NormalizedProgramacionAcademicaMvcRepository : IProgramacion
                 x.programacion.Id, x.programacion.Nrc, x.periodo.Id, x.periodo.Clave,
                 x.entidad.Id, x.entidad.Nombre, x.programa.Id, x.programa.Nombre,
                 x.experiencia.Id, x.experiencia.Nombre, x.experiencia.MateriaEe, x.experiencia.CursoEe,
-                _db.HorariosProgramacion.Count(h => h.ProgramacionAcademicaId == x.programacion.Id),
                 x.programacion.FechaEliminacion))
             .ToListAsync(cancellationToken);
         return new PaginaProgramacionAcademicaMvc(items, total);

@@ -263,9 +263,9 @@ autenticación por query string.
 
 `Planea:BaseUrl` debe ser una URL absoluta HTTPS y `Planea:TimeoutSegundos` debe
 estar entre 1 y 600. `Planea:TamanoMaximoMb` limita los bytes descomprimidos y
-acepta de 1 a 2048 (default 200). PLANEA confirmó el header `X-API-KEY`; la
-configuración actual usa `Planea:ModoAutenticacion=Header` y
-`Planea:NombreParametro=X-API-KEY`. El modo y nombre siguen configurables. En
+acepta de 1 a 2048 (default 200). La petición verificada usa el encabezado
+`X-Api-Token` (`Planea:ModoAutenticacion=Header` y
+`Planea:NombreParametro=X-Api-Token`). El modo y nombre siguen configurables. En
 Development, sin clave, la sincronización falla antes de enviar una petición;
 fuera de Development la aplicación exige la clave al arrancar.
 

@@ -101,7 +101,8 @@
         document.getElementById("formPeriodoEscolar").action =
             "@Url.Action("Crear", "PeriodosEscolares")";
 
-        document.getElementById("IdPeriodoEscolar").value = "";
+        const idPeriodoEscolar = document.getElementById("IdPeriodoEscolar");
+        if (idPeriodoEscolar) idPeriodoEscolar.value = "";
         document.getElementById("Anio").value = "";
         document.getElementById("Periodo").value = "";
 

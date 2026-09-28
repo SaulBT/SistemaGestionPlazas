@@ -30,11 +30,6 @@ namespace SGPla.Services.Implementations
                 connection.SessionOptions.ProtocolVersion = 3;
                 connection.SessionOptions.ReferralChasing = ReferralChasingOptions.None; 
 
-                // El bind Basic sólo se permite después de establecer StartTLS;
-                // si el servidor no negocia TLS o el certificado no es confiable,
-                // la autenticación falla cerrada.
-                connection.SessionOptions.StartTransportLayerSecurity(null);
-
                 connection.Credential = new NetworkCredential(usuarioLdap, password);
                 connection.Bind();
 
