@@ -21,10 +21,11 @@ public sealed class AuthService : IAuthService
     private readonly ICoordinadorDgaaRepository _coordinadorDgaaRepository;
     private readonly ICoordinadorEaRepository _coordinadorEaRepository;
     private readonly TimeProvider _timeProvider;
+    private readonly ILogger<AuthService>? _logger;
 
     public AuthService(SgplaDbContext db, IArgon2idPasswordHasher hasher, ILdapAuthService ldapService,
         ICoordinadorDgaaRepository coordinadorDgaaRepository, ICoordinadorEaRepository coordinadorEaRepository,
-        TimeProvider timeProvider)
+        TimeProvider timeProvider, ILogger<AuthService>? logger = null)
     {
         _db = db;
         _hasher = hasher;
@@ -32,6 +33,7 @@ public sealed class AuthService : IAuthService
         _coordinadorDgaaRepository = coordinadorDgaaRepository;
         _coordinadorEaRepository = coordinadorEaRepository;
         _timeProvider = timeProvider;
+        _logger = logger;
     }
 
     public async Task<ResultadoAutenticacion> LoginAsync(string username, string password,
@@ -40,11 +42,47 @@ public sealed class AuthService : IAuthService
         if (string.IsNullOrWhiteSpace(username) || string.IsNullOrEmpty(password))
             return ResultadoAutenticacion.Fallido(MensajeCredencialesInvalidas);
 
-        var correo = NormalizarCorreo(username);
-        var account = await _db.Usuarios.AsNoTracking()
-            .Where(x => x.Correo == correo && x.FechaEliminacion == null)
+        var identificador = username.Trim().ToLowerInvariant();
+        var cuentasActivas = _db.Usuarios.AsNoTracking()
+            .Where(x => x.FechaEliminacion == null);
+        var account = await cuentasActivas
+            .Where(x => x.Correo == identificador)
             .Select(x => new { x.Id, x.Correo, x.Nombre, x.RolId })
             .SingleOrDefaultAsync(cancellationToken);
+
+        // El correo almacenado es la fuente de verdad para el bind LDAP. Si el
+        // usuario escribió un alias sin dominio o un dominio distinto, resolver
+        // por la parte local únicamente cuando identifica una cuenta activa única.
+        if (account is null)
+        {
+            var separador = identificador.IndexOf('@');
+            var usuarioLocal = separador >= 0 ? identificador[..separador] : identificador;
+            if (string.IsNullOrWhiteSpace(usuarioLocal))
+                return ResultadoAutenticacion.Fallido(MensajeCredencialesInvalidas);
+
+            var candidatos = await cuentasActivas
+                .Where(x => x.Correo.StartsWith(usuarioLocal + "@"))
+                .OrderBy(x => x.Id)
+                .Select(x => new { x.Id, x.Correo, x.Nombre, x.RolId })
+                .Take(2)
+                .ToListAsync(cancellationToken);
+            if (candidatos.Count != 1)
+            {
+                _logger?.LogWarning(
+                    "Login rechazado antes de LDAP: la resolución por parte local encontró {CuentaCount} cuentas activas.",
+                    candidatos.Count);
+                return ResultadoAutenticacion.Fallido(MensajeCredencialesInvalidas);
+            }
+
+            account = candidatos[0];
+            _logger?.LogInformation("Login resuelto contra una cuenta activa por identificador local; rol {RolId}.", account.RolId);
+        }
+        else
+        {
+            _logger?.LogInformation("Login resuelto por coincidencia exacta con una cuenta activa; rol {RolId}.", account.RolId);
+        }
+
+        var correo = account.Correo;
 
         if (account?.RolId == RolSuperusuario)
             return await AutenticarSuperusuarioAsync(account.Id, account.Correo, account.Nombre, password, cancellationToken);
@@ -163,11 +201,4 @@ public sealed class AuthService : IAuthService
         return true;
     }
 
-    private static string NormalizarCorreo(string username)
-    {
-        var correo = username.Trim();
-        if (!correo.Contains('@'))
-            correo = $"{correo}@uv.mx";
-        return correo.ToLowerInvariant();
-    }
 }

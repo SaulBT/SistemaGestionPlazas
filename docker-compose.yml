@@ -38,6 +38,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
+      Planea__ApiKey: ${PLANEA_API_KEY:-}
       ConnectionStrings__DefaultConnection: >-
         Server=db,1433;Database=GestionDePlazasBD;User Id=sa;Password=${MSSQL_SA_PASSWORD:-SgplaDev_2026!Password};TrustServerCertificate=True;Encrypt=False;
       Archivos__RutaBase: /app/Archivos
@@ -45,6 +46,8 @@ services:
       - "8080:8080"
     volumes:
       - ./SGPla/Archivos:/app/Archivos
+      - sgpla-dataprotection-keys:/root/.aspnet/DataProtection-Keys
 
 volumes:
   sgpla-sqlserver-data:
+  sgpla-dataprotection-keys:

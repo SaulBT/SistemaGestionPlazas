@@ -73,3 +73,11 @@ cookies.txt
 
 # Configuración privada del entorno de pruebas
 .local/sgpla-pruebas/
+
+# Secretos y configuración local de Docker Compose
+.env
+.env.*
+!.env.example
+
+# Checkouts locales de revisión
+/.claude/worktrees/

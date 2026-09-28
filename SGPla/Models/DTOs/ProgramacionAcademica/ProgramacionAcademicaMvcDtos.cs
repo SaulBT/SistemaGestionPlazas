@@ -8,7 +8,7 @@ public sealed record ProgramacionAcademicaMvcFila(
     int Id, string Nrc, int PeriodoEscolarId, string Periodo, int EntidadAcademicaId,
     string EntidadAcademica, int ProgramaEducativoId, string ProgramaEducativo,
     int ExperienciaEducativaId, string ExperienciaEducativa, string MateriaEe, string CursoEe,
-    int SesionesPlanea, DateTime? FechaEliminacion);
+    DateTime? FechaEliminacion);
 
 public sealed record PaginaProgramacionAcademicaMvc(
     IReadOnlyList<ProgramacionAcademicaMvcFila> Items, int Total);

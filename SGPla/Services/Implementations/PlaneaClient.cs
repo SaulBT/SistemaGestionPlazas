@@ -26,7 +26,10 @@ public sealed class PlaneaClient : IPlaneaClient
         if (string.IsNullOrWhiteSpace(_options.ApiKey))
             throw new InvalidOperationException("Falta configurar Planea:ApiKey; no se realizó ninguna petición a PLANEA.");
         var baseUrl = _options.BaseUrl.EndsWith('/') ? _options.BaseUrl : _options.BaseUrl + "/";
-        var uri = new Uri(new Uri(baseUrl, UriKind.Absolute), Uri.EscapeDataString(clavePeriodo));
+        var segmentoPeriodo = Uri.EscapeDataString(clavePeriodo);
+        if (string.Equals(_options.ModoAutenticacion, "Query", StringComparison.OrdinalIgnoreCase))
+            segmentoPeriodo += "/";
+        var uri = new Uri(new Uri(baseUrl, UriKind.Absolute), segmentoPeriodo);
         if (string.Equals(_options.ModoAutenticacion, "Query", StringComparison.OrdinalIgnoreCase))
         {
             var builder = new UriBuilder(uri);

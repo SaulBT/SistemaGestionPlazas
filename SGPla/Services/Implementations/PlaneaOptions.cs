@@ -11,7 +11,7 @@ public sealed class PlaneaOptions : IValidateOptions<PlaneaOptions>
     public int TimeoutSegundos { get; set; } = 120;
     public int TamanoMaximoMb { get; set; } = 200;
     public string ModoAutenticacion { get; set; } = "Header";
-    public string NombreParametro { get; set; } = "X-API-KEY";
+    public string NombreParametro { get; set; } = "X-Api-Token";
 
     public ValidateOptionsResult Validate(string? name, PlaneaOptions options)
     {

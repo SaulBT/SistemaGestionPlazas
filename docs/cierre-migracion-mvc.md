@@ -48,12 +48,11 @@ Estas decisiones se documentan sin cambiar el comportamiento:
 
 ## PLANEA: autenticación confirmada
 
-El responsable confirmó que el endpoint recibe la API key mediante el header
-`X-API-KEY`. `Planea:ModoAutenticacion` está configurado como `Header` y
-`Planea:NombreParametro` como `X-API-KEY`; ambos caminos (header y query) siguen
-siendo configurables para mantener el cliente adaptable. La llamada real para
-el periodo `202701` requiere conectividad con la red institucional y se valida
-desde allí.
+El endpoint indicó que espera el encabezado `X-Api-Token`. La aplicación
+configura `Planea:ModoAutenticacion=Header` y
+`Planea:NombreParametro=X-Api-Token`; el cliente mantiene también disponible
+el modo `Query` para otros entornos. La llamada requiere conectividad con la
+red institucional.
 
 ## Estado de validación real
 
@@ -74,9 +73,9 @@ validación inicial de esta entrega, `dotnet test` terminó con **267 correctas,
 `LdapStartTlsIntegrationTests`, porque no se proporcionaron
 `SGPLA_LDAP_STARTTLS_HOST` y `SGPLA_LDAP_STARTTLS_PORT`.
 
-La credencial PLANEA está configurada en User Secrets y la aplicación compila y
-prueba el header confirmado `X-API-KEY` y el modo query configurable con claves
-falsas. La llamada real para `202701` no se ejecutó porque esta sesión no tenía
+La credencial PLANEA se configura fuera del repositorio y la aplicación prueba
+los modos `Header` y `Query` con claves falsas. La llamada real para `202701`
+no se ejecutó porque esta sesión no tenía
 conectividad a la red institucional; los registros de
 `integracion.sincronizacion_planea`,
 `academico.horario_programacion` y `academico.asignacion_docente` quedan por
