@@ -1,0 +1,130 @@
+@using SGPla.Commons
+
+@using SGPla.Models.ViewModels.Avisos
+@model IndexViewModel
+@{
+    ViewData["Title"] = "Gestionar Avisos";
+    var esCea = User.IsInRole(Constantes.COORDINADOR_EA);
+    var tabs = new TabsModel { Id = esCea ? "tabs-avisos-cea" : "tabs-avisos-dgaa" };
+    void AgregarTab(string titulo, TabAvisosViewModel contenido, string estado, string icono)
+    {
+        tabs.Tabs.Add(new TabItemModel {
+            Titulo = titulo, Cantidad = contenido.Lista.Count, EstadoClase = $"estado-{estado}",
+            IconClass = $"bi bi-{icono}", PartialView = "_TabAvisos", PartialModel = contenido
+        });
+    }
+    AgregarTab("Todos", Model.Todos, "todos", "grid");
+    if (esCea) AgregarTab("Creados", Model.Creados, "creado", "file-earmark");
+    AgregarTab("En revisión", Model.EnRevision, "revision", "clock");
+    AgregarTab("Avalados", Model.Avalados, "avalado", "check-circle");
+    AgregarTab("Devueltos", Model.Devueltos, "devuelto", "arrow-return-left");
+    if (esCea) AgregarTab("Firmados", Model.Firmados, "firmado", "pen");
+    AgregarTab("Publicados", Model.Publicados, "publicado", "megaphone");
+    AgregarTab("Actas de CT", Model.ConActa, "acta", "file-earmark-check");
+    AgregarTab("Archivados", Model.Archivados, "archivado", "archive");
+}
+
+<link rel="stylesheet" href="~/css/components/avisos-flujo.css" asp-append-version="true" />
+<div class="avisos-modulo">
+    <h1 class="h3">Gestionar Avisos</h1>
+    <p class="text-muted">@(User.IsInRole(Constantes.COORDINADOR_DGAA) ? "Avisos recibidos de su área académica y seguimiento de sus revisiones." : "Consulte el estado de sus avisos y los comentarios de DGAA.") Ordenados por fecha de creación, del más reciente al más antiguo.</p>
+    @if (esCea && Model.Avalados.Lista.Count > 0)
+    {
+        <div class="aviso-siguiente-paso" role="status">
+            <i class="bi bi-check-circle" aria-hidden="true"></i>
+            <div><strong>DGAA avaló @Model.Avalados.Lista.Count aviso(s).</strong><br />Ya puede adjuntar el PDF firmado y continuar con la publicación.</div>
+            <button type="button" class="btn btn-outline-primary" onclick="seleccionarTab('tabs-avisos-cea', 3)">Ver avalados</button>
+        </div>
+    }
+    <div id="avisoToken" hidden>@Html.AntiForgeryToken()</div>
+    <form id="filtrosForm" method="get" action="@Url.Action("Index", "Avisos")" >
+        
+        <!-- Filtros -->
+        @await Component.InvokeAsync("ExpansionPanel", new ExpansionPanelModel
+        {
+            Id = "panel-filtros",
+            Titulo = "Filtros",
+            PartialView = "_Filtros",
+            PartialModel = Model,
+            IconClass = "bi bi-funnel-fill"
+        })
+
+
+        <!-- Acciones -->
+        <div style="display:flex; gap:10px; padding-bottom:20px; padding-top:20px; align-items:center; justify-content:space-between">
+            @await Component.InvokeAsync("Buscador", new BuscadorModel
+            {
+                Name = "busqueda",
+                Placeholder = "Buscar aviso...",
+                Action = Url.Action("Index", "Avisos"),
+                Method = "get",
+                Value = Context.Request.Query["busqueda"]
+            })
+            @if (User.IsInRole(Constantes.COORDINADOR_EA))
+            {
+            <a href="@Url.Action("CrearAviso", "Avisos")" style="display: inline-block; text-decoration: none;">
+                @await Component.InvokeAsync("Boton", new
+                {
+                    Accion = "Agregar",
+                    Texto = "Crear Aviso"
+                })
+            </a>
+            }
+        </div>
+
+        <!-- Campos ocultos para paginación -->
+        <input type="hidden" name="pagina" id="paginaHidden" value="@Model.PaginaActual" />
+        <input type="hidden" name="cantidad" id="cantidadHidden" value="@Model.CantidadPorPagina" />
+
+    </form>
+
+    @await Component.InvokeAsync("Tabs", tabs)
+</div>
+
+@await Component.InvokeAsync("ModalArchivo", new ModalArchivoModel
+{
+    Id = "modalFirmarAviso",
+    FormatosAceptados = ".pdf",
+    TamanioMaximo = 20,
+    OnConfirm = "firmarAviso()"
+})
+
+<dialog id="funcionPendienteAviso" class="aviso-dialog" aria-labelledby="funcionPendienteTitulo">
+    <div class="aviso-dialog-header">
+        <div><span class="aviso-dialog-etiqueta">EN CONSTRUCCIÓN</span><h2 id="funcionPendienteTitulo">Función pendiente</h2></div>
+        <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('funcionPendienteAviso').close()" aria-label="Cerrar"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    </div>
+    <p class="py-3">Esta función está en construcción y estará disponible próximamente.</p>
+    <form method="dialog"><button class="btn btn-primary">Entendido</button></form>
+</dialog>
+
+<dialog id="comentariosAviso" class="aviso-dialog" aria-labelledby="comentariosAvisoTitulo">
+    <div class="aviso-dialog-header">
+        <div><span class="aviso-dialog-etiqueta">SEGUIMIENTO DEL AVISO</span><h2 id="comentariosAvisoTitulo">Comentarios</h2></div>
+        <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('comentariosAviso').close()" aria-label="Cerrar comentarios"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    </div>
+    <p id="comentariosAvisoTexto"></p>
+    <form method="dialog"><button class="btn btn-primary">Entendido</button></form>
+</dialog>
+
+@await Component.InvokeAsync("ModalFormulario", new ModalFormularioModel
+{
+    Id = "modalPublicar",
+    Titulo = "Publicar",
+    PartialView = "_ModalPublicar",
+    PartialModel = Model.Modal,
+    OnConfirm = "publicar()",
+    OnCancel = "cerrarModal('modalPublicar')"
+})
+
+<script>
+    const UrlFirmarAviso = '@Url.Action("FirmarAviso", "Avisos")';
+    const UrlPublicarAviso = '@Url.Action("PublicarAviso", "Avisos")';
+    const UrlArchivarAviso = '@Url.Action("ArchivarAviso", "Avisos")';
+    const UrlDesarchivarAviso = '@Url.Action("DesarchivarAviso", "Avisos")';
+</script>
+
+@section Scripts {
+    <script src="~/js/cargarArchivo.js"></script>
+    <script src="~/js/avisos-flujo.js" asp-append-version="true"></script>
+}

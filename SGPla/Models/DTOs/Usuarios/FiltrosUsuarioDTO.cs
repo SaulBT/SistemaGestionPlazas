@@ -4,8 +4,6 @@
     {
         public string? Rol { get; set; }
 
-        // Filtro del MVC normalizado: siempre identifica el registro del catálogo.
-        public int? RegionId { get; set; }
         public string? Region { get; set; }
         public int? IdAreaAcademica { get; set; }
         public int? IdEntidadAcademica { get; set; }

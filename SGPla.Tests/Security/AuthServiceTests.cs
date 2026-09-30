@@ -1,97 +1,65 @@
-using Microsoft.EntityFrameworkCore;
 using Moq;
-using SGPla.Data.NewModel;
-using SGPla.Data.NewModel.Entities;
+using SGPla.Commons;
+using SGPla.Models;
 using SGPla.Repositories.Interfaces;
 using SGPla.Services.Implementations;
 using SGPla.Services.Interfaces;
 
 namespace SGPla.Tests.Security;
 
-[Collection("SQL Server integration")]
-public sealed class AuthServiceTests
+public class AuthServiceTests
 {
-    private const string ConnectionEnvironmentVariable = "SGPLA_SQLSERVER_TEST_CONNECTION";
+    private readonly Mock<ILdapAuthService> _ldap = new();
+    private readonly Mock<ICoordinadorDgaaRepository> _dgaa = new();
+    private readonly Mock<ICoordinadorEaRepository> _entidad = new();
 
-    [SqlServerFact]
-    public async Task Superusuario_usa_Argon2id_sin_ldap_y_obliga_el_cambio_de_contrasena()
+    [Fact]
+    public async Task LoginAsync_Superusuario_DevuelveSoloElRolSuperusuario()
     {
-        var options = new DbContextOptionsBuilder<SgplaDbContext>()
-            .UseSqlServer(Environment.GetEnvironmentVariable(ConnectionEnvironmentVariable)!).Options;
-        await using var db = new SgplaDbContext(options);
-        Assert.Equal("GestionDePlazasBD", db.Database.GetDbConnection().Database);
-
-        var token = Guid.NewGuid().ToString("N");
-        var user = new Usuario
+        const string correo = "super@uv.mx";
+        ConfigurarLdapExitoso(correo);
+        _dgaa.Setup(r => r.ObtenerSuperUsuarioPorCorreoAsync(correo)).ReturnsAsync(new SuperUsuario
         {
-            Correo = $"super-{token}@integration.invalid",
-            Nombre = "Superusuario de integración",
-            RolId = 1
-        };
-        var hasher = new Argon2idPasswordHasher();
-        const string passwordTemporal = "Temporal-1234";
-        const string passwordNueva = "Nueva-Valida-1234";
-        var passwordHash = hasher.Hash(passwordTemporal);
-        var ldap = new Mock<ILdapAuthService>();
-        ldap.Setup(x => x.Autenticar(It.IsAny<string>(), It.IsAny<string>())).Returns(false);
-        var dgaa = new Mock<ICoordinadorDgaaRepository>();
-        var ea = new Mock<ICoordinadorEaRepository>();
+            IdSuperUsuario = 7,
+            Correo = correo,
+            Nombre = "Cuenta administrativa"
+        });
+        _dgaa.Setup(r => r.ExisteCorreoAsync(correo)).ReturnsAsync(false);
+        _entidad.Setup(r => r.ExisteCorreoAsync(correo)).ReturnsAsync(false);
 
-        try
-        {
-            db.Usuarios.Add(user);
-            await db.SaveChangesAsync();
-            db.CredencialSuperusuarios.Add(new CredencialSuperusuario
-            {
-                UsuarioId = user.Id,
-                Contrasena = passwordHash,
-                FechaActualizacion = null
-            });
-            await db.SaveChangesAsync();
+        var resultado = await CrearServicio().LoginAsync(correo, "secreto");
 
-            var auth = new AuthService(db, hasher, ldap.Object, dgaa.Object, ea.Object, TimeProvider.System);
-            var loginContrasenaIncorrecta = await auth.LoginAsync(user.Correo, "incorrecta");
-            Assert.False(loginContrasenaIncorrecta.Exitoso);
-
-            var login = await auth.LoginAsync(user.Correo, passwordTemporal);
-            Assert.True(login.Exitoso);
-            Assert.Equal(user.Id, login.Usuario?.Id);
-            Assert.True(login.Usuario?.RequiereCambioContrasena);
-            ldap.Verify(x => x.Autenticar(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
-
-            Assert.False(await auth.CambiarContrasenaSuperusuarioAsync(user.Id,
-                "incorrecta", passwordNueva));
-            Assert.True(await auth.CambiarContrasenaSuperusuarioAsync(user.Id,
-                passwordTemporal, passwordNueva));
-
-            var storedCredential = await db.CredencialSuperusuarios.AsNoTracking().SingleAsync(x => x.UsuarioId == user.Id);
-            Assert.NotNull(storedCredential.FechaActualizacion);
-            Assert.NotEqual(passwordHash, storedCredential.Contrasena);
-            Assert.True(hasher.Verify(passwordNueva, storedCredential.Contrasena).EsCorrecta);
-
-            var loginContrasenaNueva = await auth.LoginAsync(user.Correo, passwordNueva);
-            Assert.True(loginContrasenaNueva.Exitoso);
-            Assert.False(loginContrasenaNueva.Usuario?.RequiereCambioContrasena);
-            Assert.False((await auth.LoginAsync(user.Correo, passwordTemporal)).Exitoso);
-            ldap.Verify(x => x.Autenticar(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
-        }
-        finally
-        {
-            if (user.Id > 0)
-            {
-                await db.CredencialSuperusuarios.IgnoreQueryFilters()
-                    .Where(x => x.UsuarioId == user.Id).ExecuteDeleteAsync();
-                await db.Usuarios.IgnoreQueryFilters().Where(x => x.Id == user.Id).ExecuteDeleteAsync();
-            }
-        }
+        Assert.True(resultado.Exitoso);
+        Assert.NotNull(resultado.Usuario);
+        Assert.Equal(Constantes.SUPERUSUARIO, resultado.Usuario.Rol);
     }
 
-    private sealed class SqlServerFactAttribute : FactAttribute
+    [Fact]
+    public async Task LoginAsync_CoordinadorEntidad_IncluyeElAmbitoDeEntidad()
     {
-        public SqlServerFactAttribute()
+        const string correo = "entidad@uv.mx";
+        ConfigurarLdapExitoso(correo);
+        _dgaa.Setup(r => r.ObtenerSuperUsuarioPorCorreoAsync(correo)).ReturnsAsync((SuperUsuario?)null);
+        _dgaa.Setup(r => r.ExisteCorreoAsync(correo)).ReturnsAsync(false);
+        _entidad.Setup(r => r.ExisteCorreoAsync(correo)).ReturnsAsync(true);
+        _entidad.Setup(r => r.ObtenerPorCorreoAsync(correo)).ReturnsAsync(new CoordinadorEa
         {
-            if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(ConnectionEnvironmentVariable)))
-                Skip = $"Configura {ConnectionEnvironmentVariable} para ejecutar la prueba de integración con SQL Server.";
-        }
+            IdCoordinadorEa = 8,
+            IdEntidadAcademica = 42,
+            Correo = correo,
+            Nombre = "Coordinación de entidad"
+        });
+
+        var resultado = await CrearServicio().LoginAsync(correo, "secreto");
+
+        Assert.True(resultado.Exitoso);
+        Assert.NotNull(resultado.Usuario);
+        Assert.Equal(Constantes.COORDINADOR_EA, resultado.Usuario.Rol);
+        Assert.Equal(42, resultado.Usuario.EntidadAcademicaId);
     }
+
+    private AuthService CrearServicio() => new(_ldap.Object, _dgaa.Object, _entidad.Object);
+
+    private void ConfigurarLdapExitoso(string correo) =>
+        _ldap.Setup(s => s.Autenticar(correo, It.IsAny<string>())).Returns(true);
 }

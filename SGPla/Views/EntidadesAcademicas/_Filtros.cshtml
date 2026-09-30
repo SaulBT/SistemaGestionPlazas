@@ -6,14 +6,12 @@
     {
         Label = "Región",
         Options = Model.Regiones,
-        Name = "regionId",
-        SelectedValue = Model.RegionIdSeleccionada?.ToString()
+        Name = "region"
     })
     @await Component.InvokeAsync("SelectField", new SelectFieldModel
     {
         Label = "Área Académica",
         Options = Model.Areas,
-        Name = "areaAcademicaId",
-        SelectedValue = Model.AreaAcademicaIdSeleccionada?.ToString()
+        Name = "idAreaAcademica"
     })
 </div>

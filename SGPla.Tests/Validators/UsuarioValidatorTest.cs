@@ -4,17 +4,13 @@ using SGPla.Models.DTOs.Usuarios;
 using SGPla.Commons;
 using SGPla.Validations.Implementations;
 using SGPla.Models;
-using SGPla.Services.Interfaces;
-using SGPla.Models.ViewModels.Catalogos;
-using SGPla.Models.DTOs.EntidadAcademica;
-using System.Threading;
 
 public class UsuarioValidatorTests
 {
     private readonly Mock<ICoordinadorEaRepository> _coordinadorEaRepositoryMock;
     private readonly Mock<ICoordinadorDgaaRepository> _coordinadorDgaaRepositoryMock;
     private readonly Mock<IAreaAcademicaRepository> _areaAcademicaRepositoryMock;
-    private readonly Mock<IEntidadAcademicaMvcRepository> _entidadAcademicaRepositoryMock;
+    private readonly Mock<IEntidadAcademicaRepository> _entidadAcademicaRepositoryMock;
     private readonly UsuarioValidator _usuarioValidator;
 
     public UsuarioValidatorTests()
@@ -22,7 +18,7 @@ public class UsuarioValidatorTests
         _coordinadorEaRepositoryMock = new Mock<ICoordinadorEaRepository>();
         _coordinadorDgaaRepositoryMock = new Mock<ICoordinadorDgaaRepository>();
         _areaAcademicaRepositoryMock = new Mock<IAreaAcademicaRepository>();
-        _entidadAcademicaRepositoryMock = new Mock<IEntidadAcademicaMvcRepository>();
+        _entidadAcademicaRepositoryMock = new Mock<IEntidadAcademicaRepository>();
 
         _usuarioValidator = new UsuarioValidator(
             _coordinadorEaRepositoryMock.Object,
@@ -175,8 +171,8 @@ public class UsuarioValidatorTests
             .ReturnsAsync(false);
 
         _entidadAcademicaRepositoryMock
-            .Setup(r => r.ObtenerPorIdAsync(dto.IdEntidadAcademica.Value, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((EntidadAcademicaMvcDto?)null);
+            .Setup(r => r.ExistePorIdAsync(dto.IdEntidadAcademica.Value))
+            .ReturnsAsync(false);
 
         var ex = await Record.ExceptionAsync(() => _usuarioValidator.ValidarCreacionAsync(dto));
 
@@ -369,8 +365,8 @@ public class UsuarioValidatorTests
             .ReturnsAsync(new CoordinadorEa { IdCoordinadorEa = 534, IdEntidadAcademica = 200, Nombre = "Ángel Bocanegra", Correo = "angel@uv.mx", Cargo = "Jefe de Unidad" });
 
         _entidadAcademicaRepositoryMock
-            .Setup(repository => repository.ObtenerPorIdAsync(76, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((EntidadAcademicaMvcDto?)null);
+            .Setup(repository => repository.ExistePorIdAsync(76))
+            .ReturnsAsync(false);
 
         var ex = await Record.ExceptionAsync(() => _usuarioValidator.ValidarEdicionAsync(dto));
 

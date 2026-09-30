@@ -1,0 +1,87 @@
+@using SGPla.Models.ViewModels.Docentes
+@model VerDocumentosPersonalViewModel
+
+@{
+    var urlPdf = Url.Action("ObtenerPdfDocente", "Docentes", new { idArchivo = Model.IdArchivo });
+}
+
+<input id="idArchivo" type="hidden" value="@Model.IdArchivo" />
+<!-- BOTON DESCARGAR -->
+<div class="d-flex justify-content-end my-3">
+    @await Component.InvokeAsync("Boton", new
+    {
+        accion = "descargar",
+        OnClick = "descargarArchivo()"
+    })
+</div>
+
+<div id="pdf-viewer-container" style="overflow-y: auto; background-color: #525659;">
+    <div id="pdf-paginas" style="display: flex; flex-direction: column; align-items: center; padding: 16px; gap: 16px;"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    const urlPdf = '@urlPdf';
+
+    async function cargarPdf() {
+        try {
+            const pdfDoc = await pdfjsLib.getDocument(urlPdf).promise;
+            const contenedor = document.getElementById('pdf-paginas');
+
+            for (let numeroPagina = 1; numeroPagina <= pdfDoc.numPages; numeroPagina++) {
+                const pagina = await pdfDoc.getPage(numeroPagina);
+                const viewport = pagina.getViewport({ scale: 1.5 });
+
+                const canvas = document.createElement('canvas');
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                canvas.style.boxShadow = '0 2px 8px rgba(0,0,0,0.5)';
+                contenedor.appendChild(canvas);
+
+                await pagina.render({
+                    canvasContext: canvas.getContext('2d'),
+                    viewport: viewport
+                }).promise;
+            }
+        } catch (error) {
+            console.error('Error al cargar el PDF:', error);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', cargarPdf);
+
+    async function descargarArchivo(){
+        const idArchivo = document.getElementById("idArchivo").value;
+        var response = await fetch(`@Url.Action("DescargarArchivo", "Docentes")?idArchivo=${idArchivo}`);
+
+        if (response.ok){
+            const blob = await response.blob();
+
+            const disposition = response.headers.get("Content-Disposition");
+
+            let nombreArchivo = "archivo";
+
+            if (disposition && disposition.includes("filename="))
+            {
+                nombreArchivo = disposition.split(";")[1].split("=")[1].replaceAll('"', '');
+            }
+
+            const url = window.URL.createObjectURL(blob);
+
+            const a = document.createElement("a");
+
+            a.href = url;
+            a.download = nombreArchivo;
+
+            document.body.appendChild(a);
+
+            a.click();
+
+            a.remove();
+
+            window.URL.revokeObjectURL(url);
+        }
+    }
+</script>

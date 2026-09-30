@@ -28,4 +28,6 @@ public partial class ExperienciaEducativa
     public virtual PlanEstudios IdPlanEstudiosNavigation { get; set; } = null!;
 
     public virtual ICollection<Oferta> Oferta { get; set; } = new List<Oferta>();
+
+    public virtual ICollection<ExperienciaEducativaPeriodo> ExperienciaEducativaPeriodo { get; set; } = new List<ExperienciaEducativaPeriodo>();
 }

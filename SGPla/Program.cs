@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using SGPla.Data;
-using SGPla.Data.NewModel;
 using SGPla.Repositories.Implementations;
 using SGPla.Repositories.Interfaces;
 using SGPla.Services.Implementations;
@@ -18,8 +16,9 @@ using SGPla.Modules.EntidadesAcademicas;
 using SGPla.Modules.ProgramasEducativos;
 using SGPla.Commons;
 using System.Security.Claims;
-using System.Net;
 using System.Text;
+using System.Net;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 // Solo el Compose aislado activa este modo; no cambia las cookies del entorno habitual.
@@ -47,79 +46,61 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<GestionDePlazasDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-// El MVC nuevo usa exclusivamente los esquemas normalizados. El contexto
-// Database-First anterior se conserva para los módulos REST legacy.
-builder.Services.AddDbContext<SgplaDbContext>(options =>
-    options.UseSqlServer(connectionString, sql =>
-        sql.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
-builder.Services.AddSingleton(TimeProvider.System);
-
 //Clases
-builder.Services.AddScoped<ICoordinadorEaRepository, NormalizedCoordinadorEaRepository>();
-builder.Services.AddScoped<ICoordinadorDgaaRepository, NormalizedCoordinadorDgaaRepository>();
-builder.Services.AddScoped<IUsuarioConsultaRepository, NormalizedUsuarioConsultaRepository>();
+builder.Services.AddScoped<ICoordinadorEaRepository, CoordinadorEaRepository>();
+builder.Services.AddScoped<ICoordinadorDgaaRepository, CoordinadorDgaaRepository>();
 builder.Services.AddScoped<IUsuarioValidator, UsuarioValidator>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
-builder.Services.AddScoped<ISuperusuarioAdminService, SuperusuarioAdminService>();
-builder.Services.AddScoped<ICatalogosMvcService, CatalogosMvcService>();
-builder.Services.AddScoped<IAdministracionCatalogosMvcService, AdministracionCatalogosMvcService>();
-builder.Services.AddScoped<IRegionCampusMvcRepository, NormalizedRegionCampusMvcRepository>();
-builder.Services.AddScoped<IRegionCampusMvcService, RegionCampusMvcService>();
-builder.Services.AddScoped<IProgramacionAcademicaMvcRepository, NormalizedProgramacionAcademicaMvcRepository>();
-builder.Services.AddScoped<IProgramacionAcademicaMvcService, ProgramacionAcademicaMvcService>();
-builder.Services.AddScoped<IDocenteDirectorioMvcRepository, NormalizedDocenteDirectorioMvcRepository>();
-builder.Services.AddScoped<IDocenteDirectorioMvcService, DocenteDirectorioMvcService>();
-builder.Services.AddScoped<IOfertaMvcRepository, NormalizedOfertaMvcRepository>();
-builder.Services.AddScoped<IOfertaMvcService, OfertaMvcService>();
-builder.Services.AddScoped<IAvisoMvcRepository, NormalizedAvisoMvcRepository>();
-builder.Services.AddScoped<IAvisoMvcService, AvisoMvcService>();
-builder.Services.AddSingleton<IAlmacenDocumentos, AlmacenDocumentosLocal>();
-builder.Services.AddScoped<IDocumentoAvisoMvcRepository, NormalizedDocumentoAvisoMvcRepository>();
-builder.Services.AddScoped<IDocumentoAvisoMvcService, DocumentoAvisoMvcService>();
-builder.Services.AddScoped<IIntegranteConsejoTecnicoMvcRepository, NormalizedIntegranteConsejoTecnicoMvcRepository>();
-builder.Services.AddScoped<IIntegranteConsejoTecnicoMvcService, IntegranteConsejoTecnicoMvcService>();
-builder.Services.AddScoped<ISolicitudMvcRepository, NormalizedSolicitudMvcRepository>();
-builder.Services.AddScoped<ISolicitudMvcService, SolicitudMvcService>();
-builder.Services.AddSingleton<Microsoft.Extensions.Options.IValidateOptions<PlaneaOptions>, PlaneaOptions>();
-builder.Services.AddOptions<PlaneaOptions>()
-    .BindConfiguration(PlaneaOptions.Seccion)
-    .Validate(options => builder.Environment.IsDevelopment() || !string.IsNullOrWhiteSpace(options.ApiKey),
-        "Planea:ApiKey es obligatoria fuera de Development.")
-    .ValidateOnStart();
-// El modo Query incluye la credencial en la URI. Se desactivan los logs de
-// transporte informativos para evitar que un handler registre ese valor.
-builder.Logging.AddFilter("System.Net.Http.HttpClient.IPlaneaClient", LogLevel.Warning);
-builder.Services.AddHttpClient<IPlaneaClient, PlaneaClient>()
-    .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
-    {
-        AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli
-    });
-builder.Services.AddScoped<IPlaneaSnapshotValidator, PlaneaSnapshotValidator>();
-builder.Services.AddScoped<ISincronizacionPlaneaService, SincronizacionPlaneaService>();
-builder.Services.AddSingleton<CanalSincronizacionPlanea>();
-builder.Services.AddHostedService<SincronizacionPlaneaWorker>();
 
-builder.Services.AddScoped<IAreaAcademicaRepository, NormalizedAreaAcademicaRepository>();
+builder.Services.AddScoped<IAreaAcademicaRepository, AreaAcademicaRepository>();
 builder.Services.AddScoped<IAreaAcademicaValidator, AreaAcademicaValidator>();
 builder.Services.AddScoped<IAreaAcademicaService, AreaAcademicaService>();
 
-builder.Services.AddScoped<IEntidadAcademicaMvcRepository, NormalizedEntidadAcademicaMvcRepository>();
-builder.Services.AddScoped<IEntidadAcademicaMvcService, EntidadAcademicaMvcService>();
-builder.Services.AddScoped<IProgramaEducativoMvcRepository, NormalizedProgramaEducativoMvcRepository>();
-builder.Services.AddScoped<IProgramaEducativoMvcService, ProgramaEducativoMvcService>();
-builder.Services.AddScoped<IPlanEstudiosMvcRepository, NormalizedPlanEstudiosMvcRepository>();
-builder.Services.AddScoped<IPlanEstudiosMvcService, PlanEstudiosMvcService>();
-builder.Services.AddScoped<IPlanEstudiosExcelImportador, PlanEstudiosExcelImportador>();
+builder.Services.AddScoped<IEntidadAcademicaRepository, EntidadAcademicaRepository>();
+builder.Services.AddScoped<IEntidadAcademicaValidator, EntidadAcademicaValidator>();
+builder.Services.AddScoped<IEntidadAcademicaService, EntidadAcademicaService>();
 
-builder.Services.AddScoped<IArticuloRepository, NormalizedArticuloRepository>();
+builder.Services.AddScoped<IArticuloRepository, ArticuloRepository>();
 builder.Services.AddScoped<IArticuloService, ArticuloService>();
 builder.Services.AddScoped<IArticuloValidator, ArticuloValidator>();
 
-builder.Services.AddScoped<IPeriodoEscolarRepository, NormalizedPeriodoEscolarRepository>();
+builder.Services.AddScoped<IProgramaEducativoRepository, ProgramaEducativoRepository>();
+builder.Services.AddScoped<IProgramaEducativoService,  ProgramaEducativoService>();
+builder.Services.AddScoped<IProgramaEducativoValidator, ProgramaEducativoValidator>();
+builder.Services.AddScoped<IPlanEstudiosRepository, PlanEstudiosRepository>();
+builder.Services.AddScoped<IExperienciaEducativaRepository, ExperienciaEducativaRepository>();
+builder.Services.AddScoped<IPlanEstudiosValidator, PlanEstudiosValidator>();
+builder.Services.AddScoped<IPlanEstudiosService, PlanEstudiosService>();
+
+builder.Services.AddScoped<IPeriodoEscolarRepository, PeriodoEscolarRepository>();
 builder.Services.AddScoped<IPeriodoEscolarService, PeriodoEscolarService>();
 builder.Services.AddScoped<IPeriodoEscolarValidator, PeriodoEscolarValidator>();
 
+builder.Services.AddScoped<IArchivoRepository, ArchivoRepository>();
+builder.Services.AddScoped<IArchivoService, ArchivoService>();
+
+builder.Services.AddScoped<IIntegranteCtService, IntegranteCtService>();
+builder.Services.AddScoped<IIntegranteCtRepository, IntegranteCtRepository>();
+builder.Services.AddScoped<IIntegranteCtValidator, IntegranteCtValidator>();
+
+builder.Services.AddScoped<IDocenteService, DocenteService>();
+builder.Services.AddScoped<IDocenteRepository, DocenteRepository>();
+builder.Services.AddScoped<IDocenteValidator, DocenteValidator>();
+builder.Services.AddScoped<IAspiranteService, AspiranteService>();
+builder.Services.AddScoped<IAspiranteRepository, AspiranteRepository>();
+builder.Services.AddScoped<IAspiranteValidator, AspiranteValidator>();
+builder.Services.AddScoped<IGradoRepository, GradoRepository>();
+
+builder.Services.AddScoped<IProgramacionAcademicaRepository, ProgramacionAcademicaRepository>();
+builder.Services.AddScoped<IDocenteRepository, DocenteRepository>();
+
+builder.Services.AddScoped<IProgramacionAcademicaValidator, ProgramacionAcademicaValidator>();
+builder.Services.AddScoped<IProgramacionAcademicaService, ProgramacionAcademicaService>();
+
+builder.Services.AddScoped<IPlantillaService, PlantillaService>();
+
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IEstadoNavegacion, EstadoNavegacion>();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -153,23 +134,6 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
             context.Response.Redirect(context.RedirectUri);
             return Task.CompletedTask;
         };
-        options.Events.OnValidatePrincipal = async context =>
-        {
-            // El MVC normalizado revalida rol y ámbito contra usuarios.* en cada
-            // solicitud. Se conserva la validación anterior del API legacy.
-            if (context.Request.Path.StartsWithSegments("/api"))
-                return;
-
-            var validator = context.HttpContext.RequestServices.GetRequiredService<IUsuarioSesionValidator>();
-            var vigente = await validator.EsSesionVigenteAsync(
-                context.Principal,
-                context.HttpContext.RequestAborted);
-            if (vigente)
-                return;
-
-            context.RejectPrincipal();
-            await context.HttpContext.SignOutAsync(context.Scheme.Name);
-        };
     });
 
 builder.Services.AddAuthorization(options =>
@@ -197,8 +161,34 @@ builder.Services.AddProgramasEducativosModule();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ILdapAuthService, LdapAuthService>();
-builder.Services.AddSingleton<IArgon2idPasswordHasher, Argon2idPasswordHasher>();
-builder.Services.AddScoped<IUsuarioSesionValidator, NormalizedUsuarioSesionValidator>();
+
+builder.Services.AddScoped<IAvisoService, AvisoService>();
+builder.Services.AddScoped<IAvisoRepository, AvisoRepository>();
+builder.Services.AddScoped<IOfertaRepository, OfertaRepository>();
+builder.Services.AddScoped<IHorarioRepository, HorarioRepository>();
+builder.Services.AddScoped<IAvisoValidator, AvisoValidator>();
+
+// Sincronización PLANEA (MVC)
+builder.Services.AddOptions<PlaneaOpciones>()
+    .Bind(builder.Configuration.GetSection(PlaneaOpciones.Seccion))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+builder.Services.AddHttpClient<IPlaneaCliente, PlaneaCliente>((proveedor, cliente) =>
+    {
+        var opciones = proveedor.GetRequiredService<IOptions<PlaneaOpciones>>().Value;
+        cliente.BaseAddress = new Uri(opciones.UrlBase.EndsWith('/') ? opciones.UrlBase : opciones.UrlBase + "/");
+        cliente.Timeout = opciones.TiempoEspera;
+        cliente.DefaultRequestHeaders.Accept.ParseAdd("application/json");
+        if (!string.IsNullOrWhiteSpace(opciones.ApiKey))
+            cliente.DefaultRequestHeaders.TryAddWithoutValidation(opciones.NombreCabeceraToken, opciones.ApiKey);
+    })
+    .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler { AutomaticDecompression = DecompressionMethods.All });
+builder.Services.AddScoped<ISincronizacionPlaneaRepository, SincronizacionPlaneaRepository>();
+builder.Services.AddScoped<ISincronizarPeriodoPlaneaService, SincronizarPeriodoPlaneaService>();
+builder.Services.AddScoped<ISincronizarPeriodosVigentesService, SincronizarPeriodosVigentesService>();
+builder.Services.AddHostedService<SincronizacionPlaneaWorker>();
+builder.Services.AddScoped<IProgramacionPlaneaRepository, ProgramacionPlaneaRepository>();
+builder.Services.AddScoped<IProgramacionPlaneaService, ProgramacionPlaneaService>();
 
 var app = builder.Build();
 
@@ -282,7 +272,6 @@ if (app.Environment.IsDevelopment()
     });
 }
 
-app.UseMiddleware<CambioContrasenaObligatorioMiddleware>();
 app.UseAuthorization();  // 4. ¿qué puedes hacer?
 
 app.MapStaticAssets().AllowAnonymous();

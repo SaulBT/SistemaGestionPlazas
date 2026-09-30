@@ -35,13 +35,10 @@
         <nav class="menu-lateral" id="menuLateral">
             <div class="menu-items">
 
-                <span class="menu-item menu-item-disabled"
-                    role="link"
-                    aria-disabled="true"
-                    title="En construcción">
+                <!-- Notificaciones -->
+                <a href="/Notificaciones" class="menu-item @(IsActiveController("Notificaciones"))">
                     <span>Notificaciones</span>
-                    <small>En construcción</small>
-                </span>
+                </a>
 
                 <!-- ProgramacionesAcademicas -->
                 <a href="/ProgramacionesAcademicas" class="menu-item @(IsActiveController("ProgramacionesAcademicas"))">
@@ -49,18 +46,18 @@
                 </a>
 
                 <!-- Avisos -->
-                <a href="/Avisos" class="menu-item @(IsActiveController("AvisosMvc"))">
+                <a href="/Avisos" class="menu-item @(IsActiveController("Avisos"))">
                     <span>Avisos</span>
                 </a>
 
-                <span class="menu-item menu-item-disabled"
-                    role="link"
-                    aria-disabled="true"
-                    title="En construcción">
+                <!-- ActasConsejoTecnico -->
+                <a href="/ActasConsejoTecnico" class="menu-item @(IsActiveController("ActasConsejoTecnico"))">
                     <span>Actas de Consejo Técnico</span>
-                    <small>En construcción</small>
-                </span>
+                </a>
 
+              
+
+                <!-- Estadísticas: pendiente de implementación -->
                 <span class="menu-item menu-item-disabled"
                     role="link"
                     aria-disabled="true"

@@ -22,6 +22,16 @@
     <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:center; justify-content:space-between; background-color:var(--bg-gris)">
         @await Component.InvokeAsync("InputField", new InputFieldModel
         {
+            Id = "cargo",
+            Name = "cargo",
+            Label = "Cargo:",
+            Valor = Model.Cargo,
+            Disabled = true,
+            Flexible = true
+        })
+
+        @await Component.InvokeAsync("InputField", new InputFieldModel
+        {
             Id = "correo",
             Name = "correo",
             Label = "Correo:",

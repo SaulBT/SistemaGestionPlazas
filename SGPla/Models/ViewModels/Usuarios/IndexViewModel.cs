@@ -9,7 +9,7 @@ namespace SGPla.Models.ViewModels.Usuarios
         public List<OptionModel> Areas { get; set; }
         public List<OptionModel> Entidades { get; set; }
 
-        public int? RegionSeleccionadaId { get; set; }
+        public string? RegionSeleccionada { get; set; }
         public int? IdAreaSeleccionada { get; set; }
         public int? IdEntidadSeleccionada { get; set; }
         public string? Busqueda { get; set; }
@@ -19,3 +19,4 @@ namespace SGPla.Models.ViewModels.Usuarios
         public int CantidadPorPagina { get; set; } = 10;
     }
 }
+

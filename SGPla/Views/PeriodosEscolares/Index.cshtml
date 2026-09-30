@@ -101,10 +101,22 @@
         document.getElementById("formPeriodoEscolar").action =
             "@Url.Action("Crear", "PeriodosEscolares")";
 
-        const idPeriodoEscolar = document.getElementById("IdPeriodoEscolar");
-        if (idPeriodoEscolar) idPeriodoEscolar.value = "";
+        document.getElementById("IdPeriodoEscolar").value = "";
         document.getElementById("Anio").value = "";
         document.getElementById("Periodo").value = "";
+
+        abrirModal("modalPeriodoEscolar");
+    }
+
+    function abrirModalEditarPeriodoEscolar(id, anio, periodo) {
+        limpiarErroresFormularioPeriodoEscolar();
+
+        document.getElementById("formPeriodoEscolar").action =
+            "@Url.Action("Editar", "PeriodosEscolares")";
+
+        document.getElementById("IdPeriodoEscolar").value = id;
+        document.getElementById("Anio").value = anio;
+        document.getElementById("Periodo").value = periodo;
 
         abrirModal("modalPeriodoEscolar");
     }

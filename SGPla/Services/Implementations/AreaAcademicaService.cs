@@ -29,7 +29,7 @@ namespace SGPla.Services.Implementations
             var areaAcademica = new AreaAcademica
             {
                 Nombre = dto.Nombre,
-                    Telefono = dto.Telefono ?? string.Empty,
+                Telefono = dto.Telefono,
                 Extension = string.IsNullOrWhiteSpace(dto.Extension) ? null : dto.Extension.Trim(),
             };
 
@@ -86,7 +86,7 @@ namespace SGPla.Services.Implementations
             {
                 IdAreaAcademica = dto.IdAreaAcademica,
                 Nombre = dto.Nombre,
-                Telefono = dto.Telefono ?? string.Empty,
+                Telefono = dto.Telefono,
                 Extension = string.IsNullOrWhiteSpace(dto.Extension) ? null : dto.Extension.Trim(),
             };
 

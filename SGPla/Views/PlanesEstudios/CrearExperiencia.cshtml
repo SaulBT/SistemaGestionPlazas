@@ -1,5 +1,0 @@
-@using SGPla.Models.ViewModels.PlanesEstudios
-@model PlanEstudiosMvcExperienciaViewModel
-@{ ViewData["Title"] = "Agregar Experiencia Educativa"; }
-<div class="container py-3"><h1>Agregar Experiencia Educativa</h1><div asp-validation-summary="ModelOnly" class="text-danger"></div><form asp-action="CrearExperiencia" method="post" class="card card-body" style="max-width:800px">@Html.AntiForgeryToken()<input asp-for="PlanEstudiosId" type="hidden" /><partial name="_FormularioExperienciaMvc" model="Model" /><div class="d-flex gap-2"><button class="btn btn-primary">Agregar</button><a asp-action="Ver" asp-route-id="@Model.PlanEstudiosId" class="btn btn-secondary">Cancelar</a></div></form></div>
-@section Scripts { <partial name="_ValidationScriptsPartial" /> }

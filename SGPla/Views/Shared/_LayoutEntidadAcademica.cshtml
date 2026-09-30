@@ -35,13 +35,10 @@
         <nav class="menu-lateral" id="menuLateral">
             <div class="menu-items">
 
-                <span class="menu-item menu-item-disabled"
-                      role="link"
-                      aria-disabled="true"
-                      title="En construcción">
+                <!-- Notificaciones -->
+                <a href="/Notificaciones" class="menu-item @(IsActiveController("Notificaciones"))">
                     <span>Notificaciones</span>
-                    <small>En construcción</small>
-                </span>
+                </a>
 
                 <!-- ProgramacionesAcademicas -->
                 <a href="/ProgramacionesAcademicas" class="menu-item @(IsActiveController("ProgramacionesAcademicas"))">
@@ -49,8 +46,13 @@
                 </a>
 
                 <!-- Avisos -->
-                <a href="/Avisos" class="menu-item @(IsActiveController("AvisosMvc"))">
+                <a href="/Avisos" class="menu-item @(IsActiveController("Avisos"))">
                     <span>Avisos</span>
+                </a>
+
+                <!-- ActasConsejoTecnico -->
+                <a href="/ActasConsejoTecnico" class="menu-item @(IsActiveController("ActasConsejoTecnico"))">
+                    <span>Actas de Consejo Técnico</span>
                 </a>
 
                 <!-- Docentes -->
@@ -58,27 +60,15 @@
                     <span>Docentes</span>
                 </a>
 
-
-                <!-- ConsejoTecnico -->
-                <a href="/IntegranteCT" class="menu-item @(IsActiveController("IntegranteConsejoTecnicoMvc"))">
-                    <span>Consejo Técnico</span>
+                <!-- Estadisticas -->
+                <a href="/Estadisticas" class="menu-item @(IsActiveController("Estadisticas"))">
+                    <span>Estadísticas</span>
                 </a>
 
-                <span class="menu-item menu-item-disabled"
-                      role="link"
-                      aria-disabled="true"
-                      title="En construcción">
-                    <span>Actas de Consejo</span>
-                    <small>En construcción</small>
-                </span>
-
-                <span class="menu-item menu-item-disabled"
-                      role="link"
-                      aria-disabled="true"
-                      title="En construcción">
-                    <span>Estadísticas</span>
-                    <small>En construcción</small>
-                </span>
+                <!-- ConsejoTecnico -->
+                <a href="/IntegranteCT" class="menu-item @(IsActiveController("IntegranteCT"))">
+                    <span>Consejo Técnico</span>
+                </a>
             </div>
         </nav>
 

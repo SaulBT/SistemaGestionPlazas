@@ -35,8 +35,14 @@ namespace SGPla.Tests.Services
                 Periodo = "Febrero-Julio"
             };
 
+            var result = new Periodo
+            {
+                Codigo = "202551"
+            };
+
             _periodoEscolarRepositoryMock.Setup(r => r.CrearAsync(It.IsAny<Periodo>()))
-                .ReturnsAsync((Periodo periodo) => periodo);
+            .Callback<Periodo>(p => result = p)
+            .ReturnsAsync(result);
 
             _periodoEscolarValidatorMock.Setup(v => v.ValidarCreacionAsync(dto)).Returns(Task.CompletedTask);
 
@@ -45,7 +51,7 @@ namespace SGPla.Tests.Services
             Assert.NotNull(periodoEscolar);
             Assert.Equal(dto.Anio + "", periodoEscolar.Anio + "");
             Assert.Equal(dto.Periodo, periodoEscolar.Periodo);
-            Assert.Equal("202451", periodoEscolar.Codigo);
+            Assert.Equal(result.Codigo, periodoEscolar.Codigo);
         }
 
         //CP-07-06
@@ -55,16 +61,22 @@ namespace SGPla.Tests.Services
         {
             var dto = new EditarPeriodoEscolarDTO
             {
-                Codigo = "202451",
+                Codigo = "202551",
                 Anio = "2024",
                 Periodo = "Febrero-Julio"
             };
+            var result = new Periodo
+            {
+                Codigo = "202551",
+
+            };
             _periodoEscolarRepositoryMock.Setup(r => r.ActualizarAsync(It.IsAny<Periodo>()))
-                .ReturnsAsync((Periodo periodo) => periodo);
+            .Callback<Periodo>(p => result = p)
+            .ReturnsAsync(result);
             _periodoEscolarValidatorMock.Setup(v => v.ValidarEdicionAsync(dto)).Returns(Task.CompletedTask);
             var periodoEscolar = await _periodoEscolarService.EditarAsync(dto);
             Assert.NotNull(periodoEscolar);
-            Assert.Equal("202451", periodoEscolar.Codigo);
+            Assert.Equal(dto.Codigo, periodoEscolar.Codigo);
             Assert.Equal(dto.Anio + "", periodoEscolar.Anio + "");
             Assert.Equal(dto.Periodo, periodoEscolar.Periodo);
         }

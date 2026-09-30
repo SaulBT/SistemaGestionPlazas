@@ -1,24 +1,169 @@
-@model SGPla.Models.DTOs.EntidadAcademica.EntidadAcademicaMvcDto
+﻿@using SGPla.Models.DTOs.EntidadAcademica
+
+
+@model DatosEntidadAcademicaDTO
 @{
-    Layout = "_LayoutSuperUsuario";
-    ViewData["Title"] = "Entidad Académica";
+    ViewData["Title"] = "Agregar Entidad Académica";
+    ViewBag.RegresarUrl = Url.Action("Index", "EntidadesAcademicas");
 }
 
-<section class="container py-4">
-    <h1>@Model.Nombre</h1>
-    <dl class="row mt-4">
-        <dt class="col-sm-3">Clave</dt><dd class="col-sm-9">@Model.Clave</dd>
-        <dt class="col-sm-3">Campus</dt><dd class="col-sm-9">@Model.CampusNombre</dd>
-        <dt class="col-sm-3">Región</dt><dd class="col-sm-9">@Model.RegionNombre</dd>
-        <dt class="col-sm-3">Área académica</dt><dd class="col-sm-9">@Model.AreaAcademicaNombre</dd>
-        <dt class="col-sm-3">Calle</dt><dd class="col-sm-9">@Model.Calle</dd>
-        <dt class="col-sm-3">Número exterior</dt><dd class="col-sm-9">@(Model.NumeroExterior ?? "Sin número")</dd>
-        <dt class="col-sm-3">Colonia</dt><dd class="col-sm-9">@Model.Colonia</dd>
-        <dt class="col-sm-3">Código postal</dt><dd class="col-sm-9">@Model.CodigoPostal</dd>
-        <dt class="col-sm-3">Municipio</dt><dd class="col-sm-9">@Model.MunicipioNombre</dd>
-        <dt class="col-sm-3">Teléfono</dt><dd class="col-sm-9">@Model.Telefono</dd>
-        <dt class="col-sm-3">Extensión</dt><dd class="col-sm-9">@(Model.Extension ?? "Sin extensión")</dd>
-    </dl>
-    <a class="btn btn-secondary" href="@Url.Action("Index")">Regresar</a>
-    <a class="btn btn-primary" href="@Url.Action("EditarEntidadAcademica", new { id = Model.Id })">Editar</a>
-</section>
+<!-- Campos -->
+<div style="padding-bottom:var(--padding-end); ">
+    <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:flex-start; justify-content:space-evenly; background-color:var(--bg-gris)">
+        <div style="width:100%">
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "clave",
+                Name = "clave",
+                Label = "Clave:",
+                Valor = Model.Clave,
+                Flexible = true,
+                Error = ViewData.ModelState["clave"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                MaximoCaracteres = 5,
+                Disabled = true
+            })
+        </div>
+            
+        <div style="width:300%">
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "nombre",
+                Name = "nombre",
+                Label = "Nombre",
+                Valor = Model.Nombre,
+                Flexible = true,
+                Error = ViewData.ModelState["nombre"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                MaximoCaracteres = 94,
+                Disabled = true
+            })
+        </div>
+    </div>
+
+    <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:flex-start; justify-content:space-evenly; background-color:var(--bg-gris)">
+        <div style="width:200%">
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "calleNumero",
+                Name = "calleNumero",
+                Label = "Domicilio (Calle y Número):",
+                Valor = Model.CalleNumero,
+                Flexible = true,
+                Error = ViewData.ModelState["calleNumero"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                MaximoCaracteres = 150,
+                Disabled = true
+            })
+        </div>
+            
+        <div style="width:100%">
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "colonia",
+                Name = "colonia",
+                Label = "Colonia:",
+                Valor = Model.Colonia,
+                Flexible = true,
+                Error = ViewData.ModelState["colonia"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                MaximoCaracteres = 100,
+                Disabled = true
+            })
+        </div>
+            
+        <div style="width:50%">
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "cp",
+                Name = "cp",
+                Label = "C.P. :",
+                Valor = Model.Cp,
+                Flexible = true,
+                Error = ViewData.ModelState["cp"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                MaximoCaracteres = 5,
+                Disabled = true
+            })
+        </div>
+            
+        <div style="width:100%">
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "municipio",
+                Name = "municipio",
+                Label = "Municipio:",
+                Valor = Model.Municipio,
+                Flexible = true,
+                Error = ViewData.ModelState["municipio"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                MaximoCaracteres = 100,
+                Disabled = true
+            })
+        </div>
+            
+    </div>
+
+    <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:flex-start; justify-content:space-evenly; background-color:var(--bg-gris)">
+        <div style="width:100%">
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "telefono",
+                Name = "telefono",
+                Label = "Teléfono:",
+                Valor = Model.Telefono,
+                Flexible = true,
+                Error = ViewData.ModelState["telefono"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                MaximoCaracteres = 30,
+                Disabled = true
+            })
+        </div>
+        
+        <div style="width:100%">
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "extension",
+                Name = "extension",
+                Label = "Extensión:",
+                Valor = Model.Extension ?? string.Empty,
+                Flexible = true,
+                Error = ViewData.ModelState["extension"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                MaximoCaracteres = 5,
+                Disabled = true
+            })
+        </div>
+    </div>
+
+    <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:flex-start; justify-content:space-evenly; width:100%; background-color:var(--bg-gris)">
+        <div style="width:100%">
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "region",
+                Name = "region",
+                Label = "Region:",
+                Valor = Model.Region,
+                Flexible = true,
+                Error = ViewData.ModelState["fax"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                Disabled = true
+            })
+        </div>
+
+        <div style="width:100%">
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
+                Id = "areaAcademica",
+                Name = "areaAcademica",
+                Label = "Área académica:",
+                Valor = Model.NombreEntidadAcademica,
+                Flexible = true,
+                Error = ViewData.ModelState["fax"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                Disabled = true
+            })
+        </div>
+        
+    </div>
+</div>
+
+<!-- Botón Regresar -->
+<div>
+    <a href="@Url.Action("Index", "EntidadesAcademicas")" style="display: inline-block; text-decoration: none;">
+        @await Component.InvokeAsync("Boton", new
+        {
+            Accion = "Regresar"
+        })
+    </a>
+</div>

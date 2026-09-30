@@ -1,0 +1,14 @@
+﻿@using SGPla.Models.ViewModels.ProgramacionesAcademicas
+@model CargarProgramacionAcademica2ViewModel
+
+<div id="filtrosContainer" style="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease;">
+	@await Component.InvokeAsync("SelectField", new SelectFieldModel
+	{
+		Id = "Docente",
+		Label = "Docente:",
+		Options = Model.Docentes,
+		Name = "Docente",
+		SelectedValue = Model.FiltroCarga.Docente,
+		Error = ViewData.ModelState["Docente"]?.Errors.FirstOrDefault()?.ErrorMessage
+	})
+</div>

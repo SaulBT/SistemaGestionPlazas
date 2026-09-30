@@ -1,7 +1,6 @@
 ﻿using SGPla.Commons;
 using SGPla.Models.DTOs.Usuarios;
 using SGPla.Repositories.Interfaces;
-using SGPla.Services.Interfaces;
 using SGPla.Validations.Interfaces;
 using System.Net.Mail;
 
@@ -12,13 +11,13 @@ namespace SGPla.Validations.Implementations
         private readonly ICoordinadorEaRepository _coordinadorEaRepository;
         private readonly ICoordinadorDgaaRepository _coordinadorDgaaRepository;
         private readonly IAreaAcademicaRepository _areaAcademicaRepository;
-        private readonly IEntidadAcademicaMvcRepository _entidadAcademicaRepository;
+        private readonly IEntidadAcademicaRepository _entidadAcademicaRepository;
 
         public UsuarioValidator(
             ICoordinadorEaRepository coordinadorEaRepository,
             ICoordinadorDgaaRepository coordinadorDgaaRepository,
             IAreaAcademicaRepository areaAcademicaRepository,
-            IEntidadAcademicaMvcRepository entidadAcademicaRepository)
+            IEntidadAcademicaRepository entidadAcademicaRepository)
         {
             _coordinadorEaRepository = coordinadorEaRepository;
             _coordinadorDgaaRepository = coordinadorDgaaRepository;
@@ -71,12 +70,16 @@ namespace SGPla.Validations.Implementations
             if (string.IsNullOrWhiteSpace(crearUsuarioDTO.Correo))
                 throw new ArgumentException("El correo es obligatorio.");
 
+            if (string.IsNullOrWhiteSpace(crearUsuarioDTO.Cargo))
+                throw new ArgumentException("El cargo es obligatorio.");
         }
         private static void ValidarCamposEdicion(EditarUsuarioDTO editarUsuarioDTO)
         {
             if (string.IsNullOrWhiteSpace(editarUsuarioDTO.Nombre))
                 throw new ArgumentException("El nombre es obligatorio.");
 
+            if (string.IsNullOrWhiteSpace(editarUsuarioDTO.Cargo))
+                throw new ArgumentException("El cargo es obligatorio.");
         }
 
         private static void ValidarIdUsuarioReferencia(int idUsuario)
@@ -175,7 +178,7 @@ namespace SGPla.Validations.Implementations
                 throw new ArgumentException("La Entidad Académica es obligatoria.");
 
             bool existeEntidadAcademica = await _entidadAcademicaRepository
-                .ObtenerPorIdAsync(crearUsuarioDTO.IdEntidadAcademica.Value) is not null;
+                .ExistePorIdAsync(crearUsuarioDTO.IdEntidadAcademica.Value);
 
             if (!existeEntidadAcademica)
                 throw new ArgumentException("No existe esa Entidad Académica.");
@@ -207,7 +210,7 @@ namespace SGPla.Validations.Implementations
                     throw new ArgumentException("La Entidad Académica es obligatoria.");
 
                 bool existeEntidadAcademica = await _entidadAcademicaRepository
-                    .ObtenerPorIdAsync(editarUsuarioDTO.IdEntidadAcademica.Value) is not null;
+                    .ExistePorIdAsync(editarUsuarioDTO.IdEntidadAcademica.Value);
 
                 if (!existeEntidadAcademica)
                     throw new ArgumentException("No existe esa Entidad Académica.");

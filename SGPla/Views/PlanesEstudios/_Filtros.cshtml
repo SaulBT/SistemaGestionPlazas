@@ -1,0 +1,45 @@
+﻿@using SGPla.Models.ViewModels.PlanesEstudios
+@model IndexViewModel
+
+<div id="filtrosContainer" style="display: block; gap: 10px;  transition: all 0.3s ease;">
+    <div style="display:inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease;">
+        @await Component.InvokeAsync("SelectField", new SelectFieldModel
+        {
+            Id = "Region",
+            Label = "Región",
+            Options = Model.Regiones,
+            Name = "region"
+        })
+
+        <div id="contenedorArea" style="display:none">
+            @await Component.InvokeAsync("SelectField", new SelectFieldModel
+            {
+                Id = "Area",
+                Label = "Área Académica",
+                Options = Model.Areas,
+                Name = "idAreaAcademica"
+            })
+        </div>
+
+        <div id="contenedorEntidad" style="display:none">
+            @await Component.InvokeAsync("SelectField", new SelectFieldModel
+            {
+                Id = "Entidad",
+                Label = "Entidad Académica",
+                Options = Model.Entidades,
+                Name = "idEntidadAcademica"
+            })
+        </div>
+   </div>  
+    
+
+    <div id="contenedorPrograma" style="display:none; padding-bottom: 20px;">
+        @await Component.InvokeAsync("SelectField", new SelectFieldModel
+        {
+            Id = "Programa",
+            Label = "Programa Educativo",
+            Options = Model.ProgramasEducativos,
+            Name = "idProgramaEducativo"
+        })
+    </div>
+</div>

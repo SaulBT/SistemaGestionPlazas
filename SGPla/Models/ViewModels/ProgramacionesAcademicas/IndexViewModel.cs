@@ -1,6 +1,7 @@
 ﻿using DocumentFormat.OpenXml.Bibliography;
 using DocumentFormat.OpenXml.Office2010.PowerPoint;
 using SGPla.Models.Components;
+using SGPla.Models.DTOs.Planea;
 using SGPla.Models.DTOs.ProgramacionAcademica;
 
 namespace SGPla.Models.ViewModels.ProgramacionesAcademicas
@@ -30,6 +31,15 @@ namespace SGPla.Models.ViewModels.ProgramacionesAcademicas
         public int? IdPeriodo { get; set; }
 
         public List<ResumenOfertaProgramacionAcademicaDTO> ResumenesProgramacionesAcademicas { get; set; }
+
+        // Programación sincronizada desde PLANEA
+        public UltimaSincronizacionPlaneaDTO? UltimaSincronizacionPlanea { get; set; }
+
+        public TableModel TablaPlanea { get; set; } = new();
+
+        public int TotalCopiasPlanea { get; set; }
+
+        public int CopiasPlaneaMostradas { get; set; }
 
 
 

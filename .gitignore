@@ -74,10 +74,5 @@ cookies.txt
 # Configuración privada del entorno de pruebas
 .local/sgpla-pruebas/
 
-# Secretos y configuración local de Docker Compose
+# Variables locales de Docker Compose (token de PLANEA)
 .env
-.env.*
-!.env.example
-
-# Checkouts locales de revisión
-/.claude/worktrees/

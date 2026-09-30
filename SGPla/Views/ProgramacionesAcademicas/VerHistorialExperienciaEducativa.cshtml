@@ -1,0 +1,23 @@
+﻿@using SGPla.Models.DTOs.Oferta
+@using SGPla.Models.DTOs.ProgramacionAcademica
+@using SGPla.Models.ViewModels.ProgramacionesAcademicas
+
+@model SGPla.Models.ViewModels.ProgramacionesAcademicas.VerHistorialExperienciaEducativaViewModel
+@{
+	ViewData["Title"] = "Historial Experiencia Educativa";
+}
+
+
+<h4><strong>@Model.ExperienciaEducativa</strong></h4>
+
+<ul class="timeline">
+    @foreach (var movimiento in Model.Movimientos)
+    {
+        <li class="timeline-item">
+            <span class="timeline-dot"></span>
+            <span class="timeline-text">
+                @movimiento.Fecha.ToString("dd/MM/yyyy HH:mm") - @movimiento.Mensaje
+            </span>
+        </li>
+    }
+</ul>

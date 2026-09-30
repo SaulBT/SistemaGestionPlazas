@@ -19,8 +19,10 @@ namespace SGPla.Controllers
     {
         private readonly IUsuarioService _usuarioService;
         private readonly ILogger<UsuariosController> _logger;
-        private readonly IAreaAcademicaService _areaAcademicaService;
-        private readonly ICatalogosMvcService _catalogosMvcService;
+        private readonly IAreaAcademicaRepository _areaAcademicaRepository;
+        private readonly IEntidadAcademicaRepository _entidadAcademicaRepository;
+        private readonly IAreaAcademicaService _areaAcademicaService; //TODO: Reemplazar los métodos que usan el repository
+        private readonly IEntidadAcademicaService _entidadAcademicaService; //TODO: Reemplazar los métodos que usan el repository
         private int paginaActual = 1;
 
         private static List<string> HEADERS_TABLA_INDEX = ["Nombre", "Correo", "Cargo", "Rol", "Entidad/Área", "Región", "Acciones"];
@@ -28,23 +30,32 @@ namespace SGPla.Controllers
         public UsuariosController(
             IUsuarioService usuarioService,
             ILogger<UsuariosController> logger,
+            IAreaAcademicaRepository areaAcademicaRepository,
             IAreaAcademicaService areaAcademicaService,
-            ICatalogosMvcService catalogosMvcService)
+            IEntidadAcademicaRepository entidadAcademicaRepository,
+            IEntidadAcademicaService entidadAcademicaService)
         {
             _usuarioService = usuarioService;
             _logger = logger;
+            _areaAcademicaRepository = areaAcademicaRepository;
+            _entidadAcademicaRepository = entidadAcademicaRepository;
             _areaAcademicaService = areaAcademicaService;
-            _catalogosMvcService = catalogosMvcService;
+            _entidadAcademicaService = entidadAcademicaService;
         }
 
         // GET: Usuarios
-        public async Task<IActionResult> Index(string? busqueda, int? regionId, int? idAreaAcademica, int? idEntidadAcademica, int pagina = 1, int cantidad = 10, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Index(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int pagina = 1, int cantidad = 10)
         {
-            pagina = Math.Max(1, pagina);
-            cantidad = Math.Clamp(cantidad, 1, 100);
             paginaActual = pagina;
             // combos
-            var regionesCombo = await ObtenerRegionesFiltroComboAsync(regionId, cancellationToken);
+            var regionesCombo = Constantes.REGIONES
+                .Select(r => new OptionModel
+                {
+                    Value = r,
+                    Text = r,
+                    Selected = r == region
+                })
+                .ToList();
 
             var areas = await _areaAcademicaService.ObtenerTodasAsync();
 
@@ -62,7 +73,8 @@ namespace SGPla.Controllers
 
             if (idAreaAcademica.HasValue)
             {
-                entidades = await ObtenerEntidadesNormalizadasAsync(idAreaAcademica, regionId, cancellationToken);
+                entidades = await _entidadAcademicaRepository
+                    .ObtenerPorIdAreaAcademicaAsync(idAreaAcademica.Value);
             }
             else
             {
@@ -82,12 +94,12 @@ namespace SGPla.Controllers
 
             return View(new IndexViewModel
             {
-                Table = await LlenarTabla(busqueda, regionId, idAreaAcademica, idEntidadAcademica, pagina, cantidad, cancellationToken),
+                Table = await LlenarTabla(busqueda, region, idAreaAcademica, idEntidadAcademica, pagina, cantidad),
                 Regiones = regionesCombo,
                 Areas = areasCombo,
                 Entidades = entidadesCombo,
 
-                RegionSeleccionadaId = regionId,
+                RegionSeleccionada = region,
                 IdAreaSeleccionada = idAreaAcademica,
                 IdEntidadSeleccionada = idEntidadAcademica,
                 Busqueda = busqueda,
@@ -98,25 +110,25 @@ namespace SGPla.Controllers
         }
 
 
-        private async Task<TableModel> LlenarTabla(string? busqueda, int? regionId, int? idAreaAcademica, int? idEntidadAcademica, int pagina = 1, int cantidad = 10, CancellationToken cancellationToken = default)
+        private async Task<TableModel> LlenarTabla(string? busqueda, string? region, int? idAreaAcademica, int? idEntidadAcademica, int pagina = 1, int cantidad = 10)
         {
             try
             {
                 FiltrosUsuarioDTO filtros = new FiltrosUsuarioDTO
                 {
                     Busqueda = busqueda,
-                    RegionId = regionId,
+                    Region = region,
                     IdAreaAcademica = idAreaAcademica,
                     IdEntidadAcademica = idEntidadAcademica,
                     Pagina = pagina,
                     Cantidad = cantidad
                 };
-                var usuarios = await _usuarioService.BuscarPorFiltroPaginadoAsync(filtros, cancellationToken);
+                var usuarios = await _usuarioService.BuscarPorFiltroPaginadoAsync(filtros);
                 if (usuarios.Items.Count == 0)
                 {
                     paginaActual = 1;
                     filtros.Pagina = paginaActual;
-                    usuarios = await _usuarioService.BuscarPorFiltroPaginadoAsync(filtros, cancellationToken);
+                    usuarios = await _usuarioService.BuscarPorFiltroPaginadoAsync(filtros);
                 }
                 if (usuarios.Items.Count == 0)
                     return TablaFactory.GenerarTablaConMensaje(HEADERS_TABLA_INDEX, string.Format(Constantes.TABLA_VACIA, Constantes.USUARIOS));
@@ -219,12 +231,12 @@ namespace SGPla.Controllers
         /* * * * * * Crear Usuario * * * * * */
 
         //GET: Usuarios/CrearUsuario
-        public async Task<IActionResult> CrearUsuario(int? regionId, int? idAreaAcademica, int? idEntidadAcademica, string? rol)
+        public async Task<IActionResult> CrearUsuario(string? region, int? idAreaAcademica, int? idEntidadAcademica, string? rol)
         {
-            return View(await ObtenerModelo(regionId, idAreaAcademica, idEntidadAcademica, rol));
+            return View(await ObtenerModelo(region, idAreaAcademica, idEntidadAcademica, rol));
         }
 
-        private async Task<CrearUsuarioViewModel> ObtenerModelo(int? regionId, int? idAreaAcademica, int? idEntidadAcademica, string? rol)
+        private async Task<CrearUsuarioViewModel> ObtenerModelo(string? region, int? idAreaAcademica, int? idEntidadAcademica, string? rol)
         {
             var rolesCombo = Constantes.ROLES
                 .Select(r => new OptionModel
@@ -235,9 +247,16 @@ namespace SGPla.Controllers
                 })
                 .ToList();
 
-            var regionesCombo = await ObtenerRegionesComboAsync(regionId);
+            var regionesCombo = Constantes.REGIONES
+                .Select(r => new OptionModel
+                {
+                    Value = r,
+                    Text = r,
+                    Selected = r == region
+                })
+                .ToList();
 
-            var areas = await _areaAcademicaService.ObtenerTodasAsync();
+            var areas = await _areaAcademicaRepository.ObtenerTodosAsync();
 
             var areasCombo = areas
                 .Select(a => new OptionModel
@@ -253,7 +272,8 @@ namespace SGPla.Controllers
 
             if (idAreaAcademica.HasValue)
             {
-                entidades = await ObtenerEntidadesNormalizadasAsync(idAreaAcademica, regionId);
+                entidades = await _entidadAcademicaRepository
+                    .ObtenerPorIdAreaAcademicaAsync(idAreaAcademica.Value);
             }
             else
             {
@@ -280,9 +300,9 @@ namespace SGPla.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ObtenerEntidades(int idAreaAcademica, int regionId)
+        public async Task<IActionResult> ObtenerEntidades(int idAreaAcademica, string region)
         {
-            var entidades = await ObtenerEntidadesNormalizadasAsync(idAreaAcademica, regionId);
+            var entidades = await _entidadAcademicaRepository.ObtenerPorIdAreaAcademicaYRegionAsync(idAreaAcademica, region);
 
 
             var result = entidades.Select(e => new
@@ -306,8 +326,8 @@ namespace SGPla.Controllers
                     if (!model.IdAreaAcademica.HasValue)
                         ModelState.AddModelError("IdAreaAcademica", "Seleccione un área");
 
-                    if (!model.RegionId.HasValue)
-                        ModelState.AddModelError("RegionId", "Seleccione una región");
+                    if (string.IsNullOrEmpty(model.Region))
+                        ModelState.AddModelError("Region", "Seleccione una región");
 
                     if (!model.IdEntidadAcademica.HasValue)
                         ModelState.AddModelError("IdEntidadAcademica", "Seleccione una entidad");
@@ -373,10 +393,16 @@ namespace SGPla.Controllers
                 }).ToList();
 
 
-            model.Regiones = await ObtenerRegionesComboAsync(model.RegionId);
+            model.Regiones = Constantes.REGIONES
+                .Select(r => new OptionModel
+                {
+                    Value = r,
+                    Text = r,
+                    Selected = r == model.Region
+                }).ToList();
 
 
-            var areas = await _areaAcademicaService.ObtenerTodasAsync();
+            var areas = await _areaAcademicaRepository.ObtenerTodosAsync();
 
             model.Areas = areas.Select(a => new OptionModel
             {
@@ -387,9 +413,10 @@ namespace SGPla.Controllers
             }).ToList();
 
 
-            if (model.IdAreaAcademica.HasValue && model.RegionId.HasValue)
+            if (model.IdAreaAcademica.HasValue && !string.IsNullOrEmpty(model.Region))
             {
-                var entidades = await ObtenerEntidadesNormalizadasAsync(model.IdAreaAcademica, model.RegionId);
+                var entidades = await _entidadAcademicaRepository
+                    .ObtenerPorIdAreaAcademicaYRegionAsync(model.IdAreaAcademica.Value, model.Region);
 
                 model.Entidades = entidades.Select(e => new OptionModel
                 {
@@ -405,51 +432,11 @@ namespace SGPla.Controllers
             }
         }
 
-        private async Task<List<OptionModel>> ObtenerRegionesComboAsync(int? seleccionada)
-        {
-            var catalogos = await _catalogosMvcService.ObtenerAsync();
-            return catalogos.Regiones.Select(r => new OptionModel
-            {
-                Value = r.Id.ToString(),
-                Text = $"{r.Clave}-{r.Nombre}",
-                Selected = seleccionada == r.Id
-            }).ToList();
-        }
-
-        private async Task<List<OptionModel>> ObtenerRegionesFiltroComboAsync(int? seleccionada, CancellationToken cancellationToken = default)
-        {
-            var catalogos = await _catalogosMvcService.ObtenerAsync(cancellationToken);
-            return catalogos.Regiones.Select(r => new OptionModel
-            {
-                Value = r.Id.ToString(),
-                Text = $"{r.Clave}-{r.Nombre}",
-                Selected = r.Id == seleccionada
-            }).ToList();
-        }
-
-        private async Task<List<EntidadAcademica>> ObtenerEntidadesNormalizadasAsync(int? idAreaAcademica, int? regionId, CancellationToken cancellationToken = default)
-        {
-            var entidades = await _catalogosMvcService.ObtenerEntidadesAsync(
-                campusId: null,
-                areaAcademicaId: idAreaAcademica,
-                cancellationToken: cancellationToken,
-                regionId: regionId);
-            return entidades.Select(x => new EntidadAcademica
-            {
-                IdEntidadAcademica = x.Id,
-                Nombre = x.Nombre,
-                IdAreaAcademica = idAreaAcademica ?? 0
-            }).ToList();
-        }
-
         /* * * * * * Editar Usuario * * * * * */
 
         public async Task<IActionResult> EditarUsuario(int id, string rol)
         {
             var usuario = await _usuarioService.ObtenerPorIdAsync(new ReferenciaUsuarioDTO { IdUsuario = id, Rol = rol });
-            var regionId = usuario.IdEntidadAcademica.HasValue
-                ? await _catalogosMvcService.ObtenerRegionEntidadAsync(usuario.IdEntidadAcademica.Value)
-                : null;
 
             var model = new CrearUsuarioViewModel
             {
@@ -460,7 +447,7 @@ namespace SGPla.Controllers
                 Rol = usuario.Rol,
                 IdAreaAcademica = usuario.IdAreaAcademica,
                 IdEntidadAcademica = usuario.IdEntidadAcademica,
-                RegionId = regionId
+                Region = usuario.Region
             };
 
             await CargarCombos(model);
@@ -478,8 +465,8 @@ namespace SGPla.Controllers
                     if (!model.IdAreaAcademica.HasValue)
                         ModelState.AddModelError("IdAreaAcademica", "Seleccione un área");
 
-                    if (!model.RegionId.HasValue)
-                        ModelState.AddModelError("RegionId", "Seleccione una región");
+                    if (string.IsNullOrEmpty(model.Region))
+                        ModelState.AddModelError("Region", "Seleccione una región");
 
                     if (!model.IdEntidadAcademica.HasValue)
                         ModelState.AddModelError("IdEntidadAcademica", "Seleccione una entidad");

@@ -247,35 +247,3 @@ Si se agregan, eliminan o modifican tablas en SQL Server:
 7. Configurar `Program.cs`.
 8. Verificar archivos generados.
 9. Probar la conexión.
-
-## Integración PLANEA
-
-La clave de PLANEA no se guarda en este repositorio. En desarrollo se configura
-con User Secrets (el proyecto ya define `UserSecretsId`):
-
-```sh
-dotnet user-secrets set "Planea:ApiKey" "<clave-proporcionada-por-el-responsable>" --project SGPla
-```
-
-En servidores configura `Planea__ApiKey` en el entorno del proceso o en el
-gestor de secretos del hosting. No registres la clave ni la URI si se configura
-autenticación por query string.
-
-`Planea:BaseUrl` debe ser una URL absoluta HTTPS y `Planea:TimeoutSegundos` debe
-estar entre 1 y 600. `Planea:TamanoMaximoMb` limita los bytes descomprimidos y
-acepta de 1 a 2048 (default 200). La petición verificada usa el encabezado
-`X-Api-Token` (`Planea:ModoAutenticacion=Header` y
-`Planea:NombreParametro=X-Api-Token`). El modo y nombre siguen configurables. En
-Development, sin clave, la sincronización falla antes de enviar una petición;
-fuera de Development la aplicación exige la clave al arrancar.
-
-La descarga JSON se procesa por streaming. El POST registra la bitácora y pone
-la solicitud en una cola acotada; el worker descarga y aplica el snapshot fuera
-del request. La bitácora queda consultable mediante
-`GET /ProgramacionesAcademicas/EstadoSincronizacionPlanea/{id}`. Al iniciar la
-aplicación se cierran como `FALLIDA` las bitácoras que sigan `EN_PROCESO` por un
-reinicio. Esta cola vive en memoria: ejecutar una sola instancia de la aplicación
-para estas sincronizaciones.
-
-Las decisiones pendientes del cierre MVC y la clasificación de pruebas legacy
-están en [docs/cierre-migracion-mvc.md](docs/cierre-migracion-mvc.md).

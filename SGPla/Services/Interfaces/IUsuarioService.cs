@@ -18,7 +18,6 @@ namespace SGPla.Services.Interfaces
 
         Task EliminarAsync(ReferenciaUsuarioDTO dto);
 
-        Task<(List<ListaUsuarioDTO> Items, int TotalCount)> BuscarPorFiltroPaginadoAsync(
-            FiltrosUsuarioDTO filtro, CancellationToken cancellationToken = default);
+        Task<(List<ListaUsuarioDTO> Items, int TotalCount)> BuscarPorFiltroPaginadoAsync(FiltrosUsuarioDTO filtro);
     }
 }

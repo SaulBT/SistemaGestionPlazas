@@ -1,17 +1,21 @@
-using SGPla.Models.Components;
+﻿using SGPla.Models.Components;
 
-namespace SGPla.Models.ViewModels.ProgramasEducativos;
-
-public sealed class IndexViewModel
+namespace SGPla.Models.ViewModels.ProgramasEducativos
 {
-    public TableModel Table { get; set; } = new();
-    public List<OptionModel> Regiones { get; set; } = [];
-    public List<OptionModel> Areas { get; set; } = [];
-    public List<OptionModel> Entidades { get; set; } = [];
-    public int? RegionSeleccionadaId { get; set; }
-    public int? IdAreaSeleccionada { get; set; }
-    public int? IdEntidadSeleccionada { get; set; }
-    public string? Busqueda { get; set; }
-    public int PaginaActual { get; set; } = 1;
-    public int CantidadPorPagina { get; set; } = 10;
+    public class IndexViewModel
+    {
+        public TableModel Table { get; set; }
+        public List<OptionModel> Regiones { get; set; }
+        public List<OptionModel> Areas { get; set; }
+        public List<OptionModel> Entidades { get; set; }
+
+        public string? RegionSeleccionada { get; set; }
+        public int? IdAreaSeleccionada { get; set; }
+        public int? IdEntidadSeleccionada { get; set; }
+        public string? Busqueda { get; set; }
+
+        // Propiedades para paginación
+        public int PaginaActual { get; set; } = 1;
+        public int CantidadPorPagina { get; set; } = 10;
+    }
 }

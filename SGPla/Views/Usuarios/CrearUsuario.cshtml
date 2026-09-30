@@ -27,6 +27,16 @@
         <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:flex-start; justify-content:space-evenly;">
             @await Component.InvokeAsync("InputField", new InputFieldModel
             {
+                Id = "cargo",
+                Name = "Cargo",
+                Label = "Cargo:",
+                Flexible = true,
+                Valor = Model.Cargo,
+                Error = ViewData.ModelState["Cargo"]?.Errors.FirstOrDefault()?.ErrorMessage,
+            })
+
+            @await Component.InvokeAsync("InputField", new InputFieldModel
+            {
                 Id = "correo",
                 Name = "Correo",
                 Label = "Correo:",
@@ -66,10 +76,10 @@
                 {
                     Label = "Región",
                     Options = Model.Regiones,
-                    Name = "RegionId",
-                    SelectedValue = Model.RegionId?.ToString(),
+                    Name = "Region",
+                    SelectedValue = Model.Region?.ToString(),
                     Flexible = true,
-                    Error = ViewData.ModelState["RegionId"]?.Errors.FirstOrDefault()?.ErrorMessage
+                    Error = ViewData.ModelState["Region"]?.Errors.FirstOrDefault()?.ErrorMessage
                 })
             </div>
 
@@ -148,7 +158,7 @@
     document.addEventListener("DOMContentLoaded", function () {
 
         const area = document.querySelector("[name='IdAreaAcademica']");
-        const region = document.querySelector("[name='RegionId']");
+        const region = document.querySelector("[name='Region']");
         const entidad = document.querySelector("[name='IdEntidadAcademica']");
 
             async function cargarEntidades() {
@@ -168,7 +178,7 @@
         }
 
         try {
-            const response = await fetch(`/Usuarios/ObtenerEntidades?idAreaAcademica=${idArea}&regionId=${encodeURIComponent(reg)}`);
+            const response = await fetch(`/Usuarios/ObtenerEntidades?idAreaAcademica=${idArea}&region=${encodeURIComponent(reg)}`);
             const data = await response.json();
 
             entidad.innerHTML = "";

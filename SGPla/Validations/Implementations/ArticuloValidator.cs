@@ -60,7 +60,7 @@ namespace SGPla.Validations.Implementations
 
             if (existeNumero is not null)
             {
-                throw new ArgumentException($"El número de articulo '{numero}' ya existe. Por favor, elija un número diferente.");
+                throw new ArgumentException($"Ya existe un artículo con los mismos datos registrado.");
             }
 
         }
@@ -71,7 +71,7 @@ namespace SGPla.Validations.Implementations
 
             if (existeNumero is not null && existeNumero.IdArticulo != idArticulo)
             {
-                throw new ArgumentException($"El número de articulo '{numero}' ya existe. Por favor, elija un número diferente.");
+                throw new ArgumentException($"Ya existe un artículo con los mismos datos registrado.");
             }
 
         }

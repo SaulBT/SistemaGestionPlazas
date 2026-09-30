@@ -1,0 +1,24 @@
+@using SGPla.Models.ViewModels.Docentes
+@model VerDocumentosPersonalViewModel
+@{
+    ViewData["Title"] = "Documentos de " + Model.NombrePersonal;
+    ViewData["RegresarUrl"] = Url.Action("Index", "Docentes");
+}
+
+<div style="margin-left: 20px;">
+    @await Component.InvokeAsync("Tabs",
+    new TabsModel
+    {
+        Id = "tabsDocumentosPersonal",
+        TabActivaPorDefecto = 0,
+        Tabs =
+        [
+            new()
+            {
+                Titulo = "Documentos Generales",
+                PartialView = "_TabDocumentosGenerales",
+                PartialModel = Model
+            }
+        ]
+    })
+</div>

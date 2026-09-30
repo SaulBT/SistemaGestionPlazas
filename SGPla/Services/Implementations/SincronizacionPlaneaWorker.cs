@@ -1,48 +1,38 @@
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
+using SGPla.Commons;
 using SGPla.Services.Interfaces;
 
-namespace SGPla.Services.Implementations;
-
-public sealed class SincronizacionPlaneaWorker : BackgroundService
+namespace SGPla.Services.Implementations
 {
-    private readonly CanalSincronizacionPlanea _canal;
-    private readonly IServiceScopeFactory _scopeFactory;
-    private readonly ILogger<SincronizacionPlaneaWorker> _logger;
-
-    public SincronizacionPlaneaWorker(CanalSincronizacionPlanea canal,
-        IServiceScopeFactory scopeFactory, ILogger<SincronizacionPlaneaWorker> logger)
+    public sealed class SincronizacionPlaneaWorker(IServiceScopeFactory scopeFactory, IOptions<PlaneaOpciones> opciones,
+        ILogger<SincronizacionPlaneaWorker> logger) : BackgroundService
     {
-        _canal = canal;
-        _scopeFactory = scopeFactory;
-        _logger = logger;
-    }
-
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        await using (var startupScope = _scopeFactory.CreateAsyncScope())
+        private readonly PlaneaOpciones _opciones = opciones.Value;
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var service = startupScope.ServiceProvider.GetRequiredService<ISincronizacionPlaneaService>();
-            await service.MarcarEnProcesoHuerfanasAsync(stoppingToken);
-        }
-
-        await foreach (var solicitud in _canal.LeerAsync(stoppingToken))
-        {
-            await using var scope = _scopeFactory.CreateAsyncScope();
+            if (!_opciones.Habilitada) { logger.LogInformation("La sincronización con PLANEA está deshabilitada."); return; }
+            if (string.IsNullOrWhiteSpace(_opciones.ApiKey))
+            {
+                logger.LogWarning("La sincronización con PLANEA está habilitada, pero falta Planea:ApiKey; no se ejecutará.");
+                return;
+            }
             try
             {
-                var service = scope.ServiceProvider.GetRequiredService<ISincronizacionPlaneaService>();
-                await service.EjecutarRegistradaAsync(solicitud.SincronizacionId, stoppingToken);
+                await Task.Delay(_opciones.RetrasoInicial, stoppingToken);
+                using var timer = new PeriodicTimer(_opciones.Intervalo);
+                do { await EjecutarCicloAsync(stoppingToken); } while (await timer.WaitForNextTickAsync(stoppingToken));
             }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { }
+        }
+        private async Task EjecutarCicloAsync(CancellationToken stoppingToken)
+        {
+            try
             {
-                break;
+                await using var scope = scopeFactory.CreateAsyncScope();
+                var servicio = scope.ServiceProvider.GetRequiredService<ISincronizarPeriodosVigentesService>();
+                await servicio.EjecutarAsync(stoppingToken);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Falló la sincronización PLANEA {SincronizacionId} en segundo plano.",
-                    solicitud.SincronizacionId);
-            }
+            catch (Exception ex) when (ex is not OperationCanceledException) { logger.LogError(ex, "Falló el ciclo de sincronización con PLANEA."); }
         }
     }
 }

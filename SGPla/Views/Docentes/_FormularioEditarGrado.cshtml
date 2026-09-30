@@ -1,0 +1,24 @@
+﻿@model SGPla.Models.ViewModels.Docentes.FormularioGradoViewModel
+
+@await Component.InvokeAsync("SelectField", new SelectFieldModel
+{
+    Id = "sfGradoEditar",
+    Label = "Grado:",
+    Options = Model.ListaGrados,
+    Error = "e"
+})
+
+@await Component.InvokeAsync("InputField", new InputFieldModel
+{
+    Id = "ifAreaEditar",
+    Label = "Área:",
+    Valor = Model.Area,
+    Error = "e"
+})
+
+@await Component.InvokeAsync("CheckboxField", new CheckboxFieldModel
+{
+    Id = "cfUltimoEditar",
+    Label = "Mayor grado de estudios",
+    Checked = Model.Ultimo
+})

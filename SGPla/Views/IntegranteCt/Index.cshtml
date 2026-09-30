@@ -1,0 +1,180 @@
+﻿@using SGPla.Models.ViewModels.IntegranteCt
+@model IndexViewModel
+
+@{
+	Layout = "_LayoutEntidadAcademica";
+	ViewData["Title"] = "Consejo Técnico";
+}
+
+<div> 
+    <!-- Acciones -->
+    <div style="display:flex; gap:10px; padding-bottom:20px; align-items:center; justify-content:space-between">
+        <form id = "filtrosForm" method="get" action="@Url.Action("Index", "IntegranteCt")">
+            <!-- Barra de búsqueda -->
+            @await Component.InvokeAsync("Buscador", new BuscadorModel
+            {
+                Name = "nombre",
+                Placeholder = "Buscar por nombre...",
+                Action = Url.Action("Index", "IntegranteCt"),
+                Method = "get",
+                Value = Context.Request.Query["nombre"]
+            })
+
+            <!-- Campos ocultos para paginación -->
+            <input type="hidden" name="pagina" id="paginaHidden" value="@Model.PaginaActual" />
+            <input type="hidden" name="cantidad" id="cantidadHidden" value="@Model.CantidadPorPagina" />
+
+        </form>
+        <!-- Botón agregar -->
+        @await Component.InvokeAsync("Boton", new
+        {
+            Accion = "Agregar",
+            Texto = "Nuevo Integrante",
+            OnClick = "abrirModalNuevoIntegrante()"
+        })
+    </div>
+
+    <!-- Tabla -->
+    <div style="display:flex; gap:10px; padding-top:0px; justify-content:left">
+        @await Component.InvokeAsync("Table", Model.Table)
+    </div>
+
+    <!-- ========================= -->
+    <!-- MODALES -->
+    <!-- ========================= -->
+    <div>
+
+        <!-- Modal Crear / Editar -->
+        <form id="formIntegrante" method="post">
+
+            @Html.AntiForgeryToken()
+
+            @await Component.InvokeAsync("ModalFormulario", new ModalFormularioModel
+            {
+                Id = "modalIntegrante",
+                Titulo = "Integrante",
+                PartialView = "_FormularioIntegrante",
+                PartialModel = Model.Formulario,
+                OnConfirm = "submitFormIntegrante()",
+                OnCancel = "cerrarModal('modalIntegrante')"
+            })
+
+        </form>
+
+
+        <!-- Modal eliminar -->
+        <form id="formEliminarIntegrante"
+              method="post"
+              action="@Url.Action("Eliminar", "IntegranteCt")">
+
+            @Html.AntiForgeryToken()
+
+            <input type="hidden"
+                   name="id"
+                   id="deleteIntegranteId" />
+
+            @await Component.InvokeAsync("Modal", new ModalModel
+            {
+                Id = "modalConfirmacion",
+                Tipo = "confirm",
+                Titulo = "Confirmación",
+                Mensaje = "¿Deseas eliminar este Integrante?",
+                OnConfirm = "confirmarModal()",
+                OnCancel = "cerrarModal('modalConfirmacion')"
+            })
+
+        </form>
+
+
+    </div>
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <script>
+
+                document.addEventListener("DOMContentLoaded", function () {
+
+                    document.getElementById("formIntegrante").action =
+                        "@Url.Action("Crear", "IntegranteCt")";
+
+                    abrirModal("modalIntegrante");
+
+                    history.replaceState(
+                        null,
+                        "",
+                        "@Url.Action("Index", "IntegranteCt")"
+                    );
+
+                });
+
+        </script>
+    }
+</div>
+
+<script>
+
+    // =========================
+    // CREAR
+    // =========================
+    function abrirModalNuevoIntegrante() {
+
+        limpiarErroresFormularioIntegrante();
+
+        document.getElementById("formIntegrante").action =
+            "@Url.Action("Crear", "IntegranteCt")";
+
+        document.getElementById("IdIntegranteCt").value = "";
+        document.getElementById("Cargo").value = "";
+        document.getElementById("Nombre").value = "";
+        document.getElementById("Grado").value = "";
+
+        abrirModal("modalIntegrante");
+    }
+
+    // =========================
+    // EDITAR
+    // =========================
+    function abrirModalEditarIntegrante(id, cargo, nombre, grado) {
+
+        limpiarErroresFormularioIntegrante();
+
+        document.getElementById("formIntegrante").action =
+            "@Url.Action("Editar", "IntegranteCt")";
+
+        document.getElementById("IdIntegranteCt").value = id;
+        document.getElementById("Cargo").value = cargo;
+        document.getElementById("Nombre").value = nombre;
+        document.getElementById("Grado").value = grado;
+
+        abrirModal("modalIntegrante");
+    }
+
+    // =========================
+    // SUBMIT FORM
+    // =========================
+    function submitFormIntegrante() {
+        document.getElementById("formIntegrante").submit();
+    }
+
+    function limpiarErroresFormularioIntegrante() {
+
+        document.querySelectorAll(".input-error-text")
+            .forEach(e => {
+                e.innerText = "";
+            });
+        document.querySelectorAll(".select-error-text")
+            .forEach(e => {
+                e.innerText = "";
+            });
+
+    }
+
+</script>
+
+<script>
+    function eliminarIntegrante(id) {
+
+        document.getElementById("deleteIntegranteId").value = id;
+
+        document.getElementById("formEliminarIntegrante").submit();
+    }
+</script>

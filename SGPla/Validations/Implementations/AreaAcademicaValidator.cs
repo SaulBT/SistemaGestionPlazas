@@ -44,12 +44,16 @@ namespace SGPla.Validations.Implementations
         {
             if (string.IsNullOrWhiteSpace(crearAreaAcademicaDTO.Nombre))
                 throw new ArgumentException("El Nombre es obligatorio.");
+            if (string.IsNullOrWhiteSpace(crearAreaAcademicaDTO.Telefono))
+                throw new ArgumentException("El Teléfono es obligatorio.");
         }
 
         private void validarCamposEdicion(DatosAreaAcademicaDTO datosAreaAcademicaDTO)
         {
             if (string.IsNullOrWhiteSpace(datosAreaAcademicaDTO.Nombre))
                 throw new ArgumentException("El Nombre es obligatorio.");
+            if (string.IsNullOrWhiteSpace(datosAreaAcademicaDTO.Telefono))
+                throw new ArgumentException("El Teléfono es obligatorio.");
         }
     }
 }
