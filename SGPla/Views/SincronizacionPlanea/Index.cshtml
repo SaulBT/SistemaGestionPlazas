@@ -1,0 +1,26 @@
+@using SGPla.Models.Components
+@using SGPla.Models.ViewModels.SincronizacionPlanea
+@model IndexViewModel
+@{ ViewData["Title"] = "Sincronización PLANEA"; }
+<div class="contenido-tabla">
+    <div class="d-flex gap-3 mb-3">
+        <a class="btn btn-outline-primary" href="@Url.Action("Index")">Bitácora</a>
+        <a class="btn btn-outline-secondary" href="@Url.Action("Copias")">Copias registradas</a>
+    </div>
+    <form id="filtrosForm" method="get" action="@Url.Action("Index")" class="d-flex gap-3 align-items-end mb-3">
+        @await Component.InvokeAsync("SelectField", new SelectFieldModel { Id="periodoFiltro", Name="idPeriodo", Label="Periodo", SelectedValue=Model.IdPeriodo?.ToString(), Options=Model.Periodos, HtmlAttributes=new Dictionary<string,string>{{"data-autosubmit","true"}} })
+        @await Component.InvokeAsync("SelectField", new SelectFieldModel { Id="estadoFiltro", Name="estado", Label="Estado", SelectedValue=Model.Estado, Options=Model.Estados, HtmlAttributes=new Dictionary<string,string>{{"data-autosubmit","true"}} })
+        <input type="hidden" name="pagina" id="paginaHidden" value="@Model.PaginaActual" />
+        <input type="hidden" name="cantidad" id="cantidadHidden" value="@Model.CantidadPorPagina" />
+    </form>
+    @await Component.InvokeAsync("Table", Model.Table)
+</div>
+@await Component.InvokeAsync("Modal", new ModalModel { Id="detallePlanea", Titulo="Detalle de sincronización", Body="<pre id=\"detallePlaneaTexto\" style=\"white-space:pre-wrap;max-height:60vh;overflow:auto\"></pre>" })
+<script>
+function abrirDetallePlanea(detalle) {
+    const texto = [detalle.Advertencias ? "Advertencias:\n" + detalle.Advertencias : "", detalle.MensajeError ? "Error:\n" + detalle.MensajeError : ""].filter(Boolean).join("\n\n") || "Sin advertencias ni errores.";
+    document.getElementById("detallePlaneaTexto").textContent = texto;
+    abrirModal("detallePlanea");
+}
+document.querySelectorAll("#filtrosForm select").forEach(x => x.addEventListener("change", () => document.getElementById("paginaHidden").value = "1"));
+</script>
