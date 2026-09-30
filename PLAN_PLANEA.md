@@ -4,13 +4,24 @@
 > Al terminar cada fase, ejecuta su **checkpoint**. No avances a la siguiente fase si el checkpoint falla.
 > Las decisiones de diseño de la §1 ya están tomadas con el usuario: **no las cambies**.
 > Si algo del código real no coincide con lo que dice este plan (un nombre, una línea), **investígalo en el código**, adáptate y anótalo en tu resumen final.
+>
+> **Base de código:** commit `37625fe4aeafc0f5a0554f23f47b96fb9db8dbf2` ("Feature/cargar planes estudio (#24)"). La última migración aplicada es la `0011`.
+> **NO** uses `origin/develop` ni commits posteriores: tienen un esquema distinto (`academico.*`, `integracion.*`, migraciones `0020`+) que **no** es la base de este trabajo. Ignora cualquier `DATABASE.md` o `DATABASE_DIAGRAM.md`.
+>
+> **Alcance técnico: solo el MVC (ASP.NET Core MVC + vistas Razor).** Queda fuera:
+> - el cliente React (`sgpla-app/`);
+> - la API REST (`SGPla/Modules/*` y cualquier controlador `[ApiController]` o ruta `/api/...`).
+>
+> No crees nada en `SGPla/Modules/` ni en `sgpla-app/`. La única excepción son los ajustes **de compilación** que exija la nulabilidad (§2.4).
 
 ---
 
 ## 0. Reglas de trabajo
 
-- **Raíz del repo:** `/Users/kaleb/repos/sgpla/SistemaGestionPlazas`. Rama base: `develop`.
-  - Crea la rama `feature/sincronizacion-planea` antes del primer commit.
+- **Raíz del repo:** `/Users/kaleb/repos/sgpla/SistemaGestionPlazas`.
+  - Trabaja en la rama `feature/sincronizacion-planea`. Ya existe, parte de `37625fe` y contiene este plan.
+  - Antes de empezar, verifica `git log --oneline -2`: el padre del commit del plan debe ser `37625fe`.
+  - **No** hagas `pull`, `rebase` ni `merge` con `origin/develop`.
 - **No hagas push ni abras PR** sin que el usuario lo pida.
   - Commits en español, estilo convencional: `feat(db): …`, `feat(planea): …`, `test(planea): …`.
   - Termina cada mensaje de commit con la línea `Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>`.
@@ -23,11 +34,19 @@
   - `Microsoft.Data.SqlClient`, transitivo de `Microsoft.EntityFrameworkCore.SqlServer`.
   - `AddHttpClient`, `IOptions` y `ValidateDataAnnotations`, del framework compartido de ASP.NET Core.
   - `System.Text.Json`.
-- **Convenciones del código** (imítalas):
-  - Nombres en español y clases `sealed`.
-  - `CancellationToken cancellationToken` en todos los métodos async.
-  - Módulos con la estructura de `SGPla/Modules/PeriodosEscolares/` (`Api/`, `Application/`, `Domain/`, `Infra/`, `XxxModuleExtensions.cs`).
-  - Namespaces `SGPla.Modules.<Modulo>.<Capa>...`.
+- **Convenciones del código.** Imita la **capa MVC** existente: usa como referencia `PeriodosEscolares` y `ProgramacionesAcademicas`, **no** `SGPla/Modules`.
+  - Nombres en español.
+  - `CancellationToken cancellationToken` en los métodos async nuevos (es opcional con default en las interfaces).
+  - Capas y carpetas:
+    - Controladores: `SGPla/Controllers/XxxController.cs`, que heredan de `Controller` y se protegen con `[Authorize(Policy = PoliticasAutorizacion.…)]`.
+    - Servicios: interfaz en `SGPla/Services/Interfaces/IXxxService.cs` e implementación en `SGPla/Services/Implementations/XxxService.cs`.
+    - Repositorios: `SGPla/Repositories/Interfaces/IXxxRepository.cs` y `SGPla/Repositories/Implementations/XxxRepository.cs`, sobre `GestionDePlazasDbContext`.
+    - DTOs: `SGPla/Models/DTOs/<Tema>/…`.
+    - ViewModels: `SGPla/Models/ViewModels/<Tema>/…`.
+    - Vistas: `SGPla/Views/<Controlador>/…`, usando los ViewComponents existentes (`Table`, `Buscador`, `SelectField`, `Boton`, `Modal`, etc.) y `TablaFactory`.
+    - Parsers y normalizadores de archivos externos: `SGPla/Parsers/`.
+  - Namespaces: sigue el estilo de cada carpeta. La capa MVC usa **namespaces con bloque** (`namespace SGPla.Services.Implementations { … }`); los modelos EF usan `namespace SGPla.Models;`.
+  - Registro de dependencias: con `builder.Services.AddScoped<…>()` en `SGPla/Program.cs`, en el bloque `//Clases`, como el resto del MVC. **No** crees un `XxxModuleExtensions`.
 - **Comandos:**
   - Compilar: `dotnet build SGPla/SGPla.csproj`
   - Probar: `dotnet test SGPla.Tests/SGPla.Tests.csproj`
@@ -48,7 +67,9 @@ PLANEA expone `GET https://planea.uv.mx/planea/index.php/apiroladoovr/periodo/{c
 | EE que no existe en el catálogo | Se crea con datos mínimos (código y nombre), `idPlanEstudios = NULL` y `origen = 'PLANEA'`. `idPlanEstudios`, `perfilDocente`, `creditos` y `horas` pasan a ser opcionales |
 | Alcance | NRC + docentes asignados por NRC + horarios por NRC |
 | Re-sincronización | Upsert. Los NRC que ya no vienen reciben **baja lógica** (`fechaBaja`); si reaparecen, se reactivan. Los docentes y horarios de cada NRC se reemplazan por lo que trae PLANEA (se insertan, actualizan o borran) |
-| Disparo | **Automático programado** (`BackgroundService`), sin pantalla ni endpoint |
+| Disparo | **Automático programado** (`BackgroundService`). No hay botón para sincronizar manualmente |
+| Alcance técnico | **Solo MVC + vistas Razor.** No se toca `sgpla-app/` (React) ni la API REST (`SGPla/Modules`, `/api/...`) |
+| Front MVC | Pantallas de **consulta** (solo lectura) para SuperUsuario (§FASE 6): bitácora de sincronizaciones, listado de NRC sincronizados y detalle de un NRC con sus docentes y horarios. Lleva un enlace en el menú de `_LayoutSuperUsuario` |
 | Qué periodos | **Vigentes por fecha**: `fechaFin >= hoy` y `fechaInicio <= hoy + VentanaAnticipacionMeses` |
 | Fechas de `Periodo` | Están mal calculadas (ver §10), pero **su corrección está fuera de alcance** |
 
@@ -92,36 +113,61 @@ PLANEA expone `GET https://planea.uv.mx/planea/index.php/apiroladoovr/periodo/{c
 ```
 SGPla.DbMigrator/database/migrations/0012_sincronizacion_planea.sql
 
+# Modelos EF (Database First, mantenidos a mano)
 SGPla/Models/ExperienciaEducativaPeriodo.cs
 SGPla/Models/ExperienciaEducativaPeriodoDocente.cs
 SGPla/Models/ExperienciaEducativaPeriodoHorario.cs
 SGPla/Models/SincronizacionPlanea.cs
 
-SGPla/Modules/SincronizacionPlanea/SincronizacionPlaneaModuleExtensions.cs
-SGPla/Modules/SincronizacionPlanea/Application/PlaneaOpciones.cs
-SGPla/Modules/SincronizacionPlanea/Application/Models/PlaneaRespuesta.cs          (DTOs JSON)
-SGPla/Modules/SincronizacionPlanea/Application/Models/PlaneaModelos.cs            (records normalizados)
-SGPla/Modules/SincronizacionPlanea/Application/Contracts/ResumenAplicacionPlanea.cs
-SGPla/Modules/SincronizacionPlanea/Application/Contracts/ResultadoSincronizacionPlanea.cs
-SGPla/Modules/SincronizacionPlanea/Application/Ports/IPlaneaCliente.cs
-SGPla/Modules/SincronizacionPlanea/Application/Ports/ISincronizacionPlaneaRepository.cs
-SGPla/Modules/SincronizacionPlanea/Application/SincronizarPeriodo/SincronizarPeriodoPlaneaService.cs
-SGPla/Modules/SincronizacionPlanea/Application/SincronizarPeriodo/Ports/ISincronizarPeriodoPlaneaService.cs
-SGPla/Modules/SincronizacionPlanea/Application/SincronizarPeriodosVigentes/SincronizarPeriodosVigentesService.cs
-SGPla/Modules/SincronizacionPlanea/Application/SincronizarPeriodosVigentes/Ports/ISincronizarPeriodosVigentesService.cs
-SGPla/Modules/SincronizacionPlanea/Domain/PlaneaConstantes.cs
-SGPla/Modules/SincronizacionPlanea/Domain/PlaneaExcepciones.cs
-SGPla/Modules/SincronizacionPlanea/Domain/PlaneaNormalizador.cs
-SGPla/Modules/SincronizacionPlanea/Infra/PlaneaCliente.cs
-SGPla/Modules/SincronizacionPlanea/Infra/SincronizacionPlaneaRepository.cs
-SGPla/Modules/SincronizacionPlanea/Infra/SincronizacionPlaneaSql.cs               (constantes SQL)
-SGPla/Modules/SincronizacionPlanea/Infra/SincronizacionPlaneaWorker.cs
+# Configuración, constantes y excepciones
+SGPla/Commons/PlaneaOpciones.cs
+SGPla/Commons/PlaneaConstantes.cs
+SGPla/Commons/PlaneaExcepciones.cs
 
-SGPla.Tests/Modules/SincronizacionPlanea/Fixtures/planea_muestra.json
-SGPla.Tests/Modules/SincronizacionPlanea/PlaneaNormalizadorTests.cs
-SGPla.Tests/Modules/SincronizacionPlanea/PlaneaClienteTests.cs
-SGPla.Tests/Modules/SincronizacionPlanea/SincronizarPeriodoPlaneaServiceTests.cs
-SGPla.Tests/Modules/SincronizacionPlanea/SincronizarPeriodosVigentesServiceTests.cs
+# DTOs
+SGPla/Models/DTOs/Planea/PlaneaRespuesta.cs                 (DTOs JSON)
+SGPla/Models/DTOs/Planea/PlaneaModelos.cs                   (records normalizados)
+SGPla/Models/DTOs/Planea/ResumenAplicacionPlanea.cs
+SGPla/Models/DTOs/Planea/ResultadoSincronizacionPlanea.cs
+SGPla/Models/DTOs/Planea/ConsultaPlaneaDtos.cs              (filtros y filas para el front, FASE 6)
+
+# Lectura y normalización
+SGPla/Parsers/PlaneaNormalizador.cs
+
+# Servicios
+SGPla/Services/Interfaces/IPlaneaCliente.cs
+SGPla/Services/Implementations/PlaneaCliente.cs
+SGPla/Services/Interfaces/ISincronizarPeriodoPlaneaService.cs
+SGPla/Services/Implementations/SincronizarPeriodoPlaneaService.cs
+SGPla/Services/Interfaces/ISincronizarPeriodosVigentesService.cs
+SGPla/Services/Implementations/SincronizarPeriodosVigentesService.cs
+SGPla/Services/Implementations/SincronizacionPlaneaWorker.cs   (BackgroundService)
+SGPla/Services/Interfaces/IConsultaPlaneaService.cs            (FASE 6)
+SGPla/Services/Implementations/ConsultaPlaneaService.cs        (FASE 6)
+
+# Repositorios
+SGPla/Repositories/Interfaces/ISincronizacionPlaneaRepository.cs
+SGPla/Repositories/Implementations/SincronizacionPlaneaRepository.cs
+SGPla/Repositories/Implementations/SincronizacionPlaneaSql.cs   (constantes SQL)
+SGPla/Repositories/Interfaces/IConsultaPlaneaRepository.cs      (FASE 6)
+SGPla/Repositories/Implementations/ConsultaPlaneaRepository.cs  (FASE 6)
+
+# Front MVC (FASE 6)
+SGPla/Controllers/SincronizacionPlaneaController.cs
+SGPla/Models/ViewModels/SincronizacionPlanea/IndexViewModel.cs
+SGPla/Models/ViewModels/SincronizacionPlanea/NrcsViewModel.cs
+SGPla/Models/ViewModels/SincronizacionPlanea/DetalleNrcViewModel.cs
+SGPla/Views/SincronizacionPlanea/Index.cshtml
+SGPla/Views/SincronizacionPlanea/Nrcs.cshtml
+SGPla/Views/SincronizacionPlanea/DetalleNrc.cshtml
+
+# Pruebas
+SGPla.Tests/Fixtures/planea_muestra.json
+SGPla.Tests/Parsers/PlaneaNormalizadorTests.cs
+SGPla.Tests/Services/PlaneaClienteTests.cs
+SGPla.Tests/Services/SincronizarPeriodoPlaneaServiceTests.cs
+SGPla.Tests/Services/SincronizarPeriodosVigentesServiceTests.cs
+SGPla.Tests/Services/ConsultaPlaneaServiceTests.cs
 ```
 
 ### Modificar
@@ -129,10 +175,12 @@ SGPla.Tests/Modules/SincronizacionPlanea/SincronizarPeriodosVigentesServiceTests
 SGPla/Models/ExperienciaEducativa.cs            (nulabilidad + Origen + colección)
 SGPla/Models/Periodo.cs, PlanEstudios.cs, Region.cs, Docente.cs   (colecciones inversas)
 SGPla/Data/GestionDePlazasDbContext.cs          (DbSets + mapeos)
-SGPla/Program.cs                                (registrar módulo)
+SGPla/Program.cs                                (AddScoped/AddHttpClient/AddHostedService en el bloque //Clases)
+SGPla/Views/Shared/_LayoutSuperUsuario.cshtml   (enlace de menú "Sincronización PLANEA")
 SGPla/appsettings.json, SGPla/appsettings.Development.json, docker-compose.yml
 SGPla.Tests/SGPla.Tests.csproj                  (copiar fixture al output)
-+ los sitios afectados por la nulabilidad (§5.4)
+SGPla.Tests/Security/AutorizacionControllersTests.cs  (nuevo controlador → SuperUsuario)
++ los sitios afectados por la nulabilidad (§2.4)
 ```
 
 ---
@@ -517,7 +565,7 @@ Compila (`dotnet build SGPla/SGPla.csproj`) y corrige **todos los errores**. Rev
 
 | Archivo | Cambio |
 |---|---|
-| `SGPla/Modules/ProgramasEducativos/Infra/ProgramaEducativoRepository.cs:~377` | `.Where(experiencia => idsPlanesEstudio.Contains(experiencia.IdPlanEstudios))` → `.Where(experiencia => experiencia.IdPlanEstudios.HasValue && idsPlanesEstudio.Contains(experiencia.IdPlanEstudios.Value))` |
+| `SGPla/Modules/ProgramasEducativos/Infra/ProgramaEducativoRepository.cs:~377` (API REST: **solo** este ajuste de compilación, sin otros cambios) | `.Where(experiencia => idsPlanesEstudio.Contains(experiencia.IdPlanEstudios))` → `.Where(experiencia => experiencia.IdPlanEstudios.HasValue && idsPlanesEstudio.Contains(experiencia.IdPlanEstudios.Value))` |
 | `SGPla/Repositories/Implementations/OfertaRepository.cs:~69-78` | El `GroupBy` usa `IdPlanEstudios`, que ahora es `int?`. Si el consumidor espera `int`, usa `IdPlanEstudios ?? 0`. Las ofertas siempre apuntan a EEs con plan |
 | `SGPla/Repositories/Implementations/OfertaRepository.cs:~111` | `PerfilDocente = o.IdExperienciaEducativaNavigation.PerfilDocente ?? string.Empty` |
 | `SGPla/Repositories/Implementations/ProgramacionAcademicaRepository.cs:~205` | `…IdPlanEstudiosNavigation!.Modalidad` |
@@ -537,13 +585,22 @@ Compila (`dotnet build SGPla/SGPla.csproj`) y corrige **todos los errores**. Rev
 
 ## FASE 3 — Contratos, normalizador y cliente HTTP
 
-Todos los archivos van bajo `SGPla/Modules/SincronizacionPlanea/`, con el namespace de su carpeta.
+Ubicación y namespace de cada pieza (capa MVC; **nada** va en `SGPla/Modules`):
 
-### 3.1 `Application/PlaneaOpciones.cs`
+| Pieza | Archivo | Namespace |
+|---|---|---|
+| Opciones, constantes y excepciones | `SGPla/Commons/PlaneaOpciones.cs`, `PlaneaConstantes.cs`, `PlaneaExcepciones.cs` | `SGPla.Commons` |
+| DTOs JSON y records normalizados | `SGPla/Models/DTOs/Planea/*.cs` | `SGPla.Models.DTOs.Planea` |
+| Normalizador | `SGPla/Parsers/PlaneaNormalizador.cs` | `SGPla.Parsers` |
+| Cliente HTTP | `SGPla/Services/Interfaces/IPlaneaCliente.cs` y `SGPla/Services/Implementations/PlaneaCliente.cs` | `SGPla.Services.Interfaces` / `SGPla.Services.Implementations` |
+
+Los fragmentos de código de esta fase usan namespaces *file-scoped* por brevedad. Al implementarlos, usa el estilo de la carpeta destino (namespaces con bloque en `Services`, `Repositories` y `Parsers`).
+
+### 3.1 `SGPla/Commons/PlaneaOpciones.cs`
 ```csharp
 using System.ComponentModel.DataAnnotations;
 
-namespace SGPla.Modules.SincronizacionPlanea.Application;
+namespace SGPla.Commons;
 
 public sealed class PlaneaOpciones
 {
@@ -573,12 +630,12 @@ public sealed class PlaneaOpciones
 }
 ```
 
-### 3.2 `Application/Models/PlaneaRespuesta.cs` (DTOs JSON ligeros)
+### 3.2 `SGPla/Models/DTOs/Planea/PlaneaRespuesta.cs` (DTOs JSON ligeros)
 Mapea **solo** estas propiedades. System.Text.Json ignora las demás al leer, sin crear strings para ellas.
 ```csharp
 using System.Text.Json.Serialization;
 
-namespace SGPla.Modules.SincronizacionPlanea.Application.Models;
+namespace SGPla.Models.DTOs.Planea;
 
 public sealed class PlaneaRespuesta
 {
@@ -636,9 +693,9 @@ public sealed class PlaneaHorario
 }
 ```
 
-### 3.3 `Application/Models/PlaneaModelos.cs` (datos ya normalizados)
+### 3.3 `SGPla/Models/DTOs/Planea/PlaneaModelos.cs` (datos ya normalizados)
 ```csharp
-namespace SGPla.Modules.SincronizacionPlanea.Application.Models;
+namespace SGPla.Models.DTOs.Planea;
 
 public sealed record PeriodoPorSincronizar(int IdPeriodo, string Codigo);
 
@@ -666,7 +723,7 @@ public sealed record DatosPeriodoPlanea(
     IReadOnlyList<string> Advertencias);
 ```
 
-### 3.4 `Application/Contracts/`
+### 3.4 `SGPla/Models/DTOs/Planea/` (`ResumenAplicacionPlanea.cs`, `ResultadoSincronizacionPlanea.cs`)
 ```csharp
 // ResumenAplicacionPlanea.cs
 public sealed record ResumenAplicacionPlanea(
@@ -680,7 +737,7 @@ public sealed record ResultadoSincronizacionPlanea(
     string CodigoPeriodo, string Estado, ResumenAplicacionPlanea? Resumen, string? Mensaje);
 ```
 
-### 3.5 `Domain/PlaneaConstantes.cs` y `Domain/PlaneaExcepciones.cs`
+### 3.5 `SGPla/Commons/PlaneaConstantes.cs` y `SGPla/Commons/PlaneaExcepciones.cs`
 ```csharp
 public static class PlaneaConstantes
 {
@@ -705,15 +762,16 @@ public sealed class BajasMasivasException(int bajas, int activos, int porcentaje
     : Exception($"La sincronización daría de baja {bajas} de {activos} NRC activos (máximo permitido {porcentajeMaximo} %). Se canceló para proteger los datos.");
 ```
 
-### 3.6 `Domain/PlaneaNormalizador.cs`
+### 3.6 `SGPla/Parsers/PlaneaNormalizador.cs`
 Clase **estática y pura**: sin I/O ni dependencias. Recorre los datos una sola vez usando diccionarios (O(n)). Implementa exactamente estas reglas:
 
 ```csharp
 using System.Globalization;
 using System.Text.RegularExpressions;
-using SGPla.Modules.SincronizacionPlanea.Application.Models;
+using SGPla.Commons;
+using SGPla.Models.DTOs.Planea;
 
-namespace SGPla.Modules.SincronizacionPlanea.Domain;
+namespace SGPla.Parsers;
 
 public static partial class PlaneaNormalizador
 {
@@ -881,7 +939,7 @@ public static partial class PlaneaNormalizador
 ```
 **No** guardes `FIN` sumándole un minuto. `"1459"` se guarda literal como `14:59`.
 
-### 3.7 `Application/Ports/IPlaneaCliente.cs` e `Infra/PlaneaCliente.cs`
+### 3.7 `SGPla/Services/Interfaces/IPlaneaCliente.cs` y `SGPla/Services/Implementations/PlaneaCliente.cs`
 ```csharp
 public interface IPlaneaCliente
 {
@@ -926,7 +984,7 @@ public sealed class PlaneaCliente : IPlaneaCliente
 
 ### 3.8 Pruebas de la Fase 3
 
-**Fixture `SGPla.Tests/Modules/SincronizacionPlanea/Fixtures/planea_muestra.json`**
+**Fixture `SGPla.Tests/Fixtures/planea_muestra.json`**
 
 Genéralo con este script, **sin editarlo a mano**. Así conserva la forma real del JSON, con todos sus campos.
 ```bash
@@ -937,7 +995,7 @@ nrcs = {'10676','10677','10709','10795','59262','10812','10695','25637','38444'}
 res = [x for x in d['resultado'] if x['radoc_nrc'] in nrcs]
 hor = [x for x in d['horarios'] if x['NRC'] in nrcs or x['NRC'] == '25108']
 out = {'periodo': d['periodo'], 'total': len(res), 'resultado': res, 'horarios': hor}
-json.dump(out, open('SGPla.Tests/Modules/SincronizacionPlanea/Fixtures/planea_muestra.json','w'), ensure_ascii=False, indent=4)
+json.dump(out, open('SGPla.Tests/Fixtures/planea_muestra.json','w'), ensure_ascii=False, indent=4)
 print(len(res), len(hor))
 EOF
 ```
@@ -958,12 +1016,14 @@ Qué cubre cada NRC:
 En `SGPla.Tests/SGPla.Tests.csproj` agrega:
 ```xml
 <ItemGroup>
-  <None Update="Modules\SincronizacionPlanea\Fixtures\*.json">
+  <None Update="Fixtures\*.json">
     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
   </None>
 </ItemGroup>
 ```
-Lee el fixture con `Path.Combine(AppContext.BaseDirectory, "Modules", "SincronizacionPlanea", "Fixtures", "planea_muestra.json")`.
+Lee el fixture con `Path.Combine(AppContext.BaseDirectory, "Fixtures", "planea_muestra.json")`.
+
+Ubicación de las pruebas: `SGPla.Tests/Parsers/PlaneaNormalizadorTests.cs` y `SGPla.Tests/Services/PlaneaClienteTests.cs`, con namespaces `SGPla.Tests.Parsers` y `SGPla.Tests.Services`.
 
 **`PlaneaNormalizadorTests`** (xUnit, clase `sealed`, `[Fact]`/`[Theory]`, nombres `Metodo_Condicion`). Carga el fixture con `JsonSerializer.Deserialize<PlaneaRespuesta>`, **con las mismas opciones que usa el cliente**. Prueba:
 - Hay un único NRC por cada `radoc_nrc`.
@@ -997,7 +1057,7 @@ Lee el fixture con `Path.Combine(AppContext.BaseDirectory, "Modules", "Sincroniz
 
 ## FASE 4 — Repositorio set-based (SqlBulkCopy + MERGE)
 
-### 4.1 `Application/Ports/ISincronizacionPlaneaRepository.cs`
+### 4.1 `SGPla/Repositories/Interfaces/ISincronizacionPlaneaRepository.cs`
 ```csharp
 public interface ISincronizacionPlaneaRepository
 {
@@ -1021,7 +1081,7 @@ public interface ISincronizacionPlaneaRepository
 }
 ```
 
-### 4.2 `Infra/SincronizacionPlaneaRepository.cs`: métodos simples (EF)
+### 4.2 `SGPla/Repositories/Implementations/SincronizacionPlaneaRepository.cs`: métodos simples (EF)
 - **`ObtenerPeriodosVigentesAsync`:** `_context.Periodo.AsNoTracking()`, con este filtro:
   ```csharp
   var limite = hoy.AddMonths(ventanaAnticipacionMeses);
@@ -1097,7 +1157,7 @@ public async Task<ResumenAplicacionPlanea> AplicarAsync(int idPeriodo, string co
   - Tipos: `TimeOnly` → columna `TimeSpan` (`hora.ToTimeSpan()`), `DateOnly?` → `DateTime` (`fecha.ToDateTime(TimeOnly.MinValue)`), `decimal` → `decimal` y `bool` → `bool`.
 - **`LeerContadoresAsync`:** ejecuta el MERGE y lee **la última fila de resultados** (el `SELECT` final de conteos) con `SqlDataReader`. Si una columna llega `NULL` (el MERGE no afectó filas), cuenta como 0.
 
-### 4.4 `Infra/SincronizacionPlaneaSql.cs`: SQL exacto
+### 4.4 `SGPla/Repositories/Implementations/SincronizacionPlaneaSql.cs`: SQL exacto
 `internal static class` con constantes `const string` en raw string literals (`"""…"""`).
 
 > **Collation:** las tablas temporales viven en `tempdb`, que puede tener otra collation. **Todas** las columnas de texto de las `#tablas` llevan `COLLATE DATABASE_DEFAULT`; si falta, SQL Server lanza "Cannot resolve the collation conflict".
@@ -1353,14 +1413,14 @@ Notas:
 - La fuente de docentes y horarios siempre tiene `idExperienciaEducativaPeriodo` resuelto, porque el normalizador ya descartó los NRC huérfanos. Aun así, si alguno quedó `NULL` tras `ResolverNrcHijos`, lanza `THROW 51101, …` antes de los MERGE.
 
 ### 4.5 Checkpoint Fase 4
-- `dotnet build` compila. El SQL se valida en la Fase 6 contra un SQL Server real.
+- `dotnet build` compila. El SQL se valida en la Fase 7 contra un SQL Server real.
 - Commit: `feat(planea): agrega repositorio de sincronización set-based`.
 
 ---
 
 ## FASE 5 — Servicios, worker y registro
 
-### 5.1 `SincronizarPeriodoPlaneaService`
+### 5.1 `SincronizarPeriodoPlaneaService` (`SGPla/Services/Interfaces` + `SGPla/Services/Implementations`)
 ```csharp
 public interface ISincronizarPeriodoPlaneaService
 {
@@ -1392,7 +1452,7 @@ Flujo de `SincronizarAsync`:
 - La espera es `EsperaEntreIntentos * 4^(intento-1)` (30 s, 2 min…), con `Task.Delay(espera, ct)`.
 - En el último intento relanza la excepción.
 
-### 5.2 `SincronizarPeriodosVigentesService`
+### 5.2 `SincronizarPeriodosVigentesService` (`SGPla/Services/Interfaces` + `SGPla/Services/Implementations`)
 ```csharp
 public interface ISincronizarPeriodosVigentesService
 {
@@ -1405,7 +1465,7 @@ public interface ISincronizarPeriodosVigentesService
 4. Si no hay periodos: `LogInformation` y devuelve una lista vacía.
 5. Llama a `_sincronizarPeriodo.SincronizarAsync` para cada periodo **en secuencia** (sin paralelismo) y acumula los resultados. Como ese servicio no relanza errores, un fallo no detiene a los demás.
 
-### 5.3 `Infra/SincronizacionPlaneaWorker.cs`
+### 5.3 `SGPla/Services/Implementations/SincronizacionPlaneaWorker.cs`
 ```csharp
 public sealed class SincronizacionPlaneaWorker : BackgroundService
 {
@@ -1457,43 +1517,31 @@ public sealed class SincronizacionPlaneaWorker : BackgroundService
 }
 ```
 
-### 5.4 `SincronizacionPlaneaModuleExtensions.cs`
+### 5.4 Registro en `SGPla/Program.cs`
+No crees un `XxxModuleExtensions`. Agrega esto **en el bloque `//Clases`**, junto a los demás registros del MVC (después de `builder.Services.AddScoped<IPlantillaService, PlantillaService>();`):
 ```csharp
-public static class SincronizacionPlaneaModuleExtensions
-{
-    public static IServiceCollection AddSincronizacionPlaneaModule(
-        this IServiceCollection services, IConfiguration configuration)
+// Sincronización PLANEA (MVC)
+builder.Services.AddOptions<PlaneaOpciones>()
+    .Bind(builder.Configuration.GetSection(PlaneaOpciones.Seccion))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+builder.Services.AddHttpClient<IPlaneaCliente, PlaneaCliente>((proveedor, cliente) =>
     {
-        services.AddOptions<PlaneaOpciones>()
-            .Bind(configuration.GetSection(PlaneaOpciones.Seccion))
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
-
-        services.AddHttpClient<IPlaneaCliente, PlaneaCliente>((proveedor, cliente) =>
-            {
-                var opciones = proveedor.GetRequiredService<IOptions<PlaneaOpciones>>().Value;
-                cliente.BaseAddress = new Uri(opciones.UrlBase.EndsWith('/') ? opciones.UrlBase : opciones.UrlBase + "/");
-                cliente.Timeout = opciones.TiempoEspera;
-                cliente.DefaultRequestHeaders.Accept.ParseAdd("application/json");
-            })
-            .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
-            {
-                AutomaticDecompression = DecompressionMethods.All   // gzip/deflate/brotli si PLANEA lo soporta
-            });
-
-        services.AddScoped<ISincronizacionPlaneaRepository, SincronizacionPlaneaRepository>();
-        services.AddScoped<ISincronizarPeriodoPlaneaService, SincronizarPeriodoPlaneaService>();
-        services.AddScoped<ISincronizarPeriodosVigentesService, SincronizarPeriodosVigentesService>();
-        services.AddHostedService<SincronizacionPlaneaWorker>();
-
-        return services;
-    }
-}
+        var opciones = proveedor.GetRequiredService<IOptions<PlaneaOpciones>>().Value;
+        cliente.BaseAddress = new Uri(opciones.UrlBase.EndsWith('/') ? opciones.UrlBase : opciones.UrlBase + "/");
+        cliente.Timeout = opciones.TiempoEspera;
+        cliente.DefaultRequestHeaders.Accept.ParseAdd("application/json");
+    })
+    .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+    {
+        AutomaticDecompression = DecompressionMethods.All   // gzip/deflate/brotli si PLANEA lo soporta
+    });
+builder.Services.AddScoped<ISincronizacionPlaneaRepository, SincronizacionPlaneaRepository>();
+builder.Services.AddScoped<ISincronizarPeriodoPlaneaService, SincronizarPeriodoPlaneaService>();
+builder.Services.AddScoped<ISincronizarPeriodosVigentesService, SincronizarPeriodosVigentesService>();
+builder.Services.AddHostedService<SincronizacionPlaneaWorker>();
 ```
-En `SGPla/Program.cs`, después de `builder.Services.AddProgramasEducativosModule();` (línea ~153), agrega:
-```csharp
-builder.Services.AddSincronizacionPlaneaModule(builder.Configuration);
-```
+Agrega los `using` que falten: `System.Net`, `Microsoft.Extensions.Options` y `SGPla.Commons`. Los registros de la consulta del front se agregan en la FASE 6.
 
 ### 5.5 Configuración
 - **`SGPla/appsettings.json`:** agrega la sección. En producción queda habilitada.
@@ -1515,7 +1563,7 @@ builder.Services.AddSincronizacionPlaneaModule(builder.Configuration);
 - **`docker-compose.yml`**, servicio `backend`: agrega `Planea__Habilitada: ${PLANEA_HABILITADA:-false}`.
 
 ### 5.6 Pruebas de la Fase 5 (Moq)
-Sigue el estilo de `SGPla.Tests/Modules/SolicitudesApertura/CrearSolicitudAperturaServiceTests.cs`: helpers privados `CrearService(...)`, `Mock<IPort>` y `Callback` para capturar argumentos. En las pruebas, usa `Options.Create(new PlaneaOpciones { EsperaEntreIntentos = TimeSpan.Zero, Intentos = 3 })`.
+Ubica las pruebas en `SGPla.Tests/Services/`. Sigue el estilo de `SGPla.Tests/Services/PeriodoEscolarServiceTest.cs` (mocks de repositorio con Moq). Para capturar argumentos, puedes usar `Callback` como en `SGPla.Tests/Modules/SolicitudesApertura/CrearSolicitudAperturaServiceTests.cs`. En las pruebas, usa `Options.Create(new PlaneaOpciones { EsperaEntreIntentos = TimeSpan.Zero, Intentos = 3 })`.
 
 **`SincronizarPeriodoPlaneaServiceTests`:**
 - `SincronizarAsync_AplicaYCierraExitosa`: respuesta válida → `AplicarAsync` se llama una vez → `CerrarBitacoraAsync(…, "Exitosa", …)`.
@@ -1539,7 +1587,139 @@ Sigue el estilo de `SGPla.Tests/Modules/SolicitudesApertura/CrearSolicitudApertu
 
 ---
 
-## FASE 6 — Verificación end-to-end (requiere Docker)
+## FASE 6 — Front MVC de consulta (solo lectura)
+
+Estas pantallas permiten consultar lo sincronizado **sin volver a llamar a PLANEA**. Son de solo lectura: no hay botón para sincronizar, porque el disparo es solo automático.
+
+- **Acceso:** política `SuperUsuario`. Se usa `_LayoutSuperUsuario`, que `_ViewStart` elige automáticamente según el rol.
+- **Referencias de estilo:**
+  - `Controllers/PeriodosEscolaresController.cs` y `Views/PeriodosEscolares/Index.cshtml`: tabla con `TableModel`, `TablaFactory.GenerarTablaConMensaje`, paginación del lado del servidor y los ViewComponents `Buscador` y `SelectField` con `data-autosubmit`.
+  - `Controllers/ProgramacionesAcademicasController.cs`: filtros por periodo.
+
+### 6.1 Consultas: `IConsultaPlaneaRepository` / `ConsultaPlaneaRepository`
+Usa EF con `AsNoTracking`, **paginado en SQL** (`Skip`/`Take`) y proyecciones a DTOs. Nunca materialices los 18k NRC.
+
+DTOs en `SGPla/Models/DTOs/Planea/ConsultaPlaneaDtos.cs`:
+```csharp
+public sealed class FiltroBitacoraPlaneaDTO { public int? IdPeriodo { get; set; } public string? Estado { get; set; } public int Pagina { get; set; } = 1; public int Cantidad { get; set; } = 10; }
+public sealed record BitacoraPlaneaDTO(int IdSincronizacion, string CodigoPeriodo, DateTime FechaInicio, DateTime? FechaFin,
+    string Estado, int? RegistrosRecibidos, int? EesCreadas, int? NrcNuevos, int? NrcActualizados, int? NrcReactivados,
+    int? NrcBaja, int? DocentesInsertados, int? HorariosInsertados, string? Advertencias, string? MensajeError);
+
+public sealed class FiltroNrcPlaneaDTO { public int? IdPeriodo { get; set; } public string? Busqueda { get; set; }  // NRC, código o nombre de EE
+    public string? CodigoPlan { get; set; } public int? IdRegion { get; set; } public bool IncluirBajas { get; set; }
+    public int Pagina { get; set; } = 1; public int Cantidad { get; set; } = 20; }
+public sealed record NrcPlaneaFilaDTO(int IdExperienciaEducativaPeriodo, string CodigoPeriodo, string Nrc, string CodigoExperiencia,
+    string Titulo, string? CodigoPlanPlanea, bool PlanEnlazado, string? Region, string? Campus, int Docentes, int Horarios, DateTime? FechaBaja);
+
+public sealed record DocenteNrcDTO(string NumeroPersonal, string NombreDocente, bool DocenteRegistrado, string? Plaza,
+    string? TextoPuesto, string? TextoContratacion, decimal Horas, bool Imparte);
+public sealed record HorarioNrcDTO(string Dia, TimeOnly HoraInicio, TimeOnly HoraFin, string? Edificio, string? Aula,
+    DateOnly? FechaInicio, DateOnly? FechaFin);
+public sealed record DetalleNrcPlaneaDTO(NrcPlaneaFilaDTO Nrc, string NombreExperiencia, string OrigenExperiencia,
+    string? Nivel, string? Area, DateTime FechaAlta, DateTime FechaActualizacion,
+    IReadOnlyList<DocenteNrcDTO> Docentes, IReadOnlyList<HorarioNrcDTO> Horarios);
+```
+Métodos del repositorio. Todos reciben `CancellationToken` y cada uno devuelve también el total para paginar:
+- `(List<BitacoraPlaneaDTO> Items, int Total) ObtenerBitacoraAsync(FiltroBitacoraPlaneaDTO)`: ordena por `fechaInicio` descendente.
+- `(List<NrcPlaneaFilaDTO> Items, int Total) ObtenerNrcsAsync(FiltroNrcPlaneaDTO)`.
+  - Por defecto trae solo los activos (`fechaBaja IS NULL`).
+  - `Busqueda` filtra con `Contains` sobre `nrc`, `titulo` y el código de la EE.
+  - Ordena por `nrc`.
+  - `Docentes` y `Horarios` son `COUNT` en la proyección.
+- `DetalleNrcPlaneaDTO? ObtenerDetalleNrcAsync(int idExperienciaEducativaPeriodo)`.
+  - Los docentes se ordenan por nombre.
+  - Los horarios se ordenan por día (Lunes → Sabado, con un `CASE` o un orden en memoria sobre la lista pequeña) y luego por `horaInicio`.
+- `List<Periodo> ObtenerPeriodosConSincronizacionAsync()`: periodos que tienen bitácora o NRC, para llenar el `SelectField`.
+
+### 6.2 Servicio: `IConsultaPlaneaService` / `ConsultaPlaneaService`
+- Es un pase fino al repositorio.
+- Valida los filtros: `Pagina >= 1`, y `Cantidad` entre 1 y 100 (fuera de rango usa el default). Aplica `Trim` a `Busqueda` y la limita a 100 caracteres. `Estado` debe ser uno de los estados válidos de `PlaneaConstantes`; si no, se ignora.
+- Si el NRC no existe, `ObtenerDetalleNrcAsync` devuelve `null`.
+
+Registra en `Program.cs`, en el bloque `//Clases`:
+```csharp
+builder.Services.AddScoped<IConsultaPlaneaRepository, ConsultaPlaneaRepository>();
+builder.Services.AddScoped<IConsultaPlaneaService, ConsultaPlaneaService>();
+```
+
+### 6.3 Controlador `SGPla/Controllers/SincronizacionPlaneaController.cs`
+```csharp
+[Authorize(Policy = PoliticasAutorizacion.SuperUsuario)]
+public class SincronizacionPlaneaController : Controller
+{
+    // GET /SincronizacionPlanea?idPeriodo=&estado=&pagina=1&cantidad=10
+    public async Task<IActionResult> Index(int? idPeriodo, string? estado, int pagina = 1, int cantidad = 10, CancellationToken cancellationToken = default);
+
+    // GET /SincronizacionPlanea/Nrcs?idPeriodo=&busqueda=&codigoPlan=&incluirBajas=false&pagina=1&cantidad=20
+    public async Task<IActionResult> Nrcs(int? idPeriodo, string? busqueda, string? codigoPlan, bool incluirBajas = false,
+        int pagina = 1, int cantidad = 20, CancellationToken cancellationToken = default);
+
+    // GET /SincronizacionPlanea/DetalleNrc/{id}
+    public async Task<IActionResult> DetalleNrc(int id, CancellationToken cancellationToken = default); // NotFound() si no existe
+}
+```
+- Solo acciones **GET**. No lleva `[ApiController]` ni rutas `/api`.
+- Arma `TableModel` en el controlador, como `PeriodosEscolaresController.LlenarTabla`:
+  - Usa `TablaFactory.GenerarTablaConMensaje` cuando no hay filas.
+  - Llena `Pagination` (`CurrentPage`, `PageSize`, `TotalItems`).
+- **Tabla de bitácora (Index).** Columnas:
+  - Periodo, Inicio, Fin, Estado.
+  - Recibidos, EEs creadas, NRC nuevos, Actualizados, Reactivados, Bajas.
+  - Acciones: "Ver detalle", que abre un `Modal` con `Advertencias` y `MensajeError`. Si el texto es largo, puede ir en un `<pre>` dentro del modal.
+  - Formato de fechas: `dd/MM/yyyy HH:mm`.
+- **Tabla de NRC (Nrcs).** Columnas:
+  - Periodo, NRC, Código EE, Experiencia Educativa.
+  - Plan (el código; si `PlanEnlazado` es falso, muestra "(sin enlazar)").
+  - Región, Docentes, Horarios, Estado ("Activo" o "Baja").
+  - Acciones: "Ver" → `DetalleNrc/{id}`.
+- **Detalle (DetalleNrc):**
+  - Encabezado con los datos del NRC y de la EE, incluido el origen (`PLANEA`/`SGPLA`).
+  - Dos tablas: Docentes y Horarios (horas en formato `HH:mm`).
+  - Botón "Volver" al listado, conservando los filtros por query string.
+- Captura `ValidacionExcepction` (de `SGPla.Commons`) y muestra el mensaje con el componente `Toast`, igual que las pantallas existentes. Cualquier otra excepción se propaga.
+
+### 6.4 ViewModels y vistas
+- **ViewModels** en `SGPla/Models/ViewModels/SincronizacionPlanea/`:
+  - `IndexViewModel`: `TableModel Table`, `List<OptionModel> Periodos`, `List<OptionModel> Estados`, los filtros actuales y la paginación.
+  - `NrcsViewModel`: igual, más `Busqueda`, `CodigoPlan` e `IncluirBajas`.
+  - `DetalleNrcViewModel`: `DetalleNrcPlaneaDTO Detalle`, `TableModel TablaDocentes`, `TableModel TablaHorarios` y `string UrlVolver`.
+- **Vistas** en `SGPla/Views/SincronizacionPlanea/`: `Index.cshtml`, `Nrcs.cshtml` y `DetalleNrc.cshtml`.
+  - Formularios GET con `SelectField` (periodo y estado) y `Buscador` (NRC/EE), con `data-autosubmit`.
+  - `@await Component.InvokeAsync("Table", Model.Table)`.
+  - Hidden `pagina`/`cantidad`, como en `PeriodosEscolares/Index.cshtml`.
+  - Pestañas o enlaces entre "Bitácora" y "NRC sincronizados". Puedes usar el ViewComponent `Tabs` o dos enlaces simples.
+  - `ViewData["Title"]`: "Sincronización PLANEA", "NRC sincronizados" y "Detalle NRC {nrc}".
+- **Menú:** en `SGPla/Views/Shared/_LayoutSuperUsuario.cshtml`, agrega después de "Periodos Escolares":
+  ```html
+  <!-- Sincronización PLANEA -->
+  <a href="/SincronizacionPlanea" class="menu-item @(IsActiveController("SincronizacionPlanea"))">
+      <span>Sincronización PLANEA</span>
+  </a>
+  ```
+
+### 6.5 Pruebas de la Fase 6
+- **`SGPla.Tests/Services/ConsultaPlaneaServiceTests.cs`** (Moq sobre `IConsultaPlaneaRepository`):
+  - Normaliza la paginación fuera de rango.
+  - Recorta la búsqueda.
+  - Ignora un estado inválido.
+  - Devuelve `null` si no existe el detalle.
+- **`SGPla.Tests/Security/AutorizacionControllersTests.cs`:** agrega `[InlineData(typeof(SincronizacionPlaneaController), PoliticasAutorizacion.SuperUsuario)]`.
+
+### 6.6 Checkpoint Fase 6
+- `dotnet build` y `dotnet test` en verde.
+- Con la app corriendo y datos sincronizados (FASE 7), entra como SuperUsuario y revisa:
+  - Aparece el menú "Sincronización PLANEA".
+  - La bitácora muestra las corridas.
+  - El listado de NRC filtra por periodo y búsqueda y pagina.
+  - El detalle del NRC `10709` muestra 2 docentes.
+  - El detalle del NRC `10676` muestra 5 horarios (14:00–14:59).
+- Un usuario con otro rol recibe acceso denegado (redirección a `/Login`).
+- Commit: `feat(planea): agrega pantallas MVC de consulta de la sincronización`.
+
+---
+
+## FASE 7 — Verificación end-to-end (requiere Docker)
 
 1. Levanta la BD y aplica las migraciones:
    ```bash
@@ -1580,10 +1760,11 @@ Sigue el estilo de `SGPla.Tests/Modules/SolicitudesApertura/CrearSolicitudApertu
    - Altera `total`: la corrida queda `Fallida` y no cambian los datos.
    - Deja solo el 50 % de los NRC con su `total` coherente: la corrida queda `Fallida` por `BajasMasivasException`, con rollback y sin cambios.
 8. **Rendimiento:** anota en el resumen final la duración por fase y la memoria del proceso. Estima la memoria con `dotnet-counters` si está instalado; si no, con el Monitor de actividad. Objetivo orientativo: menos de 30 s en local.
-9. **Regresión:** navega en la app los flujos de avisos, programación académica y planes de estudio con los datos del seed, y confirma que no hay errores por la nulabilidad.
-10. Detén el mock y la app.
+9. **Front (FASE 6):** recorre las 3 pantallas de consulta con los datos sincronizados (ver el checkpoint 6.6).
+10. **Regresión:** navega en la app los flujos de avisos, programación académica y planes de estudio con los datos del seed, y confirma que no hay errores por la nulabilidad.
+11. Detén el mock y la app.
 
-Si no hay Docker o SQL Server disponible, **no marques la Fase 6 como hecha**. Deja la lista de pasos pendientes en tu resumen final.
+Si no hay Docker o SQL Server disponible, **no marques la Fase 7 como hecha**. Deja la lista de pasos pendientes en tu resumen final.
 
 ---
 
@@ -1604,7 +1785,9 @@ Si no hay Docker o SQL Server disponible, **no marques la Fase 6 como hecha**. D
 | Caída a mitad de una ejecución | Rollback automático; la bitácora pasa a `Interrumpida` en el siguiente ciclo |
 
 ## 8. Qué NO hacer
-- **No** agregues un controlador, una vista ni un endpoint: el disparo es solo automático.
+- **No** toques `sgpla-app/` (React) ni la API REST: nada en `SGPla/Modules/`, ni controladores `[ApiController]`, ni rutas `/api/...`. La única excepción es el ajuste de compilación de §2.4.
+- **No** agregues un botón ni una acción POST para sincronizar manualmente: el disparo es solo automático y el front es de solo lectura.
+- **No** trabajes sobre `origin/develop` ni traigas cambios de ahí: la base es `37625fe` (migración `0011`).
 - **No** modifiques `CargaAcademica`, `Oferta` ni `Horario`. La importación por Excel sigue igual; solo cambia el filtro de §2.4.
 - **No** actualices nombre, perfil, créditos ni horas de EEs que ya existen en el catálogo.
 - **No** borres físicamente NRC.
@@ -1616,10 +1799,10 @@ Si no hay Docker o SQL Server disponible, **no marques la Fase 6 como hecha**. D
 ## 9. Resumen final que debe entregar el implementador
 - Lista de commits.
 - Resultado de `dotnet build` y `dotnet test`.
-- Resultado de cada paso de la Fase 6, o cuáles quedaron pendientes y por qué.
+- Resultado de cada paso de la Fase 7 y del checkpoint 6.6, o cuáles quedaron pendientes y por qué.
 - Cualquier desviación de este plan y su motivo.
 
 ## 10. Hallazgos fuera de alcance (solo documentar)
 - **Fechas de `Periodo`:** la migración `0002` asume «sufijo `01` = feb–jul, `51` = ago–ene». PLANEA muestra que `202701` va del 17 de agosto al 2 de diciembre de 2026, así que la regla parece estar invertida. La selección de periodos vigentes depende de esas fechas; conviene corregirlas en otra tarea.
 - **Borrar EEs de un plan:** si un plan de estudios elimina una EE que ya tiene NRC sincronizados, la FK lo impide. Hoy pasa lo mismo con `Oferta`. Queda pendiente mostrar un mensaje amigable.
-- **Consultar sincronizaciones:** no hay pantalla ni endpoint para ver la bitácora o forzar una sincronización; queda como posible siguiente iteración.
+- **Forzar una sincronización:** no hay acción manual; si se necesita, sería una siguiente iteración (un POST en `SincronizacionPlaneaController` que encole el periodo).
