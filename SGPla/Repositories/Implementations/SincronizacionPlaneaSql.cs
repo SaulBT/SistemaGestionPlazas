@@ -42,9 +42,15 @@ namespace SGPla.Repositories.Implementations
                 FROM dbo.ExperienciaEducativa AS ee
                 INNER JOIN dbo.PlanEstudios AS pl ON pl.idPlanEstudios = ee.idPlanEstudios
                 INNER JOIN dbo.ProgramaEducativo AS pe ON pe.idProgramaEducativo = pl.idProgramaEducativo
+                INNER JOIN dbo.EntidadAcademica AS ea ON ea.idEntidadAcademica = pe.idEntidadAcademica
+                INNER JOIN dbo.Region AS re ON re.id = ea.idRegion
+                -- PLANEA repite el código de plan en varias regiones: la copia solo se enlaza
+                -- con el plan de una entidad de su misma región.
                 WHERE pl.codigoPlan = c.codigoPlan
                   AND ee.codigo = c.codigoExperiencia
+                  AND re.nombre COLLATE Latin1_General_CI_AI = c.region COLLATE Latin1_General_CI_AI
                   AND pe.fechaEliminacion IS NULL
+                  AND ea.fechaEliminacion IS NULL
                 ORDER BY ee.idExperienciaEducativa
             ) AS x;
 

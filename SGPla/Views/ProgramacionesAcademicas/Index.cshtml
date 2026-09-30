@@ -96,7 +96,7 @@
 				<span>@((ultima.FechaFin ?? ultima.FechaInicio).ToString("dd/MM/yyyy HH:mm"))</span>
 				@if (ultima.NrcNuevos is not null)
 				{
-					<span> · @ultima.NrcNuevos NRC nuevos · @ultima.NrcExistentes ya registrados · @ultima.NrcSinExperiencia sin EE en el catálogo · @ultima.HorariosInsertados horarios</span>
+					<span> · @ultima.NrcNuevos NRC nuevos · @ultima.NrcExistentes ya registrados · @ultima.NrcSinExperiencia sin EE en el catálogo de su región · @ultima.HorariosInsertados horarios</span>
 				}
 				@if (!string.IsNullOrWhiteSpace(ultima.MensajeError))
 				{

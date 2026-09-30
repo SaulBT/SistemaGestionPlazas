@@ -66,7 +66,7 @@ namespace SGPla.Services.Implementations
         {
             PlaneaConstantes.ESTADO_EXITOSA when r.Resumen is { } s =>
                 $"{r.CodigoPeriodo}: {s.NrcNuevos} NRC nuevos, {s.NrcExistentes} ya registrados, "
-                + $"{s.NrcSinExperiencia} sin EE en el catálogo, {s.HorariosInsertados} horarios.",
+                + $"{s.NrcSinExperiencia} sin EE en el catálogo de su región, {s.HorariosInsertados} horarios.",
             PlaneaConstantes.ESTADO_SIN_DATOS => $"{r.CodigoPeriodo}: PLANEA aún no tiene programación para este periodo.",
             _ => $"{r.CodigoPeriodo}: {r.Estado}{(string.IsNullOrWhiteSpace(r.Mensaje) ? "" : " — " + r.Mensaje)}"
         };

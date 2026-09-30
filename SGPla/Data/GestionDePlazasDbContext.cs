@@ -796,6 +796,11 @@ public partial class GestionDePlazasDbContext : DbContext
             entity.HasKey(e => e.IdPlanEstudios);
 
             entity.HasIndex(e => e.IdProgramaEducativo, "IX_PlanEstudios_idProgramaEducativo");
+            entity.HasIndex(e => new { e.IdProgramaEducativo, e.CodigoPlan }, "UQ_PlanEstudios_programa_codigoPlan")
+                .IsUnique()
+                .HasFilter("([codigoPlan] IS NOT NULL)");
+            entity.HasIndex(e => e.CodigoPlan, "IX_PlanEstudios_codigoPlan")
+                .HasFilter("([codigoPlan] IS NOT NULL)");
 
             entity.Property(e => e.IdPlanEstudios).HasColumnName("idPlanEstudios");
             entity.Property(e => e.IdArchivoPlan).HasColumnName("idArchivoPlan");
