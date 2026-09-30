@@ -70,12 +70,19 @@ namespace SGPla.Services.Implementations
             }
         }
 
+        private static bool EsTransitorio(Exception ex, CancellationToken ct) => ex switch
+        {
+            HttpRequestException http => http.StatusCode is null || (int)http.StatusCode >= 500,
+            TaskCanceledException => !ct.IsCancellationRequested,
+            _ => false
+        };
+
         private async Task<PlaneaRespuesta> ObtenerConReintentosAsync(string codigoPeriodo, CancellationToken ct)
         {
             for (var intento = 1; ; intento++)
             {
                 try { return await cliente.ObtenerPeriodoAsync(codigoPeriodo, ct); }
-                catch (Exception ex) when ((ex is HttpRequestException || ex is TaskCanceledException && !ct.IsCancellationRequested) && intento < _opciones.Intentos)
+                catch (Exception ex) when (EsTransitorio(ex, ct) && intento < _opciones.Intentos)
                 {
                     var espera = TimeSpan.FromTicks((long)(_opciones.EsperaEntreIntentos.Ticks * Math.Pow(4, intento - 1)));
                     await Task.Delay(espera, ct);

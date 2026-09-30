@@ -179,6 +179,8 @@ builder.Services.AddHttpClient<IPlaneaCliente, PlaneaCliente>((proveedor, client
         cliente.BaseAddress = new Uri(opciones.UrlBase.EndsWith('/') ? opciones.UrlBase : opciones.UrlBase + "/");
         cliente.Timeout = opciones.TiempoEspera;
         cliente.DefaultRequestHeaders.Accept.ParseAdd("application/json");
+        if (!string.IsNullOrWhiteSpace(opciones.ApiKey))
+            cliente.DefaultRequestHeaders.TryAddWithoutValidation(opciones.NombreCabeceraToken, opciones.ApiKey);
     })
     .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler { AutomaticDecompression = DecompressionMethods.All });
 builder.Services.AddScoped<ISincronizacionPlaneaRepository, SincronizacionPlaneaRepository>();

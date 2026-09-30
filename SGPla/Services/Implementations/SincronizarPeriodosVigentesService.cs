@@ -16,7 +16,7 @@ namespace SGPla.Services.Implementations
             var hoy = DateOnly.FromDateTime(DateTime.Today);
             var periodos = await repositorio.ObtenerPeriodosVigentesAsync(hoy, opciones.Value.VentanaAnticipacionMeses, cancellationToken);
             var sinFechas = await repositorio.ContarPeriodosSinFechasAsync(cancellationToken);
-            if (sinFechas > 0) logger.LogWarning("Hay {Cantidad} periodos sin fechas y no se sincronizan hasta que las tengan.", sinFechas);
+            if (sinFechas > 0) logger.LogInformation("Hay {Cantidad} periodos sin fechas registradas; se usan las fechas derivadas de su código.", sinFechas);
             if (periodos.Count == 0) { logger.LogInformation("No hay periodos vigentes para sincronizar con PLANEA."); return []; }
             var resultados = new List<ResultadoSincronizacionPlanea>(periodos.Count);
             foreach (var periodo in periodos) resultados.Add(await sincronizarPeriodo.SincronizarAsync(periodo, cancellationToken));

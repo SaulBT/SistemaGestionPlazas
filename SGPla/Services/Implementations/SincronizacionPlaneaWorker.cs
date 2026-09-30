@@ -11,6 +11,11 @@ namespace SGPla.Services.Implementations
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             if (!_opciones.Habilitada) { logger.LogInformation("La sincronización con PLANEA está deshabilitada."); return; }
+            if (string.IsNullOrWhiteSpace(_opciones.ApiKey))
+            {
+                logger.LogWarning("La sincronización con PLANEA está habilitada, pero falta Planea:ApiKey; no se ejecutará.");
+                return;
+            }
             try
             {
                 await Task.Delay(_opciones.RetrasoInicial, stoppingToken);

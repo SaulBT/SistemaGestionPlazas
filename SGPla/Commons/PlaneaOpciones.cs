@@ -7,6 +7,9 @@ namespace SGPla.Commons
         public const string Seccion = "Planea";
         public bool Habilitada { get; set; }
         [Required, Url] public string UrlBase { get; set; } = "https://planea.uv.mx/planea/index.php/apiroladoovr/";
+        // Token de PLANEA. Se configura fuera del repositorio (variable de entorno Planea__ApiKey o user-secrets).
+        public string ApiKey { get; set; } = string.Empty;
+        [Required] public string NombreCabeceraToken { get; set; } = "X-Api-Token";
         public TimeSpan Intervalo { get; set; } = TimeSpan.FromDays(1);
         public TimeSpan RetrasoInicial { get; set; } = TimeSpan.FromMinutes(1);
         public TimeSpan TiempoEspera { get; set; } = TimeSpan.FromMinutes(5);

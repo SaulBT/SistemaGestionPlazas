@@ -70,4 +70,14 @@ public class SincronizarPeriodoPlaneaServiceTests
         var (cliente, _, service) = Crear(); cliente.Setup(c => c.ObtenerPeriodoAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ThrowsAsync(new HttpRequestException("offline"));
         Assert.Equal(PlaneaConstantes.ESTADO_FALLIDA, (await service.SincronizarAsync(Periodo)).Estado); cliente.Verify(c => c.ObtenerPeriodoAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Exactly(3));
     }
+    [Theory]
+    [InlineData(System.Net.HttpStatusCode.Unauthorized)]
+    [InlineData(System.Net.HttpStatusCode.NotFound)]
+    public async Task SincronizarAsync_Error4xx_NoReintentaYFalla(System.Net.HttpStatusCode estado)
+    {
+        var (cliente, _, service) = Crear();
+        cliente.Setup(c => c.ObtenerPeriodoAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ThrowsAsync(new HttpRequestException("4xx", null, estado));
+        Assert.Equal(PlaneaConstantes.ESTADO_FALLIDA, (await service.SincronizarAsync(Periodo)).Estado);
+        cliente.Verify(c => c.ObtenerPeriodoAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
 }

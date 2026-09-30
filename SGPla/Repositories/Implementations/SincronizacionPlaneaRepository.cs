@@ -17,10 +17,24 @@ namespace SGPla.Repositories.Implementations
         public async Task<IReadOnlyList<PeriodoPorSincronizar>> ObtenerPeriodosVigentesAsync(DateOnly hoy, int ventanaAnticipacionMeses, CancellationToken cancellationToken = default)
         {
             var limite = hoy.AddMonths(ventanaAnticipacionMeses);
-            return await _context.Periodo.AsNoTracking()
-                .Where(p => p.FechaInicio != null && p.FechaFin != null && p.FechaFin >= hoy && p.FechaInicio <= limite)
-                .OrderBy(p => p.Codigo).Select(p => new PeriodoPorSincronizar(p.IdPeriodo, p.Codigo.Trim()))
+            // Son pocos periodos: se evalúan en memoria para usar las fechas derivadas del código
+            // cuando el periodo no tiene fechas registradas.
+            var periodos = await _context.Periodo.AsNoTracking()
+                .Select(p => new { p.IdPeriodo, p.Codigo, p.FechaInicio, p.FechaFin })
                 .ToListAsync(cancellationToken);
+            return periodos
+                .Select(p => new
+                {
+                    p.IdPeriodo,
+                    Codigo = p.Codigo.Trim(),
+                    Fechas = p.FechaInicio is { } inicio && p.FechaFin is { } fin
+                        ? (inicio, fin)
+                        : PlaneaPeriodos.FechasPorCodigo(p.Codigo)
+                })
+                .Where(p => p.Fechas is { } f && f.Item2 >= hoy && f.Item1 <= limite)
+                .OrderBy(p => p.Codigo, StringComparer.Ordinal)
+                .Select(p => new PeriodoPorSincronizar(p.IdPeriodo, p.Codigo))
+                .ToList();
         }
 
         public Task<int> ContarPeriodosSinFechasAsync(CancellationToken cancellationToken = default) =>
