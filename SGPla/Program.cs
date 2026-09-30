@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using SGPla.Data;
-using SGPla.Data.NewModel;
 using SGPla.Repositories.Implementations;
 using SGPla.Repositories.Interfaces;
 using SGPla.Services.Implementations;
@@ -18,6 +17,8 @@ using SGPla.Modules.ProgramasEducativos;
 using SGPla.Commons;
 using System.Security.Claims;
 using System.Text;
+using System.Net;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 // Solo el Compose aislado activa este modo; no cambia las cookies del entorno habitual.
@@ -45,20 +46,13 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<GestionDePlazasDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-// El MVC nuevo usa exclusivamente los esquemas normalizados. El contexto
-// Database-First anterior se conserva para los módulos REST legacy.
-builder.Services.AddDbContext<SgplaDbContext>(options =>
-    options.UseSqlServer(connectionString, sql =>
-        sql.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
-
 //Clases
-builder.Services.AddScoped<ICoordinadorEaRepository, NormalizedCoordinadorEaRepository>();
-builder.Services.AddScoped<ICoordinadorDgaaRepository, NormalizedCoordinadorDgaaRepository>();
+builder.Services.AddScoped<ICoordinadorEaRepository, CoordinadorEaRepository>();
+builder.Services.AddScoped<ICoordinadorDgaaRepository, CoordinadorDgaaRepository>();
 builder.Services.AddScoped<IUsuarioValidator, UsuarioValidator>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
-builder.Services.AddScoped<ICatalogosMvcService, CatalogosMvcService>();
 
-builder.Services.AddScoped<IAreaAcademicaRepository, NormalizedAreaAcademicaRepository>();
+builder.Services.AddScoped<IAreaAcademicaRepository, AreaAcademicaRepository>();
 builder.Services.AddScoped<IAreaAcademicaValidator, AreaAcademicaValidator>();
 builder.Services.AddScoped<IAreaAcademicaService, AreaAcademicaService>();
 
@@ -66,7 +60,7 @@ builder.Services.AddScoped<IEntidadAcademicaRepository, EntidadAcademicaReposito
 builder.Services.AddScoped<IEntidadAcademicaValidator, EntidadAcademicaValidator>();
 builder.Services.AddScoped<IEntidadAcademicaService, EntidadAcademicaService>();
 
-builder.Services.AddScoped<IArticuloRepository, NormalizedArticuloRepository>();
+builder.Services.AddScoped<IArticuloRepository, ArticuloRepository>();
 builder.Services.AddScoped<IArticuloService, ArticuloService>();
 builder.Services.AddScoped<IArticuloValidator, ArticuloValidator>();
 
@@ -78,7 +72,7 @@ builder.Services.AddScoped<IExperienciaEducativaRepository, ExperienciaEducativa
 builder.Services.AddScoped<IPlanEstudiosValidator, PlanEstudiosValidator>();
 builder.Services.AddScoped<IPlanEstudiosService, PlanEstudiosService>();
 
-builder.Services.AddScoped<IPeriodoEscolarRepository, NormalizedPeriodoEscolarRepository>();
+builder.Services.AddScoped<IPeriodoEscolarRepository, PeriodoEscolarRepository>();
 builder.Services.AddScoped<IPeriodoEscolarService, PeriodoEscolarService>();
 builder.Services.AddScoped<IPeriodoEscolarValidator, PeriodoEscolarValidator>();
 
@@ -173,6 +167,28 @@ builder.Services.AddScoped<IAvisoRepository, AvisoRepository>();
 builder.Services.AddScoped<IOfertaRepository, OfertaRepository>();
 builder.Services.AddScoped<IHorarioRepository, HorarioRepository>();
 builder.Services.AddScoped<IAvisoValidator, AvisoValidator>();
+
+// Sincronización PLANEA (MVC)
+builder.Services.AddOptions<PlaneaOpciones>()
+    .Bind(builder.Configuration.GetSection(PlaneaOpciones.Seccion))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+builder.Services.AddHttpClient<IPlaneaCliente, PlaneaCliente>((proveedor, cliente) =>
+    {
+        var opciones = proveedor.GetRequiredService<IOptions<PlaneaOpciones>>().Value;
+        cliente.BaseAddress = new Uri(opciones.UrlBase.EndsWith('/') ? opciones.UrlBase : opciones.UrlBase + "/");
+        cliente.Timeout = opciones.TiempoEspera;
+        cliente.DefaultRequestHeaders.Accept.ParseAdd("application/json");
+        if (!string.IsNullOrWhiteSpace(opciones.ApiKey))
+            cliente.DefaultRequestHeaders.TryAddWithoutValidation(opciones.NombreCabeceraToken, opciones.ApiKey);
+    })
+    .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler { AutomaticDecompression = DecompressionMethods.All });
+builder.Services.AddScoped<ISincronizacionPlaneaRepository, SincronizacionPlaneaRepository>();
+builder.Services.AddScoped<ISincronizarPeriodoPlaneaService, SincronizarPeriodoPlaneaService>();
+builder.Services.AddScoped<ISincronizarPeriodosVigentesService, SincronizarPeriodosVigentesService>();
+builder.Services.AddHostedService<SincronizacionPlaneaWorker>();
+builder.Services.AddScoped<IProgramacionPlaneaRepository, ProgramacionPlaneaRepository>();
+builder.Services.AddScoped<IProgramacionPlaneaService, ProgramacionPlaneaService>();
 
 var app = builder.Build();
 

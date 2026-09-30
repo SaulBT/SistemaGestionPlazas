@@ -7,9 +7,12 @@ using SGPla.Helpers;
 using SGPla.Models;
 using SGPla.Models.Components;
 using SGPla.Models.DTOs.Oferta;
+using SGPla.Models.DTOs.Planea;
 using SGPla.Models.DTOs.ProgramacionAcademica;
 using SGPla.Models.ViewModels.ProgramacionesAcademicas;
 using SGPla.Services.Interfaces;
+using System.Globalization;
+using System.Security.Claims;
 using System.Text.Json;
 using static SGPla.Services.Implementations.ClavesEstado.ProgramacionAcademica;
 using ProgramacionClaves = SGPla.Services.Implementations.ClavesEstado.ProgramacionAcademica;
@@ -31,6 +34,7 @@ public class ProgramacionesAcademicasController : Controller
     private readonly IProgramacionAcademicaService _programacionAcademicaService;
     private readonly IPeriodoEscolarService _periodoEscolarService;
     private readonly IEstadoNavegacion _estado;
+    private readonly IProgramacionPlaneaService _programacionPlaneaService;
     private int _paginaActual = 1;
 
 
@@ -44,17 +48,26 @@ public class ProgramacionesAcademicasController : Controller
         ["NRC", "Experiencia Educativa", "NP", "Docente", "Plaza", "Hrs Contacto", "Hrs Pago", "Imparte"];
     private static readonly List<string> HEADERS_TABLA_HORARIOS =
         ["Dîa", "Horario", "Salon", "Acciones"];
+    private static readonly List<string> HEADERS_TABLA_PLANEA =
+        ["Periodo", "NRC", "Experiencia educativa", "Plan", "Programa educativo", "Región", "Horario y espacio"];
+    private static readonly Dictionary<string, string> ABREVIATURA_DIA = new()
+    {
+        ["Lunes"] = "Lun", ["Martes"] = "Mar", ["Miercoles"] = "Mié",
+        ["Jueves"] = "Jue", ["Viernes"] = "Vie", ["Sabado"] = "Sáb"
+    };
 
     public ProgramacionesAcademicasController(
         ILogger<ProgramacionesAcademicasController> logger,
         IProgramacionAcademicaService programacionAcademicaService,
         IPeriodoEscolarService periodoEscolarService,
-        IEstadoNavegacion estado)
+        IEstadoNavegacion estado,
+        IProgramacionPlaneaService programacionPlaneaService)
     {
         _logger = logger;
         _programacionAcademicaService = programacionAcademicaService;
         _periodoEscolarService = periodoEscolarService;
         _estado = estado;
+        _programacionPlaneaService = programacionPlaneaService;
     }
 
     #region Índice y resumen de programaciones
@@ -140,7 +153,20 @@ public class ProgramacionesAcademicasController : Controller
 
         _estado.Guardar(ResumenOferta, resumen);
 
+        await LlenarProgramacionPlaneaAsync(modelo, filtro);
+
         return View("Index", modelo);
+    }
+
+    [HttpPost]
+    [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SincronizarPlanea(int? idPeriodo, CancellationToken cancellationToken)
+    {
+        // Botón de prueba: ejecuta la misma sincronización que corre al levantar la aplicación.
+        var (exito, mensaje) = await _programacionPlaneaService.SincronizarAsync(idPeriodo, cancellationToken);
+        TempData[exito ? "Success" : "Error"] = mensaje;
+        return RedirectToAction(nameof(Index), new { idPeriodo });
     }
 
     [HttpGet]
@@ -704,6 +730,61 @@ public class ProgramacionesAcademicasController : Controller
     #endregion
 
     #region Helpers privados — construcción de tablas
+
+    private async Task LlenarProgramacionPlaneaAsync(IndexViewModel modelo, BuscarProgramacionAcademicaDTO filtro)
+    {
+        var idEntidad = filtro.IdEntidadAcademica;
+        // Un coordinador de entidad solo ve la programación PLANEA de su entidad.
+        if (User.IsInRole(Constantes.COORDINADOR_EA)
+            && int.TryParse(User.FindFirstValue("EntidadAcademicaId"), out var idEntidadUsuario))
+            idEntidad = idEntidadUsuario;
+
+        var planea = await _programacionPlaneaService.ObtenerAsync(new FiltroProgramacionPlaneaDTO
+        {
+            IdPeriodo = filtro.IdPeriodo,
+            IdEntidadAcademica = idEntidad,
+            IdProgramaEducativo = filtro.IdProgramaEducativo,
+            Busqueda = filtro.Busqueda
+        });
+
+        modelo.UltimaSincronizacionPlanea = planea.UltimaSincronizacion;
+        modelo.TotalCopiasPlanea = planea.Total;
+        modelo.CopiasPlaneaMostradas = planea.Copias.Count;
+        modelo.TablaPlanea = planea.Copias.Count == 0
+            ? TablaFactory.GenerarTablaConMensajeSinPaginacion(HEADERS_TABLA_PLANEA,
+                "No hay NRC de PLANEA registrados para los filtros seleccionados.")
+            : new TableModel
+            {
+                TableId = "tablaPlanea",
+                Headers = HEADERS_TABLA_PLANEA,
+                Pagination = new PaginationInfo { PaginationMode = "NA" },
+                Rows = planea.Copias.Select(c => new TableRowModel
+                {
+                    Cells =
+                    [
+                        new() { Value = c.CodigoPeriodo },
+                        new() { Value = c.Nrc },
+                        new() { Value = $"{c.CodigoExperiencia} - {c.NombreExperiencia}" },
+                        new() { Value = c.CodigoPlan ?? "—" },
+                        new() { Value = c.ProgramaEducativo },
+                        new() { Value = c.Region ?? "—" },
+                        new() { Value = FormatearHorarios(c.Horarios) }
+                    ]
+                }).ToList()
+            };
+    }
+
+    private static string FormatearHorarios(IReadOnlyList<HorarioPlaneaDTO> horarios)
+    {
+        if (horarios.Count == 0) return "Sin horario";
+        return string.Join("; ", horarios.Select(h =>
+        {
+            var dia = ABREVIATURA_DIA.GetValueOrDefault(h.Dia, h.Dia);
+            var espacio = string.Join("/", new[] { h.Edificio, h.Aula }.Where(x => !string.IsNullOrWhiteSpace(x)));
+            var horas = $"{h.HoraInicio.ToString("HH:mm", CultureInfo.InvariantCulture)}-{h.HoraFin.ToString("HH:mm", CultureInfo.InvariantCulture)}";
+            return string.IsNullOrEmpty(espacio) ? $"{dia} {horas}" : $"{dia} {horas} ({espacio})";
+        }));
+    }
 
     private TableModel LlenarTablaResumen(List<ResumenOfertaProgramacionAcademicaDTO> resumen)
     {

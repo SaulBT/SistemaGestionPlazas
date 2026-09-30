@@ -54,6 +54,71 @@
 		@await Component.InvokeAsync("Table", Model.Table)
 	</div>
 
+	<!-- Programación sincronizada desde PLANEA -->
+	@{
+		var ultima = Model.UltimaSincronizacionPlanea;
+		var claseEstado = ultima?.Estado switch
+		{
+			"Exitosa" => "bg-success",
+			"SinDatos" => "bg-secondary",
+			"EnProceso" or "Omitida" => "bg-warning text-dark",
+			_ => "bg-danger"
+		};
+	}
+	<section style="padding-top:30px">
+		<div style="display:flex; gap:10px; align-items:center; justify-content:space-between; padding-bottom:10px">
+			<h4 style="margin:0">Programación PLANEA</h4>
+			@if (User.IsInRole(Constantes.COORDINADOR_DGAA))
+			{
+				<form method="post" action="@Url.Action("SincronizarPlanea", "ProgramacionesAcademicas")"
+					  onsubmit="const b = this.querySelector('button'); b.disabled = true; b.querySelector('.text-wrapper').textContent = 'Sincronizando…';">
+					@Html.AntiForgeryToken()
+					<input type="hidden" name="idPeriodo" value="@Model.IdPeriodo" />
+					@await Component.InvokeAsync("Boton", new
+					{
+						Accion = "Cargar",
+						Texto = "Sincronizar",
+						ButtonType = "submit"
+					})
+				</form>
+			}
+		</div>
+
+		<p style="margin-bottom:10px">
+			@if (ultima is null)
+			{
+				<span>Aún no hay sincronizaciones con PLANEA@(Model.IdPeriodo.HasValue ? " para este periodo" : "").</span>
+			}
+			else
+			{
+				<span>Última sincronización (periodo @ultima.CodigoPeriodo):</span>
+				<span class="badge @claseEstado">@ultima.Estado</span>
+				<span>@((ultima.FechaFin ?? ultima.FechaInicio).ToString("dd/MM/yyyy HH:mm"))</span>
+				@if (ultima.NrcNuevos is not null)
+				{
+					<span> · @ultima.NrcNuevos NRC nuevos · @ultima.NrcExistentes ya registrados · @ultima.NrcSinExperiencia sin EE en el catálogo de su región · @ultima.HorariosInsertados horarios</span>
+				}
+				@if (!string.IsNullOrWhiteSpace(ultima.MensajeError))
+				{
+					<br /><span class="text-danger">@ultima.MensajeError</span>
+				}
+			}
+			@if (User.IsInRole(Constantes.COORDINADOR_DGAA) && !Model.IdPeriodo.HasValue)
+			{
+				<br /><small class="text-muted">Sin periodo seleccionado, «Sincronizar» procesa los periodos vigentes.</small>
+			}
+		</p>
+
+		<div style="display:flex; gap:10px; padding-top:0px; justify-content:left">
+			@await Component.InvokeAsync("Table", Model.TablaPlanea)
+		</div>
+
+		@if (Model.TotalCopiasPlanea > Model.CopiasPlaneaMostradas)
+		{
+			<small class="text-muted">Se muestran @Model.CopiasPlaneaMostradas de @Model.TotalCopiasPlanea NRC. Usa los filtros o la búsqueda para acotar.</small>
+		}
+	</section>
+
 	
 
 </div>

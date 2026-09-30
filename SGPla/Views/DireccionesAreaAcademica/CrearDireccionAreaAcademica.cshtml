@@ -24,6 +24,33 @@
             })
         </div>
 
+        <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:flex-start; justify-content:space-evenly;">
+            <div style="width:100%">
+                @await Component.InvokeAsync("InputField", new InputFieldModel
+                {
+                    Id = "telefono",
+                    Name = "telefono",
+                    Label = "Teléfono:",
+                    Valor = Model.Telefono,
+                    Flexible = true,
+                    Error = ViewData.ModelState["telefono"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                    MaximoCaracteres =10
+                })
+            </div>
+            
+            <div style="width:100%">
+                @await Component.InvokeAsync("InputField", new InputFieldModel
+                {
+                    Id = "extension",
+                    Name = "extension",
+                    Label = "Extensión:",
+                    Valor = Model.Extension ?? string.Empty,
+                    Flexible = true,
+                    Error = ViewData.ModelState["extension"]?.Errors.FirstOrDefault()?.ErrorMessage,
+                    MaximoCaracteres =5
+                })
+            </div>
+        </div>
     </div>
 
     <!-- Botones -->

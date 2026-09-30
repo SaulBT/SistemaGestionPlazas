@@ -6,7 +6,8 @@ namespace SGPla.Models.DTOs.AreaAcademica
     {
         [Required(ErrorMessage = "Campo obligatorio")]
         public string Nombre { get; set; } = string.Empty;
-        public string? Telefono { get; set; }
+        [Required(ErrorMessage = "Campo obligatorio")]
+        public string Telefono { get; set; } = string.Empty;
         public string? Extension { get; set; }
     }
 }
