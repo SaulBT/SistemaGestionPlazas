@@ -19,8 +19,7 @@
 ## 0. Reglas de trabajo
 
 - **Raíz del repo:** `/Users/kaleb/repos/sgpla/SistemaGestionPlazas`.
-  - Trabaja en la rama `feature/sincronizacion-planea`. Ya existe, parte de `37625fe` y contiene este plan.
-  - Antes de empezar, verifica `git log --oneline -2`: el padre del commit del plan debe ser `37625fe`.
+  - Trabaja en la rama `feature/sincronizacion-planea`. Ya existe, parte de `37625fe` y solo contiene commits `docs(planea)` con este plan.
   - **No** hagas `pull`, `rebase` ni `merge` con `origin/develop`.
 - **No hagas push ni abras PR** sin que el usuario lo pida.
   - Commits en español, estilo convencional: `feat(db): …`, `feat(planea): …`, `test(planea): …`.
@@ -52,6 +51,27 @@
   - Probar: `dotnet test SGPla.Tests/SGPla.Tests.csproj`
   - Compilar el migrador: `dotnet build SGPla.DbMigrator/SGPla.DbMigrator.csproj`
 - **Archivo de datos real** para análisis y fixtures: `/Users/kaleb/repos/sgpla/Endpoint.json` (65 MB, fuera del repo). **No lo copies al repo.**
+  - Úsalo solo para generar el fixture (script de §3.8) y para el mock de la FASE 7.
+
+### 0.1 Antes de empezar (obligatorio)
+1. `git switch feature/sincronizacion-planea`.
+2. Ejecuta `git log --oneline -5`:
+   - Todos los commits por encima de `37625fe` ("Feature/cargar planes estudio (#24)") deben ser `docs(planea): …`.
+   - Si aparece cualquier otro commit entre ellos, o si `37625fe` no está en la historia, **DETENTE** y avisa al usuario.
+3. Confirma que la última migración es `SGPla.DbMigrator/database/migrations/0011_conservar_docentes_importados.sql` y que no existen `0012`+.
+4. Lee este documento **completo** antes de escribir código, en especial:
+   - §1: decisiones cerradas.
+   - §12: qué NO hacer.
+5. **Línea base.** Ejecuta `dotnet build SGPla/SGPla.csproj` y `dotnet test SGPla.Tests/SGPla.Tests.csproj`. Anota qué pruebas ya fallaban antes de tus cambios. En cada checkpoint, "tests en verde" significa **ningún fallo nuevo** respecto a esa línea base.
+
+### 0.2 Reglas durante la implementación
+- Ejecuta las fases en orden (FASE 1 → FASE 7). Cierra cada una con su checkpoint y su commit, usando los mensajes sugeridos.
+- Usa **tal cual** el SQL de la migración `0012` (FASE 1) y el de `SincronizacionPlaneaSql` (FASE 4). Solo corrige errores de sintaxis reales y documéntalos como desviación.
+- Si el código real no coincide con el plan (una línea, un nombre, una firma), investígalo, adáptate a lo que existe y anótalo como desviación. **No inventes APIs** ni métodos que no existan.
+- Si no hay Docker ni SQL Server disponible:
+  - Termina las fases 1–6, con build y pruebas unitarias.
+  - Deja la FASE 7 y el checkpoint 6.6 como **pendientes**.
+  - **No simules resultados** ni los describas como ejecutados.
 
 ---
 
@@ -71,7 +91,7 @@ PLANEA expone `GET https://planea.uv.mx/planea/index.php/apiroladoovr/periodo/{c
 | Alcance técnico | **Solo MVC + vistas Razor.** No se toca `sgpla-app/` (React) ni la API REST (`SGPla/Modules`, `/api/...`) |
 | Front MVC | Pantallas de **consulta** (solo lectura) para SuperUsuario (§FASE 6): bitácora de sincronizaciones, listado de NRC sincronizados y detalle de un NRC con sus docentes y horarios. Lleva un enlace en el menú de `_LayoutSuperUsuario` |
 | Qué periodos | **Vigentes por fecha**: `fechaFin >= hoy` y `fechaInicio <= hoy + VentanaAnticipacionMeses` |
-| Fechas de `Periodo` | Están mal calculadas (ver §10), pero **su corrección está fuera de alcance** |
+| Fechas de `Periodo` | Están mal calculadas (ver §14), pero **su corrección está fuera de alcance** |
 
 ---
 
@@ -1768,7 +1788,7 @@ Si no hay Docker o SQL Server disponible, **no marques la Fase 7 como hecha**. D
 
 ---
 
-## 7. Casos borde (referencia rápida)
+## 11. Casos borde (referencia rápida)
 
 | Caso | Comportamiento esperado |
 |---|---|
@@ -1784,25 +1804,25 @@ Si no hay Docker o SQL Server disponible, **no marques la Fase 7 como hecha**. D
 | Dos ejecuciones simultáneas | La segunda queda `Omitida` (`sp_getapplock`) |
 | Caída a mitad de una ejecución | Rollback automático; la bitácora pasa a `Interrumpida` en el siguiente ciclo |
 
-## 8. Qué NO hacer
+## 12. Qué NO hacer
 - **No** toques `sgpla-app/` (React) ni la API REST: nada en `SGPla/Modules/`, ni controladores `[ApiController]`, ni rutas `/api/...`. La única excepción es el ajuste de compilación de §2.4.
 - **No** agregues un botón ni una acción POST para sincronizar manualmente: el disparo es solo automático y el front es de solo lectura.
 - **No** trabajes sobre `origin/develop` ni traigas cambios de ahí: la base es `37625fe` (migración `0011`).
 - **No** modifiques `CargaAcademica`, `Oferta` ni `Horario`. La importación por Excel sigue igual; solo cambia el filtro de §2.4.
 - **No** actualices nombre, perfil, créditos ni horas de EEs que ya existen en el catálogo.
 - **No** borres físicamente NRC.
-- **No** corrijas las fechas de `Periodo` (§10).
+- **No** corrijas las fechas de `Periodo` (§14).
 - **No** uses `SaveChanges` ni `AddRange` de EF para los datos masivos.
 - **No** cargues la respuesta HTTP como `string` (`ReadAsStringAsync`) ni uses `JsonDocument` sobre el payload completo.
 - **No** subas `Endpoint.json` ni el mock al repo.
 
-## 9. Resumen final que debe entregar el implementador
+## 13. Resumen final que debe entregar el implementador
 - Lista de commits.
-- Resultado de `dotnet build` y `dotnet test`.
+- Resultado de `dotnet build` y `dotnet test`: fallos nuevos contra la línea base de §0.1, o confirmación de que no hay ninguno.
 - Resultado de cada paso de la Fase 7 y del checkpoint 6.6, o cuáles quedaron pendientes y por qué.
 - Cualquier desviación de este plan y su motivo.
 
-## 10. Hallazgos fuera de alcance (solo documentar)
+## 14. Hallazgos fuera de alcance (solo documentar)
 - **Fechas de `Periodo`:** la migración `0002` asume «sufijo `01` = feb–jul, `51` = ago–ene». PLANEA muestra que `202701` va del 17 de agosto al 2 de diciembre de 2026, así que la regla parece estar invertida. La selección de periodos vigentes depende de esas fechas; conviene corregirlas en otra tarea.
 - **Borrar EEs de un plan:** si un plan de estudios elimina una EE que ya tiene NRC sincronizados, la FK lo impide. Hoy pasa lo mismo con `Oferta`. Queda pendiente mostrar un mensaje amigable.
 - **Forzar una sincronización:** no hay acción manual; si se necesita, sería una siguiente iteración (un POST en `SincronizacionPlaneaController` que encole el periodo).
