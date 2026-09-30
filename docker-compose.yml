@@ -41,6 +41,7 @@ services:
       ConnectionStrings__DefaultConnection: >-
         Server=db,1433;Database=GestionDePlazasBD;User Id=sa;Password=${MSSQL_SA_PASSWORD:-SgplaDev_2026!Password};TrustServerCertificate=True;Encrypt=False;
       Archivos__RutaBase: /app/Archivos
+      Planea__Habilitada: ${PLANEA_HABILITADA:-false}
     ports:
       - "8080:8080"
     volumes:

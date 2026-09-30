@@ -17,6 +17,8 @@ using SGPla.Modules.ProgramasEducativos;
 using SGPla.Commons;
 using System.Security.Claims;
 using System.Text;
+using System.Net;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 // Solo el Compose aislado activa este modo; no cambia las cookies del entorno habitual.
@@ -165,6 +167,24 @@ builder.Services.AddScoped<IAvisoRepository, AvisoRepository>();
 builder.Services.AddScoped<IOfertaRepository, OfertaRepository>();
 builder.Services.AddScoped<IHorarioRepository, HorarioRepository>();
 builder.Services.AddScoped<IAvisoValidator, AvisoValidator>();
+
+// Sincronización PLANEA (MVC)
+builder.Services.AddOptions<PlaneaOpciones>()
+    .Bind(builder.Configuration.GetSection(PlaneaOpciones.Seccion))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+builder.Services.AddHttpClient<IPlaneaCliente, PlaneaCliente>((proveedor, cliente) =>
+    {
+        var opciones = proveedor.GetRequiredService<IOptions<PlaneaOpciones>>().Value;
+        cliente.BaseAddress = new Uri(opciones.UrlBase.EndsWith('/') ? opciones.UrlBase : opciones.UrlBase + "/");
+        cliente.Timeout = opciones.TiempoEspera;
+        cliente.DefaultRequestHeaders.Accept.ParseAdd("application/json");
+    })
+    .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler { AutomaticDecompression = DecompressionMethods.All });
+builder.Services.AddScoped<ISincronizacionPlaneaRepository, SincronizacionPlaneaRepository>();
+builder.Services.AddScoped<ISincronizarPeriodoPlaneaService, SincronizarPeriodoPlaneaService>();
+builder.Services.AddScoped<ISincronizarPeriodosVigentesService, SincronizarPeriodosVigentesService>();
+builder.Services.AddHostedService<SincronizacionPlaneaWorker>();
 
 var app = builder.Build();
 
