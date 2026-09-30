@@ -42,7 +42,9 @@ namespace SGPla.Controllers
                 new() { Actions=[new TableActionModel { Accion="Ver detalle", OnClick=$"abrirDetallePlanea({JsonSerializer.Serialize(new { x.Advertencias, x.MensajeError })})" }] }
             ]}).ToList();
             return View(new IndexViewModel { Table = rows.Count == 0 ? TablaFactory.GenerarTablaConMensaje(HeadersBitacora, "No hay sincronizaciones registradas.") : new TableModel { Headers=HeadersBitacora, Rows=rows, Pagination=new PaginationInfo { CurrentPage=filtro.Pagina, PageSize=filtro.Cantidad, TotalItems=total, OnPageChange="cambiarPagina" } },
-                Periodos=await servicio.ObtenerPeriodosConSincronizacionAsync(cancellationToken), Estados=PlaneaConstantes.ESTADOS.Select(s => new OptionModel { Value=s, Text=s }).ToList(), IdPeriodo=idPeriodo, Estado=filtro.Estado, PaginaActual=filtro.Pagina, CantidadPorPagina=filtro.Cantidad });
+                Periodos=Seleccionar(await servicio.ObtenerPeriodosConSincronizacionAsync(cancellationToken), idPeriodo?.ToString()),
+                Estados=PlaneaConstantes.ESTADOS.Select(s => new OptionModel { Value=s, Text=s, Selected=s == filtro.Estado }).ToList(),
+                IdPeriodo=idPeriodo, Estado=filtro.Estado, PaginaActual=filtro.Pagina, CantidadPorPagina=filtro.Cantidad });
         }
 
         public async Task<IActionResult> Copias(int? idPeriodo, string? busqueda, int? idPlanEstudios, int? idRegion, int pagina = 1, int cantidad = 20, CancellationToken cancellationToken = default)
@@ -56,7 +58,9 @@ namespace SGPla.Controllers
                 new() { Actions=[new TableActionModel { Accion="Ver", Url=Url.Action(nameof(DetalleCopia), new { id=x.IdExperienciaEducativaPeriodo, idPeriodo, busqueda, idPlanEstudios, idRegion, pagina=filtro.Pagina, cantidad=filtro.Cantidad }) }] }
             ]}).ToList();
             return View(new CopiasViewModel { Table=rows.Count == 0 ? TablaFactory.GenerarTablaConMensaje(HeadersCopias, "No hay copias registradas.") : new TableModel { Headers=HeadersCopias, Rows=rows, Pagination=new PaginationInfo { CurrentPage=filtro.Pagina, PageSize=filtro.Cantidad, TotalItems=total, OnPageChange="cambiarPagina" } },
-                Periodos=await servicio.ObtenerPeriodosConSincronizacionAsync(cancellationToken), Planes=await servicio.ObtenerPlanesConCopiasAsync(idPeriodo,cancellationToken), Regiones=await servicio.ObtenerRegionesAsync(cancellationToken),
+                Periodos=Seleccionar(await servicio.ObtenerPeriodosConSincronizacionAsync(cancellationToken), idPeriodo?.ToString()),
+                Planes=Seleccionar(await servicio.ObtenerPlanesConCopiasAsync(idPeriodo,cancellationToken), idPlanEstudios?.ToString()),
+                Regiones=Seleccionar(await servicio.ObtenerRegionesAsync(cancellationToken), idRegion?.ToString()),
                 Busqueda=filtro.Busqueda, IdPeriodo=idPeriodo, IdPlanEstudios=idPlanEstudios, IdRegion=idRegion, PaginaActual=filtro.Pagina, CantidadPorPagina=filtro.Cantidad });
         }
 
@@ -71,5 +75,10 @@ namespace SGPla.Controllers
             ]}).ToList() } });
         }
         private static string Fmt(int? valor) => valor?.ToString(CultureInfo.InvariantCulture) ?? "—";
+        private static List<OptionModel> Seleccionar(List<OptionModel> opciones, string? valor)
+        {
+            foreach (var opcion in opciones) opcion.Selected = opcion.Value == valor;
+            return opciones;
+        }
     }
 }
