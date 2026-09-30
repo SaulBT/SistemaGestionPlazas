@@ -9,7 +9,6 @@ public class AutorizacionControllersTests
     [Theory]
     [InlineData(typeof(UsuariosController), PoliticasAutorizacion.SuperUsuario)]
     [InlineData(typeof(ArticulosController), PoliticasAutorizacion.SuperUsuario)]
-    [InlineData(typeof(SincronizacionPlaneaController), PoliticasAutorizacion.SuperUsuario)]
     [InlineData(typeof(DocentesController), PoliticasAutorizacion.EntidadAcademica)]
     [InlineData(typeof(IntegranteCtController), PoliticasAutorizacion.EntidadAcademica)]
     public void ControladoresDeRolExclusivo_ExigenLaPoliticaCorrecta(Type controller, string policy)
