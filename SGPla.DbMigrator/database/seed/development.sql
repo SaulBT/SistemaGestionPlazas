@@ -100,3 +100,28 @@ BEGIN
     DBCC CHECKIDENT ('dbo.ProgramaEducativo', RESEED, 12);
 END
 GO
+
+-- Usuarios de desarrollo. El acceso se valida contra el LDAP institucional;
+-- estas filas solo asignan el rol a cada correo.
+IF NOT EXISTS (SELECT 1 FROM [dbo].[SuperUsuario] WHERE [correo] = N'zs22013663@estudiantes.uv.mx')
+BEGIN
+    INSERT INTO [dbo].[SuperUsuario] ([nombre], [correo])
+    VALUES (N'Ian Kaleb Moctezuma Rojas', N'zs22013663@estudiantes.uv.mx');
+END
+GO
+
+-- DGAA del Área Económico Administrativa (área de la Facultad de Estadística e Informática).
+IF NOT EXISTS (SELECT 1 FROM [dbo].[CoordinadorDGAA] WHERE [correo] = N'zs22013696@estudiantes.uv.mx')
+BEGIN
+    INSERT INTO [dbo].[CoordinadorDGAA] ([idAreaAcademica], [nombre], [correo], [cargo])
+    VALUES (2, N'Axel Luna', N'zs22013696@estudiantes.uv.mx', N'Coordinador de Área Académica');
+END
+GO
+
+-- Coordinador de la Facultad de Estadística e Informática.
+IF NOT EXISTS (SELECT 1 FROM [dbo].[CoordinadorEA] WHERE [correo] = N'zs22013630@estudiantes.uv.mx')
+BEGIN
+    INSERT INTO [dbo].[CoordinadorEA] ([idEntidadAcademica], [nombre], [correo], [cargo])
+    VALUES (1, N'Ivan Jafeth Carballo Delgado', N'zs22013630@estudiantes.uv.mx', N'Coordinador de Entidad Académica');
+END
+GO
