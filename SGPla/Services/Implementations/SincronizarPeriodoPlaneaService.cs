@@ -21,7 +21,9 @@ namespace SGPla.Services.Implementations
             int? recibidos = null;
             try
             {
+                var medicionDescarga = Stopwatch.StartNew();
                 var respuesta = await ObtenerConReintentosAsync(periodo.Codigo, cancellationToken);
+                medicionDescarga.Stop();
                 recibidos = respuesta.Resultado?.Count ?? 0;
                 if (respuesta.Periodo?.Trim() != periodo.Codigo)
                     throw new PlaneaRespuestaInvalidaException($"PLANEA devolvió el periodo '{respuesta.Periodo?.Trim() ?? "(vacío)"}' y se esperaba '{periodo.Codigo}'.");
@@ -32,14 +34,20 @@ namespace SGPla.Services.Implementations
                     await repositorio.CerrarBitacoraAsync(idBitacora, PlaneaConstantes.ESTADO_SIN_DATOS, recibidos, null, null, null, null, cancellationToken);
                     return new(periodo.Codigo, PlaneaConstantes.ESTADO_SIN_DATOS, null, null);
                 }
+                var medicionNormalizacion = Stopwatch.StartNew();
                 datos = PlaneaNormalizador.Normalizar(respuesta);
+                medicionNormalizacion.Stop();
+                var medicionEscritura = Stopwatch.StartNew();
                 var resumen = await repositorio.RegistrarNuevasAsync(periodo.IdPeriodo, periodo.Codigo, idBitacora, datos, cancellationToken);
+                medicionEscritura.Stop();
                 var advertencias = string.Join(Environment.NewLine, datos.Advertencias);
                 await repositorio.CerrarBitacoraAsync(idBitacora, PlaneaConstantes.ESTADO_EXITOSA, recibidos, datos, resumen,
                     string.IsNullOrEmpty(advertencias) ? null : advertencias, null, cancellationToken);
                 reloj.Stop();
                 logger.LogInformation("Sincronización PLANEA {Periodo}: {Duracion} ms, nuevas={Nuevas}, existentes={Existentes}, sin plan={SinPlan}, sin EE={SinExperiencia}, horarios={Horarios}",
                     periodo.Codigo, reloj.ElapsedMilliseconds, resumen.NrcNuevos, resumen.NrcExistentes, datos.NrcSinPlan, resumen.NrcSinExperiencia, resumen.HorariosInsertados);
+                logger.LogInformation("Tiempos PLANEA {Periodo}: descarga+deserialización={Descarga} ms, normalización={Normalizacion} ms, escritura={Escritura} ms",
+                    periodo.Codigo, medicionDescarga.ElapsedMilliseconds, medicionNormalizacion.ElapsedMilliseconds, medicionEscritura.ElapsedMilliseconds);
                 return new(periodo.Codigo, PlaneaConstantes.ESTADO_EXITOSA, resumen, null);
             }
             catch (SincronizacionEnCursoException ex)
