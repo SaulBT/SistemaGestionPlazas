@@ -19,6 +19,8 @@ public partial class PlanEstudios
 
     public virtual ICollection<ExperienciaEducativa> ExperienciaEducativa { get; set; } = new List<ExperienciaEducativa>();
 
+    public virtual ICollection<ExperienciaEducativaPeriodo> ExperienciaEducativaPeriodo { get; set; } = new List<ExperienciaEducativaPeriodo>();
+
     public virtual Archivo IdArchivoPlanNavigation { get; set; } = null!;
 
     public virtual ProgramaEducativo IdProgramaEducativoNavigation { get; set; } = null!;

@@ -39,6 +39,10 @@ public partial class GestionDePlazasDbContext : DbContext
 
     public virtual DbSet<ExperienciaEducativa> ExperienciaEducativa { get; set; }
 
+    public virtual DbSet<ExperienciaEducativaPeriodo> ExperienciaEducativaPeriodo { get; set; }
+
+    public virtual DbSet<ExperienciaEducativaPeriodoHorario> ExperienciaEducativaPeriodoHorario { get; set; }
+
     public virtual DbSet<Grado> Grado { get; set; }
 
     public virtual DbSet<Horario> Horario { get; set; }
@@ -66,6 +70,8 @@ public partial class GestionDePlazasDbContext : DbContext
     public virtual DbSet<Modalidad> Modalidad { get; set; }
 
     public virtual DbSet<SolicitudApertura> SolicitudApertura { get; set; }
+
+    public virtual DbSet<SincronizacionPlanea> SincronizacionPlanea { get; set; }
 
     public virtual DbSet<SuperUsuario> SuperUsuario { get; set; }
 
@@ -511,6 +517,7 @@ public partial class GestionDePlazasDbContext : DbContext
             entity.HasKey(e => e.IdExperienciaEducativa);
 
             entity.HasIndex(e => e.IdPlanEstudios, "IX_ExperienciaEducativa_idPlanEstudios");
+            entity.HasIndex(e => e.Codigo, "IX_ExperienciaEducativa_codigo");
 
             entity.Property(e => e.IdExperienciaEducativa).HasColumnName("idExperienciaEducativa");
             entity.Property(e => e.Codigo)
@@ -1011,6 +1018,87 @@ public partial class GestionDePlazasDbContext : DbContext
                 .HasConstraintName("FK_SolicitudApertura_ProgramaEducativo");
 
             entity.ToTable("SolicitudApertura");
+        });
+
+        modelBuilder.Entity<SincronizacionPlanea>(entity =>
+        {
+            entity.HasKey(e => e.IdSincronizacionPlanea);
+            entity.HasIndex(e => new { e.IdPeriodo, e.FechaInicio }, "IX_SincronizacionPlanea_periodo_fecha");
+            entity.Property(e => e.IdSincronizacionPlanea).HasColumnName("idSincronizacionPlanea");
+            entity.Property(e => e.IdPeriodo).HasColumnName("idPeriodo");
+            entity.Property(e => e.FechaInicio).HasColumnType("datetime2(0)").HasColumnName("fechaInicio");
+            entity.Property(e => e.FechaFin).HasColumnType("datetime2(0)").HasColumnName("fechaFin");
+            entity.Property(e => e.Estado).HasMaxLength(15).IsUnicode(false).HasColumnName("estado");
+            entity.Property(e => e.RegistrosRecibidos).HasColumnName("registrosRecibidos");
+            entity.Property(e => e.NrcRecibidos).HasColumnName("nrcRecibidos");
+            entity.Property(e => e.NrcSinPlan).HasColumnName("nrcSinPlan");
+            entity.Property(e => e.NrcSinExperiencia).HasColumnName("nrcSinExperiencia");
+            entity.Property(e => e.NrcExistentes).HasColumnName("nrcExistentes");
+            entity.Property(e => e.NrcNuevos).HasColumnName("nrcNuevos");
+            entity.Property(e => e.HorariosInsertados).HasColumnName("horariosInsertados");
+            entity.Property(e => e.Advertencias).HasColumnName("advertencias");
+            entity.Property(e => e.MensajeError).HasColumnName("mensajeError");
+            entity.HasOne(d => d.IdPeriodoNavigation).WithMany(p => p.SincronizacionPlanea)
+                .HasForeignKey(d => d.IdPeriodo).OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_SincronizacionPlanea_Periodo");
+            entity.ToTable("SincronizacionPlanea");
+        });
+
+        modelBuilder.Entity<ExperienciaEducativaPeriodo>(entity =>
+        {
+            entity.HasKey(e => e.IdExperienciaEducativaPeriodo);
+            entity.HasIndex(e => new { e.IdPeriodo, e.Nrc }, "UX_ExperienciaEducativaPeriodo_periodo_nrc").IsUnique();
+            entity.HasIndex(e => e.IdExperienciaEducativa, "IX_ExperienciaEducativaPeriodo_idExperienciaEducativa");
+            entity.HasIndex(e => e.IdPlanEstudios, "IX_ExperienciaEducativaPeriodo_idPlanEstudios");
+            entity.HasIndex(e => e.IdSincronizacionPlanea, "IX_ExperienciaEducativaPeriodo_idSincronizacionPlanea");
+            entity.Property(e => e.IdExperienciaEducativaPeriodo).HasColumnName("idExperienciaEducativaPeriodo");
+            entity.Property(e => e.IdExperienciaEducativa).HasColumnName("idExperienciaEducativa");
+            entity.Property(e => e.IdPeriodo).HasColumnName("idPeriodo");
+            entity.Property(e => e.IdPlanEstudios).HasColumnName("idPlanEstudios");
+            entity.Property(e => e.IdRegion).HasColumnName("idRegion");
+            entity.Property(e => e.IdSincronizacionPlanea).HasColumnName("idSincronizacionPlanea");
+            entity.Property(e => e.Nrc).HasMaxLength(5).IsUnicode(false).HasColumnName("nrc");
+            entity.Property(e => e.Titulo).HasMaxLength(150).IsUnicode(false).HasColumnName("titulo");
+            entity.Property(e => e.Campus).HasMaxLength(5).IsUnicode(false).HasColumnName("campus");
+            entity.Property(e => e.Nivel).HasMaxLength(5).IsUnicode(false).HasColumnName("nivel");
+            entity.Property(e => e.Area).HasMaxLength(100).IsUnicode(false).HasColumnName("area");
+            entity.Property(e => e.FechaAlta).HasColumnType("datetime2(0)").HasDefaultValueSql("(sysdatetime())").HasColumnName("fechaAlta");
+            entity.HasOne(d => d.IdExperienciaEducativaNavigation).WithMany(p => p.ExperienciaEducativaPeriodo)
+                .HasForeignKey(d => d.IdExperienciaEducativa).OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_ExperienciaEducativaPeriodo_ExperienciaEducativa");
+            entity.HasOne(d => d.IdPeriodoNavigation).WithMany(p => p.ExperienciaEducativaPeriodo)
+                .HasForeignKey(d => d.IdPeriodo).OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_ExperienciaEducativaPeriodo_Periodo");
+            entity.HasOne(d => d.IdPlanEstudiosNavigation).WithMany(p => p.ExperienciaEducativaPeriodo)
+                .HasForeignKey(d => d.IdPlanEstudios).OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_ExperienciaEducativaPeriodo_PlanEstudios");
+            entity.HasOne(d => d.IdRegionNavigation).WithMany(p => p.ExperienciaEducativaPeriodo)
+                .HasForeignKey(d => d.IdRegion).OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_ExperienciaEducativaPeriodo_Region");
+            entity.HasOne(d => d.IdSincronizacionPlaneaNavigation).WithMany(p => p.ExperienciaEducativaPeriodo)
+                .HasForeignKey(d => d.IdSincronizacionPlanea).OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_ExperienciaEducativaPeriodo_SincronizacionPlanea");
+            entity.ToTable("ExperienciaEducativaPeriodo");
+        });
+
+        modelBuilder.Entity<ExperienciaEducativaPeriodoHorario>(entity =>
+        {
+            entity.HasKey(e => e.IdExperienciaEducativaPeriodoHorario);
+            entity.HasIndex(e => new { e.IdExperienciaEducativaPeriodo, e.Dia, e.HoraInicio, e.HoraFin, e.Edificio, e.Aula, e.FechaInicio, e.FechaFin }, "UX_ExperienciaEducativaPeriodoHorario_sesion").IsUnique();
+            entity.Property(e => e.IdExperienciaEducativaPeriodoHorario).HasColumnName("idExperienciaEducativaPeriodoHorario");
+            entity.Property(e => e.IdExperienciaEducativaPeriodo).HasColumnName("idExperienciaEducativaPeriodo");
+            entity.Property(e => e.IdHorarioPlanea).HasColumnName("idHorarioPlanea");
+            entity.Property(e => e.Dia).HasMaxLength(10).IsUnicode(false).HasColumnName("dia");
+            entity.Property(e => e.HoraInicio).HasColumnType("time(0)").HasColumnName("horaInicio");
+            entity.Property(e => e.HoraFin).HasColumnType("time(0)").HasColumnName("horaFin");
+            entity.Property(e => e.Edificio).HasMaxLength(50).IsUnicode(false).HasColumnName("edificio");
+            entity.Property(e => e.Aula).HasMaxLength(100).IsUnicode(false).HasColumnName("aula");
+            entity.Property(e => e.FechaInicio).HasColumnName("fechaInicio");
+            entity.Property(e => e.FechaFin).HasColumnName("fechaFin");
+            entity.HasOne(d => d.IdExperienciaEducativaPeriodoNavigation).WithMany(p => p.Horarios)
+                .HasForeignKey(d => d.IdExperienciaEducativaPeriodo).OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_ExperienciaEducativaPeriodoHorario_ExperienciaEducativaPeriodo");
+            entity.ToTable("ExperienciaEducativaPeriodoHorario");
         });
     }
 }
