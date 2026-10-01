@@ -2,6 +2,9 @@ namespace SGPla.Commons;
 
 public static class EstadosAviso
 {
+    public static readonly string[] Informativos =
+        [Constantes.CREADO, Constantes.EN_REVISION_POR_DGAA, Constantes.DEVUELTO_POR_DGAA];
+
     public static readonly string[] RevisadosDgaa =
     [
         Constantes.AVALADO_POR_DGAA, Constantes.DEVUELTO_POR_DGAA,
@@ -10,4 +13,6 @@ public static class EstadosAviso
 
     public static readonly string[] RecibidosDgaa =
         [Constantes.EN_REVISION_POR_DGAA, .. RevisadosDgaa];
+
+    public static bool EsInformativo(string estado) => Informativos.Contains(estado);
 }

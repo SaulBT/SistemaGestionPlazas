@@ -4,5 +4,6 @@ namespace SGPla.Models.ViewModels.Avisos
     {
         public string UrlVistaPrevia { get; set; } = string.Empty;
         public string UrlDescarga { get; set; } = string.Empty;
+        public bool EsDocumentoInformativo { get; set; }
     }
 }

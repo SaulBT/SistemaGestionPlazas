@@ -233,16 +233,17 @@ namespace SGPla.Services.Implementations
             var plantillaDTO = new PlantillaAvisoDTO
             {
                 AreaAcademica = entidad?.IdAreaAcademicaNavigation.Nombre ?? "Nombre del Área Académica",
-                EntidadAcademica = entidad?.Nombre.Substring(6) ?? "Nombre de la Entidad Académica",
+                EntidadAcademica = obtenerNombreEntidadAcademica(entidad),
                 Articulo = articulo?.Numero ?? "Número del Artículo",
-                Region = entidad?.Region.Substring(2) ?? "Región",
+                Region = obtenerNombreRegion(entidad?.Region),
                 PerfilArticulo = articulo?.Descripcion ?? "Perfil del Artículo",
                 Periodo = periodoDTO.PeriodoMostrar ?? "Periodo Escolar",
-                Campus = "Campus", //TODO: El campus depende del Programa Educativo
+                Campus = await obtenerCampusAsync(aviso.OfertasId, entidad?.Municipio),
                 Sistema = aviso.Sistema,
                 Programas = await generarListaProgramasPlantillaAsync(aviso.OfertasId),
                 Requisitos = aviso.Requisitos ?? "Requisitos",
                 HorarioAceptacion = GenerarHorarioAceptacion(aviso.Horarios),
+                Direccion = aviso.Lugar?.Trim().TrimEnd(',', ';', '.') ?? string.Empty,
                 FechaConsejoTecnico = generarFechaNormal(aviso.FechaCT),
                 FechaPublicacion = generarFechaNormal(aviso.FechaPublicacion),
                 Titular = "Titular" //TODO: falta obtenerlo del formulario
@@ -320,9 +321,16 @@ namespace SGPla.Services.Implementations
             var horarios = horariosDTO
                 .Select(h =>
                 {
-                    if (!DateOnly.TryParse(h.Fecha, out var fecha)) return null;
-                    var inicio = TimeOnly.TryParse(h.HoraInicio, out var horaInicio) ? horaInicio : TimeOnly.MinValue;
-                    return new { Horario = h, Fecha = fecha, Inicio = inicio };
+                    if (!DateOnly.TryParseExact(h.Fecha, "yyyy-MM-dd", CultureInfo.InvariantCulture,
+                            DateTimeStyles.None, out var fecha)
+                        && !DateOnly.TryParse(h.Fecha, cultura, DateTimeStyles.None, out fecha))
+                        return null;
+
+                    if (!TimeOnly.TryParse(h.HoraInicio, cultura, DateTimeStyles.None, out var inicio)
+                        || !TimeOnly.TryParse(h.HoraTermino, cultura, DateTimeStyles.None, out var termino))
+                        return null;
+
+                    return new { Fecha = fecha, Inicio = inicio, Termino = termino };
                 })
                 .Where(h => h is not null)
                 .Select(h => h!)
@@ -331,14 +339,77 @@ namespace SGPla.Services.Implementations
                 .GroupBy(h => h.Fecha)
                 .Select(grupo =>
                 {
-                    var intervalos = grupo.Select(h => $"{h.Horario.HoraInicio} hrs. a {h.Horario.HoraTermino} hrs.").ToList();
-                    var textoIntervalos = intervalos.Count == 1
-                        ? intervalos[0]
-                        : string.Join(" y de ", intervalos);
-                    return $"El día {grupo.Key.Day} del mes {grupo.Key.ToString("MMMM", cultura)} de {textoIntervalos}";
-                });
+                    var intervalos = grupo
+                        .Select(h => $"de {h.Inicio:HH\\:mm} hrs. a {h.Termino:HH\\:mm} hrs.")
+                        .ToList();
+                    var textoIntervalos = unirElementos(intervalos, " y ");
+                    return $"{grupo.Key.Day} de {grupo.Key.ToString("MMMM", cultura)}, {textoIntervalos}";
+                })
+                .ToList();
 
-            return string.Join("; ", horarios);
+            if (horarios.Count == 0)
+                return string.Empty;
+
+            return horarios.Count == 1
+                ? $"el día {horarios[0]}"
+                : $"los días {string.Join("; y ", horarios)}";
+        }
+
+        private static string unirElementos(IReadOnlyList<string> elementos, string ultimoSeparador)
+        {
+            if (elementos.Count == 0) return string.Empty;
+            if (elementos.Count == 1) return elementos[0];
+            return $"{string.Join(", ", elementos.Take(elementos.Count - 1))}{ultimoSeparador}{elementos[^1]}";
+        }
+
+        private static string obtenerNombreEntidadAcademica(EntidadAcademica? entidad)
+        {
+            if (entidad is null)
+                return "Nombre de la Entidad Académica";
+
+            var nombre = entidad.Nombre.Trim();
+            var clave = entidad.Clave?.Trim();
+            if (!string.IsNullOrWhiteSpace(clave)
+                && nombre.StartsWith(clave + "-", StringComparison.Ordinal))
+                return nombre[(clave.Length + 1)..].Trim();
+
+            var separador = nombre.IndexOf('-');
+            if (separador == 5 && nombre[..separador].All(char.IsDigit))
+                return nombre[(separador + 1)..].Trim();
+
+            return nombre;
+        }
+
+        private static string obtenerNombreRegion(string? region)
+        {
+            if (string.IsNullOrWhiteSpace(region))
+                return "Región";
+
+            var nombre = region.Trim();
+            var separador = nombre.IndexOf('-');
+            return separador > 0 && nombre[..separador].All(char.IsDigit)
+                ? nombre[(separador + 1)..].Trim()
+                : nombre;
+        }
+
+        private async Task<string> obtenerCampusAsync(IEnumerable<int> ofertasId, string? campusAlternativo)
+        {
+            var campus = new List<string>();
+            foreach (var idOferta in ofertasId.Distinct())
+            {
+                var oferta = await _ofertaRepository.ObtenerPorIdAsync(idOferta);
+                var nombreCampus = oferta?.IdProgramaEducativoNavigation?.Campus?.Trim();
+                if (!string.IsNullOrWhiteSpace(nombreCampus)
+                    && !campus.Contains(nombreCampus, StringComparer.OrdinalIgnoreCase))
+                    campus.Add(nombreCampus);
+            }
+
+            if (campus.Count > 0)
+                return string.Join(", ", campus);
+
+            return string.IsNullOrWhiteSpace(campusAlternativo)
+                ? "Campus no especificado"
+                : campusAlternativo.Trim();
         }
 
         private static string generarFechaNormal(DateOnly fecha)
@@ -416,6 +487,7 @@ namespace SGPla.Services.Implementations
             await _archivoRepository.EliminarAsync(archivo);
             await _archivoService.EliminarAsync(archivo.Ruta);
             await _archivoService.EliminarAsync($"aviso-preview/{idArchivo}.pdf");
+            await _archivoService.EliminarAsync($"aviso-preview/{idArchivo}-informativo.pdf");
         }
 
         private async Task validarOfertasParaAvisoAsync(CrearAvisoDTO aviso)

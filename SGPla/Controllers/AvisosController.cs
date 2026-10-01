@@ -187,10 +187,12 @@ namespace SGPla.Controllers
                     return Forbid();
 
                 _avisoService.ObtenerIdArchivoVigente(aviso);
+                var esDocumentoInformativo = EstadosAviso.EsInformativo(aviso.Estado);
                 return View(new VistaPreviaAvisoViewModel
                 {
                     UrlVistaPrevia = Url.Action("ObtenerVistaPreviaAviso", new { idAviso }) ?? string.Empty,
-                    UrlDescarga = Url.Action("DescargarAviso", new { idAviso }) ?? string.Empty
+                    UrlDescarga = Url.Action("DescargarAviso", new { idAviso }) ?? string.Empty,
+                    EsDocumentoInformativo = esDocumentoInformativo
                 });
             }
             catch (ValidacionExcepction)
@@ -210,7 +212,8 @@ namespace SGPla.Controllers
                     return Forbid();
 
                 var idArchivo = _avisoService.ObtenerIdArchivoVigente(aviso);
-                var archivo = await _archivoService.ObtenerVistaPreviaPdfAsync(idArchivo);
+                var archivo = await _archivoService.ObtenerVistaPreviaPdfAsync(
+                    idArchivo, EstadosAviso.EsInformativo(aviso.Estado));
                 return PhysicalFile(archivo.Ruta, archivo.Tipo, enableRangeProcessing: true);
             }
             catch (ValidacionExcepction)
@@ -238,9 +241,15 @@ namespace SGPla.Controllers
                 if (!await PuedeConsultarAsync(idAviso))
                     return Forbid();
 
+                if (EstadosAviso.EsInformativo(aviso.Estado))
+                {
+                    var idArchivo = _avisoService.ObtenerIdArchivoVigente(aviso);
+                    var pdfInformativo = await _archivoService.ObtenerVistaPreviaPdfAsync(idArchivo, true);
+                    return PhysicalFile(pdfInformativo.Ruta, pdfInformativo.Tipo, pdfInformativo.Nombre);
+                }
+
                 if (aviso.IdArchivoOriginal <= 0)
                     return NotFound("No se encontró el documento original del aviso.");
-
                 var archivo = await _archivoService.DescargarAsync(aviso.IdArchivoOriginal);
                 return PhysicalFile(archivo.Ruta, archivo.Tipo, archivo.Nombre);
             }
