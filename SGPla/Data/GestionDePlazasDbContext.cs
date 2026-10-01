@@ -25,8 +25,6 @@ public partial class GestionDePlazasDbContext : DbContext
 
     public virtual DbSet<Aviso> Aviso { get; set; }
 
-    public virtual DbSet<CargaAcademica> CargaAcademica { get; set; }
-
     public virtual DbSet<CoordinadorDgaa> CoordinadorDgaa { get; set; }
 
     public virtual DbSet<CoordinadorEa> CoordinadorEa { get; set; }
@@ -277,46 +275,6 @@ public partial class GestionDePlazasDbContext : DbContext
                 .HasForeignKey(d => d.IdPeriodo)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Aviso_Periodo");
-        });
-
-        modelBuilder.Entity<CargaAcademica>(entity =>
-        {
-            entity.HasKey(e => e.IdCargaAcademica);
-            entity.Property(e => e.NumeroPersonalImportado).HasMaxLength(50).HasColumnName("numeroPersonalImportado");
-            entity.Property(e => e.NombreDocenteImportado).HasMaxLength(300).HasColumnName("nombreDocenteImportado");
-
-            entity.Property(e => e.IdCargaAcademica).HasColumnName("idCargaAcademica");
-            entity.Property(e => e.HorasPago).HasColumnName("horasPago");
-            entity.Property(e => e.IdDocente).HasColumnName("idDocente");
-            entity.Property(e => e.IdExperienciaEducativa).HasColumnName("idExperienciaEducativa");
-            entity.Property(e => e.IdPeriodo).HasColumnName("idPeriodo");
-            entity.Property(e => e.Imparte).HasColumnName("imparte");
-            entity.Property(e => e.Nrc)
-                .HasMaxLength(5)
-                .IsUnicode(false)
-                .HasColumnName("nrc");
-            entity.Property(e => e.Plaza)
-                .HasMaxLength(5)
-                .IsUnicode(false)
-                .HasColumnName("plaza");
-            entity.Property(e => e.TipoContratacion)
-                .HasMaxLength(2)
-                .IsUnicode(false)
-                .HasColumnName("tipoContratacion");
-
-            entity.HasOne(d => d.IdDocenteNavigation).WithMany(p => p.CargaAcademica)
-                .HasForeignKey(d => d.IdDocente)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_CargaAcademica_Docente");
-
-            entity.HasOne(d => d.IdExperienciaEducativaNavigation).WithMany(p => p.CargaAcademica)
-                .HasForeignKey(d => d.IdExperienciaEducativa)
-                .HasConstraintName("FK_CargaAcademica_ExperienciaEducativa");
-
-            entity.HasOne(d => d.IdPeriodoNavigation).WithMany(p => p.CargaAcademica)
-                .HasForeignKey(d => d.IdPeriodo)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_CargaAcademica_Periodo");
         });
 
         modelBuilder.Entity<CoordinadorDgaa>(entity =>
@@ -1082,6 +1040,7 @@ public partial class GestionDePlazasDbContext : DbContext
             entity.HasIndex(e => e.IdExperienciaEducativa, "IX_ExperienciaEducativaPeriodo_idExperienciaEducativa");
             entity.HasIndex(e => e.IdPlanEstudios, "IX_ExperienciaEducativaPeriodo_idPlanEstudios");
             entity.HasIndex(e => e.IdSincronizacionPlanea, "IX_ExperienciaEducativaPeriodo_idSincronizacionPlanea");
+            entity.HasIndex(e => new { e.CodigoPlan, e.CodigoExperiencia }, "IX_ExperienciaEducativaPeriodo_codigos");
             entity.Property(e => e.IdExperienciaEducativaPeriodo).HasColumnName("idExperienciaEducativaPeriodo");
             entity.Property(e => e.IdExperienciaEducativa).HasColumnName("idExperienciaEducativa");
             entity.Property(e => e.IdPeriodo).HasColumnName("idPeriodo");
@@ -1089,19 +1048,21 @@ public partial class GestionDePlazasDbContext : DbContext
             entity.Property(e => e.IdRegion).HasColumnName("idRegion");
             entity.Property(e => e.IdSincronizacionPlanea).HasColumnName("idSincronizacionPlanea");
             entity.Property(e => e.Nrc).HasMaxLength(5).IsUnicode(false).HasColumnName("nrc");
+            entity.Property(e => e.CodigoExperiencia).HasMaxLength(10).IsUnicode(false).HasColumnName("codigoExperiencia");
+            entity.Property(e => e.CodigoPlan).HasMaxLength(50).IsUnicode(false).HasColumnName("codigoPlan");
             entity.Property(e => e.Titulo).HasMaxLength(150).IsUnicode(false).HasColumnName("titulo");
             entity.Property(e => e.Campus).HasMaxLength(5).IsUnicode(false).HasColumnName("campus");
             entity.Property(e => e.Nivel).HasMaxLength(5).IsUnicode(false).HasColumnName("nivel");
             entity.Property(e => e.Area).HasMaxLength(100).IsUnicode(false).HasColumnName("area");
             entity.Property(e => e.FechaAlta).HasColumnType("datetime2(0)").HasDefaultValueSql("(sysdatetime())").HasColumnName("fechaAlta");
             entity.HasOne(d => d.IdExperienciaEducativaNavigation).WithMany(p => p.ExperienciaEducativaPeriodo)
-                .HasForeignKey(d => d.IdExperienciaEducativa).OnDelete(DeleteBehavior.ClientSetNull)
+                .HasForeignKey(d => d.IdExperienciaEducativa).OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("FK_ExperienciaEducativaPeriodo_ExperienciaEducativa");
             entity.HasOne(d => d.IdPeriodoNavigation).WithMany(p => p.ExperienciaEducativaPeriodo)
                 .HasForeignKey(d => d.IdPeriodo).OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_ExperienciaEducativaPeriodo_Periodo");
             entity.HasOne(d => d.IdPlanEstudiosNavigation).WithMany(p => p.ExperienciaEducativaPeriodo)
-                .HasForeignKey(d => d.IdPlanEstudios).OnDelete(DeleteBehavior.ClientSetNull)
+                .HasForeignKey(d => d.IdPlanEstudios).OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("FK_ExperienciaEducativaPeriodo_PlanEstudios");
             entity.HasOne(d => d.IdRegionNavigation).WithMany(p => p.ExperienciaEducativaPeriodo)
                 .HasForeignKey(d => d.IdRegion).OnDelete(DeleteBehavior.ClientSetNull)

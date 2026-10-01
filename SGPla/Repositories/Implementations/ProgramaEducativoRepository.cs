@@ -157,24 +157,6 @@ namespace SGPla.Repositories.Implementations
                 .ToList();
         }
 
-        public async Task<Dictionary<string, int>> ObtenerIdsProgramasAsync(
-      List<string> programas)
-        {
-            var codigosArchivo = programas
-                .Select(ObtenerClavePrograma)
-                .Distinct()
-                .ToHashSet();
-
-            var programasBd = await _context.ProgramaEducativo
-                .ToListAsync();
-
-            return programasBd
-                .Where(p => codigosArchivo.Contains(ObtenerClavePrograma(p)))
-                .ToDictionary(
-                    p => ObtenerClavePrograma(p),
-                    p => p.IdProgramaEducativo);
-        }
-
         private static string ObtenerClavePrograma(ProgramaEducativo programa)
         {
             if (!string.IsNullOrWhiteSpace(programa.Codigo))

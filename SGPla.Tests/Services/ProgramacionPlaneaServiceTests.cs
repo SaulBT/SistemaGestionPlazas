@@ -88,7 +88,7 @@ public class ProgramacionPlaneaServiceTests
     }
 
     [Fact]
-    public async Task ObtenerEncabezadoAsync_ProgramaOPeriodoInexistente_DevuelveNull()
+    public async Task ObtenerEncabezadoAsync_PlanOPeriodoInexistente_DevuelveNull()
     {
         _repositorio.Setup(r => r.ObtenerEncabezadoAsync(1, 99, It.IsAny<CancellationToken>()))
             .ReturnsAsync((EncabezadoProgramacionPlaneaDTO?)null);
@@ -100,7 +100,7 @@ public class ProgramacionPlaneaServiceTests
     public async Task ObtenerEncabezadoAsync_AgregaElPeriodoLegible()
     {
         _repositorio.Setup(r => r.ObtenerEncabezadoAsync(1, 5, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new EncabezadoProgramacionPlaneaDTO(3, "Facultad de Estadística", "XAL", "Estadística", "202701"));
+            .ReturnsAsync(new EncabezadoProgramacionPlaneaDTO(3, "Facultad de Estadística", "XAL", "Estadística", "ESTA-24-E-CR", "202701"));
 
         var encabezado = await Crear().ObtenerEncabezadoAsync(1, 5);
 

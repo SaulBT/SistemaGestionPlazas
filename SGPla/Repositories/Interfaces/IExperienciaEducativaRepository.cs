@@ -13,6 +13,5 @@ namespace SGPla.Repositories.Interfaces
         Task EliminarExperienciasEducativasPorIdsAsync(List<int> idsExperienciasEducativas);
         Task ActualizarExperienciasEducativasAsync(List<ExperienciaEducativa> experienciasEducativas);
 
-        Task<Dictionary<string, int>> ObtenerIdsPorNombreAsync(List<string> nombres);
     }
 }

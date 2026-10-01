@@ -16,8 +16,6 @@ namespace SGPla.Repositories.Implementations
                 nivel varchar(5) COLLATE DATABASE_DEFAULT NULL,
                 region varchar(50) COLLATE DATABASE_DEFAULT NULL,
                 area varchar(100) COLLATE DATABASE_DEFAULT NULL,
-                idExperienciaEducativa int NULL,
-                idPlanEstudios int NULL,
                 idRegion int NULL
             );
             CREATE TABLE #HorarioPlanea (
@@ -41,27 +39,8 @@ namespace SGPla.Repositories.Implementations
             CREATE INDEX IX_DocentePlanea_nrc ON #DocentePlanea(nrc);
             """;
 
+        // El enlace con la EE y el plan se resuelve después de registrar, con EnlacePlaneaSql.
         public const string ResolverReferencias = """
-            UPDATE c SET idExperienciaEducativa = x.idExperienciaEducativa,
-                         idPlanEstudios = x.idPlanEstudios
-            FROM #CopiaPlanea AS c
-            CROSS APPLY (
-                SELECT TOP (1) ee.idExperienciaEducativa, ee.idPlanEstudios
-                FROM dbo.ExperienciaEducativa AS ee
-                INNER JOIN dbo.PlanEstudios AS pl ON pl.idPlanEstudios = ee.idPlanEstudios
-                INNER JOIN dbo.ProgramaEducativo AS pe ON pe.idProgramaEducativo = pl.idProgramaEducativo
-                INNER JOIN dbo.EntidadAcademica AS ea ON ea.idEntidadAcademica = pe.idEntidadAcademica
-                INNER JOIN dbo.Region AS re ON re.id = ea.idRegion
-                -- PLANEA repite el código de plan en varias regiones: la copia solo se enlaza
-                -- con el plan de una entidad de su misma región.
-                WHERE pl.codigoPlan = c.codigoPlan
-                  AND ee.codigo = c.codigoExperiencia
-                  AND re.nombre COLLATE Latin1_General_CI_AI = c.region COLLATE Latin1_General_CI_AI
-                  AND pe.fechaEliminacion IS NULL
-                  AND ea.fechaEliminacion IS NULL
-                ORDER BY ee.idExperienciaEducativa
-            ) AS x;
-
             UPDATE c SET idRegion = r.id
             FROM #CopiaPlanea AS c
             INNER JOIN dbo.Region AS r
@@ -79,20 +58,16 @@ namespace SGPla.Repositories.Implementations
                 SELECT COUNT(*) FROM #CopiaPlanea AS c
                 WHERE EXISTS (SELECT 1 FROM dbo.ExperienciaEducativaPeriodo AS t
                               WHERE t.idPeriodo = @idPeriodo AND t.nrc = c.nrc));
-            DECLARE @sinExperiencia int = (
-                SELECT COUNT(*) FROM #CopiaPlanea AS c
-                WHERE c.idExperienciaEducativa IS NULL
-                  AND NOT EXISTS (SELECT 1 FROM dbo.ExperienciaEducativaPeriodo AS t
-                                  WHERE t.idPeriodo = @idPeriodo AND t.nrc = c.nrc));
+            -- Se registran todos los NRC con plan aunque su EE o su plan aún no estén en el catálogo:
+            -- quedan pendientes y se enlazan en local al cargar el plan de estudios.
             INSERT INTO dbo.ExperienciaEducativaPeriodo
                 (idExperienciaEducativa, idPeriodo, idPlanEstudios, idRegion, idSincronizacionPlanea,
-                 nrc, titulo, campus, nivel, area, fechaAlta)
+                 nrc, codigoExperiencia, codigoPlan, titulo, campus, nivel, area, fechaAlta)
             OUTPUT inserted.idExperienciaEducativaPeriodo, inserted.nrc INTO @nuevas (idExperienciaEducativaPeriodo, nrc)
-            SELECT c.idExperienciaEducativa, @idPeriodo, c.idPlanEstudios, c.idRegion, @idSincronizacion,
-                   c.nrc, c.titulo, c.campus, c.nivel, c.area, @ahora
+            SELECT NULL, @idPeriodo, NULL, c.idRegion, @idSincronizacion,
+                   c.nrc, c.codigoExperiencia, c.codigoPlan, c.titulo, c.campus, c.nivel, c.area, @ahora
             FROM #CopiaPlanea AS c
-            WHERE c.idExperienciaEducativa IS NOT NULL
-              AND NOT EXISTS (SELECT 1 FROM dbo.ExperienciaEducativaPeriodo AS t WITH (UPDLOCK, HOLDLOCK)
+            WHERE NOT EXISTS (SELECT 1 FROM dbo.ExperienciaEducativaPeriodo AS t WITH (UPDLOCK, HOLDLOCK)
                               WHERE t.idPeriodo = @idPeriodo AND t.nrc = c.nrc);
             INSERT INTO dbo.ExperienciaEducativaPeriodoHorario
                 (idExperienciaEducativaPeriodo, idHorarioPlanea, dia, horaInicio, horaFin, edificio, aula, fechaInicio, fechaFin)
@@ -115,6 +90,14 @@ namespace SGPla.Repositories.Implementations
             FROM #DocentePlanea AS d
             INNER JOIN dbo.ExperienciaEducativaPeriodo AS t
                 ON t.idPeriodo = @idPeriodo AND t.nrc = d.nrc;
+            """
+            // Enlaza con el catálogo las copias pendientes del periodo, nuevas o de sincronizaciones anteriores.
+            + EnlacePlaneaSql.EnlazarPendientes
+            + """
+            DECLARE @sinExperiencia int = (
+                SELECT COUNT(*) FROM #CopiaPlanea AS c
+                INNER JOIN dbo.ExperienciaEducativaPeriodo AS t ON t.idPeriodo = @idPeriodo AND t.nrc = c.nrc
+                WHERE t.idExperienciaEducativa IS NULL);
             SELECT (SELECT COUNT(*) FROM @nuevas) AS nuevos,
                    @existentes AS existentes,
                    @sinExperiencia AS sinExperiencia,

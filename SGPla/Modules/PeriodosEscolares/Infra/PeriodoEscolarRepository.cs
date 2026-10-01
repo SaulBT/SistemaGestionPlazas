@@ -127,13 +127,6 @@ public sealed class PeriodoEscolarRepository : IPeriodoEscolarRepository
             return true;
         }
 
-        if (await _context.CargaAcademica.AnyAsync(
-                carga => carga.IdPeriodo == idPeriodoEscolar,
-                cancellationToken))
-        {
-            return true;
-        }
-
         if (await _context.Oferta.AnyAsync(
                 oferta => oferta.IdPeriodo == idPeriodoEscolar,
                 cancellationToken))

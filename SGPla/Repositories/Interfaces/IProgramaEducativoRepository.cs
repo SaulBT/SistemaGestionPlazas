@@ -22,7 +22,6 @@ namespace SGPla.Repositories.Interfaces
         Task<List<string>> ObtenerNombresProgramasRegistradosAsync(
         List<string> programas);
 
-        Task<Dictionary<string, int>> ObtenerIdsProgramasAsync(List<string> programas);
 
     }
 }

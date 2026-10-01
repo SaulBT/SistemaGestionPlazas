@@ -15,7 +15,6 @@ using System.Globalization;
 using System.Security.Claims;
 using System.Text.Json;
 using static SGPla.Services.Implementations.ClavesEstado.ProgramacionAcademica;
-using ProgramacionClaves = SGPla.Services.Implementations.ClavesEstado.ProgramacionAcademica;
 
 namespace SGPla.Controllers;
 
@@ -43,9 +42,7 @@ public class ProgramacionesAcademicasController : Controller
     private static readonly List<string> HEADERS_TABLA_VACANTES =
         ["NRC", "Experiencia educativa", "H/S/M", "Tipo contratación", "Horario"];
     private static readonly List<string> HEADERS_TABLA_RESUMEN_OFERTA =
-        ["Entidad Academica", "Programa Educativo", "Periodo", "EE Convocadas", "EE Vacantes", "Acciones"];
-    private static readonly List<string> HEADERS_TABLA_CARGAS =
-        ["NRC", "Experiencia Educativa", "NP", "Docente", "Plaza", "Hrs Contacto", "Hrs Pago", "Imparte"];
+        ["Entidad Academica", "Programa Educativo", "Modalidad", "Código de plan", "EE Convocadas", "EE Vacantes", "Acciones"];
     private static readonly List<string> HEADERS_TABLA_HORARIOS =
         ["Dîa", "Horario", "Salon", "Acciones"];
     private static readonly List<string> HEADERS_TABLA_PLANEA =
@@ -86,7 +83,8 @@ public class ProgramacionesAcademicasController : Controller
             Region = region,
             IdEntidadAcademica = idEntidadAcademica,
             IdProgramaEducativo = idProgramaEducativo,
-            IdPeriodo = idPeriodo,
+            // Sin periodo elegido se muestra el más reciente con programación; los anteriores se consultan con el filtro.
+            IdPeriodo = idPeriodo ?? await _programacionAcademicaService.ObtenerPeriodoActualAsync(),
             Busqueda = busqueda
         };
 
@@ -153,22 +151,19 @@ public class ProgramacionesAcademicasController : Controller
 
         _estado.Guardar(ResumenOferta, resumen);
 
-        modelo.UltimaSincronizacionPlanea =
-            await _programacionPlaneaService.ObtenerUltimaSincronizacionAsync(filtro.IdPeriodo);
-
         return View("Index", modelo);
     }
 
     [HttpGet]
     [Authorize(Policy = PoliticasAutorizacion.OperadorAcademico)]
     public async Task<IActionResult> ProgramacionPlanea(
-        int idProgramaEducativo,
+        int idPlanEstudios,
         int idPeriodo,
         string? busqueda,
         int pagina = 1,
         int cantidad = 10)
     {
-        var encabezado = await _programacionPlaneaService.ObtenerEncabezadoAsync(idProgramaEducativo, idPeriodo);
+        var encabezado = await _programacionPlaneaService.ObtenerEncabezadoAsync(idPlanEstudios, idPeriodo);
         if (encabezado is null)
             return NotFound();
 
@@ -181,7 +176,7 @@ public class ProgramacionesAcademicasController : Controller
         var filtroPlanea = new FiltroProgramacionPlaneaDTO
         {
             IdPeriodo = idPeriodo,
-            IdProgramaEducativo = idProgramaEducativo,
+            IdPlanEstudios = idPlanEstudios,
             Busqueda = busqueda,
             Pagina = pagina,
             Limite = cantidad
@@ -191,28 +186,18 @@ public class ProgramacionesAcademicasController : Controller
 
         var modelo = new ProgramacionPlaneaViewModel
         {
-            IdProgramaEducativo = idProgramaEducativo,
+            IdPlanEstudios = idPlanEstudios,
             IdPeriodo = idPeriodo,
             Region = encabezado.Region,
             NombreEntidadAcademica = encabezado.EntidadAcademica,
             NombrePrograma = encabezado.ProgramaEducativo,
+            CodigoPlan = encabezado.CodigoPlan,
             NombrePeriodo = encabezado.PeriodoMostrar,
             UltimaSincronizacionPlanea = planea.UltimaSincronizacion,
             TablaPlanea = LlenarTablaPlanea(planea, filtroPlanea.Limite)
         };
 
         return View("ProgramacionPlanea", modelo);
-    }
-
-    [HttpPost]
-    [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SincronizarPlanea(int? idPeriodo, CancellationToken cancellationToken)
-    {
-        // Botón de prueba: ejecuta la misma sincronización que corre al levantar la aplicación.
-        var (exito, mensaje) = await _programacionPlaneaService.SincronizarAsync(idPeriodo, cancellationToken);
-        TempData[exito ? "Success" : "Error"] = mensaje;
-        return RedirectToAction(nameof(Index), new { idPeriodo });
     }
 
     [HttpGet]
@@ -231,172 +216,6 @@ public class ProgramacionesAcademicasController : Controller
         var programas = await _programacionAcademicaService.ObtenerOpcionesProgramaEducativoAsync(entidad);
         var result = programas.Select(p => new { value = p.IdProgramaEducativo, text = p.Nombre });
         return Json(result);
-    }
-
-    #endregion
-
-    #region Carga de programación académica (flujo multi-paso)
-
-    [HttpGet]
-    [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
-    public async Task<IActionResult> CargarProgramacionAcademicaPaso1()
-    {
-        _estado.Eliminar(Ofertas);
-        _estado.Eliminar(Cargas);
-
-        CargarProgramacionAcademica1ViewModel modelo = new CargarProgramacionAcademica1ViewModel();
-        await CargarCombos(modelo);
-
-        return (View("CargarProgramacionAcademicaPaso1", modelo));
-    }
-
-    [HttpPost]
-    [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
-    public async Task<IActionResult> RevisarListaDeExperienciasEducativas(CargarProgramacionAcademica1ViewModel modelo)
-    {
-        if (!ModelState.IsValid)
-        {
-            var erroresArchivos = ModelState
-                .Where(x => x.Key == nameof(modelo.ArchivoVacantes)
-                         || x.Key == nameof(modelo.ArchivoDescargas))
-                .SelectMany(x => x.Value.Errors)
-                .Select(e => e.ErrorMessage);
-
-            TempData["Error"] = string.Join("|", erroresArchivos);
-
-            await CargarCombos(modelo);
-            return View("CargarProgramacionAcademicaPaso1", modelo);
-        }
-
-        try
-        {
-            var ofertasVacantes = await _programacionAcademicaService.ProcesarArchivoOfertasAsync(modelo.ArchivoVacantes, TipoArchivoOferta.Vacantes);
-            var ofertasDescargas = await _programacionAcademicaService.ProcesarArchivoOfertasAsync(modelo.ArchivoDescargas, TipoArchivoOferta.Descargas);
-            var cargas = await _programacionAcademicaService.ProcesarCargasAsync(modelo.ArchivoCargas);
-
-            var todas = new List<OfertaDTO>();
-            todas.AddRange(ofertasVacantes);
-            todas.AddRange(ofertasDescargas);
-
-            foreach (var oferta in todas)
-            {
-                oferta.IdPeriodo = modelo.IdPeriodo.Value;
-            }
-
-            foreach (var carga in cargas)
-                carga.idPeriodo = modelo.IdPeriodo.Value;
-
-            _estado.Guardar(Ofertas, todas);
-            _estado.Guardar(Cargas, cargas);
-
-            var periodoSeleccionado = (await _periodoEscolarService.ObtenerTodosAsync())
-                .FirstOrDefault(p => p.IdPeriodoEscolar == modelo.IdPeriodo!.Value);
-            var entidadSeleccionada = (await _programacionAcademicaService.ObtenerOpcionesEntidadAcademicaAsync(modelo.Region))
-                .FirstOrDefault(e => e.IdEntidadAcademica == modelo.IdEntidadAcademica!.Value);
-
-            _estado.Guardar(ProgramacionClaves.Region, modelo.Region);
-            _estado.Guardar(IdPeriodo, modelo.IdPeriodo!.Value);
-            _estado.Guardar(NombrePeriodo, periodoSeleccionado?.PeriodoMostrar ?? "");
-            _estado.Guardar(IdEntidadAcademica, modelo.IdEntidadAcademica!.Value);
-            _estado.Guardar(NombreEntidadAcademica, entidadSeleccionada?.Nombre ?? "");
-        }
-        catch (Exception ex)
-        {
-            TempData["Error"] = $"Error al procesar los archivos: {ex.Message}";
-            await CargarCombos(modelo);
-            return View("CargarProgramacionAcademicaPaso1", modelo);
-        }
-        return await CargarProgramacionAcademicaPaso2();
-    }
-
-    [HttpGet]
-    [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
-    public async Task<IActionResult> CargarProgramacionAcademicaPaso2()
-    {
-        var region = _estado.Obtener<string>(ProgramacionClaves.Region);
-        var idPeriodo = _estado.Obtener<int?>(IdPeriodo);
-        var idEntidadAcademica = _estado.Obtener<int?>(IdEntidadAcademica);
-
-        if (string.IsNullOrEmpty(region) || idPeriodo is null || idEntidadAcademica is null)
-        {
-            TempData["Error"] = "No hay información de la carga. Vuelve a iniciar el proceso.";
-            return RedirectToAction(nameof(CargarProgramacionAcademicaPaso1));
-        }
-
-        var vm = await ObtenerViewModelCompletoAsync();
-        return View("CargarProgramacionAcademicaPaso2", vm);
-    }
-
-    [HttpGet]
-    [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
-    public async Task<IActionResult> FiltrarOferta(FiltroOfertaDTO filtro, int tab = 0)
-    {
-        _estado.Guardar(FiltroOfertaActual, filtro);
-        var vm = await ObtenerViewModelCompletoAsync(filtro, ObtenerFiltroCargaActual());
-        vm.TabActivo = tab;
-        return View("CargarProgramacionAcademicaPaso2", vm);
-    }
-
-    [HttpGet]
-    [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
-    public async Task<IActionResult> FiltrarCarga(FiltroCargaDTO filtro, int tab = 2)
-    {
-        _estado.Guardar(FiltroCargaActual, filtro);
-        var vm = await ObtenerViewModelCompletoAsync(ObtenerFiltroOfertaActual(), filtro);
-        vm.TabActivo = tab;
-        return View("CargarProgramacionAcademicaPaso2", vm);
-    }
-
-    private FiltroOfertaDTO ObtenerFiltroOfertaActual() =>
-        _estado.Obtener<FiltroOfertaDTO>(FiltroOfertaActual) ?? new();
-
-    private FiltroCargaDTO ObtenerFiltroCargaActual() =>
-        _estado.Obtener<FiltroCargaDTO>(FiltroCargaActual) ?? new();
-
-    [HttpPost]
-    [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
-    public async Task<IActionResult> CargarCargas(IFormFile archivoCarga)
-    {
-        var vm = new CargarProgramacionAcademica2ViewModel();
-
-        try
-        {
-            vm.CargasAcademicas = await _programacionAcademicaService
-                .ProcesarCargasAsync(archivoCarga);
-        }
-        catch (Exception ex)
-        {
-            vm.Error = $"Error al procesar las cargas: {ex.Message}";
-        }
-
-        return View("Index", vm);
-    }
-
-    [HttpPost]
-    [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
-    public async Task<IActionResult> Guardar()
-    {
-        var ofertas = ObtenerOfertasSesion();
-        var cargas = ObtenerCargasSesion();
-
-        if (ofertas.Count == 0)
-            return BadRequest("No hay ofertas para guardar.");
-
-        try
-        {
-            var guardado =
-                await _programacionAcademicaService
-                    .GuardarOfertasyCargasAsync(ofertas, cargas);
-            TempData["Success"] = "Cambios guardados con éxito";
-            return RedirectToAction(nameof(Index));
-
-        }
-        catch (Exception ex)
-        {
-            TempData["Error"] = ex.Message;
-            var vm = await ObtenerViewModelCompletoAsync();
-            return View("CargarProgramacionAcademicaPaso2", vm);
-        }
     }
 
     #endregion
@@ -658,123 +477,6 @@ public class ProgramacionesAcademicasController : Controller
 
     #endregion
 
-    #region Helpers privados — combos y estado en sesión
-
-    public async Task CargarCombos(CargarProgramacionAcademica1ViewModel modelo)
-    {
-        modelo.Regiones = Constantes.REGIONES
-             .Select(r => new OptionModel { Value = r, Text = r })
-             .ToList();
-
-        var periodos = await _periodoEscolarService.ObtenerTodosAsync();
-
-        modelo.Periodos = periodos
-            .Select(p => new OptionModel
-            {
-                Value = p.IdPeriodoEscolar.ToString(),
-                Text = p.PeriodoMostrar,
-            })
-            .ToList();
-
-        List<EntidadAcademica> entidades = [];
-
-        if (!string.IsNullOrEmpty(modelo.Region))
-        {
-            entidades =
-                await _programacionAcademicaService
-                    .ObtenerOpcionesEntidadAcademicaAsync(modelo.Region);
-        }
-
-        modelo.Entidades = entidades
-            .Select(e => new OptionModel
-            {
-                Value = e.IdEntidadAcademica.ToString(),
-                Text = e.Nombre
-            })
-            .ToList();
-
-    }
-
-    private List<OfertaDTO> ObtenerOfertasSesion() => (_estado.Obtener<List<OfertaDTO>>(Ofertas) ?? [])
-        .Where(o => !string.IsNullOrWhiteSpace(o.NRC)).ToList();
-
-    private List<CargaConOfertaDTO> ObtenerCargasSesion() => (_estado.Obtener<List<CargaConOfertaDTO>>(Cargas) ?? [])
-        .Where(c => !string.IsNullOrWhiteSpace(c.Nrc)).ToList();
-
-    private async Task<CargarProgramacionAcademica2ViewModel> ObtenerViewModelCompletoAsync(
-      FiltroOfertaDTO? filtroOferta = null,
-      FiltroCargaDTO? filtroCarga = null)
-    {
-        filtroOferta ??= ObtenerFiltroOfertaActual();
-        filtroCarga ??= ObtenerFiltroCargaActual();
-
-        var vm = await ObtenerViewModelDesdeSesion(filtroOferta, filtroCarga);
-
-        vm.Region = _estado.Obtener<string>(ProgramacionClaves.Region);
-        vm.IdEntidadAcademica = _estado.Obtener<int?>(IdEntidadAcademica)!.Value;
-        vm.NombrePeriodo = _estado.Obtener<string>(NombrePeriodo);
-        vm.NombreEntidadAcademica = _estado.Obtener<string>(NombreEntidadAcademica);
-        vm.FiltroOferta = filtroOferta;
-        vm.FiltroCarga = filtroCarga;
-
-        return vm;
-    }
-
-    private async Task<CargarProgramacionAcademica2ViewModel> ObtenerViewModelDesdeSesion(
-     FiltroOfertaDTO filtroOferta, FiltroCargaDTO filtroCarga)
-    {
-        var ofertas = ObtenerOfertasSesion();
-        var cargas = ObtenerCargasSesion();
-
-        var programasCombo = ofertas
-            .Select(o => o.Programa)
-            .Distinct()
-            .OrderBy(p => p)
-            .Select(p => new OptionModel { Value = p, Text = p })
-            .ToList();
-
-        var docentesCombo = cargas
-            .Select(c => c.NombreDocente)
-            .Distinct()
-            .OrderBy(p => p)
-            .Select(p => new OptionModel { Value = p, Text = p })
-            .ToList();
-
-        _estado.Guardar(Ofertas, ofertas);
-
-        var ofertasFiltradas = ofertas
-            .Where(o =>
-                (string.IsNullOrWhiteSpace(filtroOferta.Programa) || o.Programa == filtroOferta.Programa) &&
-                (string.IsNullOrWhiteSpace(filtroOferta.Busqueda) ||
-                 o.ExperienciaEducativa.Contains(filtroOferta.Busqueda, StringComparison.OrdinalIgnoreCase))
-            );
-
-        var ofertasAsignadas = ofertasFiltradas.Where(o => o.TieneDocente).ToList();
-        var ofertasVacantes = ofertasFiltradas.Where(o => !o.TieneDocente).ToList();
-
-        var cargasFiltradas = cargas
-            .Where(c =>
-                (string.IsNullOrWhiteSpace(filtroCarga.Docente) || c.NombreDocente == filtroCarga.Docente) &&
-                (string.IsNullOrWhiteSpace(filtroCarga.Busqueda) ||
-                 c.ExperienciaEducativa.Contains(filtroCarga.Busqueda, StringComparison.OrdinalIgnoreCase))
-            )
-            .ToList();
-
-        return new CargarProgramacionAcademica2ViewModel
-        {
-            OfertasVacantes = ofertasVacantes,
-            OfertasAsignadas = ofertasAsignadas,
-
-            TableAsignadas = await LlenarTablaAsync(TipoTablaOferta.Asignadas, ofertasAsignadas, filtroOferta.Programa),
-            TableVacantes = await LlenarTablaAsync(TipoTablaOferta.Vacantes, ofertasVacantes, filtroOferta.Programa),
-            TableCargas = await LlenarTablaCargasAsync(cargasFiltradas),
-            Programas = programasCombo,
-            Docentes = docentesCombo,
-            CargasAcademicas = cargasFiltradas
-        };
-    }
-    #endregion
-
     #region Helpers privados — construcción de tablas
 
     private static TableModel LlenarTablaPlanea(ProgramacionPlaneaDTO planea, int cantidadPorPagina)
@@ -834,6 +536,14 @@ public class ProgramacionesAcademicasController : Controller
         }));
     }
 
+    // «Ingeniería de Software (2014)»: distingue los planes de un mismo programa.
+    private static string NombreProgramaConPlan(ResumenOfertaProgramacionAcademicaDTO resumen)
+    {
+        return string.IsNullOrWhiteSpace(resumen.NombrePlan)
+            ? resumen.ProgramaEducativo
+            : $"{resumen.ProgramaEducativo} ({resumen.NombrePlan.Trim()})";
+    }
+
     private TableModel LlenarTablaResumen(List<ResumenOfertaProgramacionAcademicaDTO> resumen)
     {
         bool esCoordinadorEa = User.IsInRole(Constantes.COORDINADOR_EA);
@@ -860,15 +570,16 @@ public class ProgramacionesAcademicasController : Controller
                     var cells = new List<TableCellModel>
                     {
                         new() { Value = r.EntidadAcademica },
-                        new() { Value = r.ProgramaEducativo },
-                        new() { Value = r.PeriodoMostrar },
+                        new() { Value = NombreProgramaConPlan(r) },
+                        new() { Value = string.IsNullOrWhiteSpace(r.ModalidadPlan) ? "—" : r.ModalidadPlan },
+                        new() { Value = r.CodigoPlan ?? "—" },
                         new() { Value = r.EEAsignadas.ToString() },
                         new() { Value = r.EEVacantes.ToString() }
                     };
 
                     var acciones = new List<TableActionModel>();
 
-                    if (r.TieneProgramacionPlanea)
+                    if (r.TieneProgramacionPlanea && r.IdPlanEstudios.HasValue)
                     {
                         acciones.Add(new()
                         {
@@ -876,7 +587,7 @@ public class ProgramacionesAcademicasController : Controller
                             AriaLabel = "Ver programación PLANEA",
                             Url = Url.Action(nameof(ProgramacionPlanea), new
                             {
-                                idProgramaEducativo = r.IdProgramaEducativo,
+                                idPlanEstudios = r.IdPlanEstudios,
                                 idPeriodo = r.IdPeriodo
                             })
                         });
@@ -1094,54 +805,6 @@ public class ProgramacionesAcademicasController : Controller
         catch (Exception)
         {
             return TablaFactory.GenerarTablaConMensaje(tipoOferta == TipoTablaOferta.Vacantes ? HEADERS_TABLA_VACANTES : HEADERS_TABLA_ASIGNADAS, string.Format(Constantes.ERROR_TABLA, Constantes.EXPERIENCIAS_EDUCATIVAS));
-        }
-    }
-
-    private async Task<TableModel> LlenarTablaCargasAsync(List<CargaConOfertaDTO>? cargas)
-    {
-        if (cargas.Count() == 0)
-            return TablaFactory.GenerarTablaConMensaje(HEADERS_TABLA_CARGAS, string.Format(Constantes.TABLA_VACIA, Constantes.EXPERIENCIAS_EDUCATIVAS));
-
-        try
-        {
-            return new TableModel
-            {
-                TableId = "tablaCargas",
-                Headers = HEADERS_TABLA_CARGAS,
-                Rows = cargas.Select(carga => new TableRowModel
-                {
-                    Cells = new List<TableCellModel>
-                    {
-                        new() { Value = carga.Nrc ?? "—" },
-                        new() { Value = carga.ExperienciaEducativa },
-                        new() { Value = carga.NumeroPersonal },
-                        new() { Value = carga.NombreDocente },
-                        new() { Value = carga.Plaza ?? "—" },
-                        new() { Value = carga.HorasContacto.ToString() },
-                        new() { Value = carga.HorasPago.ToString() },
-                        new()
-                        {
-                            Value = carga.Imparte switch
-                            {
-                                true => "SÍ",
-                                false => "NO",
-                                null => "—"
-                            }
-                        },
-                    }
-                }).ToList(),
-                Pagination = new PaginationInfo
-                {
-                    CurrentPage = _paginaActual,
-                    TotalItems = cargas.Count,
-                    OnPageChange = "cambiarPagina",
-                    PaginationMode = "client"
-                }
-            };
-        }
-        catch (Exception)
-        {
-            return TablaFactory.GenerarTablaConMensaje(HEADERS_TABLA_CARGAS, string.Format(Constantes.ERROR_TABLA, Constantes.EXPERIENCIAS_EDUCATIVAS));
         }
     }
 

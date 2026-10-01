@@ -5,18 +5,14 @@ using SGPla.Models.DTOs.ProgramacionAcademica;
 
 public interface IProgramacionAcademicaService
 {
-    Task<List<OfertaDTO>> ProcesarArchivoOfertasAsync(IFormFile archivo, TipoArchivoOferta tipoArchivo);
-
-    Task<bool> GuardarOfertasyCargasAsync(List<OfertaDTO> ofertas, List<CargaConOfertaDTO> cargas);
-
-    Task<List<CargaConOfertaDTO>> ProcesarCargasAsync(
-    IFormFile archivoCarga);
-
     Task<List<EntidadAcademica>> ObtenerOpcionesEntidadAcademicaAsync(string region);
 
     Task<List<ProgramaEducativo>> ObtenerOpcionesProgramaEducativoAsync(int idEntidadAcademica);
 
     Task<List<ResumenOfertaProgramacionAcademicaDTO>> ObtenerResumenPorProgramaPeriodoAsync(BuscarProgramacionAcademicaDTO? filtro);
+
+    /// Periodo que el índice muestra cuando no se elige uno: el más reciente con programación.
+    Task<int?> ObtenerPeriodoActualAsync();
 
     Task<List<OfertaDTO>> ObtenerOfertasExperienciasEducativasAsync(int idEntidadAcademica, int idProgramaEducativo, int idPeriodo, string busqueda);
 

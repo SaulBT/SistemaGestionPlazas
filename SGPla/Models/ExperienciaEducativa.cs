@@ -23,8 +23,6 @@ public partial class ExperienciaEducativa
 
     public int? CantidadMaximaSolicitantes { get; set; }
 
-    public virtual ICollection<CargaAcademica> CargaAcademica { get; set; } = new List<CargaAcademica>();
-
     public virtual PlanEstudios IdPlanEstudiosNavigation { get; set; } = null!;
 
     public virtual ICollection<Oferta> Oferta { get; set; } = new List<Oferta>();

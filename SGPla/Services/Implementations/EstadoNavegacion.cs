@@ -7,17 +7,8 @@ namespace SGPla.Services.Implementations
     {
         public static class ProgramacionAcademica
         {
-            public const string Region = "ProgAcademica.Region";
-            public const string IdPeriodo = "ProgAcademica.IdPeriodo";
-            public const string NombrePeriodo = "ProgAcademica.NombrePeriodo";
-            public const string IdEntidadAcademica = "ProgAcademica.IdEntidadAcademica";
-            public const string NombreEntidadAcademica = "ProgAcademica.NombreEntidadAcademica";
             public const string IdOfertaAsignar = "ProgAcademica.IdOfertaAsignar";
-            public const string Ofertas = "ProgAcademica.Ofertas";
-            public const string Cargas = "ProgAcademica.Cargas";
             public const string ResumenOferta = "ProgAcademica.ResumenOferta";
-            public const string FiltroOfertaActual = "FiltroOfertaActual";
-            public const string FiltroCargaActual = "FiltroCargaActual";
         }
     }
 

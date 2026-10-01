@@ -5,6 +5,7 @@ namespace SGPla.Models.DTOs.Planea
         public int? IdPeriodo { get; set; }
         public int? IdEntidadAcademica { get; set; }
         public int? IdProgramaEducativo { get; set; }
+        public int? IdPlanEstudios { get; set; }
         public string? Busqueda { get; set; }
         public int Pagina { get; set; } = 1;
         public int Limite { get; set; } = 10;
@@ -25,10 +26,10 @@ namespace SGPla.Models.DTOs.Planea
         string? CodigoPlan, string ProgramaEducativo, IReadOnlyList<HorarioPlaneaDTO> Horarios,
         IReadOnlyList<DocentePlaneaDTO> Docentes);
 
-    /// Datos de cabecera de la programación PLANEA de un programa educativo en un periodo.
+    /// Datos de cabecera de la programación PLANEA de un plan de estudios en un periodo.
     public sealed record EncabezadoProgramacionPlaneaDTO(
         int IdEntidadAcademica, string EntidadAcademica, string? Region,
-        string ProgramaEducativo, string CodigoPeriodo, string PeriodoMostrar = "");
+        string ProgramaEducativo, string? CodigoPlan, string CodigoPeriodo, string PeriodoMostrar = "");
 
     public sealed record ProgramacionPlaneaDTO(
         UltimaSincronizacionPlaneaDTO? UltimaSincronizacion,

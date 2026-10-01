@@ -35,13 +35,18 @@ namespace SGPla.Repositories.Implementations
         public async Task<(List<CopiaProgramacionPlaneaDTO> Copias, int Total, int Pagina)> ObtenerCopiasAsync(
             FiltroProgramacionPlaneaDTO filtro, CancellationToken cancellationToken = default)
         {
-            var consulta = _context.ExperienciaEducativaPeriodo.AsNoTracking();
+            // Solo se muestran las copias ya enlazadas con el catálogo; las pendientes esperan su plan de estudios.
+            var consulta = _context.ExperienciaEducativaPeriodo.AsNoTracking()
+                .Where(c => c.IdExperienciaEducativa != null && c.IdPlanEstudios != null);
 
             if (filtro.IdPeriodo.HasValue)
                 consulta = consulta.Where(c => c.IdPeriodo == filtro.IdPeriodo.Value);
 
             if (filtro.IdProgramaEducativo.HasValue)
                 consulta = consulta.Where(c => c.IdPlanEstudiosNavigation.IdProgramaEducativo == filtro.IdProgramaEducativo.Value);
+
+            if (filtro.IdPlanEstudios.HasValue)
+                consulta = consulta.Where(c => c.IdPlanEstudios == filtro.IdPlanEstudios.Value);
 
             if (filtro.IdEntidadAcademica.HasValue)
                 consulta = consulta.Where(c =>
@@ -99,7 +104,7 @@ namespace SGPla.Repositories.Implementations
         }
 
         public async Task<EncabezadoProgramacionPlaneaDTO?> ObtenerEncabezadoAsync(
-            int idProgramaEducativo, int idPeriodo, CancellationToken cancellationToken = default)
+            int idPlanEstudios, int idPeriodo, CancellationToken cancellationToken = default)
         {
             var codigoPeriodo = await _context.Periodo.AsNoTracking()
                 .Where(p => p.IdPeriodo == idPeriodo)
@@ -109,11 +114,13 @@ namespace SGPla.Repositories.Implementations
             if (codigoPeriodo is null)
                 return null;
 
-            return await _context.ProgramaEducativo.AsNoTracking()
-                .Where(p => p.IdProgramaEducativo == idProgramaEducativo)
-                .Select(p => new EncabezadoProgramacionPlaneaDTO(
-                    p.IdEntidadAcademica, p.IdEntidadAcademicaNavigation.Nombre, p.IdEntidadAcademicaNavigation.Region,
-                    p.Nombre, codigoPeriodo, ""))
+            return await _context.PlanEstudios.AsNoTracking()
+                .Where(pl => pl.IdPlanEstudios == idPlanEstudios)
+                .Select(pl => new EncabezadoProgramacionPlaneaDTO(
+                    pl.IdProgramaEducativoNavigation.IdEntidadAcademica,
+                    pl.IdProgramaEducativoNavigation.IdEntidadAcademicaNavigation.Nombre,
+                    pl.IdProgramaEducativoNavigation.IdEntidadAcademicaNavigation.Region,
+                    pl.IdProgramaEducativoNavigation.Nombre, pl.CodigoPlan, codigoPeriodo, ""))
                 .FirstOrDefaultAsync(cancellationToken);
         }
 

@@ -18,7 +18,6 @@ namespace SGPla.Repositories.Interfaces
         List<string> numerosPersonal);
 
 
-        Task<Dictionary<string, int>> ObtenerIdsPorNumeroPersonalAsync(List<string> numerosPersonal);
 
 
     }

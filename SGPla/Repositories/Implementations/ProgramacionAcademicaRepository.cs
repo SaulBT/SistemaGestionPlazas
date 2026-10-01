@@ -18,59 +18,9 @@ namespace SGPla.Repositories.Implementations
             _context = context;
         }
 
-        public async Task GuardarOfertasYCargas(List<Oferta> ofertas, List<CargaAcademica> cargas)
-        {
-            await using var transaction = await _context.Database.BeginTransactionAsync();
-            try
-            {
-                await _context.Oferta.AddRangeAsync(ofertas);
-                await _context.CargaAcademica.AddRangeAsync(cargas);
-
-                var logs = ofertas.Select(o => new Log
-                {
-                    IdOfertaNavigation = o,
-                    Mensaje = o.IdDocente == null && string.IsNullOrWhiteSpace(o.NumeroPersonalImportado) && string.IsNullOrWhiteSpace(o.NombreDocenteImportado) ? Constantes.HISTORIAL_CREADO_VACANTE : Constantes.HISTORIAL_CREADO_ASIGNADA,
-                    Fecha = DateTime.UtcNow
-                }).ToList();
-
-                await _context.Log.AddRangeAsync(logs);
-
-                await _context.SaveChangesAsync();
-
-                await transaction.CommitAsync();
-            }
-            catch (Exception)
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
-        }
-
         private static string ObtenerClavePrograma(string nombre)
         {
             return nombre.Split('-')[0].Trim();
-        }
-
-        public async Task<List<string>> ObtenerRelacionesValidasAsync(List<OfertaDTO> ofertas)
-        {
-            var nombresArchivo = ofertas.Select(x => x.ExperienciaEducativa).Distinct().ToList();
-            var nombresBd = await _context.ExperienciaEducativa
-                .AsNoTracking()
-                .Where(ee => nombresArchivo.Contains(ee.Nombre))
-                .Select(ee => ee.Nombre)
-                .ToListAsync();
-            var nombresRegistrados = nombresBd.ToHashSet(StringComparer.Ordinal);
-
-            // Se valida la misma búsqueda global por nombre usada al asociar la oferta.
-            // El programa se conserva en la clave sólo para identificar la fila del archivo.
-            return ofertas
-                .Where(x =>
-                    !string.IsNullOrWhiteSpace(x.Programa) &&
-                    nombresRegistrados.Contains(x.ExperienciaEducativa))
-                .Select(x =>
-                    $"{ObtenerClavePrograma(x.Programa)}|{x.ExperienciaEducativa}")
-                .Distinct()
-                .ToList();
         }
 
         public async Task<List<ResumenOfertaProgramacionAcademicaDTO>> ObtenerResumenPorProgramaPeriodoAsync(BuscarProgramacionAcademicaDTO? filtro)
@@ -103,6 +53,11 @@ namespace SGPla.Repositories.Implementations
                     Programa = o.IdProgramaEducativoNavigation.Nombre,
                     o.IdProgramaEducativoNavigation.IdEntidadAcademica,
                     Entidad = o.IdProgramaEducativoNavigation.IdEntidadAcademicaNavigation.Nombre,
+                    // La oferta pertenece al plan de su EE.
+                    IdPlanEstudios = (int?)o.IdExperienciaEducativaNavigation.IdPlanEstudios,
+                    o.IdExperienciaEducativaNavigation.IdPlanEstudiosNavigation.CodigoPlan,
+                    NombrePlan = o.IdExperienciaEducativaNavigation.IdPlanEstudiosNavigation.Nombre,
+                    ModalidadPlan = o.IdExperienciaEducativaNavigation.IdPlanEstudiosNavigation.Modalidad,
                     o.IdPeriodo,
                     Periodo = o.IdPeriodoNavigation.Codigo
                 })
@@ -112,6 +67,10 @@ namespace SGPla.Repositories.Implementations
                     ProgramaEducativo = g.Key.Programa,
                     IdEntidadAcademica = g.Key.IdEntidadAcademica,
                     EntidadAcademica = g.Key.Entidad,
+                    IdPlanEstudios = g.Key.IdPlanEstudios,
+                    CodigoPlan = g.Key.CodigoPlan,
+                    NombrePlan = g.Key.NombrePlan,
+                    ModalidadPlan = g.Key.ModalidadPlan,
                     IdPeriodo = g.Key.IdPeriodo,
                     CodigoPeriodo = g.Key.Periodo,
                     EEAsignadas = g.Count(x => x.IdDocente != null || x.NumeroPersonalImportado != null || x.NombreDocenteImportado != null),
@@ -128,6 +87,10 @@ namespace SGPla.Repositories.Implementations
                     Programa = c.IdPlanEstudiosNavigation.IdProgramaEducativoNavigation.Nombre,
                     c.IdPlanEstudiosNavigation.IdProgramaEducativoNavigation.IdEntidadAcademica,
                     Entidad = c.IdPlanEstudiosNavigation.IdProgramaEducativoNavigation.IdEntidadAcademicaNavigation.Nombre,
+                    c.IdPlanEstudios,
+                    c.IdPlanEstudiosNavigation.CodigoPlan,
+                    NombrePlan = c.IdPlanEstudiosNavigation.Nombre,
+                    ModalidadPlan = c.IdPlanEstudiosNavigation.Modalidad,
                     c.IdPeriodo,
                     Periodo = c.IdPeriodoNavigation.Codigo
                 })
@@ -137,7 +100,9 @@ namespace SGPla.Repositories.Implementations
             foreach (var programa in programacionPlanea)
             {
                 var existente = resumen.FirstOrDefault(r =>
-                    r.IdProgramaEducativo == programa.IdProgramaEducativo && r.IdPeriodo == programa.IdPeriodo);
+                    r.IdProgramaEducativo == programa.IdProgramaEducativo
+                    && r.IdPlanEstudios == programa.IdPlanEstudios
+                    && r.IdPeriodo == programa.IdPeriodo);
 
                 if (existente is not null)
                 {
@@ -151,6 +116,10 @@ namespace SGPla.Repositories.Implementations
                     ProgramaEducativo = programa.Programa,
                     IdEntidadAcademica = programa.IdEntidadAcademica,
                     EntidadAcademica = programa.Entidad,
+                    IdPlanEstudios = programa.IdPlanEstudios,
+                    CodigoPlan = programa.CodigoPlan,
+                    NombrePlan = programa.NombrePlan,
+                    ModalidadPlan = programa.ModalidadPlan,
                     IdPeriodo = programa.IdPeriodo,
                     CodigoPeriodo = programa.Periodo,
                     TieneProgramacionPlanea = true
@@ -160,12 +129,27 @@ namespace SGPla.Repositories.Implementations
             return resumen
                 .OrderByDescending(r => r.CodigoPeriodo)
                 .ThenBy(r => r.ProgramaEducativo)
+                .ThenByDescending(r => r.CodigoPlan)
                 .ToList();
+        }
+
+        // Periodo más reciente con programación: NRC de PLANEA enlazados u ofertas registradas.
+        public async Task<int?> ObtenerPeriodoMasRecienteConProgramacionAsync()
+        {
+            var periodosPlanea = ConsultarProgramacionPlanea(null).Select(c => c.IdPeriodo);
+            var periodosOferta = _context.Oferta.AsNoTracking().Select(o => o.IdPeriodo);
+
+            return await _context.Periodo.AsNoTracking()
+                .Where(p => periodosPlanea.Contains(p.IdPeriodo) || periodosOferta.Contains(p.IdPeriodo))
+                .OrderByDescending(p => p.Codigo)
+                .Select(p => (int?)p.IdPeriodo)
+                .FirstOrDefaultAsync();
         }
 
         private IQueryable<ExperienciaEducativaPeriodo> ConsultarProgramacionPlanea(BuscarProgramacionAcademicaDTO? filtro)
         {
-            var query = _context.ExperienciaEducativaPeriodo.AsNoTracking();
+            var query = _context.ExperienciaEducativaPeriodo.AsNoTracking()
+                .Where(c => c.IdExperienciaEducativa != null && c.IdPlanEstudios != null);
             if (filtro == null)
                 return query;
 
@@ -430,46 +414,6 @@ namespace SGPla.Repositories.Implementations
             _context.Log.Add(log);
 
             await _context.SaveChangesAsync();
-        }
-
-        public async Task<List<OfertaDTO>> ObtenerCargasAcademicasAsync(
-   int idEntidadAcademica, int idProgramaEducativo, int idPeriodo)
-        {
-            var ofertas = await _context.Oferta
-                .Include(o => o.IdProgramaEducativoNavigation)
-                    .ThenInclude(p => p.IdEntidadAcademicaNavigation)
-                .Include(o => o.IdExperienciaEducativaNavigation)
-                    .Include(o => o.IdPeriodoNavigation).Include(o => o.IdArticuloNavigation)
-                .Include(o => o.IdDocenteNavigation)
-                .Include(o => o.Horario)
-                .Where(o =>
-                    o.IdProgramaEducativo == idProgramaEducativo &&
-                    o.IdPeriodo == idPeriodo &&
-                    o.IdProgramaEducativoNavigation.IdEntidadAcademica == idEntidadAcademica)
-                .ToListAsync();
-
-            return ofertas.Select(o => new OfertaDTO
-            {
-                Programa = o.IdProgramaEducativoNavigation.Nombre,
-                ExperienciaEducativa = o.IdExperienciaEducativaNavigation.Nombre,
-                NRC = o.Nrc,
-                HorasPago = o.Hsm,
-                TC = o.TipoContratacion,
-                NombreDocente = o.IdDocenteNavigation?.Nombre ?? o.NombreDocenteImportado,
-                NP = o.IdDocenteNavigation?.NumeroPersonal ?? o.NumeroPersonalImportado,
-                Articulo = int.Parse(o.IdArticuloNavigation.Numero),
-                IdPeriodo = o.IdPeriodo,
-                Region = o.IdProgramaEducativoNavigation.IdEntidadAcademicaNavigation.Region,
-                Incluida = o.Incluida,
-                Lunes = MapHorario(o.Horario, "Lunes"),
-                Martes = MapHorario(o.Horario, "Martes"),
-                Miercoles = MapHorario(o.Horario, "Miercoles"),
-                Jueves = MapHorario(o.Horario, "Jueves"),
-                Viernes = MapHorario(o.Horario, "Viernes"),
-                Sabado = MapHorario(o.Horario, "Sabado"),
-                IdOferta = o.IdOferta,
-                Plaza = o.Plaza
-            }).ToList();
         }
     }
 }

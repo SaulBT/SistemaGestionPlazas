@@ -18,6 +18,7 @@ namespace SGPla.Services.Implementations
 
         private readonly IArchivoRepository _archivoRepository;
         private readonly IArchivoService _archivoService;
+        private readonly IEnlacePlaneaRepository _enlacePlaneaRepository;
         private readonly ILogger<PlanEstudiosService> _logger;
 
         private static List<string> EE_IGNORADAS = ["ENSO", "BGRC", "BGRE", "BGRT", "FBGR", "FBGT", "EXAV"];
@@ -28,6 +29,7 @@ namespace SGPla.Services.Implementations
             IPlanEstudiosValidator planEstudiosValidator,
             IArchivoRepository archivoRepository,
             IArchivoService archivoService,
+            IEnlacePlaneaRepository enlacePlaneaRepository,
             ILogger<PlanEstudiosService> logger)
         {
             _planEstudiosRepository = planEstudiosRepository;
@@ -35,6 +37,7 @@ namespace SGPla.Services.Implementations
             _planEstudiosValidator = planEstudiosValidator;
             _archivoRepository = archivoRepository;
             _archivoService = archivoService;
+            _enlacePlaneaRepository = enlacePlaneaRepository;
             _logger = logger;
         }
 
@@ -124,6 +127,7 @@ namespace SGPla.Services.Implementations
 
             DatosArchivoGuardadoDTO? archivoGuardado = null;
             Archivo? archivoRegistrado = null;
+            int idPlanEstudios;
 
             try
             {
@@ -150,7 +154,7 @@ namespace SGPla.Services.Implementations
 
                 await _experienciaEducativaRepository.CrearExperienciasEducativasAsync(experienciasEducativas);
 
-                return planEstudiosCreado.IdPlanEstudios;
+                idPlanEstudios = planEstudiosCreado.IdPlanEstudios;
             }
             catch
             {
@@ -161,6 +165,9 @@ namespace SGPla.Services.Implementations
 
                 throw;
             }
+
+            await EnlazarProgramacionPlaneaAsync(idPlanEstudios);
+            return idPlanEstudios;
         }
 
         public async Task<List<ListaPlanEstudiosDTO>> ObtenerTodosAsync()
@@ -286,7 +293,8 @@ namespace SGPla.Services.Implementations
 
                 throw;
             }
-            
+
+            await EnlazarProgramacionPlaneaAsync(editarPlanEstudiosDTO.IdPlanEstudios);
         }
 
         public async Task EliminarAsync(int idPlanEstudios)
@@ -303,6 +311,22 @@ namespace SGPla.Services.Implementations
             await _planEstudiosRepository.EliminarAsync(planEstudios!);
             await _archivoRepository.EliminarAsync(archivo!);
             await _archivoService.EliminarAsync(archivo.Ruta);
+        }
+
+        // Enlaza los NRC de PLANEA que esperaban este plan y deja pendientes los que ya no coinciden.
+        // Un error aquí no debe impedir guardar el plan: la siguiente sincronización enlaza los pendientes.
+        private async Task EnlazarProgramacionPlaneaAsync(int idPlanEstudios)
+        {
+            try
+            {
+                var enlazadas = await _enlacePlaneaRepository.ReconciliarPlanAsync(idPlanEstudios);
+                if (enlazadas > 0)
+                    _logger.LogInformation("Se enlazaron {Enlazadas} NRC de PLANEA con el plan de estudios {IdPlanEstudios}.", enlazadas, idPlanEstudios);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "No se pudo enlazar la programación PLANEA del plan de estudios {IdPlanEstudios}.", idPlanEstudios);
+            }
         }
 
         private static string obtenerTextoCelda(IExcelDataReader reader, int columnIndex)

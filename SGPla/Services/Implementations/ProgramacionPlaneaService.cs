@@ -41,15 +41,10 @@ namespace SGPla.Services.Implementations
             return new ProgramacionPlaneaDTO(ultima, copias, total, pagina);
         }
 
-        public Task<UltimaSincronizacionPlaneaDTO?> ObtenerUltimaSincronizacionAsync(int? idPeriodo, CancellationToken cancellationToken = default)
-        {
-            return _repositorio.ObtenerUltimaSincronizacionAsync(idPeriodo, cancellationToken);
-        }
-
         public async Task<EncabezadoProgramacionPlaneaDTO?> ObtenerEncabezadoAsync(
-            int idProgramaEducativo, int idPeriodo, CancellationToken cancellationToken = default)
+            int idPlanEstudios, int idPeriodo, CancellationToken cancellationToken = default)
         {
-            var encabezado = await _repositorio.ObtenerEncabezadoAsync(idProgramaEducativo, idPeriodo, cancellationToken);
+            var encabezado = await _repositorio.ObtenerEncabezadoAsync(idPlanEstudios, idPeriodo, cancellationToken);
             if (encabezado is null) return null;
 
             var periodo = PeriodoEscolarMapper.ToDTO(new Periodo { IdPeriodo = idPeriodo, Codigo = encabezado.CodigoPeriodo });
