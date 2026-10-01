@@ -108,15 +108,6 @@
 				<br /><small class="text-muted">Sin periodo seleccionado, «Sincronizar» procesa los periodos vigentes.</small>
 			}
 		</p>
-
-		<div style="display:flex; gap:10px; padding-top:0px; justify-content:left">
-			@await Component.InvokeAsync("Table", Model.TablaPlanea)
-		</div>
-
-		@if (Model.TotalCopiasPlanea > Model.CopiasPlaneaMostradas)
-		{
-			<small class="text-muted">Se muestran @Model.CopiasPlaneaMostradas de @Model.TotalCopiasPlanea NRC. Usa los filtros o la búsqueda para acotar.</small>
-		}
 	</section>
 
 	

@@ -88,6 +88,7 @@ namespace SGPla.Repositories.Implementations
                 await EjecutarAsync(conexion, transaccion, SincronizacionPlaneaSql.CrearTablasTemporales, cancellationToken);
                 await CopiarAsync(conexion, transaccion, "#CopiaPlanea", CrearTablaCopias(datos.Copias), cancellationToken);
                 await CopiarAsync(conexion, transaccion, "#HorarioPlanea", CrearTablaHorarios(datos.Horarios), cancellationToken);
+                await CopiarAsync(conexion, transaccion, "#DocentePlanea", CrearTablaDocentes(datos.Docentes), cancellationToken);
                 await EjecutarAsync(conexion, transaccion, SincronizacionPlaneaSql.ResolverReferencias, cancellationToken);
                 var resumen = await LeerResumenAsync(conexion, transaccion, idPeriodo, idSincronizacion, cancellationToken);
                 await transaccionEf.CommitAsync(cancellationToken);
@@ -134,6 +135,13 @@ namespace SGPla.Repositories.Implementations
             t.Columns.Add("horaInicio", typeof(TimeSpan)); t.Columns.Add("horaFin", typeof(TimeSpan)); t.Columns.Add("edificio", typeof(string)); t.Columns.Add("aula", typeof(string));
             t.Columns.Add("fechaInicio", typeof(DateTime)); t.Columns.Add("fechaFin", typeof(DateTime));
             foreach (var h in horarios) t.Rows.Add(h.IdHorario, h.Nrc, h.Dia, h.HoraInicio.ToTimeSpan(), h.HoraFin.ToTimeSpan(), Db(h.Edificio), Db(h.Aula), Db(h.FechaInicio?.ToDateTime(TimeOnly.MinValue)), Db(h.FechaFin?.ToDateTime(TimeOnly.MinValue)));
+            return t;
+        }
+        private static DataTable CrearTablaDocentes(IReadOnlyList<DocenteCopiaPlanea> docentes)
+        {
+            var t = new DataTable(); t.Columns.Add("nrc", typeof(string)); t.Columns.Add("numeroPersonal", typeof(string));
+            t.Columns.Add("nombre", typeof(string)); t.Columns.Add("imparte", typeof(bool));
+            foreach (var d in docentes) t.Rows.Add(d.Nrc, Db(d.NumeroPersonal), d.Nombre, Db(d.Imparte));
             return t;
         }
         private static object Db(object? value) => value ?? DBNull.Value;

@@ -12,6 +12,7 @@ namespace SGPla.Parsers
             var advertencias = new AcumuladorAdvertencias();
             var nrcsVistos = new HashSet<string>(StringComparer.Ordinal);
             var copias = new Dictionary<string, CopiaPlanea>(StringComparer.Ordinal);
+            var docentes = new Dictionary<(string Nrc, string? NumeroPersonal, string Nombre), DocenteCopiaPlanea>();
             var nrcSinPlan = 0;
             foreach (var fila in respuesta.Resultado ?? [])
             {
@@ -23,6 +24,14 @@ namespace SGPla.Parsers
                 {
                     advertencias.Agregar("Filas sin NRC, materia, curso o título válidos", nrc);
                     continue;
+                }
+                // PLANEA repite el NRC en una fila por docente: los docentes se toman de todas las filas.
+                if (NormalizarEspacios(fila.NombreDocente) is { } nombreDocente)
+                {
+                    var numeroPersonal = Truncar(Limpiar(fila.NumeroPersonalDocente)?.ToUpperInvariant(), 15);
+                    nombreDocente = Truncar(nombreDocente, 150)!;
+                    docentes.TryAdd((nrc, numeroPersonal, nombreDocente),
+                        new DocenteCopiaPlanea(nrc, numeroPersonal, nombreDocente, ParsearIndicador(fila.Imparte)));
                 }
                 if (!nrcsVistos.Add(nrc)) continue;
                 var codigoPlan = Limpiar(fila.CodigoPlan)?.ToUpperInvariant();
@@ -62,7 +71,8 @@ namespace SGPla.Parsers
                 }
                 if (!tieneDias) advertencias.Agregar("Bloques de horario sin días", nrc);
             }
-            return new DatosPeriodoPlanea(nrcsVistos.Count, nrcSinPlan, copias.Values.ToList(), horarios.Values.ToList(), advertencias.Resumir());
+            var docentesCopias = docentes.Values.Where(d => copias.ContainsKey(d.Nrc)).ToList();
+            return new DatosPeriodoPlanea(nrcsVistos.Count, nrcSinPlan, copias.Values.ToList(), horarios.Values.ToList(), docentesCopias, advertencias.Resumir());
         }
 
         public static string? Limpiar(string? valor)
@@ -84,6 +94,12 @@ namespace SGPla.Parsers
                 || !int.TryParse(valor.AsSpan(2, 2), NumberStyles.None, CultureInfo.InvariantCulture, out var m) || h > 23 || m > 59) return false;
             hora = new TimeOnly(h, m); return true;
         }
+        public static bool? ParsearIndicador(string? valor) => Limpiar(valor)?.ToUpperInvariant() switch
+        {
+            "SI" or "SÍ" or "S" => true,
+            "NO" or "N" => false,
+            _ => null
+        };
         public static DateOnly? ParsearFecha(string? valor) => DateOnly.TryParseExact(valor, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var fecha) ? fecha : null;
         public static string? Truncar(string? valor, int longitud) => valor is null || valor.Length <= longitud ? valor : valor[..longitud];
 
