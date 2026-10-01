@@ -117,6 +117,7 @@ namespace SGPla.Repositories.Implementations
             await using var cmd = new SqlCommand(SincronizacionPlaneaSql.RegistrarNuevas, conexion, transaccion) { CommandTimeout = 300 };
             cmd.Parameters.Add("@idPeriodo", SqlDbType.Int).Value = idPeriodo;
             cmd.Parameters.Add("@idSincronizacion", SqlDbType.Int).Value = idSincronizacion;
+            cmd.Parameters.Add("@idPlanEstudios", SqlDbType.Int).Value = DBNull.Value;
             await using var reader = await cmd.ExecuteReaderAsync(ct);
             if (!await reader.ReadAsync(ct)) throw new InvalidOperationException("SQL no devolvió el resumen de sincronización.");
             return new ResumenAplicacionPlanea(reader.GetInt32(0), reader.GetInt32(1), reader.GetInt32(2), reader.GetInt32(3));

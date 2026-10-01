@@ -35,7 +35,9 @@ namespace SGPla.Repositories.Implementations
         public async Task<(List<CopiaProgramacionPlaneaDTO> Copias, int Total, int Pagina)> ObtenerCopiasAsync(
             FiltroProgramacionPlaneaDTO filtro, CancellationToken cancellationToken = default)
         {
-            var consulta = _context.ExperienciaEducativaPeriodo.AsNoTracking();
+            // Solo se muestran las copias ya enlazadas con el catálogo; las pendientes esperan su plan de estudios.
+            var consulta = _context.ExperienciaEducativaPeriodo.AsNoTracking()
+                .Where(c => c.IdExperienciaEducativa != null && c.IdPlanEstudios != null);
 
             if (filtro.IdPeriodo.HasValue)
                 consulta = consulta.Where(c => c.IdPeriodo == filtro.IdPeriodo.Value);

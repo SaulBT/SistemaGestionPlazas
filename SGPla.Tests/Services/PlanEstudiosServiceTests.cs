@@ -179,6 +179,49 @@ public class PlanEstudiosServiceTests
         experienciaEducativaRepositoryMock.Verify(r => r.CrearExperienciasEducativasAsync(It.IsAny<List<ExperienciaEducativa>>()), Times.Once);
     }
 
+    [Fact]
+    public async Task AgregarPlanDeEstudios_EnlazaLaProgramacionPlaneaDelPlanCreado()
+    {
+        var enlacePlaneaRepositoryMock = new Mock<IEnlacePlaneaRepository>();
+        var service = CrearServiceParaAgregar(enlacePlaneaRepositoryMock.Object);
+
+        var idResultado = await service.AgregarAsync(CrearPlanEstudiosDtoValido());
+
+        Assert.Equal(1, idResultado);
+        enlacePlaneaRepositoryMock.Verify(e => e.ReconciliarPlanAsync(1, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AgregarPlanDeEstudios_FallaDelEnlacePlanea_NoImpideGuardarElPlan()
+    {
+        var enlacePlaneaRepositoryMock = new Mock<IEnlacePlaneaRepository>();
+        enlacePlaneaRepositoryMock
+            .Setup(e => e.ReconciliarPlanAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("Sin conexión"));
+        var service = CrearServiceParaAgregar(enlacePlaneaRepositoryMock.Object);
+
+        var idResultado = await service.AgregarAsync(CrearPlanEstudiosDtoValido());
+
+        Assert.Equal(1, idResultado);
+    }
+
+    [Fact]
+    public async Task EditarPlanDeEstudios_ReconciliaLaProgramacionPlaneaDelPlan()
+    {
+        var planEstudiosRepositoryMock = new Mock<IPlanEstudiosRepository>();
+        planEstudiosRepositoryMock
+            .Setup(r => r.ObtenerPorIdAsync(67))
+            .ReturnsAsync(new PlanEstudios { IdPlanEstudios = 67 });
+        var enlacePlaneaRepositoryMock = new Mock<IEnlacePlaneaRepository>();
+        var service = CrearService(
+            planEstudiosRepositoryMock: planEstudiosRepositoryMock.Object,
+            enlacePlaneaRepositoryMock: enlacePlaneaRepositoryMock.Object);
+
+        await service.EditarAsync(new EditarPlanEstudiosDTO { IdPlanEstudios = 67, NuevaLista = false });
+
+        enlacePlaneaRepositoryMock.Verify(e => e.ReconciliarPlanAsync(67, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     //CP-06-12
     [Fact]
     public async Task ObtenerTodosLosPlanesDeEstudio()
@@ -555,7 +598,8 @@ public class PlanEstudiosServiceTests
         IExperienciaEducativaRepository? experienciaEducativaRepositoryMock = null,
         IPlanEstudiosValidator? planEstudiosValidatorMock = null,
         IArchivoRepository? archivoRepositoryMock = null,
-        IArchivoService? archivoServiceMock = null)
+        IArchivoService? archivoServiceMock = null,
+        IEnlacePlaneaRepository? enlacePlaneaRepositoryMock = null)
     {
         return new PlanEstudiosService(
             planEstudiosRepositoryMock ?? Mock.Of<IPlanEstudiosRepository>(),
@@ -563,7 +607,33 @@ public class PlanEstudiosServiceTests
             planEstudiosValidatorMock ?? Mock.Of<IPlanEstudiosValidator>(),
             archivoRepositoryMock ?? Mock.Of<IArchivoRepository>(),
             archivoServiceMock ?? Mock.Of<IArchivoService>(),
+            enlacePlaneaRepositoryMock ?? Mock.Of<IEnlacePlaneaRepository>(),
             Mock.Of<ILogger<PlanEstudiosService>>());
+    }
+
+    // Servicio con lo mínimo para que AgregarAsync registre el plan con id 1.
+    private static PlanEstudiosService CrearServiceParaAgregar(IEnlacePlaneaRepository enlacePlaneaRepository)
+    {
+        var archivoServiceMock = new Mock<IArchivoService>();
+        archivoServiceMock
+            .Setup(s => s.GuardarAsync(It.IsAny<string>(), It.IsAny<string>(), "planes-estudios"))
+            .ReturnsAsync(new DatosArchivoGuardadoDTO { NombreOriginal = "PlanLisoft.xls", Ruta = "planes-estudios/archivo-prueba.xls" });
+
+        var archivoRepositoryMock = new Mock<IArchivoRepository>();
+        archivoRepositoryMock
+            .Setup(r => r.CrearAsync(It.IsAny<Archivo>()))
+            .ReturnsAsync(new Archivo { IdArchivo = 15 });
+
+        var planEstudiosRepositoryMock = new Mock<IPlanEstudiosRepository>();
+        planEstudiosRepositoryMock
+            .Setup(r => r.CrearAsync(It.IsAny<PlanEstudios>()))
+            .ReturnsAsync(new PlanEstudios { IdPlanEstudios = 1 });
+
+        return CrearService(
+            planEstudiosRepositoryMock: planEstudiosRepositoryMock.Object,
+            archivoRepositoryMock: archivoRepositoryMock.Object,
+            archivoServiceMock: archivoServiceMock.Object,
+            enlacePlaneaRepositoryMock: enlacePlaneaRepository);
     }
 
     private static CrearPlanEstudiosDTO CrearPlanEstudiosDtoValido()

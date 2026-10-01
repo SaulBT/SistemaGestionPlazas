@@ -165,7 +165,8 @@ namespace SGPla.Repositories.Implementations
 
         private IQueryable<ExperienciaEducativaPeriodo> ConsultarProgramacionPlanea(BuscarProgramacionAcademicaDTO? filtro)
         {
-            var query = _context.ExperienciaEducativaPeriodo.AsNoTracking();
+            var query = _context.ExperienciaEducativaPeriodo.AsNoTracking()
+                .Where(c => c.IdExperienciaEducativa != null && c.IdPlanEstudios != null);
             if (filtro == null)
                 return query;
 

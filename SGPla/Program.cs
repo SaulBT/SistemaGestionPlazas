@@ -188,6 +188,7 @@ builder.Services.AddScoped<ISincronizarPeriodoPlaneaService, SincronizarPeriodoP
 builder.Services.AddScoped<ISincronizarPeriodosVigentesService, SincronizarPeriodosVigentesService>();
 builder.Services.AddHostedService<SincronizacionPlaneaWorker>();
 builder.Services.AddScoped<IProgramacionPlaneaRepository, ProgramacionPlaneaRepository>();
+builder.Services.AddScoped<IEnlacePlaneaRepository, EnlacePlaneaRepository>();
 builder.Services.AddScoped<IProgramacionPlaneaService, ProgramacionPlaneaService>();
 
 var app = builder.Build();
