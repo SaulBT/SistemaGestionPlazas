@@ -60,4 +60,6 @@ public partial class Aviso
     public virtual Periodo IdPeriodoNavigation { get; set; } = null!;
 
     public virtual ICollection<OfertaAviso> OfertaAviso { get; set; } = new List<OfertaAviso>();
+
+    public virtual ICollection<OfertaExcluidaAviso> OfertaExcluidaAviso { get; set; } = new List<OfertaExcluidaAviso>();
 }

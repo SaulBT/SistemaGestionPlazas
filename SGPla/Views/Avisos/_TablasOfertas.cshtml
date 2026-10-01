@@ -40,7 +40,9 @@ else
                     @foreach (var oferta in carrera.Ofertas)
                     {
                         <tr>
-                            <td><input type="checkbox" name="OfertasId" value="@oferta.IdOferta" @(carrera.OfertasSeleccionadas.Contains(oferta.IdOferta) ? "checked" : null) /></td>
+                            <td><input type="checkbox" name="OfertasId" value="@oferta.IdOferta"
+                                       data-ee="@oferta.ExperienciaEducativa" data-nrc="@oferta.NRC"
+                                       @(carrera.OfertasSeleccionadas.Contains(oferta.IdOferta) ? "checked" : null) /></td>
                             <td>@oferta.Horas</td><td>@oferta.ExperienciaEducativa</td><td>@oferta.NRC</td><td>@oferta.Plaza</td>
                             <td>
                                 @await Component.InvokeAsync("Boton", new

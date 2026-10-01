@@ -211,7 +211,7 @@ namespace SGPla.Services.Implementations
                         HoraFin = TimeOnly.Parse(h.HoraTermino)
                     });
                 }
-                await _avisoRepository.CrearCompletoAsync(avisoRegistrado, aviso.OfertasId, horarios);
+                await _avisoRepository.CrearCompletoAsync(avisoRegistrado, aviso.OfertasId, horarios, aviso.OfertasExcluidas);
                 await prepararVistaPreviaPdfAsync(idArchivoGenerado.Value);
 
             }
@@ -423,6 +423,18 @@ namespace SGPla.Services.Implementations
             if (!await _ofertaRepository.SonOfertasValidasParaAvisoAsync(
                 aviso.OfertasId, aviso.IdEntidadAcademica, aviso.IdPeriodo, aviso.IdArticulo))
                 throw new ValidacionExcepction("Las ofertas seleccionadas no existen, no pertenecen a la entidad, no corresponden al período o artículo, no están incluidas o están duplicadas.", "400");
+
+            var idsDisponibles = (await _ofertaRepository.ObtenerPlanesEstudioCrearAviso(
+                    aviso.IdEntidadAcademica, aviso.IdPeriodo, aviso.IdArticulo))
+                .SelectMany(plan => plan.Ofertas)
+                .Select(oferta => oferta.IdOferta)
+                .ToHashSet();
+            var idsSeleccionados = aviso.OfertasId.ToHashSet();
+            var idsExcluidos = aviso.OfertasExcluidas.Select(exclusion => exclusion.IdOferta).ToHashSet();
+
+            if (idsExcluidos.Overlaps(idsSeleccionados) || !idsDisponibles.SetEquals(idsSeleccionados.Concat(idsExcluidos)))
+                throw new ValidacionExcepction("Cada EE no seleccionada debe incluir un motivo de exclusión válido.", "400");
+
         }
 
         private async Task<string> obtenerSistemaDeOfertasAsync(List<int> ofertasId)

@@ -51,6 +51,9 @@ namespace SGPla.Repositories.Implementations
                 .AsNoTracking()
                 .Include(a => a.IdEntidadAcademicaNavigation)
                 .Include(a => a.IdArticuloNavigation)
+                .Include(a => a.OfertaExcluidaAviso)
+                    .ThenInclude(e => e.IdOfertaNavigation)
+                    .ThenInclude(o => o.IdExperienciaEducativaNavigation)
                 .FirstOrDefaultAsync(aviso => aviso.IdAviso == idAviso);
         }
 
@@ -142,7 +145,7 @@ namespace SGPla.Repositories.Implementations
             return aviso is not null;
         }
 
-        public async Task CrearCompletoAsync(Aviso aviso, List<int> idsOfertas, List<Horario> horarios)
+        public async Task CrearCompletoAsync(Aviso aviso, List<int> idsOfertas, List<Horario> horarios, List<OfertaExcluidaAvisoDTO> ofertasExcluidas)
         {
             await using var transaccion = await _context.Database.BeginTransactionAsync();
             try
@@ -157,6 +160,12 @@ namespace SGPla.Repositories.Implementations
                 {
                     IdAviso = aviso.IdAviso,
                     IdOferta = idOferta
+                }));
+                await _context.OfertaExcluidaAviso.AddRangeAsync(ofertasExcluidas.Select(exclusion => new OfertaExcluidaAviso
+                {
+                    IdAviso = aviso.IdAviso,
+                    IdOferta = exclusion.IdOferta,
+                    Motivo = exclusion.Motivo.Trim()
                 }));
                 await _context.Horario.AddRangeAsync(horarios);
                 await _context.SaveChangesAsync();
@@ -204,10 +213,23 @@ namespace SGPla.Repositories.Implementations
                     .ToListAsync();
                 _context.Horario.RemoveRange(horariosAnteriores);
 
+                var exclusionesAnteriores = await _context.OfertaExcluidaAviso
+                    .Where(e => e.IdAviso == avisoDTO.IdAviso)
+                    .ToListAsync();
+                _context.OfertaExcluidaAviso.RemoveRange(exclusionesAnteriores);
+
+                await _context.SaveChangesAsync();
+
                 await _context.OfertaAviso.AddRangeAsync(avisoDTO.OfertasId.Distinct().Select(idOferta => new OfertaAviso
                 {
                     IdAviso = avisoDTO.IdAviso,
                     IdOferta = idOferta
+                }));
+                await _context.OfertaExcluidaAviso.AddRangeAsync(avisoDTO.OfertasExcluidas.Select(exclusion => new OfertaExcluidaAviso
+                {
+                    IdAviso = avisoDTO.IdAviso,
+                    IdOferta = exclusion.IdOferta,
+                    Motivo = exclusion.Motivo.Trim()
                 }));
                 await _context.Horario.AddRangeAsync(horarios);
 
