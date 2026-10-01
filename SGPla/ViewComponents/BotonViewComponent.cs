@@ -60,6 +60,7 @@ public class BotonViewComponent : ViewComponent
                 "firmar" => "Firmar",
                 "solicitudes" => "Ver solicitudes",
                 "historial" => "Ver historial",
+                "planea" => "Ver programación PLANEA",
                 "excel" => "Exportar a Excel",
                 "pdf" => "Exportar a PDF",
                 "pregunta" => "Ver simbología",
@@ -219,6 +220,9 @@ public class BotonViewComponent : ViewComponent
                     break;
                 case "historial":
                     model.Icono = "bi bi-clock-history";
+                    break;
+                case "planea":
+                    model.Icono = "bi bi-calendar-week-fill";
                     break;
                 case "excel":
                     model.Icono = "bi bi-file-earmark-spreadsheet-fill";

@@ -20,6 +20,9 @@ namespace SGPla.Models.DTOs.Planea
         [JsonPropertyName("nivel")] public string? Nivel { get; set; }
         [JsonPropertyName("Region")] public string? Region { get; set; }
         [JsonPropertyName("Area")] public string? Area { get; set; }
+        [JsonPropertyName("ID_TITULAR")] public string? NumeroPersonalDocente { get; set; }
+        [JsonPropertyName("radoc_nombre")] public string? NombreDocente { get; set; }
+        [JsonPropertyName("IND_IMPARTE")] public string? Imparte { get; set; }
     }
     public sealed class PlaneaHorario
     {

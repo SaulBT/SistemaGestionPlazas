@@ -49,7 +49,7 @@ public class ProgramacionesAcademicasController : Controller
     private static readonly List<string> HEADERS_TABLA_HORARIOS =
         ["Dîa", "Horario", "Salon", "Acciones"];
     private static readonly List<string> HEADERS_TABLA_PLANEA =
-        ["Periodo", "NRC", "Experiencia educativa", "Plan", "Programa educativo", "Región", "Horario y espacio"];
+        ["NRC", "Experiencia educativa", "Horario y espacio", "Imparte", "Docente"];
     private static readonly Dictionary<string, string> ABREVIATURA_DIA = new()
     {
         ["Lunes"] = "Lun", ["Martes"] = "Mar", ["Miercoles"] = "Mié",
@@ -153,9 +153,55 @@ public class ProgramacionesAcademicasController : Controller
 
         _estado.Guardar(ResumenOferta, resumen);
 
-        await LlenarProgramacionPlaneaAsync(modelo, filtro);
+        modelo.UltimaSincronizacionPlanea =
+            await _programacionPlaneaService.ObtenerUltimaSincronizacionAsync(filtro.IdPeriodo);
 
         return View("Index", modelo);
+    }
+
+    [HttpGet]
+    [Authorize(Policy = PoliticasAutorizacion.OperadorAcademico)]
+    public async Task<IActionResult> ProgramacionPlanea(
+        int idProgramaEducativo,
+        int idPeriodo,
+        string? busqueda,
+        int pagina = 1,
+        int cantidad = 10)
+    {
+        var encabezado = await _programacionPlaneaService.ObtenerEncabezadoAsync(idProgramaEducativo, idPeriodo);
+        if (encabezado is null)
+            return NotFound();
+
+        // Un coordinador de entidad solo consulta la programación PLANEA de su entidad.
+        if (User.IsInRole(Constantes.COORDINADOR_EA)
+            && int.TryParse(User.FindFirstValue("EntidadAcademicaId"), out var idEntidadUsuario)
+            && idEntidadUsuario != encabezado.IdEntidadAcademica)
+            return Forbid();
+
+        var filtroPlanea = new FiltroProgramacionPlaneaDTO
+        {
+            IdPeriodo = idPeriodo,
+            IdProgramaEducativo = idProgramaEducativo,
+            Busqueda = busqueda,
+            Pagina = pagina,
+            Limite = cantidad
+        };
+        // El servicio normaliza página y límite; la tabla usa los valores ya ajustados.
+        var planea = await _programacionPlaneaService.ObtenerAsync(filtroPlanea);
+
+        var modelo = new ProgramacionPlaneaViewModel
+        {
+            IdProgramaEducativo = idProgramaEducativo,
+            IdPeriodo = idPeriodo,
+            Region = encabezado.Region,
+            NombreEntidadAcademica = encabezado.EntidadAcademica,
+            NombrePrograma = encabezado.ProgramaEducativo,
+            NombrePeriodo = encabezado.PeriodoMostrar,
+            UltimaSincronizacionPlanea = planea.UltimaSincronizacion,
+            TablaPlanea = LlenarTablaPlanea(planea, filtroPlanea.Limite)
+        };
+
+        return View("ProgramacionPlanea", modelo);
     }
 
     [HttpPost]
@@ -731,47 +777,49 @@ public class ProgramacionesAcademicasController : Controller
 
     #region Helpers privados — construcción de tablas
 
-    private async Task LlenarProgramacionPlaneaAsync(IndexViewModel modelo, BuscarProgramacionAcademicaDTO filtro)
+    private static TableModel LlenarTablaPlanea(ProgramacionPlaneaDTO planea, int cantidadPorPagina)
     {
-        var idEntidad = filtro.IdEntidadAcademica;
-        // Un coordinador de entidad solo ve la programación PLANEA de su entidad.
-        if (User.IsInRole(Constantes.COORDINADOR_EA)
-            && int.TryParse(User.FindFirstValue("EntidadAcademicaId"), out var idEntidadUsuario))
-            idEntidad = idEntidadUsuario;
-
-        var planea = await _programacionPlaneaService.ObtenerAsync(new FiltroProgramacionPlaneaDTO
-        {
-            IdPeriodo = filtro.IdPeriodo,
-            IdEntidadAcademica = idEntidad,
-            IdProgramaEducativo = filtro.IdProgramaEducativo,
-            Busqueda = filtro.Busqueda
-        });
-
-        modelo.UltimaSincronizacionPlanea = planea.UltimaSincronizacion;
-        modelo.TotalCopiasPlanea = planea.Total;
-        modelo.CopiasPlaneaMostradas = planea.Copias.Count;
-        modelo.TablaPlanea = planea.Copias.Count == 0
+        return planea.Copias.Count == 0
             ? TablaFactory.GenerarTablaConMensajeSinPaginacion(HEADERS_TABLA_PLANEA,
-                "No hay NRC de PLANEA registrados para los filtros seleccionados.")
+                "No se encontraron NRC de PLANEA para este programa educativo y periodo.")
             : new TableModel
             {
                 TableId = "tablaPlanea",
                 Headers = HEADERS_TABLA_PLANEA,
-                Pagination = new PaginationInfo { PaginationMode = "NA" },
+                Pagination = new PaginationInfo
+                {
+                    CurrentPage = planea.Pagina,
+                    PageSize = cantidadPorPagina,
+                    TotalItems = planea.Total,
+                    OnPageChange = "cambiarPaginaPlanea",
+                    PaginationMode = "server"
+                },
                 Rows = planea.Copias.Select(c => new TableRowModel
                 {
                     Cells =
                     [
-                        new() { Value = c.CodigoPeriodo },
                         new() { Value = c.Nrc },
                         new() { Value = $"{c.CodigoExperiencia} - {c.NombreExperiencia}" },
-                        new() { Value = c.CodigoPlan ?? "—" },
-                        new() { Value = c.ProgramaEducativo },
-                        new() { Value = c.Region ?? "—" },
-                        new() { Value = FormatearHorarios(c.Horarios) }
+                        new() { Value = FormatearHorarios(c.Horarios) },
+                        new() { Value = FormatearImparte(c.Docentes) },
+                        new() { Value = FormatearDocentes(c.Docentes) }
                     ]
                 }).ToList()
             };
+    }
+
+    // Con varios docentes en el NRC basta con que uno imparta para marcarlo como «SÍ».
+    private static string FormatearImparte(IReadOnlyList<DocentePlaneaDTO> docentes)
+    {
+        if (docentes.Any(d => d.Imparte == true)) return "SÍ";
+        if (docentes.Any(d => d.Imparte == false)) return "NO";
+        return "—";
+    }
+
+    private static string FormatearDocentes(IReadOnlyList<DocentePlaneaDTO> docentes)
+    {
+        var nombres = docentes.Select(d => d.Nombre).Where(n => !string.IsNullOrWhiteSpace(n)).Distinct().ToList();
+        return nombres.Count == 0 ? "Sin asignar" : string.Join("; ", nombres);
     }
 
     private static string FormatearHorarios(IReadOnlyList<HorarioPlaneaDTO> horarios)
@@ -788,14 +836,9 @@ public class ProgramacionesAcademicasController : Controller
 
     private TableModel LlenarTablaResumen(List<ResumenOfertaProgramacionAcademicaDTO> resumen)
     {
-        bool mostrarAcciones = User.IsInRole(Constantes.COORDINADOR_EA);
+        bool esCoordinadorEa = User.IsInRole(Constantes.COORDINADOR_EA);
 
         var headers = HEADERS_TABLA_RESUMEN_OFERTA.ToList();
-
-        if (!mostrarAcciones)
-        {
-            headers.Remove("Acciones");
-        }
 
         if (resumen.Count == 0)
         {
@@ -823,31 +866,44 @@ public class ProgramacionesAcademicasController : Controller
                         new() { Value = r.EEVacantes.ToString() }
                     };
 
-                    if (mostrarAcciones)
+                    var acciones = new List<TableActionModel>();
+
+                    if (r.TieneProgramacionPlanea)
                     {
-                        cells.Add(new TableCellModel
+                        acciones.Add(new()
                         {
-                            Actions = new List<TableActionModel>
+                            Accion = "planea",
+                            AriaLabel = "Ver programación PLANEA",
+                            Url = Url.Action(nameof(ProgramacionPlanea), new
                             {
-                                new()
-                                {
-                                    Accion = "ver",
-                                    AriaLabel = "Ver programación académica",
-                                    Url = Url.Action("Ver", new
-                                    {
-                                        idEntidadAcademica = r.IdEntidadAcademica,
-                                        idProgramaEducativo = r.IdProgramaEducativo,
-                                        idPeriodo = r.IdPeriodo
-                                    })
-                                },
-                                new()
-                                {
-                                    Accion = "solicitudes",
-                                    AriaLabel = "Ver solicitudes"
-                                }
-                            }
+                                idProgramaEducativo = r.IdProgramaEducativo,
+                                idPeriodo = r.IdPeriodo
+                            })
                         });
                     }
+
+                    // «Ver» y «Solicitudes» trabajan sobre la oferta; sin oferta cargada no hay nada que mostrar.
+                    if (esCoordinadorEa && r.TotalEE > 0)
+                    {
+                        acciones.Add(new()
+                        {
+                            Accion = "ver",
+                            AriaLabel = "Ver programación académica",
+                            Url = Url.Action("Ver", new
+                            {
+                                idEntidadAcademica = r.IdEntidadAcademica,
+                                idProgramaEducativo = r.IdProgramaEducativo,
+                                idPeriodo = r.IdPeriodo
+                            })
+                        });
+                        acciones.Add(new()
+                        {
+                            Accion = "solicitudes",
+                            AriaLabel = "Ver solicitudes"
+                        });
+                    }
+
+                    cells.Add(new TableCellModel { Actions = acciones });
 
                     return new TableRowModel
                     {

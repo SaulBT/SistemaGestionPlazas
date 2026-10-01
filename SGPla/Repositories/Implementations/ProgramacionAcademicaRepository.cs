@@ -118,11 +118,75 @@ namespace SGPla.Repositories.Implementations
                     EEVacantes = g.Count(x => x.IdDocente == null && x.NumeroPersonalImportado == null && x.NombreDocenteImportado == null),
                     TotalEE = g.Count()
                 })
-                .OrderByDescending(g => g.CodigoPeriodo)
-                .ThenBy(r => r.ProgramaEducativo)
                 .ToListAsync();
 
-            return resumen;
+            // También cuentan como programados los programas con NRC de PLANEA aunque aún no tengan oferta.
+            var programacionPlanea = await ConsultarProgramacionPlanea(filtro)
+                .Select(c => new
+                {
+                    c.IdPlanEstudiosNavigation.IdProgramaEducativo,
+                    Programa = c.IdPlanEstudiosNavigation.IdProgramaEducativoNavigation.Nombre,
+                    c.IdPlanEstudiosNavigation.IdProgramaEducativoNavigation.IdEntidadAcademica,
+                    Entidad = c.IdPlanEstudiosNavigation.IdProgramaEducativoNavigation.IdEntidadAcademicaNavigation.Nombre,
+                    c.IdPeriodo,
+                    Periodo = c.IdPeriodoNavigation.Codigo
+                })
+                .Distinct()
+                .ToListAsync();
+
+            foreach (var programa in programacionPlanea)
+            {
+                var existente = resumen.FirstOrDefault(r =>
+                    r.IdProgramaEducativo == programa.IdProgramaEducativo && r.IdPeriodo == programa.IdPeriodo);
+
+                if (existente is not null)
+                {
+                    existente.TieneProgramacionPlanea = true;
+                    continue;
+                }
+
+                resumen.Add(new ResumenOfertaProgramacionAcademicaDTO
+                {
+                    IdProgramaEducativo = programa.IdProgramaEducativo,
+                    ProgramaEducativo = programa.Programa,
+                    IdEntidadAcademica = programa.IdEntidadAcademica,
+                    EntidadAcademica = programa.Entidad,
+                    IdPeriodo = programa.IdPeriodo,
+                    CodigoPeriodo = programa.Periodo,
+                    TieneProgramacionPlanea = true
+                });
+            }
+
+            return resumen
+                .OrderByDescending(r => r.CodigoPeriodo)
+                .ThenBy(r => r.ProgramaEducativo)
+                .ToList();
+        }
+
+        private IQueryable<ExperienciaEducativaPeriodo> ConsultarProgramacionPlanea(BuscarProgramacionAcademicaDTO? filtro)
+        {
+            var query = _context.ExperienciaEducativaPeriodo.AsNoTracking();
+            if (filtro == null)
+                return query;
+
+            if (filtro.IdPeriodo.HasValue)
+                query = query.Where(c => c.IdPeriodo == filtro.IdPeriodo.Value);
+
+            if (filtro.IdEntidadAcademica.HasValue)
+                query = query.Where(c => c.IdPlanEstudiosNavigation.IdProgramaEducativoNavigation.IdEntidadAcademica == filtro.IdEntidadAcademica.Value);
+
+            if (filtro.IdProgramaEducativo.HasValue)
+                query = query.Where(c => c.IdPlanEstudiosNavigation.IdProgramaEducativo == filtro.IdProgramaEducativo.Value);
+
+            if (!string.IsNullOrEmpty(filtro.Region))
+                query = query.Where(c => c.IdPlanEstudiosNavigation.IdProgramaEducativoNavigation.IdEntidadAcademicaNavigation.Region == filtro.Region);
+
+            if (!string.IsNullOrEmpty(filtro.Busqueda))
+                query = query.Where(c =>
+                    c.IdPlanEstudiosNavigation.IdProgramaEducativoNavigation.Nombre.Contains(filtro.Busqueda)
+                    || c.IdPlanEstudiosNavigation.IdProgramaEducativoNavigation.IdEntidadAcademicaNavigation.Nombre.Contains(filtro.Busqueda));
+
+            return query;
         }
 
 

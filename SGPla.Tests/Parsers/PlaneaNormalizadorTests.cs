@@ -30,6 +30,25 @@ public class PlaneaNormalizadorTests
         Assert.Contains(datos.Advertencias, a => a.Contains("Horarios de NRC que no vienen en resultado", StringComparison.Ordinal));
     }
 
+    [Fact]
+    public void Normalizar_FixtureConservaDocentesDeCadaFilaDelNrc()
+    {
+        var datos = PlaneaNormalizador.Normalizar(Cargar());
+
+        var docentes10709 = datos.Docentes.Where(d => d.Nrc == "10709").ToList();
+        Assert.Equal(2, docentes10709.Count);
+        Assert.Contains(docentes10709, d => d.NumeroPersonal == "E00031302" && d.Nombre == "COSME REYES MARIA GUADALUPE" && d.Imparte == true);
+        Assert.Contains(docentes10709, d => d.NumeroPersonal == "E00032036" && d.Nombre == "GUTIERREZ CASIANO NAYELI" && d.Imparte == false);
+        Assert.Contains(datos.Docentes, d => d.Nrc == "25637" && d.Nombre == "FABIAN TORRES ANGELICA MARIA" && d.Imparte == null);
+        // Sin nombre de docente (vacío o solo espacios) no se registra docente.
+        Assert.DoesNotContain(datos.Docentes, d => d.Nrc is "10677" or "10795" or "38444");
+        Assert.All(datos.Docentes, d => Assert.Contains(datos.Copias, c => c.Nrc == d.Nrc));
+    }
+
+    [Theory]
+    [InlineData("SI", true)] [InlineData(" si ", true)] [InlineData("NO", false)] [InlineData(null, null)] [InlineData("", null)] [InlineData("X", null)]
+    public void ParsearIndicador_ConvierteSiNo(string? valor, bool? esperado) => Assert.Equal(esperado, PlaneaNormalizador.ParsearIndicador(valor));
+
     [Theory]
     [InlineData("", null)] [InlineData("  ", null)] [InlineData("-", null)] [InlineData("---", null)] [InlineData(" X ", "X")]
     public void Limpiar_Normaliza(string valor, string? esperado) => Assert.Equal(esperado, PlaneaNormalizador.Limpiar(valor));

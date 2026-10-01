@@ -5,6 +5,7 @@ namespace SGPla.Repositories.Implementations
         public const string CrearTablasTemporales = """
             DROP TABLE IF EXISTS #CopiaPlanea;
             DROP TABLE IF EXISTS #HorarioPlanea;
+            DROP TABLE IF EXISTS #DocentePlanea;
 
             CREATE TABLE #CopiaPlanea (
                 nrc varchar(5) COLLATE DATABASE_DEFAULT NOT NULL PRIMARY KEY,
@@ -31,6 +32,13 @@ namespace SGPla.Repositories.Implementations
                 fechaFin date NULL
             );
             CREATE INDEX IX_HorarioPlanea_nrc ON #HorarioPlanea(nrc);
+            CREATE TABLE #DocentePlanea (
+                nrc varchar(5) COLLATE DATABASE_DEFAULT NOT NULL,
+                numeroPersonal varchar(15) COLLATE DATABASE_DEFAULT NULL,
+                nombre varchar(150) COLLATE DATABASE_DEFAULT NOT NULL,
+                imparte bit NULL
+            );
+            CREATE INDEX IX_DocentePlanea_nrc ON #DocentePlanea(nrc);
             """;
 
         public const string ResolverReferencias = """
@@ -93,6 +101,20 @@ namespace SGPla.Repositories.Implementations
             FROM #HorarioPlanea AS h
             INNER JOIN @nuevas AS n ON n.nrc = h.nrc;
             SET @horarios = @@ROWCOUNT;
+            -- Los docentes cambian durante el periodo: se reemplazan en todos los NRC recibidos,
+            -- también en los ya registrados.
+            DELETE d
+            FROM dbo.ExperienciaEducativaPeriodoDocente AS d
+            INNER JOIN dbo.ExperienciaEducativaPeriodo AS t
+                ON t.idExperienciaEducativaPeriodo = d.idExperienciaEducativaPeriodo
+            WHERE t.idPeriodo = @idPeriodo
+              AND EXISTS (SELECT 1 FROM #CopiaPlanea AS c WHERE c.nrc = t.nrc);
+            INSERT INTO dbo.ExperienciaEducativaPeriodoDocente
+                (idExperienciaEducativaPeriodo, numeroPersonal, nombre, imparte)
+            SELECT t.idExperienciaEducativaPeriodo, d.numeroPersonal, d.nombre, d.imparte
+            FROM #DocentePlanea AS d
+            INNER JOIN dbo.ExperienciaEducativaPeriodo AS t
+                ON t.idPeriodo = @idPeriodo AND t.nrc = d.nrc;
             SELECT (SELECT COUNT(*) FROM @nuevas) AS nuevos,
                    @existentes AS existentes,
                    @sinExperiencia AS sinExperiencia,

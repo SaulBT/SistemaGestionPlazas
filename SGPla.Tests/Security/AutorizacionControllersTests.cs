@@ -24,6 +24,7 @@ public class AutorizacionControllersTests
     [InlineData(nameof(ProgramacionesAcademicasController.CargarProgramacionAcademicaPaso1), PoliticasAutorizacion.Dgaa)]
     [InlineData(nameof(ProgramacionesAcademicasController.SincronizarPlanea), PoliticasAutorizacion.Dgaa)]
     [InlineData(nameof(ProgramacionesAcademicasController.Ver), PoliticasAutorizacion.EntidadAcademica)]
+    [InlineData(nameof(ProgramacionesAcademicasController.ProgramacionPlanea), PoliticasAutorizacion.OperadorAcademico)]
     [InlineData(nameof(ProgramacionesAcademicasController.CambiarInclusionOferta), PoliticasAutorizacion.EntidadAcademica)]
     public void AccionesDeProgramacion_ExigenElRolDefinido(string action, string policy)
     {

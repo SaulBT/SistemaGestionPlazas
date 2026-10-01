@@ -72,17 +72,53 @@ public class ProgramacionPlaneaServiceTests
     }
 
     [Fact]
-    public async Task ObtenerAsync_NormalizaBusquedaYLimite()
+    public async Task ObtenerAsync_NormalizaBusquedaPaginaYLimite()
     {
         FiltroProgramacionPlaneaDTO? recibido = null;
         _repositorio.Setup(r => r.ObtenerCopiasAsync(It.IsAny<FiltroProgramacionPlaneaDTO>(), It.IsAny<CancellationToken>()))
             .Callback<FiltroProgramacionPlaneaDTO, CancellationToken>((f, _) => recibido = f)
-            .ReturnsAsync((new List<CopiaProgramacionPlaneaDTO>(), 0));
+            .ReturnsAsync((new List<CopiaProgramacionPlaneaDTO>(), 0, 1));
 
-        await Crear().ObtenerAsync(new FiltroProgramacionPlaneaDTO { Busqueda = "  10676  ", Limite = 0 });
+        await Crear().ObtenerAsync(new FiltroProgramacionPlaneaDTO { Busqueda = "  10676  ", Pagina = 0, Limite = 0 });
 
         Assert.NotNull(recibido);
         Assert.Equal("10676", recibido.Busqueda);
-        Assert.Equal(100, recibido.Limite);
+        Assert.Equal(1, recibido.Pagina);
+        Assert.Equal(10, recibido.Limite);
+    }
+
+    [Fact]
+    public async Task ObtenerEncabezadoAsync_ProgramaOPeriodoInexistente_DevuelveNull()
+    {
+        _repositorio.Setup(r => r.ObtenerEncabezadoAsync(1, 99, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((EncabezadoProgramacionPlaneaDTO?)null);
+
+        Assert.Null(await Crear().ObtenerEncabezadoAsync(1, 99));
+    }
+
+    [Fact]
+    public async Task ObtenerEncabezadoAsync_AgregaElPeriodoLegible()
+    {
+        _repositorio.Setup(r => r.ObtenerEncabezadoAsync(1, 5, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new EncabezadoProgramacionPlaneaDTO(3, "Facultad de Estadística", "XAL", "Estadística", "202701"));
+
+        var encabezado = await Crear().ObtenerEncabezadoAsync(1, 5);
+
+        Assert.NotNull(encabezado);
+        Assert.Equal("Facultad de Estadística", encabezado.EntidadAcademica);
+        Assert.False(string.IsNullOrWhiteSpace(encabezado.PeriodoMostrar));
+        Assert.NotEqual("202701", encabezado.PeriodoMostrar);
+    }
+
+    [Fact]
+    public async Task ObtenerAsync_DevuelveTotalYPaginaDelRepositorio()
+    {
+        _repositorio.Setup(r => r.ObtenerCopiasAsync(It.IsAny<FiltroProgramacionPlaneaDTO>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((new List<CopiaProgramacionPlaneaDTO>(), 256, 26));
+
+        var resultado = await Crear().ObtenerAsync(new FiltroProgramacionPlaneaDTO { Pagina = 99 });
+
+        Assert.Equal(256, resultado.Total);
+        Assert.Equal(26, resultado.Pagina);
     }
 }

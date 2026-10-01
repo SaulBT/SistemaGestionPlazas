@@ -35,12 +35,6 @@ namespace SGPla.Models.ViewModels.ProgramacionesAcademicas
         // Programación sincronizada desde PLANEA
         public UltimaSincronizacionPlaneaDTO? UltimaSincronizacionPlanea { get; set; }
 
-        public TableModel TablaPlanea { get; set; } = new();
-
-        public int TotalCopiasPlanea { get; set; }
-
-        public int CopiasPlaneaMostradas { get; set; }
-
 
 
     }
