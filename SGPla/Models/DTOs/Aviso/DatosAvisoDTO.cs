@@ -18,8 +18,10 @@ namespace SGPla.Models.DTOs.Aviso
         public string Region { get; set; } = string.Empty;
         public string NombreEntidadAcademica { get; set; } = string.Empty;
         public string Periodo { get; set; } = string.Empty;
+        public string CodigoPeriodo { get; set; } = string.Empty;
         public string FechaPublicacion { get; set; } = string.Empty;
         public string Estado { get; set; } = string.Empty;
+        public DateOnly FechaCreacionValor { get; set; }
         public bool Archivado { get; set; }
         public string Sistema { get; set; } = string.Empty;
         public List<OfertaAvisoDTO> Ofertas { get; set; } = [];
