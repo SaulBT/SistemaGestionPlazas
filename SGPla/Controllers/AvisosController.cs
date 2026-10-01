@@ -17,6 +17,7 @@ using SGPla.Commons.Factories;
 using SGPla.Models.ViewModels.Avisos;
 using SGPla.Services.Interfaces;
 using SGPla.Views.Avisos;
+using SGPla.Helpers;
 using System.ComponentModel;
 using System.Text.Json;
 
@@ -241,16 +242,26 @@ namespace SGPla.Controllers
                 if (!await PuedeConsultarAsync(idAviso))
                     return Forbid();
 
+                ArchivoDescargadoDTO archivo;
                 if (EstadosAviso.EsInformativo(aviso.Estado))
                 {
                     var idArchivo = _avisoService.ObtenerIdArchivoVigente(aviso);
-                    var pdfInformativo = await _archivoService.ObtenerVistaPreviaPdfAsync(idArchivo, true);
-                    return PhysicalFile(pdfInformativo.Ruta, pdfInformativo.Tipo, pdfInformativo.Nombre);
+                    archivo = await _archivoService.ObtenerVistaPreviaPdfAsync(idArchivo, true);
+                }
+                else
+                {
+                    if (aviso.IdArchivoOriginal <= 0)
+                        return NotFound("No se encontró el documento original del aviso.");
+                    archivo = await _archivoService.DescargarAsync(aviso.IdArchivoOriginal);
                 }
 
-                if (aviso.IdArchivoOriginal <= 0)
-                    return NotFound("No se encontró el documento original del aviso.");
-                var archivo = await _archivoService.DescargarAsync(aviso.IdArchivoOriginal);
+                archivo.Nombre = NombreArchivoAviso.Construir(
+                    aviso.CodigoPeriodo,
+                    aviso.Articulo,
+                    aviso.NombreEntidadAcademica,
+                    aviso.FechaCreacionValor,
+                    aviso.IdAviso,
+                    Path.GetExtension(archivo.Ruta));
                 return PhysicalFile(archivo.Ruta, archivo.Tipo, archivo.Nombre);
             }
             catch (ValidacionExcepction)
