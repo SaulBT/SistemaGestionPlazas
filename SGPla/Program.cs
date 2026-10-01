@@ -94,7 +94,6 @@ builder.Services.AddScoped<IGradoRepository, GradoRepository>();
 builder.Services.AddScoped<IProgramacionAcademicaRepository, ProgramacionAcademicaRepository>();
 builder.Services.AddScoped<IDocenteRepository, DocenteRepository>();
 
-builder.Services.AddScoped<IProgramacionAcademicaValidator, ProgramacionAcademicaValidator>();
 builder.Services.AddScoped<IProgramacionAcademicaService, ProgramacionAcademicaService>();
 
 builder.Services.AddScoped<IPlantillaService, PlantillaService>();

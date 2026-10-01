@@ -91,19 +91,5 @@ namespace SGPla.Repositories.Implementations
             _context.ExperienciaEducativa.UpdateRange(experienciasEducativas);
             await _context.SaveChangesAsync();
         }
-
-        public async Task<Dictionary<string, int>> ObtenerIdsPorNombreAsync(List<string> nombres)
-        {
-            var coincidencias = await _context.ExperienciaEducativa
-                .Where(e => nombres.Contains(e.Nombre))
-                .AsNoTracking()
-                .Select(e => new { e.Nombre, e.IdExperienciaEducativa })
-                .ToListAsync();
-
-            // La primera coincidencia es siempre la de menor ID, incluso entre planes.
-            return coincidencias
-                .GroupBy(e => e.Nombre, StringComparer.Ordinal)
-                .ToDictionary(g => g.Key, g => g.Min(e => e.IdExperienciaEducativa), StringComparer.Ordinal);
-        }
     }
 }

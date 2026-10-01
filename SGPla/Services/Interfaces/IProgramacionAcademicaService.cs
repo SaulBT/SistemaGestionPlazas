@@ -5,13 +5,6 @@ using SGPla.Models.DTOs.ProgramacionAcademica;
 
 public interface IProgramacionAcademicaService
 {
-    Task<List<OfertaDTO>> ProcesarArchivoOfertasAsync(IFormFile archivo, TipoArchivoOferta tipoArchivo);
-
-    Task<bool> GuardarOfertasyCargasAsync(List<OfertaDTO> ofertas, List<CargaConOfertaDTO> cargas);
-
-    Task<List<CargaConOfertaDTO>> ProcesarCargasAsync(
-    IFormFile archivoCarga);
-
     Task<List<EntidadAcademica>> ObtenerOpcionesEntidadAcademicaAsync(string region);
 
     Task<List<ProgramaEducativo>> ObtenerOpcionesProgramaEducativoAsync(int idEntidadAcademica);

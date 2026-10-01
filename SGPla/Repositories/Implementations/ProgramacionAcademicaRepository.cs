@@ -18,59 +18,9 @@ namespace SGPla.Repositories.Implementations
             _context = context;
         }
 
-        public async Task GuardarOfertasYCargas(List<Oferta> ofertas, List<CargaAcademica> cargas)
-        {
-            await using var transaction = await _context.Database.BeginTransactionAsync();
-            try
-            {
-                await _context.Oferta.AddRangeAsync(ofertas);
-                await _context.CargaAcademica.AddRangeAsync(cargas);
-
-                var logs = ofertas.Select(o => new Log
-                {
-                    IdOfertaNavigation = o,
-                    Mensaje = o.IdDocente == null && string.IsNullOrWhiteSpace(o.NumeroPersonalImportado) && string.IsNullOrWhiteSpace(o.NombreDocenteImportado) ? Constantes.HISTORIAL_CREADO_VACANTE : Constantes.HISTORIAL_CREADO_ASIGNADA,
-                    Fecha = DateTime.UtcNow
-                }).ToList();
-
-                await _context.Log.AddRangeAsync(logs);
-
-                await _context.SaveChangesAsync();
-
-                await transaction.CommitAsync();
-            }
-            catch (Exception)
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
-        }
-
         private static string ObtenerClavePrograma(string nombre)
         {
             return nombre.Split('-')[0].Trim();
-        }
-
-        public async Task<List<string>> ObtenerRelacionesValidasAsync(List<OfertaDTO> ofertas)
-        {
-            var nombresArchivo = ofertas.Select(x => x.ExperienciaEducativa).Distinct().ToList();
-            var nombresBd = await _context.ExperienciaEducativa
-                .AsNoTracking()
-                .Where(ee => nombresArchivo.Contains(ee.Nombre))
-                .Select(ee => ee.Nombre)
-                .ToListAsync();
-            var nombresRegistrados = nombresBd.ToHashSet(StringComparer.Ordinal);
-
-            // Se valida la misma búsqueda global por nombre usada al asociar la oferta.
-            // El programa se conserva en la clave sólo para identificar la fila del archivo.
-            return ofertas
-                .Where(x =>
-                    !string.IsNullOrWhiteSpace(x.Programa) &&
-                    nombresRegistrados.Contains(x.ExperienciaEducativa))
-                .Select(x =>
-                    $"{ObtenerClavePrograma(x.Programa)}|{x.ExperienciaEducativa}")
-                .Distinct()
-                .ToList();
         }
 
         public async Task<List<ResumenOfertaProgramacionAcademicaDTO>> ObtenerResumenPorProgramaPeriodoAsync(BuscarProgramacionAcademicaDTO? filtro)
@@ -431,46 +381,6 @@ namespace SGPla.Repositories.Implementations
             _context.Log.Add(log);
 
             await _context.SaveChangesAsync();
-        }
-
-        public async Task<List<OfertaDTO>> ObtenerCargasAcademicasAsync(
-   int idEntidadAcademica, int idProgramaEducativo, int idPeriodo)
-        {
-            var ofertas = await _context.Oferta
-                .Include(o => o.IdProgramaEducativoNavigation)
-                    .ThenInclude(p => p.IdEntidadAcademicaNavigation)
-                .Include(o => o.IdExperienciaEducativaNavigation)
-                    .Include(o => o.IdPeriodoNavigation).Include(o => o.IdArticuloNavigation)
-                .Include(o => o.IdDocenteNavigation)
-                .Include(o => o.Horario)
-                .Where(o =>
-                    o.IdProgramaEducativo == idProgramaEducativo &&
-                    o.IdPeriodo == idPeriodo &&
-                    o.IdProgramaEducativoNavigation.IdEntidadAcademica == idEntidadAcademica)
-                .ToListAsync();
-
-            return ofertas.Select(o => new OfertaDTO
-            {
-                Programa = o.IdProgramaEducativoNavigation.Nombre,
-                ExperienciaEducativa = o.IdExperienciaEducativaNavigation.Nombre,
-                NRC = o.Nrc,
-                HorasPago = o.Hsm,
-                TC = o.TipoContratacion,
-                NombreDocente = o.IdDocenteNavigation?.Nombre ?? o.NombreDocenteImportado,
-                NP = o.IdDocenteNavigation?.NumeroPersonal ?? o.NumeroPersonalImportado,
-                Articulo = int.Parse(o.IdArticuloNavigation.Numero),
-                IdPeriodo = o.IdPeriodo,
-                Region = o.IdProgramaEducativoNavigation.IdEntidadAcademicaNavigation.Region,
-                Incluida = o.Incluida,
-                Lunes = MapHorario(o.Horario, "Lunes"),
-                Martes = MapHorario(o.Horario, "Martes"),
-                Miercoles = MapHorario(o.Horario, "Miercoles"),
-                Jueves = MapHorario(o.Horario, "Jueves"),
-                Viernes = MapHorario(o.Horario, "Viernes"),
-                Sabado = MapHorario(o.Horario, "Sabado"),
-                IdOferta = o.IdOferta,
-                Plaza = o.Plaza
-            }).ToList();
         }
     }
 }

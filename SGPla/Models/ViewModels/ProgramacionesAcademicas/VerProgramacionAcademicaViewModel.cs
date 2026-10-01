@@ -13,9 +13,6 @@ namespace SGPla.Models.ViewModels.ProgramacionesAcademicas
         public TableModel TableAsignadas { get; set; } = new();
         public TableModel TableVacantes { get; set; } = new();
 
-        //public TableModel TableCargas { get; set; }
-
-
         public AccionesDisponibles AccionesDisponibles { get; }
 
         public VerProgramacionAcademicaViewModel(ClaimsPrincipal usuario)

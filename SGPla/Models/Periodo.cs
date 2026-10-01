@@ -15,8 +15,6 @@ public partial class Periodo
 
     public virtual ICollection<Aviso> Aviso { get; set; } = new List<Aviso>();
 
-    public virtual ICollection<CargaAcademica> CargaAcademica { get; set; } = new List<CargaAcademica>();
-
     public virtual ICollection<Oferta> Oferta { get; set; } = new List<Oferta>();
 
     public virtual ICollection<ExperienciaEducativaPeriodo> ExperienciaEducativaPeriodo { get; set; } = new List<ExperienciaEducativaPeriodo>();
