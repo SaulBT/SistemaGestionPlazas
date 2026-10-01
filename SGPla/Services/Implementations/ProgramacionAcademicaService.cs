@@ -43,6 +43,11 @@ namespace SGPla.Services.Implementations
             return resumen;
         }
 
+        public Task<int?> ObtenerPeriodoActualAsync()
+        {
+            return _programacionAcademicaRepository.ObtenerPeriodoMasRecienteConProgramacionAsync();
+        }
+
         public async Task<List<ProgramaEducativo>> ObtenerOpcionesProgramaEducativoAsync(int idEntidadAcademica)
         {
             return await _programaEducativoRepository.ObtenerPorFiltroAsync(new BuscarProgramaEducativoDTO { IdEntidadAcademica = idEntidadAcademica });

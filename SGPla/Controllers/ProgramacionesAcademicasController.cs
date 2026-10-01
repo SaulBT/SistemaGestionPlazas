@@ -42,7 +42,7 @@ public class ProgramacionesAcademicasController : Controller
     private static readonly List<string> HEADERS_TABLA_VACANTES =
         ["NRC", "Experiencia educativa", "H/S/M", "Tipo contratación", "Horario"];
     private static readonly List<string> HEADERS_TABLA_RESUMEN_OFERTA =
-        ["Entidad Academica", "Programa Educativo", "Periodo", "EE Convocadas", "EE Vacantes", "Acciones"];
+        ["Entidad Academica", "Programa Educativo", "Modalidad", "Código de plan", "EE Convocadas", "EE Vacantes", "Acciones"];
     private static readonly List<string> HEADERS_TABLA_HORARIOS =
         ["Dîa", "Horario", "Salon", "Acciones"];
     private static readonly List<string> HEADERS_TABLA_PLANEA =
@@ -83,7 +83,8 @@ public class ProgramacionesAcademicasController : Controller
             Region = region,
             IdEntidadAcademica = idEntidadAcademica,
             IdProgramaEducativo = idProgramaEducativo,
-            IdPeriodo = idPeriodo,
+            // Sin periodo elegido se muestra el más reciente con programación; los anteriores se consultan con el filtro.
+            IdPeriodo = idPeriodo ?? await _programacionAcademicaService.ObtenerPeriodoActualAsync(),
             Busqueda = busqueda
         };
 
@@ -150,22 +151,19 @@ public class ProgramacionesAcademicasController : Controller
 
         _estado.Guardar(ResumenOferta, resumen);
 
-        modelo.UltimaSincronizacionPlanea =
-            await _programacionPlaneaService.ObtenerUltimaSincronizacionAsync(filtro.IdPeriodo);
-
         return View("Index", modelo);
     }
 
     [HttpGet]
     [Authorize(Policy = PoliticasAutorizacion.OperadorAcademico)]
     public async Task<IActionResult> ProgramacionPlanea(
-        int idProgramaEducativo,
+        int idPlanEstudios,
         int idPeriodo,
         string? busqueda,
         int pagina = 1,
         int cantidad = 10)
     {
-        var encabezado = await _programacionPlaneaService.ObtenerEncabezadoAsync(idProgramaEducativo, idPeriodo);
+        var encabezado = await _programacionPlaneaService.ObtenerEncabezadoAsync(idPlanEstudios, idPeriodo);
         if (encabezado is null)
             return NotFound();
 
@@ -178,7 +176,7 @@ public class ProgramacionesAcademicasController : Controller
         var filtroPlanea = new FiltroProgramacionPlaneaDTO
         {
             IdPeriodo = idPeriodo,
-            IdProgramaEducativo = idProgramaEducativo,
+            IdPlanEstudios = idPlanEstudios,
             Busqueda = busqueda,
             Pagina = pagina,
             Limite = cantidad
@@ -188,28 +186,18 @@ public class ProgramacionesAcademicasController : Controller
 
         var modelo = new ProgramacionPlaneaViewModel
         {
-            IdProgramaEducativo = idProgramaEducativo,
+            IdPlanEstudios = idPlanEstudios,
             IdPeriodo = idPeriodo,
             Region = encabezado.Region,
             NombreEntidadAcademica = encabezado.EntidadAcademica,
             NombrePrograma = encabezado.ProgramaEducativo,
+            CodigoPlan = encabezado.CodigoPlan,
             NombrePeriodo = encabezado.PeriodoMostrar,
             UltimaSincronizacionPlanea = planea.UltimaSincronizacion,
             TablaPlanea = LlenarTablaPlanea(planea, filtroPlanea.Limite)
         };
 
         return View("ProgramacionPlanea", modelo);
-    }
-
-    [HttpPost]
-    [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SincronizarPlanea(int? idPeriodo, CancellationToken cancellationToken)
-    {
-        // Botón de prueba: ejecuta la misma sincronización que corre al levantar la aplicación.
-        var (exito, mensaje) = await _programacionPlaneaService.SincronizarAsync(idPeriodo, cancellationToken);
-        TempData[exito ? "Success" : "Error"] = mensaje;
-        return RedirectToAction(nameof(Index), new { idPeriodo });
     }
 
     [HttpGet]
@@ -548,6 +536,14 @@ public class ProgramacionesAcademicasController : Controller
         }));
     }
 
+    // «Ingeniería de Software (2014)»: distingue los planes de un mismo programa.
+    private static string NombreProgramaConPlan(ResumenOfertaProgramacionAcademicaDTO resumen)
+    {
+        return string.IsNullOrWhiteSpace(resumen.NombrePlan)
+            ? resumen.ProgramaEducativo
+            : $"{resumen.ProgramaEducativo} ({resumen.NombrePlan.Trim()})";
+    }
+
     private TableModel LlenarTablaResumen(List<ResumenOfertaProgramacionAcademicaDTO> resumen)
     {
         bool esCoordinadorEa = User.IsInRole(Constantes.COORDINADOR_EA);
@@ -574,15 +570,16 @@ public class ProgramacionesAcademicasController : Controller
                     var cells = new List<TableCellModel>
                     {
                         new() { Value = r.EntidadAcademica },
-                        new() { Value = r.ProgramaEducativo },
-                        new() { Value = r.PeriodoMostrar },
+                        new() { Value = NombreProgramaConPlan(r) },
+                        new() { Value = string.IsNullOrWhiteSpace(r.ModalidadPlan) ? "—" : r.ModalidadPlan },
+                        new() { Value = r.CodigoPlan ?? "—" },
                         new() { Value = r.EEAsignadas.ToString() },
                         new() { Value = r.EEVacantes.ToString() }
                     };
 
                     var acciones = new List<TableActionModel>();
 
-                    if (r.TieneProgramacionPlanea)
+                    if (r.TieneProgramacionPlanea && r.IdPlanEstudios.HasValue)
                     {
                         acciones.Add(new()
                         {
@@ -590,7 +587,7 @@ public class ProgramacionesAcademicasController : Controller
                             AriaLabel = "Ver programación PLANEA",
                             Url = Url.Action(nameof(ProgramacionPlanea), new
                             {
-                                idProgramaEducativo = r.IdProgramaEducativo,
+                                idPlanEstudios = r.IdPlanEstudios,
                                 idPeriodo = r.IdPeriodo
                             })
                         });

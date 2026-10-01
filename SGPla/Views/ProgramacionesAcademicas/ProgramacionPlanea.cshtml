@@ -57,6 +57,18 @@
             Disabled = true
         })
     </div>
+    <div style="flex:2; min-width:0;">
+        @await Component.InvokeAsync("InputField", new InputFieldModel
+        {
+            Id = "codigoPlan",
+            Name = "CodigoPlan",
+            Label = "Código de plan:",
+            Valor = Model.CodigoPlan,
+            Flexible = true,
+            MaximoCaracteres = 50,
+            Disabled = true
+        })
+    </div>
 </div>
 
 <div style="display:flex;
@@ -67,7 +79,7 @@
     margin-top:15px;">
     <form method="get" action="@Url.Action("ProgramacionPlanea", "ProgramacionesAcademicas")">
 
-        <input type="hidden" name="idProgramaEducativo" value="@Model.IdProgramaEducativo" />
+        <input type="hidden" name="idPlanEstudios" value="@Model.IdPlanEstudios" />
         <input type="hidden" name="idPeriodo" value="@Model.IdPeriodo" />
 
         @await Component.InvokeAsync("Buscador", new BuscadorModel
@@ -92,7 +104,7 @@
 </div>
 
 <script>
-    // La tabla pagina en servidor: conserva programa, periodo y búsqueda de la URL actual.
+    // La tabla pagina en servidor: conserva plan, periodo y búsqueda de la URL actual.
     function cambiarPaginaPlanea(valor, esCambioTamano = false) {
         const params = new URLSearchParams(window.location.search);
 

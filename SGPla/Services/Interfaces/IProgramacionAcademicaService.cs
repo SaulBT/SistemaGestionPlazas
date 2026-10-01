@@ -11,6 +11,9 @@ public interface IProgramacionAcademicaService
 
     Task<List<ResumenOfertaProgramacionAcademicaDTO>> ObtenerResumenPorProgramaPeriodoAsync(BuscarProgramacionAcademicaDTO? filtro);
 
+    /// Periodo que el índice muestra cuando no se elige uno: el más reciente con programación.
+    Task<int?> ObtenerPeriodoActualAsync();
+
     Task<List<OfertaDTO>> ObtenerOfertasExperienciasEducativasAsync(int idEntidadAcademica, int idProgramaEducativo, int idPeriodo, string busqueda);
 
     Task<OfertaDTO?> ObtenerOfertaPorId(int idOferta);

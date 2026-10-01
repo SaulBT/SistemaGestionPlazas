@@ -53,6 +53,11 @@ namespace SGPla.Repositories.Implementations
                     Programa = o.IdProgramaEducativoNavigation.Nombre,
                     o.IdProgramaEducativoNavigation.IdEntidadAcademica,
                     Entidad = o.IdProgramaEducativoNavigation.IdEntidadAcademicaNavigation.Nombre,
+                    // La oferta pertenece al plan de su EE.
+                    IdPlanEstudios = (int?)o.IdExperienciaEducativaNavigation.IdPlanEstudios,
+                    o.IdExperienciaEducativaNavigation.IdPlanEstudiosNavigation.CodigoPlan,
+                    NombrePlan = o.IdExperienciaEducativaNavigation.IdPlanEstudiosNavigation.Nombre,
+                    ModalidadPlan = o.IdExperienciaEducativaNavigation.IdPlanEstudiosNavigation.Modalidad,
                     o.IdPeriodo,
                     Periodo = o.IdPeriodoNavigation.Codigo
                 })
@@ -62,6 +67,10 @@ namespace SGPla.Repositories.Implementations
                     ProgramaEducativo = g.Key.Programa,
                     IdEntidadAcademica = g.Key.IdEntidadAcademica,
                     EntidadAcademica = g.Key.Entidad,
+                    IdPlanEstudios = g.Key.IdPlanEstudios,
+                    CodigoPlan = g.Key.CodigoPlan,
+                    NombrePlan = g.Key.NombrePlan,
+                    ModalidadPlan = g.Key.ModalidadPlan,
                     IdPeriodo = g.Key.IdPeriodo,
                     CodigoPeriodo = g.Key.Periodo,
                     EEAsignadas = g.Count(x => x.IdDocente != null || x.NumeroPersonalImportado != null || x.NombreDocenteImportado != null),
@@ -78,6 +87,10 @@ namespace SGPla.Repositories.Implementations
                     Programa = c.IdPlanEstudiosNavigation.IdProgramaEducativoNavigation.Nombre,
                     c.IdPlanEstudiosNavigation.IdProgramaEducativoNavigation.IdEntidadAcademica,
                     Entidad = c.IdPlanEstudiosNavigation.IdProgramaEducativoNavigation.IdEntidadAcademicaNavigation.Nombre,
+                    c.IdPlanEstudios,
+                    c.IdPlanEstudiosNavigation.CodigoPlan,
+                    NombrePlan = c.IdPlanEstudiosNavigation.Nombre,
+                    ModalidadPlan = c.IdPlanEstudiosNavigation.Modalidad,
                     c.IdPeriodo,
                     Periodo = c.IdPeriodoNavigation.Codigo
                 })
@@ -87,7 +100,9 @@ namespace SGPla.Repositories.Implementations
             foreach (var programa in programacionPlanea)
             {
                 var existente = resumen.FirstOrDefault(r =>
-                    r.IdProgramaEducativo == programa.IdProgramaEducativo && r.IdPeriodo == programa.IdPeriodo);
+                    r.IdProgramaEducativo == programa.IdProgramaEducativo
+                    && r.IdPlanEstudios == programa.IdPlanEstudios
+                    && r.IdPeriodo == programa.IdPeriodo);
 
                 if (existente is not null)
                 {
@@ -101,6 +116,10 @@ namespace SGPla.Repositories.Implementations
                     ProgramaEducativo = programa.Programa,
                     IdEntidadAcademica = programa.IdEntidadAcademica,
                     EntidadAcademica = programa.Entidad,
+                    IdPlanEstudios = programa.IdPlanEstudios,
+                    CodigoPlan = programa.CodigoPlan,
+                    NombrePlan = programa.NombrePlan,
+                    ModalidadPlan = programa.ModalidadPlan,
                     IdPeriodo = programa.IdPeriodo,
                     CodigoPeriodo = programa.Periodo,
                     TieneProgramacionPlanea = true
@@ -110,7 +129,21 @@ namespace SGPla.Repositories.Implementations
             return resumen
                 .OrderByDescending(r => r.CodigoPeriodo)
                 .ThenBy(r => r.ProgramaEducativo)
+                .ThenByDescending(r => r.CodigoPlan)
                 .ToList();
+        }
+
+        // Periodo más reciente con programación: NRC de PLANEA enlazados u ofertas registradas.
+        public async Task<int?> ObtenerPeriodoMasRecienteConProgramacionAsync()
+        {
+            var periodosPlanea = ConsultarProgramacionPlanea(null).Select(c => c.IdPeriodo);
+            var periodosOferta = _context.Oferta.AsNoTracking().Select(o => o.IdPeriodo);
+
+            return await _context.Periodo.AsNoTracking()
+                .Where(p => periodosPlanea.Contains(p.IdPeriodo) || periodosOferta.Contains(p.IdPeriodo))
+                .OrderByDescending(p => p.Codigo)
+                .Select(p => (int?)p.IdPeriodo)
+                .FirstOrDefaultAsync();
         }
 
         private IQueryable<ExperienciaEducativaPeriodo> ConsultarProgramacionPlanea(BuscarProgramacionAcademicaDTO? filtro)

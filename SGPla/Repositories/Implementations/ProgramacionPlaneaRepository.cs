@@ -45,6 +45,9 @@ namespace SGPla.Repositories.Implementations
             if (filtro.IdProgramaEducativo.HasValue)
                 consulta = consulta.Where(c => c.IdPlanEstudiosNavigation.IdProgramaEducativo == filtro.IdProgramaEducativo.Value);
 
+            if (filtro.IdPlanEstudios.HasValue)
+                consulta = consulta.Where(c => c.IdPlanEstudios == filtro.IdPlanEstudios.Value);
+
             if (filtro.IdEntidadAcademica.HasValue)
                 consulta = consulta.Where(c =>
                     c.IdPlanEstudiosNavigation.IdProgramaEducativoNavigation.IdEntidadAcademica == filtro.IdEntidadAcademica.Value);
@@ -101,7 +104,7 @@ namespace SGPla.Repositories.Implementations
         }
 
         public async Task<EncabezadoProgramacionPlaneaDTO?> ObtenerEncabezadoAsync(
-            int idProgramaEducativo, int idPeriodo, CancellationToken cancellationToken = default)
+            int idPlanEstudios, int idPeriodo, CancellationToken cancellationToken = default)
         {
             var codigoPeriodo = await _context.Periodo.AsNoTracking()
                 .Where(p => p.IdPeriodo == idPeriodo)
@@ -111,11 +114,13 @@ namespace SGPla.Repositories.Implementations
             if (codigoPeriodo is null)
                 return null;
 
-            return await _context.ProgramaEducativo.AsNoTracking()
-                .Where(p => p.IdProgramaEducativo == idProgramaEducativo)
-                .Select(p => new EncabezadoProgramacionPlaneaDTO(
-                    p.IdEntidadAcademica, p.IdEntidadAcademicaNavigation.Nombre, p.IdEntidadAcademicaNavigation.Region,
-                    p.Nombre, codigoPeriodo, ""))
+            return await _context.PlanEstudios.AsNoTracking()
+                .Where(pl => pl.IdPlanEstudios == idPlanEstudios)
+                .Select(pl => new EncabezadoProgramacionPlaneaDTO(
+                    pl.IdProgramaEducativoNavigation.IdEntidadAcademica,
+                    pl.IdProgramaEducativoNavigation.IdEntidadAcademicaNavigation.Nombre,
+                    pl.IdProgramaEducativoNavigation.IdEntidadAcademicaNavigation.Region,
+                    pl.IdProgramaEducativoNavigation.Nombre, pl.CodigoPlan, codigoPeriodo, ""))
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
