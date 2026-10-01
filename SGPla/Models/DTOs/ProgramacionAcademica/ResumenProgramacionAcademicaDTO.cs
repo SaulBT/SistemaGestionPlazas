@@ -16,6 +16,9 @@
         public int EEVacantes { get; set; }
         public int TotalEE { get; set; }
 
+        // Indica si el programa ya tiene NRC sincronizados desde PLANEA en el periodo.
+        public bool TieneProgramacionPlanea { get; set; }
+
         public string? Region { get; set; }
     }
 }

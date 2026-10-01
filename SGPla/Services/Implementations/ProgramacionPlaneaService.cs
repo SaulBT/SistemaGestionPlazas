@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Options;
 using SGPla.Commons;
+using SGPla.Mappers;
+using SGPla.Models;
 using SGPla.Models.DTOs.Planea;
 using SGPla.Repositories.Interfaces;
 using SGPla.Services.Interfaces;
@@ -31,11 +33,27 @@ namespace SGPla.Services.Implementations
         {
             filtro.Busqueda = string.IsNullOrWhiteSpace(filtro.Busqueda) ? null : filtro.Busqueda.Trim();
             if (filtro.Busqueda?.Length > 100) filtro.Busqueda = filtro.Busqueda[..100];
-            if (filtro.Limite is < 1 or > LimiteMaximo) filtro.Limite = 100;
+            if (filtro.Limite is < 1 or > LimiteMaximo) filtro.Limite = 10;
+            if (filtro.Pagina < 1) filtro.Pagina = 1;
 
             var ultima = await _repositorio.ObtenerUltimaSincronizacionAsync(filtro.IdPeriodo, cancellationToken);
-            var (copias, total) = await _repositorio.ObtenerCopiasAsync(filtro, cancellationToken);
-            return new ProgramacionPlaneaDTO(ultima, copias, total);
+            var (copias, total, pagina) = await _repositorio.ObtenerCopiasAsync(filtro, cancellationToken);
+            return new ProgramacionPlaneaDTO(ultima, copias, total, pagina);
+        }
+
+        public Task<UltimaSincronizacionPlaneaDTO?> ObtenerUltimaSincronizacionAsync(int? idPeriodo, CancellationToken cancellationToken = default)
+        {
+            return _repositorio.ObtenerUltimaSincronizacionAsync(idPeriodo, cancellationToken);
+        }
+
+        public async Task<EncabezadoProgramacionPlaneaDTO?> ObtenerEncabezadoAsync(
+            int idProgramaEducativo, int idPeriodo, CancellationToken cancellationToken = default)
+        {
+            var encabezado = await _repositorio.ObtenerEncabezadoAsync(idProgramaEducativo, idPeriodo, cancellationToken);
+            if (encabezado is null) return null;
+
+            var periodo = PeriodoEscolarMapper.ToDTO(new Periodo { IdPeriodo = idPeriodo, Codigo = encabezado.CodigoPeriodo });
+            return encabezado with { PeriodoMostrar = periodo.PeriodoMostrar };
         }
 
         public async Task<(bool Exito, string Mensaje)> SincronizarAsync(int? idPeriodo, CancellationToken cancellationToken = default)
