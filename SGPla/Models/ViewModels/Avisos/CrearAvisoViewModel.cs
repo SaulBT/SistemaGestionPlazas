@@ -20,9 +20,6 @@ namespace SGPla.Models.ViewModels.Avisos
         public int? IdArticulo { get; set; }
 
         [Required(ErrorMessage = campo_obligatorio)]
-        public string FechaVacantes { get; set; }
-
-        [Required(ErrorMessage = campo_obligatorio)]
         public string FechaPublicacion { get; set; }
 
         [Required(ErrorMessage = campo_obligatorio)]
@@ -40,13 +37,15 @@ namespace SGPla.Models.ViewModels.Avisos
         [Required(ErrorMessage = campo_obligatorio)]
         public string FechaCT { get; set; }
 
-        [Required(ErrorMessage = campo_obligatorio)]
+        [ValidateNever]
         public string Requisitos { get; set; }
 
         [Required(ErrorMessage = campo_obligatorio)]
         public string Correo { get; set; }
         [ValidateNever]
         public List<int> OfertasId { get; set; } = [];
+
+        public string OfertasExcluidasJson { get; set; } = "[]";
 
         //Tablas
         [ValidateNever]

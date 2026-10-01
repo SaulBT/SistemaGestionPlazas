@@ -14,6 +14,7 @@
         {
             <input type="hidden" name="IdAviso" value="@Model.IdAviso" />
         }
+        <input type="hidden" id="OfertasExcluidasJson" name="OfertasExcluidasJson" value="@Model.OfertasExcluidasJson" />
 
         <!-- Datos Personales -->
         <div class="cabecera-seccion mb-3">
@@ -45,13 +46,15 @@
                         Label = "Fecha de publicación:",
                         Name = "FechaPublicacion",
                         Value = Model.FechaPublicacion,
+                        Min = DateTime.Today.ToString("yyyy-MM-dd"),
                         Flexible = true
                     })
                     @await Component.InvokeAsync("DatePicker", new DatePickerModel
                     {
-                        Label = "Fecha a ocupar vacantes:",
-                        Name = "FechaVacantes",
-                        Value = Model.FechaVacantes,
+                        Label = "Fecha de Consejo Técnico:",
+                        Name = "FechaCT",
+                        Value = Model.FechaCT,
+                        Min = DateTime.Today.ToString("yyyy-MM-dd"),
                         Flexible = true
                     })
                 </div>
@@ -99,23 +102,11 @@
                 
                 
             </div>
-            <div style="display: inline-flex; gap: 10px; padding-bottom: 20px; transition: all 0.3s ease; width: stretch; justify-content: space-evenly">
-                @await Component.InvokeAsync("DatePicker", new DatePickerModel
-                {
-                    Label = "Fecha de Consejo Técnico",
-                    Name = "FechaCT",
-                    Value = Model.FechaCT,
-                    Flexible = true
-                })
-                <div style="flex: 1"></div> 
-                <div style="flex: 1"></div>
-            </div>
-            
-
             <div style="display: flex; justify-content: space-between; padding-bottom: 10px; padding-top: 10px">
-                <div class="text-wrapper">Horarios de recepción:</div>
+                <div class="text-wrapper">Fecha y horario de recepción:</div>
                 @await Component.InvokeAsync("Boton", new 
                         {
+                            Id = "btnAgregarHorario",
                             Accion = "Agregar",
                             Texto = "Agregar Horario",
                             OnClick = "abrirModalAgregarHorario()",
@@ -148,9 +139,10 @@
             @await Component.InvokeAsync("TextAreaField", new TextAreaFieldModel
                     {
                         Label = "Requisitos:",
-                        Name = "Requisitos",
+                        Name = "RequisitosInformativos",
                         Value = Model.Requisitos ?? Constantes.REQUISITOS_AVISO,
-                        Rows = 13
+                        Rows = 13,
+                        Disabled = true
                     })
         </div>
 
@@ -165,6 +157,7 @@
             @await Component.InvokeAsync("Boton", new
             {
                 Accion = "Guardar",
+                Texto = "Generar aviso",
                 ButtonType = "submit"
             })
         </div>
@@ -195,6 +188,20 @@
             Mensaje = "Esta acción es irreversible. ¿Está seguro de eliminar este horario?",
             OnConfirm = "confirmarEliminarHorario()",
             OnCancel = "cancelarEliminacionHorario()"
+        })
+
+        @await Component.InvokeAsync("Modal", new ModalModel
+        {
+            Id = "modalMotivoExclusion",
+            Tipo = "confirm",
+            Titulo = "Excluir experiencia educativa",
+            Mensaje = "Indique el motivo por el cual se quitará esta EE del aviso.",
+            SolicitarMotivo = true,
+            MotivoLabel = "Motivo de exclusión:",
+            MotivoPlaceholder = "Capture un motivo obligatorio",
+            Accion = "Confirmar",
+            OnConfirm = "confirmarExclusionOferta()",
+            OnCancel = "cancelarExclusionOferta()"
         })
 
         <!-- Modal Ver Horarios -->

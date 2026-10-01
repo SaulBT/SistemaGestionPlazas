@@ -600,12 +600,14 @@ namespace SGPla.Controllers
                     FechaCreacion = DateOnly.FromDateTime(DateTime.Now),
                     FechaPublicacion = DateOnly.Parse(model.FechaPublicacion),
                     FechaCT = DateOnly.Parse(model.FechaCT),
-                    FechaVacantes = DateOnly.Parse(model.FechaVacantes),
-                    Requisitos = model.Requisitos,
+                    // Se conserva la columna histórica sin exponerla en este flujo.
+                    FechaVacantes = DateOnly.Parse(model.FechaCT),
+                    Requisitos = Constantes.REQUISITOS_AVISO,
                     Lugar = model.Lugar,
                     Correo = model.Correo,
                     Modalidad = model.Modalidad,
                     OfertasId = model.OfertasId,
+                    OfertasExcluidas = DeserializarOfertasExcluidas(model.OfertasExcluidasJson),
                     Horarios = obtenerDeSession<List<CrearHorarioAvisoDTO>>(ObtenerLlaveHorarios(null)) ?? []
 
                 };
@@ -636,6 +638,7 @@ namespace SGPla.Controllers
 
             try
             {
+                var avisoActual = await _avisoService.ObtenerAvisoPorIDAsync(model.IdAviso.Value);
                 await _avisoService.ActualizarAvisoPorId(new EditarAvisoDTO
                 {
                     IdAviso = model.IdAviso.Value,
@@ -645,12 +648,14 @@ namespace SGPla.Controllers
                     FechaCreacion = DateOnly.FromDateTime(DateTime.Now),
                     FechaPublicacion = DateOnly.Parse(model.FechaPublicacion),
                     FechaCT = DateOnly.Parse(model.FechaCT),
-                    FechaVacantes = DateOnly.Parse(model.FechaVacantes),
-                    Requisitos = model.Requisitos,
+                    // El campo ya no participa en la edición, pero se preserva para compatibilidad.
+                    FechaVacantes = DateOnly.Parse(avisoActual.FechaVacantes),
+                    Requisitos = avisoActual.Requisitos,
                     Lugar = model.Lugar,
                     Correo = model.Correo,
                     Modalidad = model.Modalidad,
                     OfertasId = model.OfertasId,
+                    OfertasExcluidas = DeserializarOfertasExcluidas(model.OfertasExcluidasJson),
                     Horarios = horarios
                 });
 
@@ -670,7 +675,6 @@ namespace SGPla.Controllers
         {
             foreach (var campoFecha in new[]
             {
-                (Nombre: nameof(model.FechaVacantes), Valor: model.FechaVacantes),
                 (Nombre: nameof(model.FechaPublicacion), Valor: model.FechaPublicacion),
                 (Nombre: nameof(model.FechaCT), Valor: model.FechaCT)
             })
@@ -678,6 +682,12 @@ namespace SGPla.Controllers
                 if (!DateOnly.TryParse(campoFecha.Valor, out _))
                     ModelState.AddModelError(campoFecha.Nombre, "Ingrese una fecha válida.");
             }
+
+            var hoy = DateOnly.FromDateTime(DateTime.Today);
+            if (DateOnly.TryParse(model.FechaPublicacion, out var fechaPublicacion) && fechaPublicacion < hoy)
+                ModelState.AddModelError(nameof(model.FechaPublicacion), "La fecha de publicación no puede ser anterior al día actual.");
+            if (DateOnly.TryParse(model.FechaCT, out var fechaCt) && fechaCt < hoy)
+                ModelState.AddModelError(nameof(model.FechaCT), "La fecha de consejo técnico no puede ser anterior al día actual.");
 
             if ((!model.Modalidad.IsNullOrEmpty())
                     && (model.Modalidad.Equals(Constantes.MODALIDAD_AVISO_PRESENCIAL))
@@ -695,6 +705,22 @@ namespace SGPla.Controllers
             if ((horarios.IsNullOrEmpty()) || (horarios.Count == 0))
             {
                 TempData["Warning"] = "Seleccione por lo menos un Horario";
+                return false;
+            }
+
+            if (DateOnly.TryParse(model.FechaPublicacion, out fechaPublicacion) && horarios.Any(h =>
+                    !DateOnly.TryParse(h.Fecha, out var fechaRecepcion) || fechaRecepcion <= fechaPublicacion || fechaRecepcion < hoy))
+            {
+                TempData["Warning"] = "Cada fecha de recepción debe ser posterior a la fecha de publicación y no puede ser anterior al día actual.";
+                return false;
+            }
+
+            if (DateOnly.TryParse(model.FechaCT, out fechaCt) && horarios.Any(h =>
+                    DateOnly.TryParse(h.Fecha, out var fechaRecepcion) && fechaRecepcion > fechaCt))
+            {
+                ModelState.AddModelError(nameof(model.FechaCT),
+                    "La fecha de consejo técnico debe ser igual o posterior a todas las fechas de recepción.");
+                TempData["Warning"] = "La fecha de consejo técnico no puede ser anterior a la recepción de documentos.";
                 return false;
             }
             
@@ -715,7 +741,6 @@ namespace SGPla.Controllers
             nuevoModelo.Correo = model.Correo ?? nuevoModelo.Correo;
             nuevoModelo.FechaCT = model.FechaCT ?? nuevoModelo.FechaCT;
             
-            nuevoModelo.FechaVacantes = model.FechaVacantes ?? nuevoModelo.FechaVacantes;
             nuevoModelo.FechaPublicacion = model.FechaPublicacion ?? nuevoModelo.FechaPublicacion;
             nuevoModelo.Horarios = model.Horarios ?? nuevoModelo.Horarios;
             nuevoModelo.IdPeriodo = model.IdPeriodo ?? nuevoModelo.IdPeriodo;
@@ -724,6 +749,7 @@ namespace SGPla.Controllers
             nuevoModelo.IdAviso = model.IdAviso;
             nuevoModelo.Requisitos = model.Requisitos ?? nuevoModelo.Requisitos;
             nuevoModelo.OfertasId = model.OfertasId;
+            nuevoModelo.OfertasExcluidasJson = model.OfertasExcluidasJson ?? "[]";
             nuevoModelo.PlanesEstudios = await CargarPlanesEstudios(model.IdPeriodo ?? -1, model.IdArticulo ?? -1, model.OfertasId);
 
             return nuevoModelo;
@@ -769,6 +795,11 @@ namespace SGPla.Controllers
                 .ToList();
 
 
+            var exclusiones = idAviso.HasValue
+                ? (await _avisos.ObtenerPorIDAsync(idAviso.Value))?.OfertaExcluidaAviso
+                    .Select(e => new OfertaExcluidaAvisoDTO { IdOferta = e.IdOferta, Motivo = e.Motivo }).ToList() ?? []
+                : [];
+
             return new CrearAvisoViewModel
             {
                 IdAviso = aviso.IdAviso > 0 ? aviso.IdAviso : null,
@@ -778,13 +809,13 @@ namespace SGPla.Controllers
                 Articulos = articulosCombo,
                 Modalidades = modalidadesCombo,
                 FechaCT = aviso.FechaCT,
-                FechaVacantes = aviso.FechaVacantes,
                 FechaPublicacion = aviso.FechaPublicacion,
                 Requisitos = aviso.IdAviso > 0 ? aviso.Requisitos : Constantes.REQUISITOS_AVISO,
                 Lugar = aviso.Lugar,
                 Correo = aviso.Correo,
                 Modalidad = aviso.Modalidad,
                 OfertasId = aviso.Ofertas.Select(o => o.IdOferta).ToList(),
+                OfertasExcluidasJson = JsonSerializer.Serialize(exclusiones),
                 TablaHorario = await LlenarTablaHorario(aviso.Horarios),
                 PlanesEstudios = aviso.IdAviso > 0
                     ? await CargarPlanesEstudios(aviso.IdPeriodo, aviso.IdArticulo, aviso.Ofertas.Select(o => o.IdOferta).ToList())
@@ -1080,6 +1111,19 @@ namespace SGPla.Controllers
             catch
             {
                 return default;
+            }
+        }
+
+        private static List<OfertaExcluidaAvisoDTO> DeserializarOfertasExcluidas(string? json)
+        {
+            if (string.IsNullOrWhiteSpace(json)) return [];
+            try
+            {
+                return JsonSerializer.Deserialize<List<OfertaExcluidaAvisoDTO>>(json) ?? [];
+            }
+            catch (JsonException)
+            {
+                return [];
             }
         }
 

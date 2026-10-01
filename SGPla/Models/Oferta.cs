@@ -59,5 +59,7 @@ public partial class Oferta
 
     public virtual ICollection<OfertaAviso> OfertaAviso { get; set; } = new List<OfertaAviso>();
 
+    public virtual ICollection<OfertaExcluidaAviso> OfertaExcluidaAviso { get; set; } = new List<OfertaExcluidaAviso>();
+
     public virtual ICollection<Solicitud> Solicitud { get; set; } = new List<Solicitud>();
 }

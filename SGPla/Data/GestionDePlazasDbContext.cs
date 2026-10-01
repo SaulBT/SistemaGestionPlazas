@@ -57,6 +57,8 @@ public partial class GestionDePlazasDbContext : DbContext
 
     public virtual DbSet<OfertaAviso> OfertaAviso { get; set; }
 
+    public virtual DbSet<OfertaExcluidaAviso> OfertaExcluidaAviso { get; set; }
+
     public virtual DbSet<Periodo> Periodo { get; set; }
 
     public virtual DbSet<PlanEstudios> PlanEstudios { get; set; }
@@ -775,6 +777,28 @@ public partial class GestionDePlazasDbContext : DbContext
                 .HasForeignKey(d => d.IdOferta)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_OfertaAviso_Oferta");
+        });
+
+        modelBuilder.Entity<OfertaExcluidaAviso>(entity =>
+        {
+            entity.HasKey(e => e.IdOfertaExcluidaAviso);
+            entity.HasIndex(e => e.IdAviso, "IX_OfertaExcluidaAviso_idAviso");
+            entity.HasIndex(e => new { e.IdOferta, e.IdAviso }, "UQ_OfertaExcluidaAviso_Oferta_Aviso").IsUnique();
+
+            entity.Property(e => e.IdOfertaExcluidaAviso).HasColumnName("idOfertaExcluidaAviso");
+            entity.Property(e => e.IdAviso).HasColumnName("idAviso");
+            entity.Property(e => e.IdOferta).HasColumnName("idOferta");
+            entity.Property(e => e.Motivo).IsUnicode(false).HasColumnName("motivo");
+
+            entity.HasOne(d => d.IdAvisoNavigation).WithMany(p => p.OfertaExcluidaAviso)
+                .HasForeignKey(d => d.IdAviso)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_OfertaExcluidaAviso_Aviso");
+
+            entity.HasOne(d => d.IdOfertaNavigation).WithMany(p => p.OfertaExcluidaAviso)
+                .HasForeignKey(d => d.IdOferta)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_OfertaExcluidaAviso_Oferta");
         });
 
         modelBuilder.Entity<Periodo>(entity =>

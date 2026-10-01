@@ -24,6 +24,7 @@ namespace SGPla.Models.DTOs.Aviso
         //public string NombreTitular { get; set; }
         public List<CrearHorarioAvisoDTO> Horarios { get; set; } = new List<CrearHorarioAvisoDTO>();
         public List<int> OfertasId { get; set; } = new List<int>();
+        public List<OfertaExcluidaAvisoDTO> OfertasExcluidas { get; set; } = new List<OfertaExcluidaAvisoDTO>();
         public string Sistema { get; set; } = string.Empty;
     }
 }

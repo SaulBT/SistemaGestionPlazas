@@ -61,6 +61,7 @@ namespace SGPla.Validations.Implementations
             ArgumentNullException.ThrowIfNull(dto);
             validarDatosAviso(dto);
             validarHorarios(dto.Horarios);
+            validarOrdenFechas(dto);
             return Task.CompletedTask;
         }
 
@@ -68,7 +69,7 @@ namespace SGPla.Validations.Implementations
         {
             if (dto.IdEntidadAcademica <= 0 || dto.IdPeriodo <= 0 || dto.IdArticulo <= 0 ||
                 dto.FechaCreacion == DateOnly.MinValue || dto.FechaPublicacion == DateOnly.MinValue ||
-                dto.FechaCT == DateOnly.MinValue || dto.FechaVacantes == DateOnly.MinValue ||
+                dto.FechaCT == DateOnly.MinValue ||
                 string.IsNullOrWhiteSpace(dto.Requisitos) || string.IsNullOrWhiteSpace(dto.Modalidad) ||
                 string.IsNullOrWhiteSpace(dto.Correo))
                 throw new ValidacionExcepction("Hay campos obligatorios sin completar.", "400");
@@ -87,6 +88,16 @@ namespace SGPla.Validations.Implementations
 
             if (dto.OfertasId.Distinct().Count() != dto.OfertasId.Count)
                 throw new ValidacionExcepction("No es posible seleccionar una oferta más de una vez.", "400");
+
+            var hoy = DateOnly.FromDateTime(DateTime.Today);
+            if (dto.FechaPublicacion < hoy || dto.FechaCT < hoy)
+                throw new ValidacionExcepction("Las fechas del aviso no pueden ser anteriores al día actual.", "400");
+
+            if (dto.OfertasExcluidas.Any(e => e.IdOferta <= 0 || string.IsNullOrWhiteSpace(e.Motivo)))
+                throw new ValidacionExcepction("Cada EE excluida debe tener un motivo.", "400");
+
+            if (dto.OfertasExcluidas.Select(e => e.IdOferta).Distinct().Count() != dto.OfertasExcluidas.Count)
+                throw new ValidacionExcepction("No es posible registrar más de un motivo para la misma EE.", "400");
         }
 
         private void validarHorarios(List<CrearHorarioAvisoDTO> horarios)
@@ -98,6 +109,19 @@ namespace SGPla.Validations.Implementations
                 !TimeOnly.TryParse(h.HoraInicio, out var inicio) ||
                 !TimeOnly.TryParse(h.HoraTermino, out var fin) || inicio >= fin))
                 throw new ValidacionExcepction("Cada horario debe tener una fecha y hora de inicio menor a la hora de término.", "400");
+
+            var hoy = DateOnly.FromDateTime(DateTime.Today);
+            if (horarios.Any(h => DateOnly.Parse(h.Fecha) < hoy))
+                throw new ValidacionExcepction("Las fechas de recepción no pueden ser anteriores al día actual.", "400");
+        }
+
+        private static void validarOrdenFechas(CrearAvisoDTO dto)
+        {
+            if (dto.Horarios.Any(h => DateOnly.Parse(h.Fecha) <= dto.FechaPublicacion))
+                throw new ValidacionExcepction("La fecha de recepción de documentos debe ser posterior a la fecha de publicación del aviso.", "400");
+
+            if (dto.Horarios.Any(h => DateOnly.Parse(h.Fecha) > dto.FechaCT))
+                throw new ValidacionExcepction("La fecha de consejo técnico debe ser igual o posterior a todas las fechas de recepción de documentos.", "400");
         }
     }
 }
