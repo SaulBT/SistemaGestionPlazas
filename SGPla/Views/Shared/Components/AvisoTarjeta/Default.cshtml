@@ -81,7 +81,9 @@
             else
             {
             <a class="btn btn-outline-primary" href="@Url.Action("VistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })" target="_blank" rel="noopener">Ver aviso</a>
-            <a class="btn btn-outline-secondary" href="@Url.Action("DescargarAviso", "Avisos", new { idAviso = Model.IdAviso })">Descargar Word (.docx)</a>
+            <a class="btn btn-outline-secondary" href="@Url.Action("DescargarAviso", "Avisos", new { idAviso = Model.IdAviso })">
+                @(EstadosAviso.EsInformativo(Model.Estado) ? "Descargar PDF (.pdf)" : "Descargar Word (.docx)")
+            </a>
             @if (!Model.Archivado && Model.Estado == Constantes.EN_REVISION_POR_DGAA)
             {
                 <a class="btn btn-primary" href="@Url.Action("RevisarAviso", "Avisos", new { idAviso = Model.IdAviso })">Revisar aviso</a>

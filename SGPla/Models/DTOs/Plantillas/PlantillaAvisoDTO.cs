@@ -13,6 +13,7 @@
         public List<PlantillaAvisoProgramaEducativoDTO> Programas { get; set; } = [];
         public string Requisitos { get; set; } = string.Empty;
         public string HorarioAceptacion { get; set; } = string.Empty;
+        public string Direccion { get; set; } = string.Empty;
         public string FechaConsejoTecnico { get; set; } = string.Empty;
         public string FechaPublicacion { get; set; } = string.Empty;
         public string Titular { get; set; } = "Nombre del Titular";
