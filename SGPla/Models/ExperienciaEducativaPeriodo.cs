@@ -21,4 +21,5 @@ public partial class ExperienciaEducativaPeriodo
     public virtual Region? IdRegionNavigation { get; set; }
     public virtual SincronizacionPlanea IdSincronizacionPlaneaNavigation { get; set; } = null!;
     public virtual ICollection<ExperienciaEducativaPeriodoHorario> Horarios { get; set; } = new List<ExperienciaEducativaPeriodoHorario>();
+    public virtual ICollection<ExperienciaEducativaPeriodoDocente> Docentes { get; set; } = new List<ExperienciaEducativaPeriodoDocente>();
 }

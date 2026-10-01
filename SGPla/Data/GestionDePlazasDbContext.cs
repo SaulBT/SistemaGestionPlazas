@@ -43,6 +43,8 @@ public partial class GestionDePlazasDbContext : DbContext
 
     public virtual DbSet<ExperienciaEducativaPeriodoHorario> ExperienciaEducativaPeriodoHorario { get; set; }
 
+    public virtual DbSet<ExperienciaEducativaPeriodoDocente> ExperienciaEducativaPeriodoDocente { get; set; }
+
     public virtual DbSet<Grado> Grado { get; set; }
 
     public virtual DbSet<Horario> Horario { get; set; }
@@ -1128,6 +1130,21 @@ public partial class GestionDePlazasDbContext : DbContext
                 .HasForeignKey(d => d.IdExperienciaEducativaPeriodo).OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_ExperienciaEducativaPeriodoHorario_ExperienciaEducativaPeriodo");
             entity.ToTable("ExperienciaEducativaPeriodoHorario");
+        });
+
+        modelBuilder.Entity<ExperienciaEducativaPeriodoDocente>(entity =>
+        {
+            entity.HasKey(e => e.IdExperienciaEducativaPeriodoDocente);
+            entity.HasIndex(e => e.IdExperienciaEducativaPeriodo, "IX_ExperienciaEducativaPeriodoDocente_idExperienciaEducativaPeriodo");
+            entity.Property(e => e.IdExperienciaEducativaPeriodoDocente).HasColumnName("idExperienciaEducativaPeriodoDocente");
+            entity.Property(e => e.IdExperienciaEducativaPeriodo).HasColumnName("idExperienciaEducativaPeriodo");
+            entity.Property(e => e.NumeroPersonal).HasMaxLength(15).IsUnicode(false).HasColumnName("numeroPersonal");
+            entity.Property(e => e.Nombre).HasMaxLength(150).IsUnicode(false).HasColumnName("nombre");
+            entity.Property(e => e.Imparte).HasColumnName("imparte");
+            entity.HasOne(d => d.IdExperienciaEducativaPeriodoNavigation).WithMany(p => p.Docentes)
+                .HasForeignKey(d => d.IdExperienciaEducativaPeriodo).OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_ExperienciaEducativaPeriodoDocente_ExperienciaEducativaPeriodo");
+            entity.ToTable("ExperienciaEducativaPeriodoDocente");
         });
     }
 }
