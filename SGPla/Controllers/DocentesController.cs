@@ -1256,9 +1256,9 @@ namespace SGPla.Controllers
         {
             try
             {
+                // Sin nombre de descarga para que el navegador lo muestre en su visor nativo.
                 var archivo = await _archivoService.DescargarAsync(idArchivo);
-                var bytes = await System.IO.File.ReadAllBytesAsync(archivo.Ruta);
-                return File(bytes, archivo.Tipo, archivo.Nombre);
+                return PhysicalFile(archivo.Ruta, archivo.Tipo, enableRangeProcessing: true);
             }
             catch (Exception ex)
             {
