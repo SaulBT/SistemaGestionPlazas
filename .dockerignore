@@ -18,3 +18,14 @@ SGPla.Tests/
 
 # Variables locales de Docker Compose (token de PLANEA)
 .env
+
+# Fuera del contexto de build (no se usan en las imágenes)
+**/TestResults/
+**/node_modules/
+**/.next/
+SGPla/Archivos/
+scripts/
+*.md
+*.sql
+!SGPla.DbMigrator/database/**/*.sql
+docker-compose*.yml
