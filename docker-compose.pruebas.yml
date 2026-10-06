@@ -48,7 +48,6 @@ services:
       - "127.0.0.1:8081:8080"
     volumes:
       - archivos-pruebas:/datos-pruebas
-      - ./SGPla/Archivos/plantillas:/datos-pruebas/plantillas:ro
       - claves-pruebas:/root/.aspnet/DataProtection-Keys
     depends_on:
       db-init:

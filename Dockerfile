@@ -16,12 +16,11 @@ RUN --mount=type=cache,target=/root/.nuget/packages \
     dotnet publish "SGPla/SGPla.csproj" -c Release -o /app/publish \
       --no-restore /p:UseAppHost=false /p:DebugType=none /p:DebugSymbols=false
 
-# Base fijada a Ubuntu 24.04 (noble): LibreOffice 24.2.x, rama estable con parches de seguridad de la distro.
+# Base fijada a Ubuntu 24.04 (noble). Los avisos se generan como HTML y el navegador los guarda en PDF,
+# por lo que la imagen no necesita LibreOffice ni fuentes adicionales.
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble AS final
-# libreoffice-writer-nogui: sin dependencias gráficas, suficiente para la conversión headless.
-# fonts-liberation / fonts-crosextra-carlito: equivalentes métricos de Arial y Calibri para que el PDF conserve el formato.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends libldap2 libreoffice-writer-nogui fonts-liberation fonts-crosextra-carlito \
+    && apt-get install -y --no-install-recommends libldap2 \
     && rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
 WORKDIR /app
