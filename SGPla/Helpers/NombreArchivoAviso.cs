@@ -57,8 +57,7 @@ public static class NombreArchivoAviso
         return extensionNormalizada switch
         {
             "pdf" => "pdf",
-            "docx" => "docx",
-            _ => throw new ArgumentException("La extensión del aviso debe ser PDF o DOCX.", nameof(extension))
+            _ => throw new ArgumentException("La extensión del aviso debe ser PDF.", nameof(extension))
         };
     }
 

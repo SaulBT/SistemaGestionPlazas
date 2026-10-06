@@ -124,7 +124,7 @@ namespace SGPla.Services.Implementations
         {
             ArgumentNullException.ThrowIfNull(aviso);
 
-            var idArchivo = aviso.Estado is Constantes.FIRMADO or Constantes.PUBLICADO or Constantes.ACTA_DE_CT_CREADA
+            var idArchivo = EstadosAviso.EsFirmado(aviso.Estado)
                 ? aviso.IdArchivoFirmado
                 : aviso.IdArchivoOriginal;
 
@@ -214,8 +214,6 @@ namespace SGPla.Services.Implementations
                     });
                 }
                 await _avisoRepository.CrearCompletoAsync(avisoRegistrado, aviso.OfertasId, horarios, aviso.OfertasExcluidas);
-                await prepararVistaPreviaPdfAsync(idArchivoGenerado.Value);
-
             }
             catch
             {
@@ -226,13 +224,56 @@ namespace SGPla.Services.Implementations
             }
         }
 
+        public async Task<DocumentoAvisoDTO> ObtenerDocumentoAvisoAsync(DatosAvisoDTO aviso)
+        {
+            var archivo = await _archivoService.DescargarAsync(ObtenerIdArchivoVigente(aviso));
+            var extension = Path.GetExtension(archivo.Ruta);
+
+            if (extension.Equals(".pdf", StringComparison.OrdinalIgnoreCase))
+            {
+                archivo.Tipo = "application/pdf";
+                return new DocumentoAvisoDTO { Pdf = archivo };
+            }
+
+            if (extension.Equals(".html", StringComparison.OrdinalIgnoreCase))
+                return new DocumentoAvisoDTO { ContenidoHtml = await File.ReadAllTextAsync(archivo.Ruta) };
+
+            // Los avisos generados antes de la plantilla HTML guardaron un DOCX; se reconstruyen con sus datos actuales.
+            var plantilla = await construirPlantillaAvisoAsync(new CrearAvisoDTO
+            {
+                IdEntidadAcademica = aviso.IdEntidadAcademica,
+                IdPeriodo = aviso.IdPeriodo,
+                IdArticulo = aviso.IdArticulo,
+                FechaCT = DateOnly.Parse(aviso.FechaCT, CultureInfo.InvariantCulture),
+                FechaPublicacion = DateOnly.TryParse(aviso.FechaPublicacion, CultureInfo.InvariantCulture, out var fechaPublicacion)
+                    ? fechaPublicacion
+                    : aviso.FechaCreacionValor,
+                Requisitos = aviso.Requisitos,
+                Lugar = aviso.Lugar,
+                Sistema = aviso.Sistema,
+                OfertasId = aviso.Ofertas.Select(o => o.IdOferta).ToList(),
+                Horarios = aviso.Horario.Dias.Select(d => new CrearHorarioAvisoDTO
+                {
+                    Fecha = d.Dia,
+                    HoraInicio = d.HoraInicio.ToString(@"hh\:mm"),
+                    HoraTermino = d.HoraFin.ToString(@"hh\:mm")
+                }).ToList()
+            });
+            return new DocumentoAvisoDTO { ContenidoHtml = await _plantillaService.RenderizarAvisoAsync(plantilla) };
+        }
+
         private async Task<int> generarArchivoAvisoAsync(CrearAvisoDTO aviso)
+        {
+            return await _plantillaService.GenerarAvisoAsync(await construirPlantillaAvisoAsync(aviso));
+        }
+
+        private async Task<PlantillaAvisoDTO> construirPlantillaAvisoAsync(CrearAvisoDTO aviso)
         {
             var entidad = await _entidadAcademicaRepository.ObtenerPorIdAsync(aviso.IdEntidadAcademica);
             var articulo = await _articuloRepository.ObtenerArticuloPorIdAsync(aviso.IdArticulo);
             var periodoDTO = await obtenerPeriodoDTOAsync(aviso.IdPeriodo);
 
-            var plantillaDTO = new PlantillaAvisoDTO
+            return new PlantillaAvisoDTO
             {
                 AreaAcademica = entidad?.IdAreaAcademicaNavigation.Nombre ?? "Nombre del Área Académica",
                 EntidadAcademica = obtenerNombreEntidadAcademica(entidad),
@@ -250,8 +291,6 @@ namespace SGPla.Services.Implementations
                 FechaPublicacion = generarFechaNormal(aviso.FechaPublicacion),
                 Titular = "Titular" //TODO: falta obtenerlo del formulario
             };
-
-            return await _plantillaService.GenerarAvisoAsync(plantillaDTO);
         }
 
         private async Task<List<PlantillaAvisoProgramaEducativoDTO>> generarListaProgramasPlantillaAsync(List<int> ofertasId)
@@ -476,8 +515,6 @@ namespace SGPla.Services.Implementations
 
             if (idArchivoAnterior.HasValue && idArchivoAnterior.Value != idArchivoNuevo.Value)
                 await eliminarArchivoGeneradoAsync(idArchivoAnterior.Value);
-
-            await prepararVistaPreviaPdfAsync(idArchivoNuevo.Value);
         }
 
         private async Task eliminarArchivoGeneradoAsync(int idArchivo)
@@ -488,8 +525,6 @@ namespace SGPla.Services.Implementations
 
             await _archivoRepository.EliminarAsync(archivo);
             await _archivoService.EliminarAsync(archivo.Ruta);
-            await _archivoService.EliminarAsync($"aviso-preview/{idArchivo}.pdf");
-            await _archivoService.EliminarAsync($"aviso-preview/{idArchivo}-informativo.pdf");
         }
 
         private async Task validarOfertasParaAvisoAsync(CrearAvisoDTO aviso)
@@ -546,7 +581,6 @@ namespace SGPla.Services.Implementations
                 archivoGuardado = await _archivoRepository.CrearAsync(archivo);
 
                 await _avisoRepository.FirmarAsync(idAviso, archivoGuardado.IdArchivo);
-                await prepararVistaPreviaPdfAsync(archivoGuardado.IdArchivo);
             }
             catch (Exception ex)
             {
@@ -556,18 +590,6 @@ namespace SGPla.Services.Implementations
                     await _archivoService.EliminarAsync(archivoDisco.Ruta);
 
                 throw;
-            }
-        }
-
-        private async Task prepararVistaPreviaPdfAsync(int idArchivo)
-        {
-            try
-            {
-                await _archivoService.ObtenerVistaPreviaPdfAsync(idArchivo);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "No se pudo preparar la vista previa PDF para el archivo {IdArchivo}.", idArchivo);
             }
         }
 

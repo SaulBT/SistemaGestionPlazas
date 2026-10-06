@@ -184,7 +184,7 @@ namespace SGPla.Tests.Services
                 .ReturnsAsync(50);
 
             _avisoRepositoryMock
-                .Setup(r => r.CrearCompletoAsync(It.IsAny<Aviso>(), dto.OfertasId, It.IsAny<List<Horario>>()))
+                .Setup(r => r.CrearCompletoAsync(It.IsAny<Aviso>(), dto.OfertasId, It.IsAny<List<Horario>>(), It.IsAny<List<OfertaExcluidaAvisoDTO>>()))
                 .Returns(Task.CompletedTask);
             _ofertaRepositoryMock.Setup(r => r.SonOfertasValidasParaAvisoAsync(dto.OfertasId, 1, 1, 1)).ReturnsAsync(true);
             _ofertaRepositoryMock.Setup(r => r.ObtenerSistemaParaAvisoAsync(dto.OfertasId)).ReturnsAsync(Constantes.MODALIDAD_ESCOLARIZADA);
@@ -198,7 +198,7 @@ namespace SGPla.Tests.Services
                 a.IdEntidadAcademica == dto.IdEntidadAcademica &&
                 a.Estado == "Creado" &&
                 a.IdArchivoOriginal == 50 && a.Sistema == Constantes.MODALIDAD_ESCOLARIZADA), dto.OfertasId,
-                It.Is<List<Horario>>(h => h.Count == 1)), Times.Once);
+                It.Is<List<Horario>>(h => h.Count == 1), It.IsAny<List<OfertaExcluidaAvisoDTO>>()), Times.Once);
         }
 
         // CP-02
@@ -762,7 +762,7 @@ namespace SGPla.Tests.Services
             await Assert.ThrowsAsync<ValidacionExcepction>(() => _avisoService.CrearAviso(dto));
 
             _plantillaServiceMock.Verify(p => p.GenerarAvisoAsync(It.IsAny<PlantillaAvisoDTO>()), Times.Never);
-            _avisoRepositoryMock.Verify(r => r.CrearCompletoAsync(It.IsAny<Aviso>(), It.IsAny<List<int>>(), It.IsAny<List<Horario>>()), Times.Never);
+            _avisoRepositoryMock.Verify(r => r.CrearCompletoAsync(It.IsAny<Aviso>(), It.IsAny<List<int>>(), It.IsAny<List<Horario>>(), It.IsAny<List<OfertaExcluidaAvisoDTO>>()), Times.Never);
         }
 
         [Fact]
@@ -776,7 +776,7 @@ namespace SGPla.Tests.Services
             await Assert.ThrowsAsync<ValidacionExcepction>(() => _avisoService.CrearAviso(dto));
 
             _plantillaServiceMock.Verify(p => p.GenerarAvisoAsync(It.IsAny<PlantillaAvisoDTO>()), Times.Never);
-            _avisoRepositoryMock.Verify(r => r.CrearCompletoAsync(It.IsAny<Aviso>(), It.IsAny<List<int>>(), It.IsAny<List<Horario>>()), Times.Never);
+            _avisoRepositoryMock.Verify(r => r.CrearCompletoAsync(It.IsAny<Aviso>(), It.IsAny<List<int>>(), It.IsAny<List<Horario>>(), It.IsAny<List<OfertaExcluidaAvisoDTO>>()), Times.Never);
         }
 
         [Fact]
@@ -785,7 +785,7 @@ namespace SGPla.Tests.Services
             var dto = CrearEdicionValida();
             ConfigurarDependenciasEdicion(dto, Constantes.CREADO);
             var archivo = new Archivo { IdArchivo = 77, Ruta = "aviso-original/nuevo.docx" };
-            _avisoRepositoryMock.Setup(r => r.CrearCompletoAsync(It.IsAny<Aviso>(), dto.OfertasId, It.IsAny<List<Horario>>()))
+            _avisoRepositoryMock.Setup(r => r.CrearCompletoAsync(It.IsAny<Aviso>(), dto.OfertasId, It.IsAny<List<Horario>>(), It.IsAny<List<OfertaExcluidaAvisoDTO>>()))
                 .ThrowsAsync(new InvalidOperationException("Fallo al guardar relaciones."));
             _archivoRepositoryMock.Setup(r => r.ObtenerPorIdAsync(77)).ReturnsAsync(archivo);
             _archivoRepositoryMock.Setup(r => r.EliminarAsync(archivo)).Returns(Task.CompletedTask);
@@ -835,6 +835,80 @@ namespace SGPla.Tests.Services
                 new CrearHorarioAvisoDTO { Fecha = "2026-10-02", HoraInicio = "09:00", HoraTermino = "11:00" },
                 new CrearHorarioAvisoDTO { Fecha = "2026-09-30", HoraInicio = "12:00", HoraTermino = "14:00" }]);
             Assert.Equal("El día 30 del mes septiembre de 12:00 hrs. a 14:00 hrs.; El día 2 del mes octubre de 09:00 hrs. a 11:00 hrs.", texto);
+        }
+
+        [Fact]
+        public async Task ObtenerDocumentoAvisoAsync_AvisoFirmado_EntregaPdfFirmado()
+        {
+            var aviso = new DatosAvisoDTO { Estado = Constantes.PUBLICADO, IdArchivoOriginal = 4, IdArchivoFirmado = 20 };
+            _archivoServiceMock.Setup(s => s.DescargarAsync(20)).ReturnsAsync(new ArchivoDescargadoDTO
+                { Ruta = "/archivos/aviso-firmado/firmado.pdf", Nombre = "firmado.pdf", Tipo = "application/octet-stream" });
+
+            var documento = await _avisoService.ObtenerDocumentoAvisoAsync(aviso);
+
+            Assert.NotNull(documento.Pdf);
+            Assert.Equal("application/pdf", documento.Pdf!.Tipo);
+            _archivoServiceMock.Verify(s => s.DescargarAsync(4), Times.Never);
+            _plantillaServiceMock.Verify(p => p.RenderizarAvisoAsync(It.IsAny<PlantillaAvisoDTO>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task ObtenerDocumentoAvisoAsync_OriginalHtml_EntregaCopiaGuardada()
+        {
+            var ruta = Path.Combine(Path.GetTempPath(), $"aviso-{Guid.NewGuid():N}.html");
+            await File.WriteAllTextAsync(ruta, "<p>Aviso guardado</p>");
+            try
+            {
+                _archivoServiceMock.Setup(s => s.DescargarAsync(4)).ReturnsAsync(new ArchivoDescargadoDTO
+                    { Ruta = ruta, Nombre = "aviso.html", Tipo = "text/html" });
+
+                var documento = await _avisoService.ObtenerDocumentoAvisoAsync(
+                    new DatosAvisoDTO { Estado = Constantes.CREADO, IdArchivoOriginal = 4 });
+
+                Assert.Null(documento.Pdf);
+                Assert.Equal("<p>Aviso guardado</p>", documento.ContenidoHtml);
+                _plantillaServiceMock.Verify(p => p.RenderizarAvisoAsync(It.IsAny<PlantillaAvisoDTO>()), Times.Never);
+            }
+            finally
+            {
+                File.Delete(ruta);
+            }
+        }
+
+        [Fact]
+        public async Task ObtenerDocumentoAvisoAsync_OriginalDocxAnterior_ReconstruyeHtmlConLosDatosDelAviso()
+        {
+            ConfigurarDependenciasEdicion(CrearEdicionValida(), Constantes.CREADO);
+            _archivoServiceMock.Setup(s => s.DescargarAsync(4)).ReturnsAsync(new ArchivoDescargadoDTO
+                { Ruta = "/archivos/aviso-original/anterior.docx", Nombre = "anterior.docx" });
+            _plantillaServiceMock.Setup(p => p.RenderizarAvisoAsync(It.IsAny<PlantillaAvisoDTO>())).ReturnsAsync("<p>Reconstruido</p>");
+            var aviso = new DatosAvisoDTO
+            {
+                Estado = Constantes.AVALADO_POR_DGAA,
+                IdArchivoOriginal = 4,
+                IdEntidadAcademica = 1,
+                IdPeriodo = 2,
+                IdArticulo = 3,
+                FechaCT = "2026-09-10",
+                FechaPublicacion = "2026-09-05",
+                Requisitos = "Requisitos",
+                Lugar = "Facultad",
+                Sistema = "Escolarizado",
+                Ofertas = [new OfertaAvisoDTO { IdOferta = 40 }],
+                Horario = new DatosHorarioDTO
+                {
+                    Dias = [new DiaDTO { Dia = "2026-09-10", HoraInicio = new TimeSpan(9, 0, 0), HoraFin = new TimeSpan(12, 0, 0) }]
+                }
+            };
+
+            var documento = await _avisoService.ObtenerDocumentoAvisoAsync(aviso);
+
+            Assert.Equal("<p>Reconstruido</p>", documento.ContenidoHtml);
+            _plantillaServiceMock.Verify(p => p.RenderizarAvisoAsync(It.Is<PlantillaAvisoDTO>(plantilla =>
+                plantilla.Articulo == "70" &&
+                plantilla.Programas.Single().Experiencias.Single().NRC == "12345" &&
+                plantilla.HorarioAceptacion.Contains("de 09:00 hrs. a 12:00 hrs."))), Times.Once);
+            _plantillaServiceMock.Verify(p => p.GenerarAvisoAsync(It.IsAny<PlantillaAvisoDTO>()), Times.Never);
         }
 
         private static EditarAvisoDTO CrearEdicionValida() => new()

@@ -1,0 +1,26 @@
+@model SGPla.Models.ViewModels.Avisos.DocumentoAvisoViewModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    @* El navegador propone este título como nombre del PDF al guardar desde el diálogo de impresión. *@
+    <title>@Model.Titulo</title>
+    <link rel="stylesheet" href="~/css/aviso-documento.css" asp-append-version="true" />
+</head>
+<body>
+    @if (Model.EsInformativo)
+    {
+        <div class="aviso-marca-agua" aria-hidden="true">
+            <span>DOCUMENTO DE CARÁCTER INFORMATIVO</span>
+            <span>DEBE ENVIARSE PARA SU REVISIÓN Y APROBACIÓN</span>
+        </div>
+    }
+    <main class="aviso-documento">
+        @Html.Raw(Model.Contenido)
+    </main>
+</body>
+</html>

@@ -3,16 +3,51 @@
     ViewData["Title"] = "Vista previa del aviso";
 }
 
-<div style="display:flex; justify-content:flex-end; gap:10px; margin-bottom:20px;">
+<div style="display:flex; justify-content:flex-end; align-items:center; gap:10px; margin-bottom:20px;">
+    @if (!Model.EsPdf)
+    {
+        <small class="text-muted">Se abrirá el diálogo de impresión: elija «Guardar como PDF».</small>
+    }
     <div style="display:flex; gap:10px;">
         <a href="@Url.Action("Index", "Avisos")" class="btn btn-outline-secondary">Volver</a>
-        <a href="@Model.UrlDescarga" class="btn btn-primary">
-            @(Model.EsDocumentoInformativo ? "Descargar PDF (.pdf)" : "Descargar Word (.docx)")
-        </a>
+        @if (Model.EsPdf)
+        {
+            <a href="@Model.UrlDescarga" class="btn btn-primary">Descargar PDF (.pdf)</a>
+        }
+        else
+        {
+            <button type="button" class="btn btn-primary" id="btnDescargarPdf">Descargar PDF (.pdf)</button>
+        }
     </div>
 </div>
 
-<iframe src="@Model.UrlVistaPrevia"
+<iframe id="visorAviso"
+        src="@Model.UrlVistaPrevia"
         title="Vista previa del aviso"
         style="width:100%; height:80vh; border:1px solid #ced4da; border-radius:4px;">
 </iframe>
+
+@if (!Model.EsPdf)
+{
+    <script>
+        (() => {
+            const visor = document.getElementById('visorAviso');
+            const nombreArchivo = @Json.Serialize(Model.NombreArchivo);
+
+            // El diálogo de impresión propone el título del documento como nombre del PDF.
+            function imprimirAviso() {
+                const tituloOriginal = document.title;
+                document.title = nombreArchivo;
+                visor.contentWindow.focus();
+                visor.contentWindow.print();
+                document.title = tituloOriginal;
+            }
+
+            document.getElementById('btnDescargarPdf').addEventListener('click', imprimirAviso);
+            @if (Model.Imprimir)
+            {
+                @:visor.addEventListener('load', imprimirAviso, { once: true });
+            }
+        })();
+    </script>
+}

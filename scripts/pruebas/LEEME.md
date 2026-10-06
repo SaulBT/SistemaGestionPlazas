@@ -9,7 +9,6 @@ Se preparó un segundo proyecto Docker llamado **sgpla-pruebas**. No reemplaza n
 | Servidor SQL | contenedor db habitual | otro contenedor db, en otra red |
 | Volumen SQL | volumen habitual existente | sgpla-pruebas_sql-pruebas |
 | Documentos | SGPla/Archivos | sgpla-pruebas_archivos-pruebas |
-| Plantillas | SGPla/Archivos/plantillas | misma carpeta, solo lectura |
 | Sesión | cookies habituales | cookies SGpla.Pruebas separadas |
 
 Ambos servidores tienen una base llamada GestionDePlazasBD. **No es la misma base**: están en contenedores, redes y volúmenes separados. No se publica el puerto SQL del servidor de pruebas al equipo.
@@ -95,7 +94,6 @@ La contraseña SQL es distinta de su contraseña institucional. El script no nec
 - No se usan redes ni volúmenes externos del proyecto original.
 - No se ejecutan DELETE, TRUNCATE, DROP ni down -v.
 - Los documentos se guardan en `/datos-pruebas`, evitando copiar los documentos incluidos en la imagen a un volumen nuevo.
-- Las plantillas se comparten en modo de solo lectura; no se copian los documentos antiguos.
 - Las cookies de autenticación, sesión y antifalsificación son distintas cuando EntornoPruebas está activado en Development.
 - La base original no recibe migraciones ni consultas de estos scripts.
 

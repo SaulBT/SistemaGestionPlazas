@@ -179,7 +179,7 @@ namespace SGPla.Controllers
 
         [HttpGet]
         [Authorize(Policy = PoliticasAutorizacion.OperadorAcademico)]
-        public async Task<IActionResult> VistaPreviaAvisoAsync(int idAviso)
+        public async Task<IActionResult> VistaPreviaAvisoAsync(int idAviso, bool imprimir = false)
         {
             try
             {
@@ -188,12 +188,14 @@ namespace SGPla.Controllers
                     return Forbid();
 
                 _avisoService.ObtenerIdArchivoVigente(aviso);
-                var esDocumentoInformativo = EstadosAviso.EsInformativo(aviso.Estado);
+                var esPdf = EstadosAviso.EsFirmado(aviso.Estado);
                 return View(new VistaPreviaAvisoViewModel
                 {
                     UrlVistaPrevia = Url.Action("ObtenerVistaPreviaAviso", new { idAviso }) ?? string.Empty,
                     UrlDescarga = Url.Action("DescargarAviso", new { idAviso }) ?? string.Empty,
-                    EsDocumentoInformativo = esDocumentoInformativo
+                    NombreArchivo = Path.GetFileNameWithoutExtension(construirNombreArchivo(aviso)),
+                    EsPdf = esPdf,
+                    Imprimir = imprimir && !esPdf
                 });
             }
             catch (ValidacionExcepction)
@@ -202,6 +204,7 @@ namespace SGPla.Controllers
             }
         }
 
+        // Entrega el PDF firmado para el visor nativo del navegador, o el aviso como HTML imprimible.
         [HttpGet]
         [Authorize(Policy = PoliticasAutorizacion.OperadorAcademico)]
         public async Task<IActionResult> ObtenerVistaPreviaAvisoAsync(int idAviso)
@@ -212,10 +215,16 @@ namespace SGPla.Controllers
                 if (!await PuedeConsultarAsync(idAviso))
                     return Forbid();
 
-                var idArchivo = _avisoService.ObtenerIdArchivoVigente(aviso);
-                var archivo = await _archivoService.ObtenerVistaPreviaPdfAsync(
-                    idArchivo, EstadosAviso.EsInformativo(aviso.Estado));
-                return PhysicalFile(archivo.Ruta, archivo.Tipo, enableRangeProcessing: true);
+                var documento = await _avisoService.ObtenerDocumentoAvisoAsync(aviso);
+                if (documento.Pdf is not null)
+                    return PhysicalFile(documento.Pdf.Ruta, documento.Pdf.Tipo, enableRangeProcessing: true);
+
+                return View("DocumentoAviso", new DocumentoAvisoViewModel
+                {
+                    Titulo = Path.GetFileNameWithoutExtension(construirNombreArchivo(aviso)),
+                    Contenido = documento.ContenidoHtml,
+                    EsInformativo = EstadosAviso.EsInformativo(aviso.Estado)
+                });
             }
             catch (ValidacionExcepction)
             {
@@ -232,6 +241,7 @@ namespace SGPla.Controllers
             }
         }
 
+        // El PDF firmado se descarga tal cual; los demás avisos se guardan como PDF desde el diálogo de impresión.
         [HttpGet]
         [Authorize(Policy = PoliticasAutorizacion.OperadorAcademico)]
         public async Task<IActionResult> DescargarAvisoAsync(int idAviso)
@@ -242,27 +252,11 @@ namespace SGPla.Controllers
                 if (!await PuedeConsultarAsync(idAviso))
                     return Forbid();
 
-                ArchivoDescargadoDTO archivo;
-                if (EstadosAviso.EsInformativo(aviso.Estado))
-                {
-                    var idArchivo = _avisoService.ObtenerIdArchivoVigente(aviso);
-                    archivo = await _archivoService.ObtenerVistaPreviaPdfAsync(idArchivo, true);
-                }
-                else
-                {
-                    if (aviso.IdArchivoOriginal <= 0)
-                        return NotFound("No se encontró el documento original del aviso.");
-                    archivo = await _archivoService.DescargarAsync(aviso.IdArchivoOriginal);
-                }
+                var documento = await _avisoService.ObtenerDocumentoAvisoAsync(aviso);
+                if (documento.Pdf is null)
+                    return RedirectToAction("VistaPreviaAviso", new { idAviso, imprimir = true });
 
-                archivo.Nombre = NombreArchivoAviso.Construir(
-                    aviso.CodigoPeriodo,
-                    aviso.Articulo,
-                    aviso.NombreEntidadAcademica,
-                    aviso.FechaCreacionValor,
-                    aviso.IdAviso,
-                    Path.GetExtension(archivo.Ruta));
-                return PhysicalFile(archivo.Ruta, archivo.Tipo, archivo.Nombre);
+                return PhysicalFile(documento.Pdf.Ruta, documento.Pdf.Tipo, construirNombreArchivo(aviso));
             }
             catch (ValidacionExcepction)
             {
@@ -277,6 +271,17 @@ namespace SGPla.Controllers
                 _logger.LogError(ex, "No se pudo preparar la descarga del aviso {IdAviso}.", idAviso);
                 return Problem("No se pudo preparar el archivo para descargar.");
             }
+        }
+
+        private static string construirNombreArchivo(DatosAvisoDTO aviso)
+        {
+            return NombreArchivoAviso.Construir(
+                aviso.CodigoPeriodo,
+                aviso.Articulo,
+                aviso.NombreEntidadAcademica,
+                aviso.FechaCreacionValor,
+                aviso.IdAviso,
+                ".pdf");
         }
 
         // El CEA adjunta el PDF previamente firmado y registra su publicación.

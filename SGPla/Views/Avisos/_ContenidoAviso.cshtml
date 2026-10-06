@@ -1,0 +1,269 @@
+@model SGPla.Models.DTOs.Plantillas.PlantillaAvisoDTO
+@* Contenido del aviso que se guarda como copia fija al crearlo o editarlo. DocumentoAviso.cshtml le agrega estilos y marca de agua. *@
+
+<table class="aviso-pagina">
+    <thead>
+        <tr>
+            <td>
+                <header class="aviso-encabezado">
+                    <div class="aviso-logo" role="img" aria-label="Universidad Veracruzana"></div>
+                    <p><strong>SECRETARÍA ACADÉMICA</strong></p>
+                    <p>Dirección General de Área Académica @Model.AreaAcademica</p>
+                    <p>@Model.EntidadAcademica</p>
+                </header>
+            </td>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+                <h1 class="aviso-titulo">A V I S O</h1>
+                <p class="aviso-subtitulo">EXPERIENCIAS EDUCATIVAS VACANTES TEMPORALES</p>
+
+                <p class="aviso-parrafo">
+                    Con fundamento en el artículo <strong>@Model.Articulo</strong> del Estatuto del Personal Académico (EPA)
+                    de la Universidad Veracruzana y con base a las necesidades académicas de la entidad académica avalada
+                    por la Dirección General del Área Académica Económico Administrativa; la Dirección de la
+                    @Model.EntidadAcademica, Región @Model.Region informa a su @Model.PerfilArticulo, y esté interesado en
+                    participar en el proceso de designación para ocupar las Experiencias Educativas Vacantes Temporales
+                    como docente de asignatura durante el periodo escolar <strong>@Model.Periodo,</strong> que a
+                    continuación se enlistan y de conformidad con las reglas que se detallan en el presente aviso.
+                </p>
+
+                <section>
+                    <h2 class="aviso-seccion">A) DATOS</h2>
+                    <p class="aviso-dato"><strong>REGIÓN:</strong> @Model.Region</p>
+                    <p class="aviso-dato"><strong>CAMPUS:</strong> @Model.Campus</p>
+                    <p class="aviso-dato"><strong>ÁREA:</strong> @Model.AreaAcademica</p>
+                    <p class="aviso-dato"><strong>SISTEMA:</strong> @Model.Sistema</p>
+
+                    @foreach (var programa in Model.Programas)
+                    {
+                        <div class="aviso-programa">
+                            <p class="aviso-dato"><strong>PROGRAMA EDUCATIVO:</strong> @programa.ProgramaEducativo</p>
+
+                            <table class="aviso-tabla">
+                                <thead>
+                                    <tr>
+                                        <th rowspan="2">Horas</th>
+                                        <th rowspan="2">Experiencia Educativa (EE)</th>
+                                        <th rowspan="2">NRC</th>
+                                        <th rowspan="2">Plaza</th>
+                                        <th colspan="6">Horario</th>
+                                        <th rowspan="2">Tipo de Contratación</th>
+                                        <th rowspan="2">PA</th>
+                                    </tr>
+                                    <tr>
+                                        <th>L</th>
+                                        <th>M</th>
+                                        <th>M</th>
+                                        <th>J</th>
+                                        <th>V</th>
+                                        <th>S</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (var i = 0; i < programa.Experiencias.Count; i++)
+                                    {
+                                        var experiencia = programa.Experiencias[i];
+                                        <tr>
+                                            <td>@experiencia.Horas</td>
+                                            <td>@experiencia.Nombre</td>
+                                            <td>@experiencia.NRC</td>
+                                            <td>@experiencia.Plaza</td>
+                                            <td>@experiencia.HorarioLunes</td>
+                                            <td>@experiencia.HorarioMartes</td>
+                                            <td>@experiencia.HorarioMiercoles</td>
+                                            <td>@experiencia.HorarioJueves</td>
+                                            <td>@experiencia.HorarioViernes</td>
+                                            <td>@experiencia.HorarioSabado</td>
+                                            <td>@experiencia.TipoContratacion</td>
+                                            <td>@(i + 1)</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+
+                            <p class="aviso-dato"><strong>PERFIL ACADÉMICO:</strong></p>
+                            <ol class="aviso-perfiles">
+                                @foreach (var experiencia in programa.Experiencias)
+                                {
+                                    <li>
+                                        <strong>@experiencia.Nombre</strong>
+                                        <p>@experiencia.PerfilDocente</p>
+                                    </li>
+                                }
+                            </ol>
+                        </div>
+                    }
+                </section>
+
+                <section>
+                    <h2 class="aviso-seccion">B) REQUISITOS:</h2>
+                    <p class="aviso-requisitos">@Model.Requisitos</p>
+                    <p class="aviso-parrafo">
+                        Todos los documentos señalados en los numerales del 4 al 12 serán presentados físicamente en la
+                        Dirección de la Entidad Académica en original para su cotejo y entregar copia en formato electrónico
+                        en un solo archivo PDF en el orden en el que aparecen en los requisitos. En caso de que dicha
+                        información ya haya sido entregada satisfactoriamente en formato electrónico PDF durante el semestre
+                        inmediato anterior, no será necesario volver a entregarla salvo que el académico deba adicionarla o
+                        actualizarla. Lo anterior deberá ser validado por la persona Titular de la Entidad Académica.
+                    </p>
+                </section>
+
+                <section>
+                    <h2 class="aviso-seccion">C) CRITERIOS GENERALES:</h2>
+                    <p class="aviso-parrafo">
+                        1. Los integrantes del Consejo Técnico, Órgano Equivalente y Autoridades Unipersonales que participan
+                        en dicho órgano colegiado, deberán observar lo establecido en los artículos 307 y 336 fracciones VI,
+                        VII y XXV y XXVI del Estatuto General de la Universidad Veracruzana, que a la letra señalan:
+                    </p>
+                    <div class="aviso-cita">
+                        <p>
+                            Artículo 307. Los miembros del Consejo Técnico deberán excusarse de intervenir en cualquier forma
+                            en la atención, tramitación, resolución cuando sean parte del asunto a tratar o en los que tenga
+                            interés personal, familiar o de negocios, incluyendo aquéllos de los que pueda resultar algún
+                            beneficio para él, su cónyuge o parientes consanguíneos hasta el cuarto grado o por afinidad o para
+                            terceros con los que tenga relaciones profesionales, laborales o de negocios, o para socios o
+                            sociedades de las que la autoridad o funcionario o las personas antes referidas formen o hayan
+                            formado parte. Cuando se presente alguna de las hipótesis descritas en este artículo el integrante
+                            del Consejo Técnico deberá excusarse de participar en la discusión y resolución del caso, quedando
+                            constancia en el acta respectiva. El no excusarse será causa de responsabilidad. En el caso de las
+                            autoridades personales y funcionarios que formen parte del Consejo Técnico de una entidad académica
+                            deberán observar lo establecido en las fracciones XXV y XXVI del artículo 336 de este Estatuto.
+                        </p>
+                        <p>
+                            Artículo 336. Además de las atribuciones establecidas en la Ley Orgánica, Estatutos y Reglamentos
+                            respectivos, aquellas personas señaladas en el artículo 335 tendrán las obligaciones siguientes:
+                        </p>
+                        <p>
+                            VI. Excusarse de intervenir en cualquier forma en la atención, tramitación o resolución de asuntos
+                            en los que tenga interés personal, familiar o de negocios, incluyendo aquéllos de los que pueda
+                            resultar algún beneficio para él, su cónyuge o parientes consanguíneos hasta el cuarto grado o por
+                            afinidad o para terceros con los que tenga relaciones profesionales, laborales o de negocios, o para
+                            socios o sociedades de las que la autoridad o funcionario o las personas antes referidas formen o
+                            hayan formado parte;
+                        </p>
+                        <p>
+                            VII. Informar por escrito al inmediato superior y en su caso al superior jerárquico, sobre la
+                            atención, trámite o resolución de los asuntos a que hace referencia la fracción anterior y que sean
+                            de su conocimiento; y observar sus instrucciones por escrito sobre su atención, tramitación y
+                            resolución, cuando la autoridad o funcionario no pueda abstenerse de intervenir en ellos;
+                        </p>
+                        <p>
+                            XXV. Abstenerse de participar en los procesos de examen de oposición, para ocupar una plaza de
+                            personal académico vacante o de nueva creación, en la entidad académica donde ocupen un cargo o
+                            función directiva, pudiendo hacerlo en una entidad académica distinta a la que dirige;
+                        </p>
+                        <p>
+                            XXVI. Abstenerse de participar e influir, por motivo de su encargo, en los procesos de selección
+                            para ocupar una plaza de personal académico, vacante o de nueva creación, en los que tenga interés
+                            personal, familiar o de negocios, incluyendo aquéllos de los que pueda resultar algún beneficio para
+                            él, su cónyuge o parientes consanguíneos o por afinidad hasta el cuarto grado, o parientes civiles,
+                            o para terceros con los que tenga relaciones profesionales, laborales o de negocios, o para socios o
+                            sociedades de las que el trabajador universitario, o las personas antes referidas formen o hayan
+                            formado parte; En los casos anteriores deberá informar por escrito al Rector, sobre la atención,
+                            trámite o resolución de los asuntos a que hace referencia la fracción anterior y que sean de su
+                            conocimiento; y observar sus instrucciones por escrito sobre su atención, tramitación y resolución,
+                            cuando la autoridad unipersonal o funcionario, no pueda abstenerse de intervenir en ellos.
+                        </p>
+                    </div>
+                    <p class="aviso-parrafo">
+                        2. Para la designación correspondiente se considerarán como referentes de evaluación, la formación y
+                        actualización académica, los antecedentes de desempeño académico (experiencia docente, evaluación del
+                        desempeño docente, producción derivada de investigación o creación artística, participación en trabajo
+                        recepcional, gestión académica, tutorías) así como la experiencia profesional considerada en el perfil.
+                    </p>
+                    <p class="aviso-parrafo">
+                        3. La fecha de contratación del docente por asignatura interino designado, será el primer día en que
+                        inicie impartiendo clase frente al grupo respectivo, previa notificación de resultados de la Dirección
+                        General correspondiente.
+                    </p>
+                    <p class="aviso-parrafo">
+                        4. La incorporación del movimiento de personal a la nómina para su pago, procederá ante la Dirección
+                        de Personal, siempre y cuando se encuentre completa la documentación establecida en el presente AVISO.
+                    </p>
+                    <p class="aviso-parrafo">
+                        5. Para el proceso de contratación, quien quede asignado y desempeñe un puesto, cargo, comisión o
+                        preste servicios profesionales por honorarios en dos o más dependencias en los gobiernos federales,
+                        estatales o municipales, deberá presentar los siguientes documentos:
+                    </p>
+                    <ul class="aviso-lista">
+                        <li>
+                            <strong>Oficio con el horario de empleo en otro ente externo a la Universidad</strong>, con el
+                            propósito de determinar si existe compatibilidad horaria y geográfica para desempeñarse en esta
+                            casa de estudios.
+                        </li>
+                        <li>
+                            <strong>Oficio en el que otro ente externo manifiesta su conformidad al horario</strong> en el que
+                            el trabajador se desempeñará en la UV.
+                        </li>
+                    </ul>
+                    <p class="aviso-parrafo">
+                        En caso de no prestar servicios en un ente externo, el personal asignado deberá entregar el manifiesto
+                        bajo protesta de decir verdad que únicamente prestará sus servicios en esta casa de estudios al momento
+                        de su contratación.
+                    </p>
+                </section>
+
+                <section>
+                    <h2 class="aviso-seccion">D) DESARROLLO DEL PROCESO:</h2>
+                    <p class="aviso-parrafo">
+                        Publicado el AVISO en el portal web de la entidad y en su tablero de avisos correspondiente, los
+                        interesados en participar en la designación de dichas EE vacantes temporales en modalidad
+                        @Model.Sistema, deberán entregar todos los documentos mencionados en los requisitos de participación
+                        @Model.HorarioAceptacion, en @Model.Direccion, para su cotejo.
+                    </p>
+                    <p class="aviso-parrafo">
+                        Entregados y validados los documentos de requisitos de participación por los interesados, se deberá
+                        convocar en tiempo y forma a sesión de Consejo Técnico u Órgano Equivalente, misma que se efectuará el
+                        día @Model.FechaConsejoTecnico
+                    </p>
+                    <p class="aviso-parrafo">
+                        Finalizada la sesión se levantará inmediatamente el acta de Consejo Técnico u Órgano Equivalente
+                        pormenorizada de los asuntos tratados y de los acuerdos adoptados por dicho Órgano Colegiado, misma que
+                        contendrá de manera enunciativa más no limitativa, los <strong>criterios utilizados</strong> y la
+                        argumentación detallada sobre la designación de conformidad con el punto 2 del inciso C.
+                    </p>
+                    <p class="aviso-parrafo">
+                        El acta de Consejo Técnico u Órgano Equivalente, deberá ser autentificada con la firma de la persona
+                        Titular de la entidad académica y de todos los integrantes del Consejo Técnico u Órgano Equivalente.
+                    </p>
+                    <p class="aviso-parrafo">
+                        El acta de Consejo Técnico u Órgano Equivalente que contiene el o los acuerdos previos sobre la
+                        designación se enviará, vía correo electrónico, un día hábil posterior a la fecha de celebración de la
+                        sesión, a la Dirección General correspondiente con un oficio a través del cual se solicitará la
+                        determinación sobre la designación, incluyendo copia del AVISO, solicitudes de los participantes y los
+                        documentos que integran los requisitos de participación en formato electrónico PDF de todos los
+                        participantes.
+                    </p>
+                    <p class="aviso-parrafo">
+                        Es responsabilidad de la Dirección General de la @Model.EntidadAcademica previo análisis y revisión de
+                        los expedientes de designación, al día hábil siguiente de recibir la información, emitir la resolución
+                        (notificación) que proceda, remitiéndola a la entidad académica para su publicación en el portal WEB
+                        institucional y en el tablero de avisos de la entidad académica. Dicha resolución será inapelable.
+                    </p>
+                    <p class="aviso-parrafo">
+                        La falta de alguno de los requisitos y documentos para participar que se enlistan en el formato de
+                        AVISO EXPERIENCIAS EDUCATIVAS VACANTES TEMPORALES invalidará la propuesta de asignación del Consejo
+                        Técnico u Órgano Equivalente.
+                    </p>
+                    <p class="aviso-parrafo">
+                        Cualquier asunto no previsto en el presente AVISO o que constituya una necesidad de interpretación para
+                        su aplicación lo resolverá la Secretaría Académica o la Secretaría de Administración y Finanzas, de
+                        conformidad con sus ámbitos de competencia.
+                    </p>
+                </section>
+
+                <footer class="aviso-cierre">
+                    <p><em>“Lis de Veracruz: Arte, Ciencia, Luz”</em></p>
+                    <p>Xalapa, Ver. a @Model.FechaPublicacion</p>
+                    <div class="aviso-firma">
+                        <p><strong>@Model.Titular</strong></p>
+                        <p>@Model.EntidadAcademica</p>
+                    </div>
+                </footer>
+            </td>
+        </tr>
+    </tbody>
+</table>
