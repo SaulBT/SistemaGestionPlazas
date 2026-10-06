@@ -1,0 +1,199 @@
+/* Documento del aviso: se muestra como hoja carta y se imprime o guarda como PDF desde el navegador. */
+
+@page {
+    size: letter;
+    margin: 0.32in 0.42in 0.56in 0.43in;
+
+    @bottom-right {
+        content: counter(page);
+        font-family: "Gill Sans MT", "Gill Sans", Calibri, "Segoe UI", sans-serif;
+        font-size: 9pt;
+    }
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+body {
+    margin: 0;
+    padding: 24px 16px;
+    background: #525659;
+    color: #000;
+    font-family: "Gill Sans MT", "Gill Sans", Calibri, "Segoe UI", sans-serif;
+    font-size: 10pt;
+    line-height: 1.25;
+}
+
+.aviso-documento {
+    width: 8.5in;
+    max-width: 100%;
+    min-height: 11in;
+    margin: 0 auto;
+    padding: 0.32in 0.42in 0.56in 0.43in;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.aviso-documento p {
+    margin: 0;
+}
+
+/* El encabezado vive en el thead para que el navegador lo repita en cada página impresa. */
+.aviso-pagina {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.aviso-pagina > thead > tr > td,
+.aviso-pagina > tbody > tr > td {
+    padding: 0;
+    vertical-align: top;
+}
+
+.aviso-encabezado {
+    padding-bottom: 0.3in;
+    text-align: center;
+}
+
+.aviso-logo {
+    width: 1in;
+    height: 0.75in;
+    margin: 0 auto 6pt;
+    background: url("../images/logo-uv.jpg") center / contain no-repeat;
+}
+
+.aviso-titulo {
+    margin: 0 0 4pt;
+    font-size: 11pt;
+    font-weight: bold;
+    text-align: center;
+}
+
+.aviso-subtitulo {
+    margin-bottom: 10pt !important;
+    font-weight: bold;
+    text-align: center;
+}
+
+.aviso-parrafo {
+    margin-bottom: 10pt !important;
+    text-align: justify;
+}
+
+.aviso-seccion {
+    margin: 12pt 0 6pt;
+    font-size: 10pt;
+    font-weight: bold;
+}
+
+.aviso-dato {
+    text-align: justify;
+}
+
+.aviso-programa {
+    margin-top: 6pt;
+}
+
+.aviso-tabla {
+    width: 100%;
+    margin: 12pt 0;
+    border-collapse: collapse;
+    font-size: 9pt;
+}
+
+.aviso-tabla th,
+.aviso-tabla td {
+    padding: 2pt 3pt;
+    border: 0.5pt solid #000;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.aviso-tabla th {
+    font-size: 8pt;
+    font-weight: bold;
+}
+
+.aviso-tabla tr {
+    break-inside: avoid;
+}
+
+.aviso-perfiles {
+    margin: 6pt 0 0;
+    padding-left: 0.5in;
+}
+
+.aviso-perfiles li {
+    margin-bottom: 6pt;
+    text-align: justify;
+}
+
+.aviso-requisitos {
+    margin-bottom: 10pt !important;
+    white-space: pre-line;
+    text-align: justify;
+}
+
+.aviso-cita {
+    margin: 0 0.39in 10pt 0.3in;
+    text-align: justify;
+}
+
+.aviso-cita p {
+    margin-bottom: 10pt !important;
+}
+
+.aviso-lista {
+    margin: 0 0 10pt;
+    padding-left: 0.5in;
+    text-align: justify;
+}
+
+.aviso-cierre {
+    margin-top: 0.6in;
+    text-align: center;
+    break-inside: avoid;
+}
+
+.aviso-firma {
+    margin-top: 0.9in;
+}
+
+/* Marca de agua de los avisos informativos; al imprimir, el elemento fijo se repite en cada página. */
+.aviso-marca-agua {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12pt;
+    pointer-events: none;
+    color: rgba(143, 143, 143, 0.45);
+    font-family: Arial, sans-serif;
+    font-size: 22pt;
+    font-weight: bold;
+    text-align: center;
+    transform: rotate(-45deg);
+}
+
+@media print {
+    body {
+        padding: 0;
+        background: #fff;
+    }
+
+    .aviso-documento {
+        width: auto;
+        min-height: 0;
+        padding: 0;
+        box-shadow: none;
+    }
+}

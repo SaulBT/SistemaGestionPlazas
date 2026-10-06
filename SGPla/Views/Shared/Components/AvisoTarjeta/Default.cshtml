@@ -82,7 +82,7 @@
             {
             <a class="btn btn-outline-primary" href="@Url.Action("VistaPreviaAviso", "Avisos", new { idAviso = Model.IdAviso })" target="_blank" rel="noopener">Ver aviso</a>
             <a class="btn btn-outline-secondary" href="@Url.Action("DescargarAviso", "Avisos", new { idAviso = Model.IdAviso })">
-                @(EstadosAviso.EsInformativo(Model.Estado) ? "Descargar PDF (.pdf)" : "Descargar Word (.docx)")
+                Descargar PDF (.pdf)
             </a>
             @if (!Model.Archivado && Model.Estado == Constantes.EN_REVISION_POR_DGAA)
             {
@@ -192,7 +192,7 @@
         (Model.Estado == Constantes.FIRMADO || Model.Estado == Constantes.PUBLICADO || Model.Estado == Constantes.ACTA_DE_CT_CREADA))
     {
         <div class="aviso-tarjeta-acciones">
-            <a class="btn btn-outline-primary" href="@Url.Action("DescargarAviso", "Avisos", new { idAviso = Model.IdAviso })"><i class="bi bi-download" aria-hidden="true"></i> Descargar Word (.docx)</a>
+            <a class="btn btn-outline-primary" href="@Url.Action("DescargarAviso", "Avisos", new { idAviso = Model.IdAviso })"><i class="bi bi-download" aria-hidden="true"></i> Descargar PDF (.pdf)</a>
             @if (Uri.TryCreate(Model.UrlPublicacion, UriKind.Absolute, out var publicacion) && (publicacion.Scheme == "https" || publicacion.Scheme == "http"))
             {
                 <a class="btn btn-outline-primary" href="@publicacion.AbsoluteUri" target="_blank" rel="noopener noreferrer">Ver publicación <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>

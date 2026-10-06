@@ -13,6 +13,7 @@ namespace SGPla.Services.Interfaces
         Task<DatosAvisoDTO> ObtenerAvisoPorIDAsync(int idAviso);
         Task EditarComentariosRevisionAsync(int idAviso, string comentarios);
         int ObtenerIdArchivoVigente(DatosAvisoDTO aviso);
+        Task<DocumentoAvisoDTO> ObtenerDocumentoAvisoAsync(DatosAvisoDTO aviso);
         Task ArchivarAvisoAsync(int idAviso);
         Task DesarchivarAvisoAsync(int idAviso);
         Task<bool> VerificarEstadoAvisoAsync(int idAviso, string estado);
