@@ -24,6 +24,7 @@ namespace SGPla.Helpers
 
             Acciones.ProgramacionAcademica.Ver,
             Acciones.ProgramacionAcademica.VerSolicitudes,
+            Acciones.ProgramacionAcademica.AprobarPlanea,
         ],
             [Constantes.SUPERUSUARIO] =
             [

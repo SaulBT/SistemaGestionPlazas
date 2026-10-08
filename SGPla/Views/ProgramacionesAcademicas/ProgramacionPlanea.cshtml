@@ -6,6 +6,7 @@
     ViewData["Title"] = "Programación PLANEA";
     ViewBag.RegresarUrl = Url.Action("Index", "ProgramacionesAcademicas");
     var ultima = Model.UltimaSincronizacionPlanea;
+    var tabla = await Component.InvokeAsync("Table", Model.TablaPlanea);
 }
 
 <div style="display:flex; gap:10px; padding:var(--padding-sm); align-items:flex-start; justify-content:space-evenly;">
@@ -99,22 +100,97 @@
     }
 </div>
 
-<div style="display:flex; gap:10px; padding-top:0px; justify-content:left">
-    @await Component.InvokeAsync("Table", Model.TablaPlanea)
-</div>
+@if (Model.HayPendientes)
+{
+    <form id="formAprobarPlanea" method="post" asp-action="AprobarProgramacionPlanea" asp-controller="ProgramacionesAcademicas">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="idPlanEstudios" value="@Model.IdPlanEstudios" />
+        <input type="hidden" name="idPeriodo" value="@Model.IdPeriodo" />
+
+        <div style="display:flex; gap:20px; padding:var(--padding-sm); align-items:flex-end; flex-wrap:wrap;">
+            <span id="contadorSeleccionPlanea" class="text-muted" aria-live="polite"></span>
+
+            <div style="margin-left:auto;">
+                @await Component.InvokeAsync("Boton", new { texto = "Confirmar programación", tipo = "primario", id = "btnConfirmarPlanea", onClick = "confirmarProgramacionPlanea()" })
+            </div>
+        </div>
+
+        <div style="display:flex; gap:10px; padding-top:0px; justify-content:left">
+            @tabla
+        </div>
+    </form>
+
+    @await Component.InvokeAsync("Modal", new SGPla.Models.ModalModel
+    {
+        Id = "modalConfirmacion",
+        Tipo = "confirm",
+        Titulo = "Confirmar programación",
+        Mensaje = "",
+        OnConfirm = "confirmarModal()",
+        OnCancel = "cerrarModal('modalConfirmacion')"
+    })
+}
+else
+{
+    <div style="display:flex; gap:10px; padding-top:0px; justify-content:left">
+        @tabla
+    </div>
+}
+
+<form id="formRestaurarPlanea" method="post" asp-action="RestaurarCopiaPlanea" asp-controller="ProgramacionesAcademicas">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="idExperienciaEducativaPeriodo" id="idCopiaRestaurar" value="" />
+    <input type="hidden" name="idPlanEstudios" value="@Model.IdPlanEstudios" />
+    <input type="hidden" name="idPeriodo" value="@Model.IdPeriodo" />
+</form>
 
 <script>
-    // La tabla pagina en servidor: conserva plan, periodo y búsqueda de la URL actual.
-    function cambiarPaginaPlanea(valor, esCambioTamano = false) {
-        const params = new URLSearchParams(window.location.search);
+    function restaurarCopiaPlanea(id) {
+        document.getElementById('idCopiaRestaurar').value = id;
+        document.getElementById('formRestaurarPlanea').submit();
+    }
 
-        if (esCambioTamano) {
-            params.set("cantidad", valor);
-            params.set("pagina", 1);
-        } else {
-            params.set("pagina", valor);
+    (function () {
+        const form = document.getElementById('formAprobarPlanea');
+        if (!form) return;
+
+        const casillas = () => Array.from(form.querySelectorAll('input[type=checkbox][name=idsAprobados]:not(:disabled)'));
+        // «Seleccionar todos los pendientes» vive en el encabezado de la primera columna.
+        const todos = document.createElement('input');
+        todos.type = 'checkbox';
+        todos.id = 'seleccionarTodosPlanea';
+        todos.checked = true;
+        todos.title = 'Seleccionar todos los pendientes';
+        todos.setAttribute('aria-label', 'Seleccionar todos los pendientes');
+        form.querySelector('#tablaPlanea thead th:first-child').appendChild(todos);
+        const contador = document.getElementById('contadorSeleccionPlanea');
+
+        function actualizar() {
+            const lista = casillas();
+            const marcadas = lista.filter(c => c.checked).length;
+            contador.textContent = `${marcadas} de ${lista.length} seleccionados`;
+            todos.checked = lista.length > 0 && marcadas === lista.length;
         }
 
-        window.location.search = params.toString();
-    }
+        todos.addEventListener('change', () => {
+            casillas().forEach(c => c.checked = todos.checked);
+            actualizar();
+        });
+        // La tabla pagina en el cliente: las filas ocultas siguen en el DOM y se envían con el form.
+        form.addEventListener('change', e => {
+            if (e.target.name === 'idsAprobados') actualizar();
+        });
+        actualizar();
+
+        window.confirmarProgramacionPlanea = function () {
+            const lista = casillas();
+            const aprobar = lista.filter(c => c.checked).length;
+            const descartar = lista.length - aprobar;
+            const mensaje = aprobar === 0
+                ? `Se descartarán todos los NRC pendientes (${descartar}). ¿Confirmar?`
+                : `Se crearán ${aprobar} ofertas y se descartarán ${descartar} NRC. ¿Confirmar?`;
+
+            abrirModalConfirmacion(mensaje, () => form.submit());
+        };
+    })();
 </script>

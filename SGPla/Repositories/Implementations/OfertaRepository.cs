@@ -64,7 +64,7 @@ namespace SGPla.Repositories.Implementations
                 .Where(o => o.Incluida 
                     && o.IdProgramaEducativoNavigation.IdEntidadAcademica == idEntidadAcademica
                     && o.IdPeriodo == idPeriodo
-                    && o.IdArticulo == idArticulo)
+                    && (o.IdArticulo == null || o.IdArticulo == idArticulo))
                 .GroupBy(o => new
                 {
                     o.IdExperienciaEducativaNavigation.IdPlanEstudios,
@@ -138,7 +138,7 @@ namespace SGPla.Repositories.Implementations
                 idsDistintos.Contains(o.IdOferta) &&
                 o.Incluida &&
                 o.IdPeriodo == idPeriodo &&
-                o.IdArticulo == idArticulo &&
+                (o.IdArticulo == null || o.IdArticulo == idArticulo) &&
                 o.IdProgramaEducativoNavigation.IdEntidadAcademica == idEntidadAcademica);
 
             return cantidadValidas == idsDistintos.Count;

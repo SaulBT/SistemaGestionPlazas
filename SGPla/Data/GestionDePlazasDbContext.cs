@@ -1041,6 +1041,8 @@ public partial class GestionDePlazasDbContext : DbContext
             entity.HasIndex(e => e.IdPlanEstudios, "IX_ExperienciaEducativaPeriodo_idPlanEstudios");
             entity.HasIndex(e => e.IdSincronizacionPlanea, "IX_ExperienciaEducativaPeriodo_idSincronizacionPlanea");
             entity.HasIndex(e => new { e.CodigoPlan, e.CodigoExperiencia }, "IX_ExperienciaEducativaPeriodo_codigos");
+            entity.HasIndex(e => e.IdOferta, "UX_ExperienciaEducativaPeriodo_idOferta").IsUnique().HasFilter("([idOferta] IS NOT NULL)");
+            entity.HasIndex(e => new { e.IdPlanEstudios, e.IdPeriodo, e.EstadoAprobacion }, "IX_ExperienciaEducativaPeriodo_plan_periodo_estado");
             entity.Property(e => e.IdExperienciaEducativaPeriodo).HasColumnName("idExperienciaEducativaPeriodo");
             entity.Property(e => e.IdExperienciaEducativa).HasColumnName("idExperienciaEducativa");
             entity.Property(e => e.IdPeriodo).HasColumnName("idPeriodo");
@@ -1055,6 +1057,13 @@ public partial class GestionDePlazasDbContext : DbContext
             entity.Property(e => e.Nivel).HasMaxLength(5).IsUnicode(false).HasColumnName("nivel");
             entity.Property(e => e.Area).HasMaxLength(100).IsUnicode(false).HasColumnName("area");
             entity.Property(e => e.FechaAlta).HasColumnType("datetime2(0)").HasDefaultValueSql("(sysdatetime())").HasColumnName("fechaAlta");
+            entity.Property(e => e.EstadoAprobacion).HasMaxLength(10).IsUnicode(false).HasDefaultValue("Pendiente").HasColumnName("estadoAprobacion");
+            entity.Property(e => e.IdOferta).HasColumnName("idOferta");
+            entity.Property(e => e.FechaRevision).HasColumnType("datetime2(0)").HasColumnName("fechaRevision");
+            entity.Property(e => e.RevisadoPor).HasMaxLength(150).HasColumnName("revisadoPor");
+            entity.HasOne(d => d.IdOfertaNavigation).WithMany(p => p.ExperienciaEducativaPeriodo)
+                .HasForeignKey(d => d.IdOferta).OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("FK_ExperienciaEducativaPeriodo_Oferta");
             entity.HasOne(d => d.IdExperienciaEducativaNavigation).WithMany(p => p.ExperienciaEducativaPeriodo)
                 .HasForeignKey(d => d.IdExperienciaEducativa).OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("FK_ExperienciaEducativaPeriodo_ExperienciaEducativa");

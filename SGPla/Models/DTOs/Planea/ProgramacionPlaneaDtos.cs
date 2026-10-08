@@ -1,3 +1,5 @@
+using SGPla.Commons;
+
 namespace SGPla.Models.DTOs.Planea
 {
     public sealed class FiltroProgramacionPlaneaDTO
@@ -24,7 +26,18 @@ namespace SGPla.Models.DTOs.Planea
     public sealed record CopiaProgramacionPlaneaDTO(
         string CodigoPeriodo, string Nrc, string CodigoExperiencia, string NombreExperiencia,
         string? CodigoPlan, string ProgramaEducativo, IReadOnlyList<HorarioPlaneaDTO> Horarios,
-        IReadOnlyList<DocentePlaneaDTO> Docentes);
+        IReadOnlyList<DocentePlaneaDTO> Docentes,
+        int IdExperienciaEducativaPeriodo = 0, string EstadoAprobacion = PlaneaConstantes.APROBACION_PENDIENTE);
+
+    public sealed record ResumenAprobacionPlaneaDTO(
+        int Pendientes, int Aprobadas, int Descartadas, DateTime? UltimaRevision, string? RevisadoPor);
+
+    public sealed record ProgramacionParaAprobarPlaneaDTO(
+        UltimaSincronizacionPlaneaDTO? UltimaSincronizacion,
+        IReadOnlyList<CopiaProgramacionPlaneaDTO> Copias,
+        ResumenAprobacionPlaneaDTO Resumen);
+
+    public sealed record ResultadoAprobacionPlaneaDTO(int OfertasCreadas, int Descartadas, int Enlazadas);
 
     /// Datos de cabecera de la programación PLANEA de un plan de estudios en un periodo.
     public sealed record EncabezadoProgramacionPlaneaDTO(

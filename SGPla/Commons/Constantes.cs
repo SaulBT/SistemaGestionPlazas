@@ -140,6 +140,7 @@
         public const string HISTORIAL_MODIFICADO = "Se modificó la oferta.";
         public const string HISTORIAL_JUSTIFICACION = "Devuelta a Vacante por el motivo: ";
         public const string HISTORIAL_ASIGNACION_DOCENTE = "Se asignó el docente: ";
+        public const string HISTORIAL_APROBADA_PLANEA = "Programación aprobada por DGAA desde PLANEA.";
         public const string CAMPO_OBLIGATORIO = "Campo obligatorio";
 
         //Avisos

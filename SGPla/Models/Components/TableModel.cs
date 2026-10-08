@@ -21,6 +21,10 @@ public class TableCellModel
     public string Value { get; set; } = string.Empty;
     public bool IsCheckBox { get; set; } = false;
     public bool Checked { get; set; } = false;
+    // Checkbox editable (p. ej. selección de filas dentro de un form); por defecto es de solo lectura.
+    public string? CheckboxName { get; set; }
+    public string? CheckboxValue { get; set; }
+    public bool CheckboxDisabled { get; set; } = true;
 
     public List<TableActionModel>? Actions { get; set; }
 }

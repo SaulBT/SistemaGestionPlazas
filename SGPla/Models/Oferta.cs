@@ -17,7 +17,7 @@ public partial class Oferta
 
     public int IdProgramaEducativo { get; set; }
 
-    public int IdArticulo { get; set; }
+    public int? IdArticulo { get; set; }
 
     public int IdPeriodo { get; set; }
 
@@ -45,7 +45,7 @@ public partial class Oferta
 
     public virtual Archivo? IdArchivoAperturaNavigation { get; set; }
 
-    public virtual Articulo IdArticuloNavigation { get; set; } = null!;
+    public virtual Articulo? IdArticuloNavigation { get; set; }
 
     public virtual Docente? IdDocenteNavigation { get; set; }
 
@@ -54,6 +54,8 @@ public partial class Oferta
     public virtual Periodo IdPeriodoNavigation { get; set; } = null!;
 
     public virtual ProgramaEducativo IdProgramaEducativoNavigation { get; set; } = null!;
+
+    public virtual ICollection<ExperienciaEducativaPeriodo> ExperienciaEducativaPeriodo { get; set; } = new List<ExperienciaEducativaPeriodo>();
 
     public virtual ICollection<Log> Log { get; set; } = new List<Log>();
 

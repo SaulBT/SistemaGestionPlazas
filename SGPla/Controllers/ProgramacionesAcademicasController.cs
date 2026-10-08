@@ -46,7 +46,7 @@ public class ProgramacionesAcademicasController : Controller
     private static readonly List<string> HEADERS_TABLA_HORARIOS =
         ["Dîa", "Horario", "Salon", "Acciones"];
     private static readonly List<string> HEADERS_TABLA_PLANEA =
-        ["NRC", "Experiencia educativa", "Horario y espacio", "Imparte", "Docente"];
+        ["", "NRC", "Experiencia educativa", "Horario y espacio", "Imparte", "Docente", "Estado"];
     private static readonly Dictionary<string, string> ABREVIATURA_DIA = new()
     {
         ["Lunes"] = "Lun", ["Martes"] = "Mar", ["Miercoles"] = "Mié",
@@ -78,13 +78,17 @@ public class ProgramacionesAcademicasController : Controller
         int? idPeriodo,
         string? busqueda)
     {
+        // Solo DGAA ve la programación de PLANEA; la entidad académica ve únicamente la ya aprobada (Oferta).
+        var esDgaa = User.IsInRole(Constantes.COORDINADOR_DGAA);
+
         var filtro = new BuscarProgramacionAcademicaDTO
         {
+            IncluirPlanea = esDgaa,
             Region = region,
             IdEntidadAcademica = idEntidadAcademica,
             IdProgramaEducativo = idProgramaEducativo,
             // Sin periodo elegido se muestra el más reciente con programación; los anteriores se consultan con el filtro.
-            IdPeriodo = idPeriodo ?? await _programacionAcademicaService.ObtenerPeriodoActualAsync(),
+            IdPeriodo = idPeriodo ?? await _programacionAcademicaService.ObtenerPeriodoActualAsync(esDgaa),
             Busqueda = busqueda
         };
 
@@ -155,34 +159,15 @@ public class ProgramacionesAcademicasController : Controller
     }
 
     [HttpGet]
-    [Authorize(Policy = PoliticasAutorizacion.OperadorAcademico)]
-    public async Task<IActionResult> ProgramacionPlanea(
-        int idPlanEstudios,
-        int idPeriodo,
-        string? busqueda,
-        int pagina = 1,
-        int cantidad = 10)
+    [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
+    public async Task<IActionResult> ProgramacionPlanea(int idPlanEstudios, int idPeriodo, string? busqueda)
     {
         var encabezado = await _programacionPlaneaService.ObtenerEncabezadoAsync(idPlanEstudios, idPeriodo);
         if (encabezado is null)
             return NotFound();
 
-        // Un coordinador de entidad solo consulta la programación PLANEA de su entidad.
-        if (User.IsInRole(Constantes.COORDINADOR_EA)
-            && int.TryParse(User.FindFirstValue("EntidadAcademicaId"), out var idEntidadUsuario)
-            && idEntidadUsuario != encabezado.IdEntidadAcademica)
-            return Forbid();
-
-        var filtroPlanea = new FiltroProgramacionPlaneaDTO
-        {
-            IdPeriodo = idPeriodo,
-            IdPlanEstudios = idPlanEstudios,
-            Busqueda = busqueda,
-            Pagina = pagina,
-            Limite = cantidad
-        };
-        // El servicio normaliza página y límite; la tabla usa los valores ya ajustados.
-        var planea = await _programacionPlaneaService.ObtenerAsync(filtroPlanea);
+        // Todas las filas llegan al DOM (paginación client) para que el form envíe todos los checkboxes.
+        var planea = await _programacionPlaneaService.ObtenerParaAprobarAsync(idPlanEstudios, idPeriodo, busqueda);
 
         var modelo = new ProgramacionPlaneaViewModel
         {
@@ -194,10 +179,48 @@ public class ProgramacionesAcademicasController : Controller
             CodigoPlan = encabezado.CodigoPlan,
             NombrePeriodo = encabezado.PeriodoMostrar,
             UltimaSincronizacionPlanea = planea.UltimaSincronizacion,
-            TablaPlanea = LlenarTablaPlanea(planea, filtroPlanea.Limite)
+            Resumen = planea.Resumen,
+            HayPendientes = planea.Resumen.Pendientes > 0,
+            UltimaRevisionLocal = planea.Resumen.UltimaRevision is { } revision ? ConvertirAHoraDeMexico(revision) : null,
+            TablaPlanea = LlenarTablaPlanea(planea.Copias)
         };
 
         return View("ProgramacionPlanea", modelo);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
+    public async Task<IActionResult> AprobarProgramacionPlanea(int idPlanEstudios, int idPeriodo, int[]? idsAprobados)
+    {
+        var revisadoPor = User.Identity?.Name ?? User.FindFirstValue(ClaimTypes.Email) ?? "DGAA";
+        if (revisadoPor.Length > 150) revisadoPor = revisadoPor[..150];
+
+        var (exito, mensaje, resultado) = await _programacionPlaneaService.AprobarAsync(
+            idPlanEstudios, idPeriodo, idsAprobados ?? [], revisadoPor);
+
+        if (!exito || resultado is null)
+        {
+            TempData["Error"] = mensaje;
+            return RedirectToAction(nameof(ProgramacionPlanea), new { idPlanEstudios, idPeriodo });
+        }
+
+        var aprobados = resultado.OfertasCreadas + resultado.Enlazadas;
+        TempData["Success"] = $"Programación confirmada: {aprobados} NRC aprobados, {resultado.Descartadas} descartados.";
+        return RedirectToAction(nameof(Index), new { idPeriodo });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Policy = PoliticasAutorizacion.Dgaa)]
+    public async Task<IActionResult> RestaurarCopiaPlanea(int idExperienciaEducativaPeriodo, int idPlanEstudios, int idPeriodo)
+    {
+        if (await _programacionPlaneaService.RestaurarAsync(idExperienciaEducativaPeriodo))
+            TempData["Success"] = "El NRC volvió a quedar pendiente de confirmación.";
+        else
+            TempData["Error"] = "No se pudo restaurar el NRC: ya no está descartado.";
+
+        return RedirectToAction(nameof(ProgramacionPlanea), new { idPlanEstudios, idPeriodo });
     }
 
     [HttpGet]
@@ -479,35 +502,72 @@ public class ProgramacionesAcademicasController : Controller
 
     #region Helpers privados — construcción de tablas
 
-    private static TableModel LlenarTablaPlanea(ProgramacionPlaneaDTO planea, int cantidadPorPagina)
+    private static DateTime ConvertirAHoraDeMexico(DateTime fechaUtc)
     {
-        return planea.Copias.Count == 0
-            ? TablaFactory.GenerarTablaConMensajeSinPaginacion(HEADERS_TABLA_PLANEA,
-                "No se encontraron NRC de PLANEA para este programa educativo y periodo.")
-            : new TableModel
+        TimeZoneInfo zona;
+        try
+        {
+            zona = TimeZoneInfo.FindSystemTimeZoneById("America/Mexico_City");
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            zona = TimeZoneInfo.FindSystemTimeZoneById("Mexico Standard Time");
+        }
+
+        return TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(fechaUtc, DateTimeKind.Utc), zona);
+    }
+
+    private static TableModel LlenarTablaPlanea(IReadOnlyList<CopiaProgramacionPlaneaDTO> copias)
+    {
+        if (copias.Count == 0)
+            return TablaFactory.GenerarTablaConMensajeSinPaginacion(HEADERS_TABLA_PLANEA,
+                "No se encontraron NRC de PLANEA para este programa educativo y periodo.");
+
+        return new TableModel
+        {
+            TableId = "tablaPlanea",
+            Headers = HEADERS_TABLA_PLANEA,
+            Pagination = new PaginationInfo { PageSize = 10, TotalItems = copias.Count, PaginationMode = "client" },
+            Rows = copias.Select(c =>
             {
-                TableId = "tablaPlanea",
-                Headers = HEADERS_TABLA_PLANEA,
-                Pagination = new PaginationInfo
+                var pendiente = c.EstadoAprobacion == PlaneaConstantes.APROBACION_PENDIENTE;
+                var estado = new TableCellModel { Value = c.EstadoAprobacion };
+                if (c.EstadoAprobacion == PlaneaConstantes.APROBACION_DESCARTADA)
                 {
-                    CurrentPage = planea.Pagina,
-                    PageSize = cantidadPorPagina,
-                    TotalItems = planea.Total,
-                    OnPageChange = "cambiarPaginaPlanea",
-                    PaginationMode = "server"
-                },
-                Rows = planea.Copias.Select(c => new TableRowModel
+                    estado.Actions =
+                    [
+                        new()
+                        {
+                            Accion = "izquierda",
+                            AriaLabel = "Restaurar",
+                            OnClick = $"restaurarCopiaPlanea({c.IdExperienciaEducativaPeriodo})"
+                        }
+                    ];
+                }
+
+                return new TableRowModel
                 {
                     Cells =
                     [
+                        new()
+                        {
+                            IsCheckBox = true,
+                            CheckboxName = "idsAprobados",
+                            CheckboxValue = c.IdExperienciaEducativaPeriodo.ToString(),
+                            // Pendiente: marcada y editable; Aprobada: marcada y fija; Descartada: desmarcada y fija.
+                            Checked = c.EstadoAprobacion != PlaneaConstantes.APROBACION_DESCARTADA,
+                            CheckboxDisabled = !pendiente
+                        },
                         new() { Value = c.Nrc },
                         new() { Value = $"{c.CodigoExperiencia} - {c.NombreExperiencia}" },
                         new() { Value = FormatearHorarios(c.Horarios) },
                         new() { Value = FormatearImparte(c.Docentes) },
-                        new() { Value = FormatearDocentes(c.Docentes) }
+                        new() { Value = FormatearDocentes(c.Docentes) },
+                        estado
                     ]
-                }).ToList()
-            };
+                };
+            }).ToList()
+        };
     }
 
     // Con varios docentes en el NRC basta con que uno imparta para marcarlo como «SÍ».
@@ -536,6 +596,15 @@ public class ProgramacionesAcademicasController : Controller
         }));
     }
 
+    private static string DescribirEstadoPlanea(ResumenOfertaProgramacionAcademicaDTO r)
+    {
+        if (!r.TieneProgramacionPlanea) return "—";
+        if (r.NrcPendientes > 0 && r.NrcAprobados > 0) return $"Aprobada · {r.NrcPendientes} nuevos";
+        if (r.NrcPendientes > 0) return $"Pendiente ({r.NrcPendientes})";
+        if (r.NrcAprobados > 0) return "Aprobada";
+        return "Descartada";
+    }
+
     // «Ingeniería de Software (2014)»: distingue los planes de un mismo programa.
     private static string NombreProgramaConPlan(ResumenOfertaProgramacionAcademicaDTO resumen)
     {
@@ -547,8 +616,11 @@ public class ProgramacionesAcademicasController : Controller
     private TableModel LlenarTablaResumen(List<ResumenOfertaProgramacionAcademicaDTO> resumen)
     {
         bool esCoordinadorEa = User.IsInRole(Constantes.COORDINADOR_EA);
+        bool esDgaa = User.IsInRole(Constantes.COORDINADOR_DGAA);
 
         var headers = HEADERS_TABLA_RESUMEN_OFERTA.ToList();
+        if (esDgaa)
+            headers.Insert(headers.Count - 1, "Estado PLANEA");
 
         if (resumen.Count == 0)
         {
@@ -577,14 +649,17 @@ public class ProgramacionesAcademicasController : Controller
                         new() { Value = r.EEVacantes.ToString() }
                     };
 
+                    if (esDgaa)
+                        cells.Add(new() { Value = DescribirEstadoPlanea(r) });
+
                     var acciones = new List<TableActionModel>();
 
-                    if (r.TieneProgramacionPlanea && r.IdPlanEstudios.HasValue)
+                    if (esDgaa && r.TieneProgramacionPlanea && r.IdPlanEstudios.HasValue)
                     {
                         acciones.Add(new()
                         {
                             Accion = "planea",
-                            AriaLabel = "Ver programación PLANEA",
+                            AriaLabel = r.NrcPendientes > 0 ? "Revisar programación PLANEA" : "Ver programación PLANEA",
                             Url = Url.Action(nameof(ProgramacionPlanea), new
                             {
                                 idPlanEstudios = r.IdPlanEstudios,
