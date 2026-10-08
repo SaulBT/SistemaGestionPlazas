@@ -28,6 +28,17 @@ namespace SGPla.Mappers
                     _ => "Desconocido"
                 };
             }
+
+            // Agosto-Enero se identifica con el año en que termina (agosto 2026 → 202701).
+            public static string ConstruirCodigoPeriodo(DateOnly fecha)
+            {
+                return fecha.Month switch
+                {
+                    1 => $"{fecha.Year}01",
+                    >= 8 => $"{fecha.Year + 1}01",
+                    _ => $"{fecha.Year}51"
+                };
+            }
         }
 
         public static Periodo ToModel(CrearPeriodoEscolarDTO dto)

@@ -18,6 +18,7 @@ using SGPla.Models.ViewModels.Avisos;
 using SGPla.Services.Interfaces;
 using SGPla.Views.Avisos;
 using SGPla.Helpers;
+using SGPla.Mappers;
 using System.ComponentModel;
 using System.Text.Json;
 
@@ -799,13 +800,18 @@ namespace SGPla.Controllers
                 })
                 .ToList();
 
-             var periodos = await _periodoService.ObtenerTodosAsync();
+            var periodos = await _periodoService.ObtenerTodosAsync();
+            // Un aviso nuevo propone el periodo vigente según la fecha actual.
+            var codigoPeriodoActual = PeriodoEscolarMapper.PeriodoMapper.ConstruirCodigoPeriodo(DateOnly.FromDateTime(DateTime.Today));
+            int? idPeriodo = aviso.IdPeriodo > 0
+                ? aviso.IdPeriodo
+                : periodos.FirstOrDefault(p => p.Codigo == codigoPeriodoActual)?.IdPeriodoEscolar;
             var periodosCombo = periodos
                 .Select(p => new OptionModel
                 {
                     Value = p.IdPeriodoEscolar.ToString(),
                     Text = p.PeriodoMostrar,
-                    Selected = aviso.IdPeriodo > 0 && p.IdPeriodoEscolar == aviso.IdPeriodo
+                    Selected = p.IdPeriodoEscolar == idPeriodo
                 })
                 .ToList();
 
@@ -828,7 +834,7 @@ namespace SGPla.Controllers
             return new CrearAvisoViewModel
             {
                 IdAviso = aviso.IdAviso > 0 ? aviso.IdAviso : null,
-                IdPeriodo = aviso.IdPeriodo > 0 ? aviso.IdPeriodo : null,
+                IdPeriodo = idPeriodo,
                 IdArticulo = aviso.IdArticulo > 0 ? aviso.IdArticulo : null,
                 Periodos = periodosCombo,
                 Articulos = articulosCombo,
