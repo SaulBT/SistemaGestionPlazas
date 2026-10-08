@@ -25,6 +25,10 @@
         // Indica si el programa ya tiene NRC sincronizados desde PLANEA en el periodo.
         public bool TieneProgramacionPlanea { get; set; }
 
+        // Solo se calculan para DGAA: NRC de PLANEA por confirmar y ya aprobados del plan en el periodo.
+        public int NrcPendientes { get; set; }
+        public int NrcAprobados { get; set; }
+
         public string? Region { get; set; }
     }
 }

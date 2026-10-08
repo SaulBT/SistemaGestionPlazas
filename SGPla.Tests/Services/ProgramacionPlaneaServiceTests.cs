@@ -18,6 +18,78 @@ public class ProgramacionPlaneaServiceTests
         new(_repositorio.Object, _sincronizarPeriodo.Object, _sincronizarVigentes.Object,
             Options.Create(new PlaneaOpciones { ApiKey = apiKey }));
 
+    private static ResumenAprobacionPlaneaDTO Resumen(int pendientes) => new(pendientes, 0, 0, null, null);
+
+    [Fact]
+    public async Task AprobarAsync_SinPendientes_DevuelveError()
+    {
+        _repositorio.Setup(r => r.ObtenerResumenAprobacionAsync(1, 2, It.IsAny<CancellationToken>())).ReturnsAsync(Resumen(0));
+
+        var (exito, mensaje, _) = await Crear().AprobarAsync(1, 2, [10], "dgaa");
+
+        Assert.False(exito);
+        Assert.Equal("No hay NRC pendientes por confirmar.", mensaje);
+        _repositorio.Verify(r => r.AprobarAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<IReadOnlyCollection<int>>(),
+            It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AprobarAsync_LoteValido_DelegaEnElRepositorio()
+    {
+        int[] ids = [10, 11];
+        var esperado = new ResultadoAprobacionPlaneaDTO(2, 1, 0);
+        _repositorio.Setup(r => r.ObtenerResumenAprobacionAsync(1, 2, It.IsAny<CancellationToken>())).ReturnsAsync(Resumen(3));
+        _repositorio.Setup(r => r.AprobarAsync(1, 2, ids, "dgaa", It.IsAny<CancellationToken>())).ReturnsAsync(esperado);
+
+        var (exito, _, resultado) = await Crear().AprobarAsync(1, 2, ids, "dgaa");
+
+        Assert.True(exito);
+        Assert.Equal(esperado, resultado);
+        _repositorio.Verify(r => r.AprobarAsync(1, 2, ids, "dgaa", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AprobarAsync_ListaVacia_DescartaTodoSinError()
+    {
+        _repositorio.Setup(r => r.ObtenerResumenAprobacionAsync(1, 2, It.IsAny<CancellationToken>())).ReturnsAsync(Resumen(3));
+        _repositorio.Setup(r => r.AprobarAsync(1, 2, It.Is<IReadOnlyCollection<int>>(c => c.Count == 0), "dgaa", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ResultadoAprobacionPlaneaDTO(0, 3, 0));
+
+        var (exito, _, resultado) = await Crear().AprobarAsync(1, 2, [], "dgaa");
+
+        Assert.True(exito);
+        Assert.Equal(3, resultado!.Descartadas);
+    }
+
+    [Fact]
+    public void CalcularHsm_CincoBloquesDeUnaHora_DevuelveCinco()
+    {
+        var horarios = new[] { "Lunes", "Martes", "Miercoles", "Jueves", "Viernes" }
+            .Select(d => new HorarioPlaneaDTO(d, new TimeOnly(14, 0), new TimeOnly(14, 59), null, null))
+            .ToList();
+
+        Assert.Equal(5, ProgramacionPlaneaService.CalcularHsm(horarios, "3"));
+    }
+
+    [Fact]
+    public void CalcularHsm_SinHorarios_UsaLasHorasDeLaExperiencia()
+        => Assert.Equal(6, ProgramacionPlaneaService.CalcularHsm([], "6"));
+
+    [Fact]
+    public void CalcularHsm_SinNada_DevuelveCero()
+    {
+        Assert.Equal(0, ProgramacionPlaneaService.CalcularHsm([], null));
+        Assert.Equal(0, ProgramacionPlaneaService.CalcularHsm([], "abc"));
+    }
+
+    [Fact]
+    public void CalcularHsm_BloquesCompletos_SumaYRedondea()
+    {
+        var horarios = new[] { new HorarioPlaneaDTO("Lunes", new TimeOnly(8, 0), new TimeOnly(10, 30), null, null) };
+
+        Assert.Equal(3, ProgramacionPlaneaService.CalcularHsm(horarios, null));
+    }
+
     [Fact]
     public async Task SincronizarAsync_SinToken_NoSincroniza()
     {

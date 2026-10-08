@@ -37,7 +37,7 @@
         public string? TipoIngreso { get; set; }
 
 
-        public int Articulo { get; set; }
+        public string Articulo { get; set; } = string.Empty;
 
         public bool Incluida { get; set; }
 
@@ -59,7 +59,7 @@
 
         public string Modalidad { get; set; } 
 
-        public int IdArticulo { get; set; }
+        public int? IdArticulo { get; set; }
 
     }
 }

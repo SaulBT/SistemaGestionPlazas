@@ -9,7 +9,7 @@ namespace SGPla.Repositories.Interfaces
 
         Task<List<ResumenOfertaProgramacionAcademicaDTO>> ObtenerResumenPorProgramaPeriodoAsync(BuscarProgramacionAcademicaDTO? filtro);
 
-        Task<int?> ObtenerPeriodoMasRecienteConProgramacionAsync();
+        Task<int?> ObtenerPeriodoMasRecienteConProgramacionAsync(bool incluirPlanea);
 
         Task<List<OfertaDTO>> ObtenerOfertasExperienciasEducativasAsync(int idEntidadAcademica, int idProgramaEducativo, int idPeriodo, string? busqueda = null);
 

@@ -79,6 +79,14 @@ namespace SGPla.Repositories.Implementations
                 })
                 .ToListAsync();
 
+            // Solo DGAA ve la programación de PLANEA; la entidad académica la ve únicamente cuando se aprueba (Oferta).
+            if (filtro?.IncluirPlanea != true)
+                return resumen
+                    .OrderByDescending(r => r.CodigoPeriodo)
+                    .ThenBy(r => r.ProgramaEducativo)
+                    .ThenByDescending(r => r.CodigoPlan)
+                    .ToList();
+
             // También cuentan como programados los programas con NRC de PLANEA aunque aún no tengan oferta.
             var programacionPlanea = await ConsultarProgramacionPlanea(filtro)
                 .Select(c => new
@@ -92,9 +100,22 @@ namespace SGPla.Repositories.Implementations
                     NombrePlan = c.IdPlanEstudiosNavigation.Nombre,
                     ModalidadPlan = c.IdPlanEstudiosNavigation.Modalidad,
                     c.IdPeriodo,
-                    Periodo = c.IdPeriodoNavigation.Codigo
+                    Periodo = c.IdPeriodoNavigation.Codigo,
+                    c.EstadoAprobacion
                 })
-                .Distinct()
+                .GroupBy(c => new
+                {
+                    c.IdProgramaEducativo, c.Programa, c.IdEntidadAcademica, c.Entidad, c.IdPlanEstudios,
+                    c.CodigoPlan, c.NombrePlan, c.ModalidadPlan, c.IdPeriodo, c.Periodo
+                })
+                .Select(g => new
+                {
+                    g.Key.IdProgramaEducativo, g.Key.Programa, g.Key.IdEntidadAcademica, g.Key.Entidad,
+                    g.Key.IdPlanEstudios, g.Key.CodigoPlan, g.Key.NombrePlan, g.Key.ModalidadPlan,
+                    g.Key.IdPeriodo, g.Key.Periodo,
+                    Pendientes = g.Count(x => x.EstadoAprobacion == PlaneaConstantes.APROBACION_PENDIENTE),
+                    Aprobadas = g.Count(x => x.EstadoAprobacion == PlaneaConstantes.APROBACION_APROBADA)
+                })
                 .ToListAsync();
 
             foreach (var programa in programacionPlanea)
@@ -107,6 +128,8 @@ namespace SGPla.Repositories.Implementations
                 if (existente is not null)
                 {
                     existente.TieneProgramacionPlanea = true;
+                    existente.NrcPendientes = programa.Pendientes;
+                    existente.NrcAprobados = programa.Aprobadas;
                     continue;
                 }
 
@@ -122,7 +145,9 @@ namespace SGPla.Repositories.Implementations
                     ModalidadPlan = programa.ModalidadPlan,
                     IdPeriodo = programa.IdPeriodo,
                     CodigoPeriodo = programa.Periodo,
-                    TieneProgramacionPlanea = true
+                    TieneProgramacionPlanea = true,
+                    NrcPendientes = programa.Pendientes,
+                    NrcAprobados = programa.Aprobadas
                 });
             }
 
@@ -134,13 +159,14 @@ namespace SGPla.Repositories.Implementations
         }
 
         // Periodo más reciente con programación: NRC de PLANEA enlazados u ofertas registradas.
-        public async Task<int?> ObtenerPeriodoMasRecienteConProgramacionAsync()
+        // Sin incluirPlanea (entidad académica) solo cuentan las ofertas, es decir, la programación ya aprobada.
+        public async Task<int?> ObtenerPeriodoMasRecienteConProgramacionAsync(bool incluirPlanea)
         {
             var periodosPlanea = ConsultarProgramacionPlanea(null).Select(c => c.IdPeriodo);
             var periodosOferta = _context.Oferta.AsNoTracking().Select(o => o.IdPeriodo);
 
             return await _context.Periodo.AsNoTracking()
-                .Where(p => periodosPlanea.Contains(p.IdPeriodo) || periodosOferta.Contains(p.IdPeriodo))
+                .Where(p => periodosOferta.Contains(p.IdPeriodo) || (incluirPlanea && periodosPlanea.Contains(p.IdPeriodo)))
                 .OrderByDescending(p => p.Codigo)
                 .Select(p => (int?)p.IdPeriodo)
                 .FirstOrDefaultAsync();
@@ -201,7 +227,7 @@ namespace SGPla.Repositories.Implementations
                 TC = o.TipoContratacion,
                 NombreDocente = o.IdDocenteNavigation?.Nombre ?? o.NombreDocenteImportado,
                 NP = o.IdDocenteNavigation?.NumeroPersonal ?? o.NumeroPersonalImportado,
-                Articulo = int.Parse(o.IdArticuloNavigation.Numero),
+                Articulo = o.IdArticuloNavigation?.Numero ?? string.Empty,
                 IdPeriodo = o.IdPeriodo,
                 Region = o.IdProgramaEducativoNavigation.IdEntidadAcademicaNavigation.Region,
                 Incluida = o.Incluida,
@@ -239,7 +265,7 @@ namespace SGPla.Repositories.Implementations
                 TC = oferta.TipoContratacion,
                 NombreDocente = oferta.IdDocenteNavigation?.Nombre ?? oferta.NombreDocenteImportado,
                 NP = oferta.IdDocenteNavigation?.NumeroPersonal ?? oferta.NumeroPersonalImportado,
-                Articulo = oferta.IdArticulo,
+                Articulo = oferta.IdArticulo?.ToString() ?? string.Empty,
                 IdPeriodo = oferta.IdPeriodo,
                 Region = oferta.IdProgramaEducativoNavigation.IdEntidadAcademicaNavigation.Region,
                 Lunes = MapHorario(oferta.Horario, "Lunes"),
@@ -334,6 +360,7 @@ namespace SGPla.Repositories.Implementations
                 .Include(o => o.Solicitud)
                 .Include(o => o.Log)
                 .Include(o => o.Horario)
+                .Include(o => o.ExperienciaEducativaPeriodo)
                 .FirstOrDefaultAsync(o => o.IdOferta == idOferta);
 
             if (oferta != null)

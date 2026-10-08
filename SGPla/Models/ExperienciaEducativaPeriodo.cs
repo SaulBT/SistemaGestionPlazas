@@ -17,9 +17,14 @@ public partial class ExperienciaEducativaPeriodo
     public string? Nivel { get; set; }
     public string? Area { get; set; }
     public DateTime FechaAlta { get; set; }
+    public string EstadoAprobacion { get; set; } = null!;
+    public int? IdOferta { get; set; }
+    public DateTime? FechaRevision { get; set; }
+    public string? RevisadoPor { get; set; }
 
     public virtual ExperienciaEducativa? IdExperienciaEducativaNavigation { get; set; }
     public virtual Periodo IdPeriodoNavigation { get; set; } = null!;
+    public virtual Oferta? IdOfertaNavigation { get; set; }
     public virtual PlanEstudios? IdPlanEstudiosNavigation { get; set; }
     public virtual Region? IdRegionNavigation { get; set; }
     public virtual SincronizacionPlanea IdSincronizacionPlaneaNavigation { get; set; } = null!;

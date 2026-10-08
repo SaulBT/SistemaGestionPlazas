@@ -51,6 +51,53 @@ namespace SGPla.Services.Implementations
             return encabezado with { PeriodoMostrar = periodo.PeriodoMostrar };
         }
 
+        public async Task<ProgramacionParaAprobarPlaneaDTO> ObtenerParaAprobarAsync(
+            int idPlanEstudios, int idPeriodo, string? busqueda, CancellationToken cancellationToken = default)
+        {
+            busqueda = string.IsNullOrWhiteSpace(busqueda) ? null : busqueda.Trim();
+            if (busqueda?.Length > 100) busqueda = busqueda[..100];
+
+            var copias = await _repositorio.ObtenerCopiasParaAprobarAsync(idPlanEstudios, idPeriodo, busqueda, cancellationToken);
+            var resumen = await _repositorio.ObtenerResumenAprobacionAsync(idPlanEstudios, idPeriodo, cancellationToken);
+            var ultima = await _repositorio.ObtenerUltimaSincronizacionAsync(idPeriodo, cancellationToken);
+            return new ProgramacionParaAprobarPlaneaDTO(ultima, copias, resumen);
+        }
+
+        public async Task<(bool Exito, string Mensaje, ResultadoAprobacionPlaneaDTO? Resultado)> AprobarAsync(
+            int idPlanEstudios, int idPeriodo, IReadOnlyCollection<int> idsAprobados, string revisadoPor,
+            CancellationToken cancellationToken = default)
+        {
+            var resumen = await _repositorio.ObtenerResumenAprobacionAsync(idPlanEstudios, idPeriodo, cancellationToken);
+            if (resumen.Pendientes == 0)
+                return (false, "No hay NRC pendientes por confirmar.", null);
+
+            // Una lista vacía equivale a descartar todos los pendientes; el front pide confirmación explícita.
+            var resultado = await _repositorio.AprobarAsync(
+                idPlanEstudios, idPeriodo, idsAprobados, revisadoPor, cancellationToken);
+            return (true, "Programación confirmada.", resultado);
+        }
+
+        public Task<bool> RestaurarAsync(int idExperienciaEducativaPeriodo, CancellationToken cancellationToken = default)
+            => _repositorio.RestaurarAsync(idExperienciaEducativaPeriodo, cancellationToken);
+
+        /// H/S/M de una oferta aprobada: suma de horas semanales de los horarios PLANEA, redondeada al entero más cercano.
+        /// PLANEA guarda los bloques como 14:00–14:59, así que un bloque cuyo fin termina en :59 se cuenta completo (+1 min).
+        /// Si no hay horarios (o suman 0) se usa el valor de la EE; si tampoco es numérico, 0.
+        public static int CalcularHsm(IEnumerable<HorarioPlaneaDTO> horarios, string? horasExperiencia)
+        {
+            var minutos = horarios.Sum(h =>
+            {
+                var duracion = (h.HoraFin - h.HoraInicio).TotalMinutes;
+                if (duracion <= 0) return 0d;
+                return h.HoraFin.Minute == 59 ? duracion + 1 : duracion;
+            });
+
+            var horas = (int)Math.Round(minutos / 60d, MidpointRounding.AwayFromZero);
+            if (horas > 0) return horas;
+
+            return int.TryParse(horasExperiencia?.Trim(), out var horasEe) && horasEe > 0 ? horasEe : 0;
+        }
+
         public async Task<(bool Exito, string Mensaje)> SincronizarAsync(int? idPeriodo, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(_opciones.ApiKey))

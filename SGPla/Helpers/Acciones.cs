@@ -17,6 +17,7 @@
             // para programaciones académicas
             public const string Ver = "ProgramacionAcademica.Ver";
             public const string VerSolicitudes = "ProgramacionAcademica.VerSolicitudes";
+            public const string AprobarPlanea = "ProgramacionAcademica.AprobarPlanea";
 
         }
 

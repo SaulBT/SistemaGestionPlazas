@@ -22,12 +22,18 @@
 							{
 								@await Component.InvokeAsync("CheckboxField", new CheckboxFieldModel
 								{
+									Name = cell.CheckboxName ?? string.Empty,
+									Value = cell.CheckboxValue,
 									Checked = cell.Checked,
-									Disabled = true
+									Disabled = cell.CheckboxDisabled
 								})
 							}
 							else if (cell.Actions != null && cell.Actions.Any())
 							{
+								@if (!string.IsNullOrEmpty(cell.Value))
+								{
+									<span>@cell.Value</span>
+								}
 								<div class="table-actions">
 									@foreach (var action in cell.Actions)
 									{

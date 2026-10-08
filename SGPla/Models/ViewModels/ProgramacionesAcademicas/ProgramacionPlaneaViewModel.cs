@@ -1,3 +1,4 @@
+using SGPla.Models.Components;
 using SGPla.Models.DTOs.Planea;
 
 namespace SGPla.Models.ViewModels.ProgramacionesAcademicas
@@ -17,5 +18,10 @@ namespace SGPla.Models.ViewModels.ProgramacionesAcademicas
         public UltimaSincronizacionPlaneaDTO? UltimaSincronizacionPlanea { get; set; }
 
         public TableModel TablaPlanea { get; set; } = new();
+
+        public ResumenAprobacionPlaneaDTO Resumen { get; set; } = new(0, 0, 0, null, null);
+        public bool HayPendientes { get; set; }
+        // Hora de México de la última confirmación de DGAA.
+        public DateTime? UltimaRevisionLocal { get; set; }
     }
 }
