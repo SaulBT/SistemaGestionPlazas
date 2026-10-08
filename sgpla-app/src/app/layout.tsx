@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "SGPla",
-  description: "Sistema de Gestión de Plazas Vacantes",
+  description: "Sistema de Gestion de Experiencias Educativas Vacantes",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
