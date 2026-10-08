@@ -11,7 +11,7 @@ export default function LoginPage() {
     <>
       <header className="fixed inset-x-0 top-0 z-10 flex h-15 items-center bg-[#005baa] px-5 text-white shadow-[0_2px_5px_rgba(0,0,0,0.1)]">
         <div className="text-xl font-bold">
-          Sistema de Gestión de Plazas Vacantes
+          Sistema de Gestion de Experiencias Educativas Vacantes
         </div>
       </header>
 

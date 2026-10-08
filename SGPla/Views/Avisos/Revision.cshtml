@@ -6,10 +6,8 @@
     ViewData["Title"] = editarComentarios ? "Editar comentarios de revisión" : revisar ? "Revisar aviso" : "Enviar a revisión por DGAA";
 }
 <div class="container py-4">
-    <h1 class="h3">@ViewData["Title"]</h1>
     <p>Aviso: <strong>@Model.IdAviso</strong> · @Model.IdEntidadAcademicaNavigation.Nombre</p>
     <p>Estado actual: <strong>@Model.Estado</strong></p>
-    <p>Creado → En revisión por DGAA → Avalado o devuelto para corrección.</p>
     @if (!string.IsNullOrWhiteSpace(Model.Comentarios))
     {
         <div class="alert alert-info"><strong>Últimos comentarios:</strong><p class="mb-0" style="white-space:pre-wrap">@Model.Comentarios</p></div>

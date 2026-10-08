@@ -10,7 +10,7 @@ export function DashboardTopBar() {
         <SidebarTrigger />
         <div>
           <p className="text-sm font-medium">
-            Sistema de Gestión de Plazas Vacantes
+            Sistema de Gestion de Experiencias Educativas Vacantes
           </p>
           <p className="text-xs text-muted-foreground">
             Panel de administración

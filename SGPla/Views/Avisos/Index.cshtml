@@ -26,8 +26,7 @@
 
 <link rel="stylesheet" href="~/css/components/avisos-flujo.css" asp-append-version="true" />
 <div class="avisos-modulo">
-    <h1 class="h3">Gestionar Avisos</h1>
-    <p class="text-muted">@(User.IsInRole(Constantes.COORDINADOR_DGAA) ? "Avisos recibidos de su área académica y seguimiento de sus revisiones." : "Consulte el estado de sus avisos y los comentarios de DGAA.") Ordenados por fecha de creación, del más reciente al más antiguo.</p>
+    <p class="text-muted">@(User.IsInRole(Constantes.COORDINADOR_DGAA) ? "Avisos recibidos de su área académica y seguimiento de sus revisiones." : "Consulte el estado de sus avisos y los comentarios de DGAA.")</p>
     @if (esCea && Model.Avalados.Lista.Count > 0)
     {
         <div class="aviso-siguiente-paso" role="status">

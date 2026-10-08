@@ -271,7 +271,7 @@ public class ProgramacionesAcademicasController : Controller
             NombrePeriodo = resumenActual?.PeriodoMostrar,
             NombrePrograma = resumenActual?.ProgramaEducativo,
             TableAsignadas = await LlenarTablaAsync(TipoTablaOferta.Asignadas, ofertasAsignadas, null, permisos, idEntidadAcademica, idProgramaEducativo, idPeriodo),
-            TableVacantes = await LlenarTablaAsync(TipoTablaOferta.Vacantes, ofertasVacantes, null, permisos, idEntidadAcademica, idProgramaEducativo, idPeriodo),
+            TableVacantes = await LlenarTablaAsync(TipoTablaOferta.Vacantes, ofertasVacantes, null, permisos, idEntidadAcademica, idProgramaEducativo, idPeriodo, mostrarInclusion: false),
             IdEntidadAcademica = idEntidadAcademica,
             IdPeriodo = idPeriodo,
             IdProgramaEducativo = idProgramaEducativo
@@ -722,7 +722,8 @@ public class ProgramacionesAcademicasController : Controller
         AccionesDisponibles? permisos = null,
         int? idEntidadAcademica = null,
         int? idProgramaEducativo = null,
-        int? idPeriodo = null)
+        int? idPeriodo = null,
+        bool mostrarInclusion = true)
     {
         if (ofertas.Count() == 0)
             return TablaFactory.GenerarTablaConMensaje(tipoOferta == TipoTablaOferta.Vacantes ? HEADERS_TABLA_VACANTES : HEADERS_TABLA_ASIGNADAS, string.Format(Constantes.TABLA_VACIA, Constantes.EXPERIENCIAS_EDUCATIVAS));
@@ -731,7 +732,7 @@ public class ProgramacionesAcademicasController : Controller
             permisos.Puede(Acciones.ProgramacionAcademica.VerHistorial) ||
             permisos.Puede(Acciones.ProgramacionAcademica.Editar) ||
             permisos.Puede(Acciones.ProgramacionAcademica.AsignarDocente) ||
-            (permisos.Puede(Acciones.ProgramacionAcademica.Ofertar) && tipoOferta == TipoTablaOferta.Vacantes) ||
+            (mostrarInclusion && permisos.Puede(Acciones.ProgramacionAcademica.Ofertar) && tipoOferta == TipoTablaOferta.Vacantes) ||
             permisos.Puede(Acciones.ProgramacionAcademica.Eliminar)
         );
 
@@ -743,7 +744,7 @@ public class ProgramacionesAcademicasController : Controller
         {
             headers.Add("Acciones");
 
-            if (tipoOferta == TipoTablaOferta.Vacantes)
+            if (mostrarInclusion && tipoOferta == TipoTablaOferta.Vacantes)
                 headers.Add("Incluir");
         }
 
@@ -862,7 +863,7 @@ public class ProgramacionesAcademicasController : Controller
 
                     if (tieneAcciones)
                         cells.Add(new TableCellModel { Actions = ConstruirAcciones(oferta) });
-                    if (tieneAcciones && tipoOferta == TipoTablaOferta.Vacantes)
+                    if (tieneAcciones && mostrarInclusion && tipoOferta == TipoTablaOferta.Vacantes)
                         cells.Add(new TableCellModel { Actions = ConstruirIncluir(oferta) });
 
                     return new TableRowModel { Cells = cells };

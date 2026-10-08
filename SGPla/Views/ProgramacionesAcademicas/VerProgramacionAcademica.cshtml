@@ -92,7 +92,12 @@
 
         <button class="tab-button" data-tab="1"
                 onclick="seleccionarTab('miTabs', 1)">
-            Convocadas
+            Con titular
+        </button>
+
+        <button class="tab-button" data-tab="2"
+                onclick="seleccionarTab('miTabs', 2)">
+            Designadas
         </button>
 
     </div>
@@ -108,6 +113,8 @@
         <div class="tab-content" data-tab="1">
             @await Component.InvokeAsync("Table", Model.TableAsignadas)
         </div>
+
+        <div class="tab-content" data-tab="2"></div>
 
     </div>
 
